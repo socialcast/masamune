@@ -1,0 +1,5 @@
+rvm gemset use fixpoint --create
+if ! command -v bundle ; then
+  gem install bundler
+  bundle
+fi
