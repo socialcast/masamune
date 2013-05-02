@@ -1,4 +1,4 @@
-class MockFileSystem
+class MockFilesystem
   def initialize
     @files = []
   end

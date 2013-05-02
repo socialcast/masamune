@@ -10,8 +10,8 @@ class Fixpoint::DataPlan
     end
   end
 
-  def initialize(file_system, handler = DEFAULT_HANDLER)
-    @file_system = file_system
+  def initialize(fs, handler = DEFAULT_HANDLER)
+    @fs = fs
     @rules = []
     @handler = handler
   end
@@ -28,8 +28,8 @@ class Fixpoint::DataPlan
       @rules.each do |rule, (template, command)|
         target = rule.bind_date(interval)
         source = rule.bind(target, template)
-        unless @file_system.exists?(target)
-          if @file_system.exists?(source)
+        unless @fs.exists?(target)
+          if @fs.exists?(source)
             batch_commands[command] << [target, source]
           else
             batch_handlers[rule] << [target, source]
