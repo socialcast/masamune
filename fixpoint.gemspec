@@ -21,6 +21,8 @@ Gem::Specification.new do |s|
   s.files = Dir['lib/**/*'] + ['LICENSE', 'Rakefile', 'README.md']
   s.test_files = Dir['spec/**/*']
 
+  s.add_dependency('thor')
+
   # Development
   s.add_development_dependency('rake', '~> 0.9')
 
