@@ -9,7 +9,7 @@ module Fixpoint
 
   class Client
     def configure
-      yield @configuration
+      yield configuration
     end
 
     def configuration
@@ -25,4 +25,5 @@ module Fixpoint
   end
 
   def_delegators :default_client, :configure, :configuration
+  def_delegators :configuration, :logger
 end

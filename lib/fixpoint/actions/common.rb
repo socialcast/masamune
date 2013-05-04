@@ -5,6 +5,7 @@ module Fixpoint::Actions
   module Common
     # TODO curry prompt
     def interactive(prompt, *args, &block)
+      Fixpoint::logger.debug(args)
       Open3.popen3(*args) do |stdin, stdout, stderr, th|
         Thread.new {
           while !stdin.closed? do
@@ -52,7 +53,7 @@ module Fixpoint::Actions
     end
 
     def handle_stderr(line)
-      Fixpoint::configuration.logger.debug(line.chomp)
+      Fixpoint::logger.debug(line.chomp)
     end
   end
 end
