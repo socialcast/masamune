@@ -3,7 +3,7 @@ require 'readline'
 
 module Fixpoint::Actions
   module Common
-    # TODO curry prompt
+    # TODO curry prompt def prompt; end
     def interactive(prompt, *args, &block)
       Fixpoint::logger.debug(args)
       Open3.popen3(*args) do |stdin, stdout, stderr, th|
@@ -43,7 +43,6 @@ module Fixpoint::Actions
 
     private
 
-    # TODO ungets prompt, and retry gets
     def handle_stdout(prompt, stdout, line_no, &block)
       if prompt && line = stdout.gets(prompt)
         print line
