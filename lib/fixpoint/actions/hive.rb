@@ -1,15 +1,19 @@
-require 'debugger'
-
 module Fixpoint::Actions
   module Hive
     include Fixpoint::Actions::Common
 
-    def hive(options)
-      prompt = (options[:exec] || options[:file]) ? nil : 'hive> '
+    def prompt
+      'hive> '
+    end
 
+    def interactive?
+      !(options[:exec] || options[:file])
+    end
+
+    def hive(options)
       Dir.chdir(Fixpoint.configuration.var_dir) do
         if options[:jobflow]
-          interactive(prompt, *emr_ssh(options[:jobflow], 'hive', *hive_args(options))) do |line, line_no|
+          execute(*emr_ssh(options[:jobflow], 'hive', *hive_args(options))) do |line, line_no|
             if line =~ /\Assh/ && line_no == 0
               Fixpoint.logger.debug(line)
             else
@@ -17,7 +21,7 @@ module Fixpoint::Actions
             end
           end
         else
-          interactive(prompt, 'hive', *hive_args(options))
+          execute('hive', *hive_args(options))
         end
       end
     end
