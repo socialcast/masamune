@@ -1,11 +1,11 @@
-class Fixpoint::DataPlan
+class Masamune::DataPlan
   def initialize
     @rules = []
     @matches = Hash.new { |h,k| h[k] = [] }
   end
 
   def add_rule(rule, template, command, &block)
-    @rules << [Fixpoint::Matcher.new(rule), [template, command, block.to_proc]]
+    @rules << [Masamune::Matcher.new(rule), [template, command, block.to_proc]]
   end
 
   def resolve(start, stop)

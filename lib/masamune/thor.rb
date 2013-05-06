@@ -1,20 +1,20 @@
 require 'date'
 
-module Fixpoint
+module Masamune
   module Thor
     def self.included(thor)
       thor.class_eval do
-        include Fixpoint::Actions::Filesystem
-        include Fixpoint::Actions::Dataflow
+        include Masamune::Actions::Filesystem
+        include Masamune::Actions::Dataflow
 
-        namespace :fixpoint
+        namespace :masamune
         class_option :debug, :aliases => '-d', :desc => 'Print debugging information', :default => false
         class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
         class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s, :required => true
 
         def initialize(*a)
           super
-          Fixpoint.configure do |config|
+          Masamune.configure do |config|
             config.debug = options[:debug]
           end
         end

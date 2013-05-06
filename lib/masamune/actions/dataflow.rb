@@ -1,4 +1,4 @@
-module Fixpoint::Actions
+module Masamune::Actions
   module Dataflow
 
     def input
@@ -32,7 +32,7 @@ module Fixpoint::Actions
       end
 
       def data_plan
-        @data_plan ||= Fixpoint::DataPlan.new
+        @data_plan ||= Masamune::DataPlan.new
       end
 
       private
@@ -48,7 +48,7 @@ module Fixpoint::Actions
       def bind
         if sources[name] && targets[name]
           data_plan.add_rule(targets[name], sources[name], name) do |file|
-            Fixpoint::filesystem.exists? file
+            Masamune::filesystem.exists? file
           end
         end
       end

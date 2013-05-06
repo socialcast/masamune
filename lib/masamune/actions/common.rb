@@ -2,7 +2,7 @@ require 'open3'
 require 'readline'
 require 'ostruct'
 
-module Fixpoint::Actions
+module Masamune::Actions
   module Common
     def prompt
     end
@@ -15,7 +15,7 @@ module Fixpoint::Actions
       STDOUT.sync = STDERR.sync = true
       exit_code = OpenStruct.new(:success? => false)
 
-      Fixpoint::logger.debug(args)
+      Masamune::logger.debug(args)
       Open3.popen3(*args) do |stdin, stdout, stderr, wait_th|
         Thread.new {
           while !stdin.closed? do
@@ -49,7 +49,7 @@ module Fixpoint::Actions
         t_err.join
         t_out.join
       end
-      Fixpoint::logger.debug(exit_code)
+      Masamune::logger.debug(exit_code)
       exit_code
     end
 
@@ -78,7 +78,7 @@ module Fixpoint::Actions
 
     def handle_stderr(stderr, &block)
       line = stderr.gets
-      Fixpoint::logger.debug(line.chomp)
+      Masamune::logger.debug(line.chomp)
     end
   end
 end

@@ -1,4 +1,4 @@
 $: << File.expand_path('../lib/', __FILE__)
-require 'fixpoint'
+require 'masamune'
 
-Fixpoint::ThorLoader.load_default_tasks
+Masamune::ThorLoader.load_default_tasks

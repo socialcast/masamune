@@ -1,10 +1,10 @@
-module Fixpoint::Actions
+module Masamune::Actions
   module Streaming
-    include Fixpoint::Actions::Common
+    include Masamune::Actions::Common
 
     def streaming(options, args)
-      Dir.chdir(Fixpoint.configuration.var_dir) do
-        execute('hadoop', 'jar', Fixpoint.configuration.hadoop_streaming_jar, *args,
+      Dir.chdir(Masamune.configuration.var_dir) do
+        execute('hadoop', 'jar', Masamune.configuration.hadoop_streaming_jar, *args,
                 '-input', options[:input],
                 '-mapper', options[:mapper], '-file', options[:mapper],
                 '-reducer', options[:reducer], '-file', options[:reducer],

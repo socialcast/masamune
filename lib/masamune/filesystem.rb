@@ -1,4 +1,4 @@
-class Fixpoint::Filesystem
+class Masamune::Filesystem
   extend Forwardable
 
   def initialize

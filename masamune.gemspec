@@ -1,17 +1,10 @@
 $:.push File.expand_path('../lib', __FILE__)
 
-require 'fixpoint/version'
+require 'masamune/version'
 
-# NOTE alternative names
-# point break
-# data break
-# fixpoint
-# becoming
-# emerging
-# emergent
 Gem::Specification.new do |s|
-  s.name        = 'fixpoint'
-  s.version     = Fixpoint::VERSION
+  s.name        = 'masamune'
+  s.version     = Masamune::VERSION
   s.authors     = ['Michael Andrews']
   s.email       = ['michael@socialcast.com']
   s.homepage    = 'https://github.com/socialcast/becoming'

@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe Fixpoint::DataPlan do
+describe Masamune::DataPlan do
   let(:fs) { MockFilesystem.new }
-  let(:plan) { Fixpoint::DataPlan.new }
+  let(:plan) { Masamune::DataPlan.new }
 
   before do
     plan.add_rule('report/%Y-%m-%d', 'table/y=%Y/m=%m/d=%d', 'command') do |file|

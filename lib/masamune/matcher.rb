@@ -1,4 +1,4 @@
-class Fixpoint::Matcher
+class Masamune::Matcher
   def initialize(rule)
     @rule = rule
     @unbound_rule = unbind_rule(rule)

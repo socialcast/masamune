@@ -1,7 +1,7 @@
 require 'logger'
-require 'fixpoint/multi_io'
+require 'masamune/multi_io'
 
-class Fixpoint::Configuration
+class Masamune::Configuration
   attr_accessor :debug
   attr_accessor :log_dir
   attr_accessor :log_file_template
@@ -27,19 +27,19 @@ class Fixpoint::Configuration
   end
 
   def log_file_template
-    @log_file_template ||= "fixpoint-#{$$}.log"
+    @log_file_template ||= "masamune-#{$$}.log"
   end
 
   def logger
     @logger ||= begin
       log_file = File.open(File.join(log_dir, log_file_template), 'a')
       log_file.sync = true
-      debug ? Logger.new(Fixpoint::MultiIO.new(STDERR, log_file)) : Logger.new(log_file)
+      debug ? Logger.new(Masamune::MultiIO.new(STDERR, log_file)) : Logger.new(log_file)
     end
   end
 
   def filesystem
-    @filesystem ||= Fixpoint::Filesystem::Hadoop.new
+    @filesystem ||= Masamune::Filesystem::Hadoop.new
   end
 
   def hadoop_streaming_jar

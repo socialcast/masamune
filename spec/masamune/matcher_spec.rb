@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe Fixpoint::Matcher do
+describe Masamune::Matcher do
   let(:rule) { 'report/%Y-%m-%d/%H' }
-  let(:instance) { Fixpoint::Matcher.new(rule) }
+  let(:instance) { Masamune::Matcher.new(rule) }
 
   describe '#bind_date' do
     subject do

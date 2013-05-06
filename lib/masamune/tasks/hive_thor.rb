@@ -1,8 +1,8 @@
-require 'fixpoint'
+require 'masamune'
 
 class HiveThor < Thor
-  include Fixpoint::Thor
-  include Fixpoint::Actions::Hive
+  include Masamune::Thor
+  include Masamune::Actions::Hive
 
   desc 'hive', 'hive'
   method_option :file, :aliases => '-f', :desc => 'SQL from files'

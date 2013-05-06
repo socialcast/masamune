@@ -1,6 +1,6 @@
-module Fixpoint::Actions
+module Masamune::Actions
   module Hive
-    include Fixpoint::Actions::Common
+    include Masamune::Actions::Common
 
     def prompt
       'hive> '
@@ -11,11 +11,11 @@ module Fixpoint::Actions
     end
 
     def hive(options)
-      Dir.chdir(Fixpoint.configuration.var_dir) do
+      Dir.chdir(Masamune.configuration.var_dir) do
         if options[:jobflow]
           execute(*emr_ssh(options[:jobflow], 'hive', *hive_args(options))) do |line, line_no|
             if line =~ /\Assh/ && line_no == 0
-              Fixpoint.logger.debug(line)
+              Masamune.logger.debug(line)
             else
               puts line
             end
@@ -34,7 +34,7 @@ module Fixpoint::Actions
 
     def hive_args(options)
       args = []
-      args << Fixpoint.configuration.options[:hive].call
+      args << Masamune.configuration.options[:hive].call
       args << ['-e', encode_sql(options[:exec], options[:jobflow])] if options[:exec]
       args << ['-f', options[:file]] if options[:file]
       args.flatten

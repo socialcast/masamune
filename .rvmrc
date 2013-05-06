@@ -1,4 +1,4 @@
-rvm gemset use fixpoint --create
+rvm gemset use masamune --create
 if ! command -v bundle ; then
   gem install bundler
   bundle

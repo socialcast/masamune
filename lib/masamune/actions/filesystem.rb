@@ -1,7 +1,7 @@
-module Fixpoint::Actions
+module Masamune::Actions
   module Filesystem
     def filesystem
-      Fixpoint::configuration.filesystem
+      Masamune::configuration.filesystem
     end
     alias :fs :filesystem
 

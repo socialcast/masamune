@@ -1,7 +1,7 @@
 require 'spec_helper'
 
-describe Fixpoint::Filesystem do
-  let(:instance) { Fixpoint::Filesystem.new }
+describe Masamune::Filesystem do
+  let(:instance) { Masamune::Filesystem.new }
 
   describe '#[]' do
     before do

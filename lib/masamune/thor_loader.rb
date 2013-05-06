@@ -1,7 +1,7 @@
-module Fixpoint
+module Masamune
   module ThorLoader
     def self.load_default_tasks
-      Fixpoint::ThorLoader.load_thorfiles(File.expand_path('../../../lib/fixpoint/tasks', __FILE__))
+      Masamune::ThorLoader.load_thorfiles(File.expand_path('../../../lib/masamune/tasks', __FILE__))
     end
 
     def self.load_thorfiles(dir)
