@@ -1,5 +1,6 @@
 require 'open3'
 require 'readline'
+require 'ostruct'
 
 module Fixpoint::Actions
   module Common
@@ -12,9 +13,10 @@ module Fixpoint::Actions
 
     def execute(*args, &block)
       STDOUT.sync = STDERR.sync = true
+      exit_code = OpenStruct.new(:success? => false)
 
       Fixpoint::logger.debug(args)
-      Open3.popen3(*args) do |stdin, stdout, stderr, th|
+      Open3.popen3(*args) do |stdin, stdout, stderr, wait_th|
         Thread.new {
           while !stdin.closed? do
             input = Readline.readline('', true).strip
@@ -40,11 +42,15 @@ module Fixpoint::Actions
           end
         }
 
-        Process::waitpid(th.pid) rescue nil
+        exit_code = wait_th.value if wait_th.value
+        Process::waitpid(wait_th.pid) rescue nil
+        exit_code = wait_th.value if wait_th.value
 
         t_err.join
         t_out.join
       end
+      Fixpoint::logger.debug(exit_code)
+      exit_code
     end
 
     private

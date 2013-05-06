@@ -2,10 +2,14 @@ module Fixpoint
   require 'fixpoint/configuration'
   require 'fixpoint/matcher'
   require 'fixpoint/data_plan'
-  require 'fixpoint/filesystem'
-  require 'fixpoint/filesystem/hadoop'
+  require 'fixpoint/thor'
   require 'fixpoint/actions/common'
   require 'fixpoint/actions/hive'
+  require 'fixpoint/actions/streaming'
+  require 'fixpoint/actions/filesystem'
+  require 'fixpoint/actions/dataflow'
+  require 'fixpoint/filesystem'
+  require 'fixpoint/filesystem/hadoop'
 
   class Client
     def configure
@@ -25,5 +29,5 @@ module Fixpoint
   end
 
   def_delegators :default_client, :configure, :configuration
-  def_delegators :configuration, :logger
+  def_delegators :configuration, :logger, :filesystem
 end

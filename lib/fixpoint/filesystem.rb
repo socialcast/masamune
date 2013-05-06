@@ -1,8 +1,7 @@
 class Fixpoint::Filesystem
   extend Forwardable
 
-  def initialize(configuration)
-    @configuration = configuration
+  def initialize
     @files = []
     @locations = {}
   end

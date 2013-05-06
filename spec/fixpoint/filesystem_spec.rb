@@ -1,8 +1,7 @@
 require 'spec_helper'
 
 describe Fixpoint::Filesystem do
-  let(:configuration) { Fixpoint::Configuration.new }
-  let(:instance) { Fixpoint::Filesystem.new(configuration) }
+  let(:instance) { Fixpoint::Filesystem.new }
 
   describe '#[]' do
     before do

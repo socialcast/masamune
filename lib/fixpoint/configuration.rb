@@ -7,6 +7,7 @@ class Fixpoint::Configuration
   attr_accessor :log_file_template
   attr_accessor :var_dir
   attr_accessor :logger
+  attr_accessor :filesystem
 
   def debug
     @debug ||= false
@@ -33,6 +34,23 @@ class Fixpoint::Configuration
       log_file = File.open(File.join(log_dir, log_file_template), 'a')
       log_file.sync = true
       debug ? Logger.new(Fixpoint::MultiIO.new(STDERR, log_file)) : Logger.new(log_file)
+    end
+  end
+
+  def filesystem
+    @filesystem ||= Fixpoint::Filesystem::Hadoop.new
+  end
+
+  def hadoop_streaming_jar
+    @hadoop_streaming_jar ||= begin
+      case RUBY_PLATFORM
+      when /darwin/
+        '/usr/local/Cellar/hadoop/1.1.2/libexec/contrib/streaming/hadoop-streaming-1.1.2.jar'
+      when /linux/
+        '/usr/lib/hadoop-mapreduce/hadoop-streaming.jar'
+      else
+        raise 'hadoop_streaming_jar not found'
+      end
     end
   end
 end

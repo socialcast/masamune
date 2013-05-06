@@ -13,9 +13,8 @@ class Fixpoint::Matcher
   end
 
   def bind(input, template)
-    free_template = free_template(template)
     if matched_rule = @unbound_rule.match(input)
-      free_template % Hash[matched_rule.names.map(&:to_sym).map { |x| [x, matched_rule[x]]}]
+      matched_date(matched_rule).strftime(template)
     end
   end
 
@@ -30,12 +29,8 @@ class Fixpoint::Matcher
     Regexp.compile(regexp)
   end
 
-  def free_template(string)
-    template = string.dup
-    template.gsub!('%Y', '%{year}')
-    template.gsub!('%m', '%{month}')
-    template.gsub!('%d', '%{day}')
-    template.gsub!('%H', '%{hour}')
-    template
+  def matched_date(matched_rule)
+    matched_attrs = [:year, :month, :day, :hour].select { |x| matched_rule.names.map(&:to_sym).include?(x) }
+    DateTime.new(*matched_attrs.map { |x| matched_rule[x].to_i })
   end
 end
