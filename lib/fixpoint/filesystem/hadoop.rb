@@ -4,4 +4,8 @@ class Fixpoint::Filesystem::Hadoop < Fixpoint::Filesystem
   def exists?(file)
     execute('hadoop', 'fs', '-test', '-e', file).success?
   end
+
+  def remove_dir(dir)
+    execute('hadoop', 'fs', '-rmr', dir)
+  end
 end

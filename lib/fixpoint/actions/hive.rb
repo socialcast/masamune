@@ -34,14 +34,20 @@ module Fixpoint::Actions
 
     def hive_args(options)
       args = []
-      args += ['-e', options[:jobflow] ? encode_sql(options[:exec]) : options[:exec]] if options[:exec]
-      args += ['-f', options[:file]] if options[:file]
-      args
+      args << Fixpoint.configuration.options[:hive].call
+      args << ['-e', encode_sql(options[:exec], options[:jobflow])] if options[:exec]
+      args << ['-f', options[:file]] if options[:file]
+      args.flatten
     end
 
     # force SQL be enclosed in single quotes, terminated with semicolon
-    def encode_sql(sql)
-      %q{'} + sql.gsub(/\A'|'\z/,'').gsub(/;\z/,'') + %q{;'}
+    def encode_sql(sql, quote = false)
+      sql.gsub!(/\s\s+/, ' ').strip!
+      if quote
+        %q{'} + sql.gsub(/\A'|'\z/,'').gsub(/;\z/,'') + %q{;'}
+      else
+        sql
+      end
     end
   end
 end

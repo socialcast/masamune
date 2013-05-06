@@ -8,6 +8,7 @@ class Fixpoint::Configuration
   attr_accessor :var_dir
   attr_accessor :logger
   attr_accessor :filesystem
+  attr_accessor :options
 
   def debug
     @debug ||= false
@@ -52,5 +53,15 @@ class Fixpoint::Configuration
         raise 'hadoop_streaming_jar not found'
       end
     end
+  end
+
+  def options
+    @options ||= {}.tap do |h|
+      h.default = Proc.new { [] }
+    end
+  end
+
+  def add_options(command, &block)
+    options[command] = block.to_proc
   end
 end
