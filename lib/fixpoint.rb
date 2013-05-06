@@ -3,6 +3,7 @@ module Fixpoint
   require 'fixpoint/matcher'
   require 'fixpoint/data_plan'
   require 'fixpoint/thor'
+  require 'fixpoint/thor_loader'
   require 'fixpoint/actions/common'
   require 'fixpoint/actions/hive'
   require 'fixpoint/actions/streaming'
