@@ -1,8 +1,7 @@
 module Masamune::Actions
   module Dataflow
-
-    def input
-      inputs[self.class.to_s]
+    def input_files
+      inputs[self.class.to_s].to_a
     end
 
     private
@@ -21,13 +20,13 @@ module Masamune::Actions
     end
 
     module ClassMethods
-      def source(source)
-        sources[name] = source
+      def source(source, options = {})
+        sources[name] = [source, options]
         bind
       end
 
-      def target(target)
-        targets[name] = target
+      def target(target, options = {})
+        targets[name] = [target, options]
         bind
       end
 
@@ -47,7 +46,8 @@ module Masamune::Actions
 
       def bind
         if sources[name] && targets[name]
-          data_plan.add_rule(targets[name], sources[name], name) do |file|
+          data_plan.add_rule(*targets[name], *sources[name], name) do |file|
+            # TODO invididual checks too slow - need to generate entire target tree, use in memory lookup
             Masamune::filesystem.exists? file
           end
         end

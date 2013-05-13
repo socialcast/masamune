@@ -1,26 +1,33 @@
+require 'active_support'
+require 'active_support/duration'
+require 'active_support/values/time_zone'
+require 'date'
+
 class Masamune::Matcher
-  def initialize(rule)
-    @rule = rule
-    @unbound_rule = unbind_rule(rule)
+  def initialize(pattern, options = {})
+    @pattern = pattern
+    @options = options
+    @matcher = unbind_pattern(pattern)
   end
 
   def matches?(input)
-    @unbound_rule.match(input) != nil
+    @matcher.match(input) != nil
   end
 
   def bind_date(date)
-    date.strftime(@rule)
+    date.strftime(@pattern)
   end
 
-  def bind(input, template)
-    if matched_rule = @unbound_rule.match(input)
-      matched_date(matched_rule).strftime(template)
+  def bind(input, template, tz_name = 'UTC')
+    if matched_pattern = @matcher.match(input)
+      tz = ActiveSupport::TimeZone[tz_name]
+      tz.utc_to_local(matched_date(matched_pattern)).strftime(template)
     end
   end
 
   private
 
-  def unbind_rule(string)
+  def unbind_pattern(string)
     regexp = string.dup
     regexp.gsub!('%Y', '(?<year>\d{4})')
     regexp.gsub!('%m', '(?<month>\d{2})')
@@ -29,8 +36,8 @@ class Masamune::Matcher
     Regexp.compile(regexp)
   end
 
-  def matched_date(matched_rule)
-    matched_attrs = [:year, :month, :day, :hour].select { |x| matched_rule.names.map(&:to_sym).include?(x) }
-    DateTime.new(*matched_attrs.map { |x| matched_rule[x].to_i })
+  def matched_date(matched_pattern)
+    matched_attrs = [:year, :month, :day, :hour].select { |x| matched_pattern.names.map(&:to_sym).include?(x) }
+    DateTime.new(*matched_attrs.map { |x| matched_pattern[x].to_i })
   end
 end

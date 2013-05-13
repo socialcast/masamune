@@ -5,7 +5,7 @@ describe Masamune::DataPlan do
   let(:plan) { Masamune::DataPlan.new }
 
   before do
-    plan.add_rule('report/%Y-%m-%d', 'table/y=%Y/m=%m/d=%d', 'command') do |file|
+    plan.add_rule('report/%Y-%m-%d', {}, 'table/y=%Y/m=%m/d=%d', {}, 'command') do |file|
       fs.exists? file
     end
   end
