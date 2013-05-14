@@ -14,4 +14,10 @@ class MockFilesystem
   def entries
     @files
   end
+
+  def glob(pattern, &block)
+    entries.select { |elem| elem =~ Regexp.compile(pattern) }.each do |elem|
+      yield elem
+    end
+  end
 end

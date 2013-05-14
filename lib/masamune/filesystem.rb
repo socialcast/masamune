@@ -18,6 +18,9 @@ class Masamune::Filesystem
     @files
   end
 
+  def glob(pattern, &block)
+  end
+
   def add_location(symbol, value)
     @locations[symbol] = value
   end

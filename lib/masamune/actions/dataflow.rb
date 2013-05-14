@@ -1,7 +1,9 @@
 module Masamune::Actions
   module Dataflow
     def input_files
-      inputs[self.class.to_s].to_a
+      set = inputs[current_command.name]
+      quit "No input sources to process for #{current_command.name}" if set.empty?
+      set.to_a
     end
 
     private
@@ -17,6 +19,15 @@ module Masamune::Actions
         self.class.data_plan.resolve(start, stop)
         self.class.data_plan.matches
       end
+    end
+
+    def current_command
+      @_initializer.last[:current_command]
+    end
+
+    def quit(a)
+      say a if a
+      exit
     end
 
     module ClassMethods

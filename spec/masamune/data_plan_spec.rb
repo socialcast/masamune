@@ -2,19 +2,23 @@ require 'spec_helper'
 
 describe Masamune::DataPlan do
   let(:fs) { MockFilesystem.new }
-  let(:plan) { Masamune::DataPlan.new }
-
   before do
-    plan.add_rule('report/%Y-%m-%d', {}, 'table/y=%Y/m=%m/d=%d', {}, 'command') do |file|
-      fs.exists? file
+    Masamune.configure do |config|
+      config.filesystem = fs
     end
+  end
+
+  let(:plan) { Masamune::DataPlan.new }
+  before do
+    plan.add_rule('table/%Y-%m-%d', {}, 'log/%Y%m%d.*.log', {}, 'forward')
+    plan.add_rule('report/%Y-%m-%d', {}, 'table/y=%Y/m=%m/d=%d', {}, 'backward')
   end
 
   describe '#resolve' do
     let(:start) { Date.civil(2013,01,01) }
     let(:stop) { Date.civil(2013,01,03) }
 
-    subject { plan.matches['command'] }
+    subject { plan.matches['backward'] }
 
     context 'when partial target data exists' do
       before do
@@ -39,6 +43,25 @@ describe Masamune::DataPlan do
       end
 
       it { should be_empty }
+    end
+
+    context 'glob rules' do
+      subject { plan.matches['forward'] }
+
+      context 'when partial source data exists' do
+        before do
+          fs.touch!('log/20130101.app1.log')
+          fs.touch!('log/20130101.app2.log')
+          fs.touch!('log/20130104.app1.log')
+          fs.touch!('log/20130104.app2.log')
+          plan.resolve(start, stop)
+        end
+
+        it { should include 'log/20130101.app1.log' }
+        it { should include 'log/20130101.app2.log' }
+        it { should_not include 'log/20130104.app1.log' }
+        it { should_not include 'log/20130104.app2.log' }
+      end
     end
   end
 end
