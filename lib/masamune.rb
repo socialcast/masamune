@@ -11,6 +11,7 @@ module Masamune
   require 'masamune/actions/dataflow'
   require 'masamune/filesystem'
   require 'masamune/filesystem/hadoop'
+  require 'masamune/store'
 
   class Client
     def configure
