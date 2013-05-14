@@ -21,10 +21,11 @@ class Masamune::DataPlan
   end
 
   def resolve(start, stop)
-    start_time, stop_time = start.to_time.utc, stop.to_time.utc
-    current_time = start_time
-    while current_time < stop_time do
-      @rules.each do |pattern, pattern_options, template, template_options, command, filter|
+    @rules.each do |pattern, pattern_options, template, template_options, command, filter|
+      start_time, stop_time = start.to_time.utc, stop.to_time.utc
+      step = [self.class.rule_step(start_time), self.class.rule_step(stop_time)].min
+      current_time = start_time
+      while current_time <= stop_time do
         target = bind_date(current_time, pattern, pattern_options.fetch(:tz, 'UTC'))
         source = bind_date(current_time, template, template_options.fetch(:tz, 'UTC'))
         if !fs.exists?(target)
@@ -34,8 +35,19 @@ class Masamune::DataPlan
             end
           end
         end
+        current_time += step
       end
-      current_time += 1.hour # TODO derive step from rule, allow override
+    end
+  end
+
+  def self.rule_step(pattern)
+    case pattern
+    when /%k/, /%H/
+      1.hour.to_i
+    when /%d/
+      1.day.to_i
+    else
+      1.day.to_i
     end
   end
 

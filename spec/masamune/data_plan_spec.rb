@@ -14,6 +14,26 @@ describe Masamune::DataPlan do
     plan.add_rule('report/%Y-%m-%d', {}, 'table/y=%Y/m=%m/d=%d', {}, 'backward')
   end
 
+  describe '.rule_step' do
+    subject { plan.class.rule_step(input) }
+    context '24 hour' do
+      let(:input) { '%Y-%m-%d/%k' }
+      it { should == 1.hour.to_i }
+    end
+    context '12 hour' do
+      let(:input) { '%Y-%m-%d/%H' }
+      it { should == 1.hour.to_i }
+    end
+    context 'daily' do
+      let(:input) { '%Y-%m-%d' }
+      it { should == 1.day.to_i }
+    end
+    context 'default' do
+      let(:input) { nil }
+      it { should == 1.day.to_i }
+    end
+  end
+
   describe '#resolve' do
     let(:start) { Date.civil(2013,01,01) }
     let(:stop) { Date.civil(2013,01,03) }
