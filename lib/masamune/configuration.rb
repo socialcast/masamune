@@ -58,7 +58,9 @@ class Masamune::Configuration
   end
 
   def filesystem
-    @filesystem ||= Masamune::Filesystem::Hadoop.new
+    @filesystem ||= self.elastic_mapreduce ?
+      Masamune::Filesystem::S3.new :
+      Masamune::Filesystem::Hadoop.new
   end
 
   def hadoop_streaming_jar

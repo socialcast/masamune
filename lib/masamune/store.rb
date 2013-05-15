@@ -1,5 +1,7 @@
 require 'pstore'
 
+# TODO use human readable format like yaml
+# TODO sync to s3
 module Masamune
   class Store
     include Masamune::Actions::Filesystem

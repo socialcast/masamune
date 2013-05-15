@@ -10,6 +10,7 @@ module Masamune
   require 'masamune/actions/dataflow'
   require 'masamune/filesystem'
   require 'masamune/filesystem/hadoop'
+  require 'masamune/filesystem/s3'
   require 'masamune/store'
 
   class Client
