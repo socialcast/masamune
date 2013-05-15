@@ -10,6 +10,10 @@ module Masamune::Actions
 
     def self.included(base)
       base.extend ClassMethods
+      base.class_eval do
+        class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil, :required => true
+        class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
+      end
     end
 
     def current_command_name
