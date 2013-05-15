@@ -10,6 +10,7 @@ module Masamune
   require 'masamune/actions/streaming'
   require 'masamune/actions/filesystem'
   require 'masamune/actions/dataflow'
+  require 'masamune/actions/elastic_mapreduce'
   require 'masamune/filesystem'
   require 'masamune/filesystem/hadoop'
   require 'masamune/filesystem/s3'

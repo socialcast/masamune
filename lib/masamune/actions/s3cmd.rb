@@ -6,7 +6,7 @@ module Masamune::Actions
     include Masamune::Filesystem::S3::ClassMethods
 
     def s3_sync(src, dst)
-      execute('s3cmd', 'sync', src, s3b(dst))
+      execute('s3cmd', 'sync', src, s3b(dst, :dir => true))
     end
   end
 end

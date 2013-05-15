@@ -28,9 +28,16 @@ module Masamune::Actions
       Masamune::logger.debug(args)
       Open3.popen3(*args) do |stdin, stdout, stderr, wait_th|
         Thread.new {
-          while !stdin.closed? do
-            input = Readline.readline('', true).strip
-            stdin.puts input
+          if opts[:stdin]
+            while line = opts[:stdin].gets
+              stdin.puts line
+            end
+            stdin.close
+          else
+            while !stdin.closed? do
+              input = Readline.readline('', true).strip
+              stdin.puts input
+            end
           end
         }
 

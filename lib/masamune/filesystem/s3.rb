@@ -6,8 +6,11 @@ module Masamune
     end
 
     module ClassMethods
-      def s3b(file)
-        file.sub(%r{\As3n://}, 's3://')
+      def s3b(file, options = {})
+        file.dup.tap do |out|
+          out.sub!(%r{\As3n://}, 's3://')
+          out.sub!(%r{/?\z}, '/') if options[:dir]
+        end
       end
     end
 
