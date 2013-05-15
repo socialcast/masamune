@@ -46,7 +46,7 @@ describe Masamune::DataPlan do
         fs.touch!('table/y=2013/m=01/d=01')
         fs.touch!('table/y=2013/m=01/d=02')
         fs.touch!('table/y=2013/m=01/d=03')
-        plan.resolve(start, stop)
+        plan.resolve(start, stop, 'backward')
       end
 
       it { should include 'table/y=2013/m=01/d=02' }
@@ -59,7 +59,7 @@ describe Masamune::DataPlan do
         fs.touch!('report/2013-01-01')
         fs.touch!('report/2013-01-02')
         fs.touch!('report/2013-01-03')
-        plan.resolve(start, stop)
+        plan.resolve(start, stop, 'backward')
       end
 
       it { should be_empty }
@@ -74,7 +74,7 @@ describe Masamune::DataPlan do
           fs.touch!('log/20130101.app2.log')
           fs.touch!('log/20130104.app1.log')
           fs.touch!('log/20130104.app2.log')
-          plan.resolve(start, stop)
+          plan.resolve(start, stop, 'forward')
         end
 
         it { should include 'log/20130101.app1.log' }

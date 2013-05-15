@@ -12,8 +12,8 @@ module Masamune::Actions
 
     def hive(options)
       Dir.chdir(Masamune.configuration.var_dir) do
-        if options[:jobflow]
-          execute(*emr_ssh(options[:jobflow], 'hive', *hive_args(options))) do |line, line_no|
+        if jobflow = Masamune.configuration.jobflow || options[:jobflow]
+          execute(*elastic_mapreduce_ssh(jobflow, 'hive', *hive_args(options))) do |line, line_no|
             if line =~ /\Assh/ && line_no == 0
               Masamune.logger.debug(line)
             else
@@ -28,13 +28,13 @@ module Masamune::Actions
 
     private
 
-    def emr_ssh(jobflow, *args)
+    def elastic_mapreduce_ssh(jobflow, *args)
       ['elastic-mapreduce', '--jobflow', jobflow, '--ssh', %Q{"#{args.join(' ')}"}]
     end
 
     def hive_args(options)
       args = []
-      args << Masamune.configuration.options[:hive].call
+      args << Masamune.configuration.command_options[:hive].call
       args << ['-e', encode_sql(options[:exec], options[:jobflow])] if options[:exec]
       args << ['-f', options[:file]] if options[:file]
       args.flatten

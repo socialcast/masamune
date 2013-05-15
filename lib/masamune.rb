@@ -30,5 +30,5 @@ module Masamune
   end
 
   def_delegators :default_client, :configure, :configuration
-  def_delegators :configuration, :logger, :filesystem
+  def_delegators :configuration, :logger, :filesystem, :trace
 end

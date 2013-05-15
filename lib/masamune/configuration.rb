@@ -8,10 +8,25 @@ class Masamune::Configuration
   attr_accessor :var_dir
   attr_accessor :logger
   attr_accessor :filesystem
-  attr_accessor :options
+  attr_accessor :command_options
+  attr_accessor :dryrun
+  attr_accessor :elastic_mapreduce
+  attr_accessor :jobflow
+
+  def dryrun
+    @dryrun ||= false
+  end
 
   def debug
     @debug ||= false
+  end
+
+  def elastic_mapreduce
+    @elastic_mapreduce ||= false
+  end
+
+  def jobflow
+    @jobflow ||= false
   end
 
   def log_dir
@@ -38,6 +53,10 @@ class Masamune::Configuration
     end
   end
 
+  def trace(*a)
+    puts a.join(' ')
+  end
+
   def filesystem
     @filesystem ||= Masamune::Filesystem::Hadoop.new
   end
@@ -55,13 +74,13 @@ class Masamune::Configuration
     end
   end
 
-  def options
-    @options ||= {}.tap do |h|
+  def command_options
+    @command_options ||= {}.tap do |h|
       h.default = Proc.new { [] }
     end
   end
 
-  def add_options(command, &block)
-    options[command] = block.to_proc
+  def add_command_options(command, &block)
+    command_options[command] = block.to_proc
   end
 end

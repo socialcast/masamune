@@ -13,7 +13,7 @@ module Masamune
     end
 
     def []=(key, val)
-      @pstore.transaction { @pstore[key]  = val }
+      @pstore.transaction { @pstore[key]  = val } unless Masamune.configuration.dryrun
     end
   end
 end

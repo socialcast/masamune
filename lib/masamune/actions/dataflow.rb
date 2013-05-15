@@ -1,8 +1,8 @@
 module Masamune::Actions
   module Dataflow
     def input_files
-      set = inputs[current_command.name]
-      quit "No input sources to process for #{current_command.name}" if set.empty?
+      set = inputs[current_command_name]
+      quit "No input sources to process for #{current_command_name}" if set.empty?
       set.to_a
     end
 
@@ -12,17 +12,17 @@ module Masamune::Actions
       base.extend ClassMethods
     end
 
+    def current_command_name
+      @_initializer.last[:current_command].name.to_sym
+    end
+
     def inputs
       @inputs ||= begin
         start = DateTime.parse(options[:start])
         stop = DateTime.parse(options[:stop])
-        self.class.data_plan.resolve(start, stop)
+        self.class.data_plan.resolve(start, stop, current_command_name)
         self.class.data_plan.matches
       end
-    end
-
-    def current_command
-      @_initializer.last[:current_command]
     end
 
     def quit(a)
@@ -31,14 +31,14 @@ module Masamune::Actions
     end
 
     module ClassMethods
-      def source(source, options = {})
-        sources[name] = [source, options]
-        bind
+      def source(source, params = {})
+        sources[command_name(params)] = [source, params]
+        bind(params)
       end
 
-      def target(target, options = {})
-        targets[name] = [target, options]
-        bind
+      def target(target, params = {})
+        targets[command_name(params)] = [target, params]
+        bind(params)
       end
 
       def data_plan
@@ -55,13 +55,15 @@ module Masamune::Actions
         @targets ||= {}
       end
 
-      def bind
-        if sources[name] && targets[name]
-          data_plan.add_rule(*targets[name], *sources[name], name) do |file|
-            # TODO invididual checks too slow - need to generate entire target tree, use in memory lookup
-            Masamune::filesystem.exists? file
-          end
+      def bind(params)
+        if sources[command_name(params)] && targets[command_name(params)]
+          data_plan.add_rule(*targets[command_name(params)], *sources[command_name(params)], command_name(params))
         end
+      end
+
+      # TODO infer command_name even when explicit :for is missing
+      def command_name(params = {})
+        params[:for]
       end
     end
   end

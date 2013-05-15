@@ -12,8 +12,18 @@ module Masamune::Actions
     end
 
     def execute(*args, &block)
+      opts = args.last.is_a?(Hash) ? args.pop : {safe: false}
       STDOUT.sync = STDERR.sync = true
       exit_code = OpenStruct.new(:success? => false)
+
+      if Masamune::configuration.dryrun
+        if opts[:safe]
+          Masamune::trace(args)
+        else
+          Masamune::trace('#', args)
+          return exit_code
+        end
+      end
 
       Masamune::logger.debug(args)
       Open3.popen3(*args) do |stdin, stdout, stderr, wait_th|

@@ -6,13 +6,13 @@ class Masamune::DataPlan
   include Masamune::Actions::Filesystem
 
   def initialize
-    @rules = []
+    @rules = Hash.new
     @options = Hash.new { |h,k| h[k] = {} }
     @matches = Hash.new { |h,k| h[k] = SortedSet.new }
   end
 
   def add_rule(pattern, pattern_options, template, template_options, command)
-    @rules << [pattern, pattern_options, template, template_options, command]
+    @rules[command] = [pattern, pattern_options, template, template_options]
   end
 
   def bind_date(date, template, tz_name = 'UTC')
@@ -20,23 +20,23 @@ class Masamune::DataPlan
     tz.utc_to_local(date).strftime(template)
   end
 
-  def resolve(start, stop)
-    @rules.each do |pattern, pattern_options, template, template_options, command, filter|
-      start_time, stop_time = start.to_time.utc, stop.to_time.utc
-      step = [self.class.rule_step(start_time), self.class.rule_step(stop_time)].min
-      current_time = start_time
-      while current_time <= stop_time do
-        target = bind_date(current_time, pattern, pattern_options.fetch(:tz, 'UTC'))
-        source = bind_date(current_time, template, template_options.fetch(:tz, 'UTC'))
-        if !fs.exists?(target)
-          fs.glob(source) do |source_file|
-            if fs.exists?(source_file)
-              @matches[command] << source_file
-            end
+  def resolve(start, stop, command)
+    pattern, pattern_options, template, template_options = @rules[command]
+    start_time, stop_time = start.to_time.utc, stop.to_time.utc
+    step = [self.class.rule_step(start_time), self.class.rule_step(stop_time)].min
+    current_time = start_time
+    while current_time <= stop_time do
+      target = bind_date(current_time, pattern, pattern_options.fetch(:tz, 'UTC'))
+      source = bind_date(current_time, template, template_options.fetch(:tz, 'UTC'))
+      if !fs.exists?(target)
+        fs.glob(source) do |source_file|
+          if fs.exists?(source_file)
+            # TODO enumerate matches
+            @matches[command] << source_file
           end
         end
-        current_time += step
       end
+      current_time += step
     end
   end
 
