@@ -27,8 +27,12 @@ class Masamune::Matcher
     regexp = string.dup
     regexp.gsub!('%Y', '(?<year>\d{4})')
     regexp.gsub!('%m', '(?<month>\d{2})')
+    regexp.gsub!('%-m', '(?<month>\d{1,2})')
     regexp.gsub!('%d', '(?<day>\d{2})')
+    regexp.gsub!('%-d', '(?<day>\d{1,2})')
     regexp.gsub!('%H', '(?<hour>\d{2})')
+    regexp.gsub!('%k', '(?<hour>\d{2})')
+    regexp.gsub!('%-k', '(?<hour>\d{1,2})')
     Regexp.compile(regexp)
   end
 

@@ -4,6 +4,7 @@ describe Masamune::Matcher do
   let(:rule) { 'report/%Y-%m-%d/%H' }
   let(:instance) { Masamune::Matcher.new(rule) }
 
+=begin
   describe '#bind_date' do
     subject do
       instance.bind_date(input)
@@ -14,6 +15,7 @@ describe Masamune::Matcher do
       it { should == 'report/2013-04-05/23' }
     end
   end
+=end
 
   describe '#bind' do
     let(:template) { 'table/y=%Y/m=%m/d=%d/h=%H' }
@@ -52,6 +54,18 @@ describe Masamune::Matcher do
     context 'when no match' do
       let(:input) { 'report' }
       it { should be_false }
+    end
+
+    context 'with alternative hour' do
+      let(:rule) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k' }
+      let(:input) { 'requests/y=2013/m=5/d=1/h=1' }
+      it { should be_true }
+    end
+
+    context 'with alternative hour' do
+      let(:rule) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k' }
+      let(:input) { 'requests/y=2013/m=4/d=30/h=20' }
+      it { should be_true }
     end
   end
 end

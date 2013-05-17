@@ -31,11 +31,14 @@ class Masamune::DataPlan
   end
 
   def rule_for_target(target)
-    @matcher.select { |rule, matcher| matcher.matches?(target) }.map(&:first).first
+    matches = @matcher.select { |rule, matcher| matcher.matches?(target) }
+    raise "No rule matches #{target}" if matches.empty?
+    raise "Multiple rule matches #{target}" if matches.length > 1
+    matches.map(&:first).first
   end
 
   def targets(rule, start, stop)
-    pattern, options, _, _ = @targets[rule]
+    pattern, options = @targets[rule]
     start_time, stop_time = start.to_time.utc, stop.to_time.utc
     step = self.class.rule_step(pattern)
     [].tap do |out|
@@ -82,18 +85,18 @@ class Masamune::DataPlan
     [matches, missing]
   end
 
-  def execute(rule, targets)
+  def resolve(rule, targets, runtime_options = {})
     matches, missing = analyze(rule, targets)
 
     missing.each do |dep, matches|
-      execute(dep, matches)
+      resolve(dep, matches, runtime_options)
     end
 
     matches, missing = analyze(rule, targets) if missing.any?
 
-    command, options = @commands[rule]
+    command, command_options = @commands[rule]
     if matches.any?
-      command.call(*matches)
+      command.call(matches, runtime_options)
     end
   end
 

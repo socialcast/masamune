@@ -108,11 +108,11 @@ describe Masamune::DataPlan do
 
     context 'invalid target' do
       let(:target) { 'report' }
-      it { should be_nil }
+      it { expect { subject }.to raise_error }
     end
   end
 
-  describe '#execute' do
+  describe '#resolve' do
     context 'primary rule' do
       let(:rule) { 'primary' }
       let(:targets) {  [
@@ -127,7 +127,7 @@ describe Masamune::DataPlan do
           fs.touch!('table/y=2013/m=01/d=03')
           primary_command.should_not_receive(:call)
           secondary_command.should_not_receive(:call)
-          plan.execute(rule, targets)
+          plan.resolve(rule, targets)
         end
 
         it 'should not call primary_command' do; end
@@ -141,9 +141,9 @@ describe Masamune::DataPlan do
           fs.touch!('log/20130103.app1.log')
           fs.touch!('table/y=2013/m=01/d=01')
           fs.touch!('table/y=2013/m=01/d=03')
-          primary_command.should_receive(:call).with('log/20130102.app1.log')
+          primary_command.should_receive(:call).with(['log/20130102.app1.log'], {})
           secondary_command.should_not_receive(:call)
-          plan.execute(rule, targets)
+          plan.resolve(rule, targets)
         end
 
         it 'should call primary_command' do; end
@@ -171,9 +171,9 @@ describe Masamune::DataPlan do
           fs.touch!('log/20130101.app1.log')
           fs.touch!('log/20130102.app1.log')
           fs.touch!('log/20130103.app1.log')
-          primary_command.should_receive(:call).with('log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log').and_call_original
-          secondary_command.should_receive(:call).with("table/y=2013/m=01/d=01", "table/y=2013/m=01/d=02", "table/y=2013/m=01/d=03")
-          plan.execute(rule, targets)
+          primary_command.should_receive(:call).with(['log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log'], {}).and_call_original
+          secondary_command.should_receive(:call).with(["table/y=2013/m=01/d=01", "table/y=2013/m=01/d=02", "table/y=2013/m=01/d=03"], {})
+          plan.resolve(rule, targets)
         end
 
         it 'should call primary_command' do; end

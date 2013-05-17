@@ -7,8 +7,8 @@ module Masamune
         include Masamune::Actions::Filesystem
 
         namespace :masamune
-        class_option :debug, :aliases => '-d', :desc => 'Print debugging information', :default => false
-        class_option :dryrun, :aliases => '-n', :desc => 'Dryrun', :default => false
+        class_option :debug, :type => :boolean, :aliases => '-d', :desc => 'Print debugging information', :default => false
+        class_option :dryrun, :type => :boolean, :aliases => '-n', :desc => 'Dryrun', :default => false
         class_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: elastic-mapreduce --list)', :required => Masamune.configuration.elastic_mapreduce
         def initialize(*a)
           super
@@ -17,6 +17,7 @@ module Masamune
             config.dryrun = options[:dryrun]
             config.jobflow = options[:jobflow]
           end
+          after_initialize
         end
       end
     end

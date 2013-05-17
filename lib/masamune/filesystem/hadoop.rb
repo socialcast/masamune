@@ -5,6 +5,7 @@ class Masamune::Filesystem::Hadoop < Masamune::Filesystem
     execute_hadoop_fs('-touchz', *files)
   end
 
+  # TODO fast option, ls Dir(file) + '*', keep in memory
   def exists?(file)
     execute_hadoop_fs('-test', '-e', file, :safe => true).success?
   end

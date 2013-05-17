@@ -1,18 +1,29 @@
 module Masamune::Actions
   module Dataflow
-    def input_files
-      set = inputs[current_command_name]
-      quit "No input sources to process for #{current_command_name}" if set.empty?
-      set.to_a
-    end
-
     private
 
     def self.included(base)
       base.extend ClassMethods
       base.class_eval do
-        class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil, :required => true
+        attr_accessor :input_files
+
+        # TODO start + stop XOR inputs
+        class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
         class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
+        class_option :inputs, :type => :array, :desc => 'Input to process'
+
+        # TODO allow multiple after_initialize blocks
+        def after_initialize
+          self.input_files = if options[:inputs]
+            options[:inputs]
+          else
+            start = DateTime.parse(options[:start])
+            stop = DateTime.parse(options[:stop])
+            self.class.data_plan.targets(current_command_name, start, stop)
+          end
+          # TODO allow user to remove existing targets
+          self.class.data_plan.resolve(current_command_name, self.input_files, options)
+        end
       end
     end
 
@@ -20,29 +31,21 @@ module Masamune::Actions
       @_initializer.last[:current_command].name.to_sym
     end
 
-    def inputs
-      @inputs ||= begin
-        start = DateTime.parse(options[:start])
-        stop = DateTime.parse(options[:stop])
-        self.class.data_plan.resolve(start, stop, current_command_name)
-        self.class.data_plan.matches
-      end
-    end
-
-    def quit(a)
-      say a if a
-      exit
-    end
-
     module ClassMethods
-      def source(source, params = {})
-        sources[command_name(params)] = [source, params]
-        bind(params)
+      def source(source, source_options = {})
+        data_plan.add_source(command_name(source_options), source, source_options)
+
+        thor_wrapper = Proc.new do |inputs, runtime_options|
+          command_options = runtime_options.map { |k,v| ["--#{k}", v] }
+          Masamune.logger.debug([command_name(source_options), '--inputs', *inputs] + command_options.flatten)
+          self.start([command_name(source_options), '--inputs', *inputs] + command_options.flatten)
+        end
+
+        data_plan.add_command(command_name(source_options), thor_wrapper)
       end
 
-      def target(target, params = {})
-        targets[command_name(params)] = [target, params]
-        bind(params)
+      def target(target, target_options = {})
+        data_plan.add_target(command_name(target_options), target, target_options)
       end
 
       def data_plan
@@ -51,23 +54,14 @@ module Masamune::Actions
 
       private
 
-      def sources
-        @sources ||= {}
-      end
-
-      def targets
-        @targets ||= {}
-      end
-
-      def bind(params)
-        if sources[command_name(params)] && targets[command_name(params)]
-          data_plan.add_rule(*targets[command_name(params)], *sources[command_name(params)], command_name(params))
-        end
+      # If internal call to Thor::Base.start fails, exit
+      def exit_on_failure?
+        true
       end
 
       # TODO infer command_name even when explicit :for is missing
-      def command_name(params = {})
-        params[:for]
+      def command_name(options = {})
+        options[:for]
       end
     end
   end
