@@ -1,5 +1,6 @@
 module Masamune
   require 'masamune/configuration'
+  require 'masamune/path_resolver'
   require 'masamune/matcher'
   require 'masamune/data_plan'
   require 'masamune/thor'
@@ -13,8 +14,6 @@ module Masamune
   require 'masamune/actions/dataflow'
   require 'masamune/actions/elastic_mapreduce'
   require 'masamune/filesystem'
-  require 'masamune/filesystem/hadoop'
-  require 'masamune/filesystem/s3'
   require 'masamune/store'
 
   class Client

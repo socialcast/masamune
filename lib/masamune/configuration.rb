@@ -57,10 +57,15 @@ class Masamune::Configuration
     puts a.join(' ')
   end
 
+=begin
   def filesystem
     @filesystem ||= self.elastic_mapreduce ?
       Masamune::Filesystem::S3.new :
       Masamune::Filesystem::Hadoop.new
+  end
+=end
+  def path_resolver
+    @path_resolver ||= Masamune::PathResolver.new
   end
 
   def hadoop_streaming_jar
