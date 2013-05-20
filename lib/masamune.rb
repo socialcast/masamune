@@ -10,6 +10,7 @@ module Masamune
   require 'masamune/actions/hive'
   require 'masamune/actions/s3cmd'
   require 'masamune/actions/streaming'
+  require 'masamune/actions/path'
   require 'masamune/actions/filesystem'
   require 'masamune/actions/dataflow'
   require 'masamune/actions/elastic_mapreduce'

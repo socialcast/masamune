@@ -5,6 +5,7 @@ module Masamune
     def self.included(thor)
       thor.class_eval do
         include Masamune::Actions::Filesystem
+        include Masamune::Actions::Path
 
         namespace :masamune
         class_option :debug, :type => :boolean, :aliases => '-d', :desc => 'Print debugging information', :default => false

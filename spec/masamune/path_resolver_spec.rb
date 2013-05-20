@@ -3,11 +3,11 @@ require 'spec_helper'
 describe Masamune::PathResolver do
   let(:instance) { Masamune::PathResolver.new }
 
-  describe '#[]' do
+  describe '#get_path' do
     before do
       instance.add_path(:home_dir, '/home')
     end
-    it { instance[:home_dir].should == '/home' }
+    it { instance.get_path(:home_dir).should == '/home' }
   end
 
   describe '#type' do

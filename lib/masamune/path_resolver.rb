@@ -1,7 +1,5 @@
 module Masamune
   class PathResolver
-    extend Forwardable
-
     def initialize
       @paths = {}
       # TODO set context based on command, resolving path determines prefix, e.g. s3n:// vs. s3://
@@ -10,8 +8,12 @@ module Masamune
 
     def add_path(symbol, path, options = {})
       @paths[symbol] = path
-      fs.mkdir!(path) if options[:mkdir]
+      Masamune.configuration.filesystem.mkdir!(path) if options[:mkdir]
       self
+    end
+
+    def get_path(symbol)
+      @paths[symbol]
     end
 
     def type(path)
@@ -24,8 +26,6 @@ module Masamune
         :local
       end
     end
-
-    def_delegators :@paths, :[]
 
 =begin
     module ClassMethods
