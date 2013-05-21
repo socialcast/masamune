@@ -13,6 +13,7 @@ module Masamune
   require 'masamune/actions/dataflow'
   require 'masamune/actions/elastic_mapreduce'
   require 'masamune/filesystem'
+  require 'masamune/cached_filesystem'
   require 'masamune/store'
 
   class Client

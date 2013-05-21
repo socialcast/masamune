@@ -5,7 +5,7 @@ require 'tmpdir'
 require 'securerandom'
 
 # TODO expect execute for hdfs
-describe Masamune::Filesystem do
+shared_examples_for 'Filesystem' do
   let(:instance) { Masamune::Filesystem.new }
   let(:old_dir) { Dir.mktmpdir('masamune') }
   let(:new_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
@@ -167,4 +167,12 @@ describe Masamune::Filesystem do
       it { should be_false}
     end
   end
+end
+
+describe Masamune::Filesystem do
+  it_behaves_like 'Filesystem'
+end
+
+describe Masamune::CachedFilesystem do
+  it_behaves_like 'Filesystem'
 end

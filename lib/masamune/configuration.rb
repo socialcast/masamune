@@ -60,7 +60,7 @@ class Masamune::Configuration
   end
 
   def filesystem
-    @filesystem ||= Masamune::Filesystem.new
+    @filesystem ||= Masamune::CachedFilesystem.new(Masamune::Filesystem.new)
   end
 
   def hadoop_streaming_jar
