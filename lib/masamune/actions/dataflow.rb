@@ -12,6 +12,8 @@ module Masamune::Actions
         class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
         class_option :inputs, :type => :array, :desc => 'Input to process'
 
+        private
+
         # TODO allow multiple after_initialize blocks
         def after_initialize
           self.input_files = if options[:inputs]
