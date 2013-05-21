@@ -7,7 +7,7 @@ module Masamune
     include Masamune::Actions::Filesystem
 
     def initialize(store_name)
-      @pstore = PStore.new(File.join(fs[:var_dir], store_name.to_s))
+      @pstore = PStore.new(File.join(fs.path(:var_dir), store_name.to_s))
     end
 
     def [](key)

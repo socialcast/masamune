@@ -63,12 +63,6 @@ class Masamune::Configuration
     @filesystem ||= Masamune::Filesystem.new
   end
 
-  def path_resolver
-    @path_resolver ||= Masamune::PathResolver.new
-  end
-
-  def_delegators :path_resolver, :add_path, :get_path
-
   def hadoop_streaming_jar
     @hadoop_streaming_jar ||= begin
       case RUBY_PLATFORM

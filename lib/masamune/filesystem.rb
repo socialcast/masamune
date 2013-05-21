@@ -2,12 +2,29 @@ module Masamune
   class Filesystem
     include Masamune::Actions::Common
 
+    def initialize
+      @paths = {}
+    end
+
+    def add_path(symbol, path, options = {})
+      @paths[symbol] = path
+      mkdir!(path) if options[:mkdir]
+      self
+    end
+
+    def get_path(symbol)
+      @paths[symbol]
+    end
+    alias :path :get_path
+
     # TODO look into FileUtils :dryrun, :noop, :verbose
     def touch!(*files)
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
-        when :hdfs, :s3
+        when :hdfs
           execute_hadoop_fs('-touchz', *file_set)
+        when :s3
+          execute_hadoop_fs('-touchz', *file_set.map { |f| s3n(f) })
         else
           FileUtils.touch(*file_set)
         end
@@ -16,8 +33,10 @@ module Masamune
 
     def exists?(file)
       case type(file)
-      when :hdfs, :s3
-        execute_hadoop_fs('-test', '-e', file, :safe => true).success?
+      when :hdfs
+        execute_hadoop_fs('-test', '-e', file, safe: true).success?
+      when :s3
+        execute_hadoop_fs('-test', '-e', s3n(file), safe: true).success?
       else
         File.exists?(file)
       end
@@ -26,8 +45,10 @@ module Masamune
     def mkdir!(*dirs)
       dirs.group_by { |path| type(path) }.each do |type, dir_set|
         case type
-        when :hdfs, :s3
+        when :hdfs
           execute_hadoop_fs('-mkdir', *dir_set)
+        when :s3
+          execute_hadoop_fs('-mkdir', *dir_set.map { |d| s3n(d, dir: true) })
         else
           FileUtils.mkdir_p(*dir_set)
         end
@@ -62,8 +83,10 @@ module Masamune
 
     def remove_dir(dir)
       case type(dir)
-      when :hdfs, :s3
+      when :hdfs
         execute_hadoop_fs('-rmr', dir)
+      when :s3
+        execute_hadoop_fs('-rmr', s3n(dir, dir: true))
       else
         FileUtils.remove_dir(dir, true)
       end
@@ -73,8 +96,13 @@ module Masamune
 
     def glob_with_block(pattern, &block)
       case type(pattern)
-      when :hdfs, :s3
-        execute_hadoop_fs('-ls', pattern, :safe => true) do |line|
+      when :hdfs
+        execute_hadoop_fs('-ls', pattern, safe: true) do |line|
+          next if line =~ /\AFound \d+ items/
+          yield q(pattern, line.split(/\s+/).last)
+        end
+      when :s3
+        execute_hadoop_fs('-ls', s3n(pattern), safe: true) do |line|
           next if line =~ /\AFound \d+ items/
           yield q(pattern, line.split(/\s+/).last)
         end
@@ -85,8 +113,15 @@ module Masamune
       end
     end
 
-    def type(*a)
-      Masamune.configuration.path_resolver.type(*a)
+    def type(path)
+      case path
+      when %r{\Afile://}, %r{\Ahdfs://}
+        :hdfs
+      when %r{\As3n?://}
+        :s3
+      else
+        :local
+      end
     end
 
     def hadoop_fs_args(options = {})
@@ -113,5 +148,12 @@ module Masamune
       end
     end
     alias :q :qualify_file
+
+    def s3n(file, options = {})
+      file.dup.tap do |out|
+        out.sub!(%r{\As3://}, 's3n://')
+        out.sub!(%r{/?\z}, '/') if options[:dir]
+      end
+    end
   end
 end

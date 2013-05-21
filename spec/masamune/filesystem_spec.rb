@@ -21,6 +21,13 @@ describe Masamune::Filesystem do
     FileUtils.rmdir(new_dir)
   end
 
+  describe '#get_path' do
+    before do
+      instance.add_path(:home_dir, '/home')
+    end
+    it { instance.get_path(:home_dir).should == '/home' }
+  end
+
   describe '#touch!' do
     subject do
       File.exists?(new_file)

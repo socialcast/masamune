@@ -1,6 +1,5 @@
 module Masamune
   require 'masamune/configuration'
-  require 'masamune/path_resolver'
   require 'masamune/matcher'
   require 'masamune/data_plan'
   require 'masamune/thor'
@@ -10,7 +9,6 @@ module Masamune
   require 'masamune/actions/hive'
   require 'masamune/actions/s3cmd'
   require 'masamune/actions/streaming'
-  require 'masamune/actions/path'
   require 'masamune/actions/filesystem'
   require 'masamune/actions/dataflow'
   require 'masamune/actions/elastic_mapreduce'
