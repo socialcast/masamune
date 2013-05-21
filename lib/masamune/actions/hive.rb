@@ -42,11 +42,13 @@ module Masamune::Actions
 
     # force SQL be enclosed in single quotes, terminated with semicolon
     def encode_sql(sql, quote = false)
-      sql.gsub!(/\s\s+/, ' ').strip!
+      out = sql.dup
+      out.gsub!(/\s\s+/, ' ')
+      out.strip!
       if quote
-        %q{'} + sql.gsub(/\A'|'\z/,'').gsub(/;\z/,'') + %q{;'}
+        %q{'} + out.gsub(/\A'|'\z/,'').gsub(/;\z/,'') + %q{;'}
       else
-        sql
+        out
       end
     end
   end
