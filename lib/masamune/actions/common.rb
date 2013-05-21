@@ -17,17 +17,14 @@ module Masamune::Actions
       exit_code = OpenStruct.new(:success? => false)
 
       if Masamune::configuration.dryrun
-        if opts[:safe]
-          Masamune::trace(args)
-        else
-          Masamune::trace('#', args)
-          return exit_code
-        end
+        Masamune::trace(args)
+        return exit_code unless opts[:safe]
       end
 
       Masamune::logger.debug(args)
       Open3.popen3(*args) do |stdin, stdout, stderr, wait_th|
         Thread.new {
+          stdin.sync = true
           if opts[:stdin]
             while line = opts[:stdin].gets
               stdin.puts line
@@ -42,12 +39,14 @@ module Masamune::Actions
         }
 
         t_err = Thread.new {
+          stderr.sync = true
           while !stderr.eof?  do
             handle_stderr(stderr)
           end
         }
 
         t_out = Thread.new {
+          stdout.sync = true
           while !stdout.eof?  do
             handle_stdout(stdout) do |line, line_no|
               if block_given?
