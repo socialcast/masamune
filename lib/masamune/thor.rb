@@ -19,6 +19,10 @@ module Masamune
           end
           after_initialize
         end
+
+        private
+
+        def after_initialize(*a); end
       end
     end
   end
