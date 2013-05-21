@@ -38,9 +38,9 @@ module Masamune::Actions
         data_plan.add_source(command_name(source_options), source, source_options)
 
         thor_wrapper = Proc.new do |inputs, runtime_options|
-          command_options = runtime_options.map { |k,v| ["--#{k}", v] }
-          Masamune.logger.debug([command_name(source_options), '--inputs', *inputs] + command_options.flatten)
-          self.start([command_name(source_options), '--inputs', *inputs] + command_options.flatten)
+          command_options = command_options(runtime_options)
+          Masamune.logger.debug([command_name(source_options), '--inputs', *inputs] + command_options)
+          self.start([command_name(source_options), '--inputs', *inputs] + command_options)
         end
 
         data_plan.add_command(command_name(source_options), thor_wrapper)
@@ -64,6 +64,10 @@ module Masamune::Actions
       # TODO infer command_name even when explicit :for is missing
       def command_name(options = {})
         options[:for]
+      end
+
+      def command_options(runtime_options)
+        runtime_options.reject { |_,v| v == false }.map { |k,v| ["--#{k}", v == true ? nil : v] }.flatten.compact
       end
     end
   end
