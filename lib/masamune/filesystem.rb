@@ -13,7 +13,7 @@ module Masamune
     end
 
     def get_path(symbol)
-      @paths[symbol]
+      @paths[symbol] or raise "Path :#{symbol} not defined"
     end
     alias :path :get_path
 
@@ -149,11 +149,22 @@ module Masamune
     end
     alias :q :qualify_file
 
-    def s3n(file, options = {})
-      file.dup.tap do |out|
-        out.sub!(%r{\As3://}, 's3n://')
-        out.sub!(%r{/?\z}, '/') if options[:dir]
+    module ClassMethods
+      def s3n(file, options = {})
+        file.dup.tap do |out|
+          out.sub!(%r{\As3://}, 's3n://')
+          out.sub!(%r{/?\z}, '/') if options[:dir]
+        end
+      end
+
+      def s3b(file, options = {})
+        file.dup.tap do |out|
+          out.sub!(%r{\As3n://}, 's3://')
+          out.sub!(%r{/?\z}, '/') if options[:dir]
+        end
       end
     end
+
+    include ClassMethods
   end
 end

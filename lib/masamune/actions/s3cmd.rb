@@ -1,9 +1,11 @@
 module Masamune::Actions
   module S3Cmd
+    require 'masamune/filesystem'
     include Masamune::Actions::Common
+    include Masamune::Filesystem::ClassMethods
 
     def s3_sync(src, dst)
-      execute('s3cmd', 'sync', src, dst, :dir => true)
+      execute('s3cmd', 'sync', s3b(src), s3b(dst, :dir => true))
     end
   end
 end
