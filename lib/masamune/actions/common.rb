@@ -24,7 +24,6 @@ module Masamune::Actions
       Masamune::logger.debug(args)
       Open3.popen3(*args) do |stdin, stdout, stderr, wait_th|
         Thread.new {
-          stdin.sync = true
           if opts[:stdin]
             while line = opts[:stdin].gets
               stdin.puts line
@@ -39,14 +38,12 @@ module Masamune::Actions
         }
 
         t_err = Thread.new {
-          stderr.sync = true
           while !stderr.eof?  do
             handle_stderr(stderr)
           end
         }
 
         t_out = Thread.new {
-          stdout.sync = true
           while !stdout.eof?  do
             handle_stdout(stdout) do |line, line_no|
               if block_given?
@@ -58,8 +55,12 @@ module Masamune::Actions
           end
         }
 
-        exit_code = wait_th.value if wait_th.value
-        Process::waitpid(wait_th.pid) rescue nil
+        trap 'SIGINT' do
+          wait_th.exit
+          exit
+        end
+
+        wait_th.join
         exit_code = wait_th.value if wait_th.value
 
         t_err.join
