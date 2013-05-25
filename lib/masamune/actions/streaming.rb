@@ -8,7 +8,7 @@ module Masamune::Actions
                 '-input', options[:input],
                 '-mapper', options[:mapper], '-file', options[:mapper],
                 '-reducer', options[:reducer], '-file', options[:reducer],
-                '-output', options[:output])
+                '-output', options[:output], :fail_fast => true)
       end
     end
   end

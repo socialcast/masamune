@@ -55,7 +55,9 @@ module Masamune::Actions
       exit_code = wait_th.value if wait_th.value
       t_err.join
       t_out.join
+
       Masamune::logger.debug(exit_code)
+      raise "fail_fast" if opts[:fail_fast] unless exit_code.success?
       exit_code
     end
 
