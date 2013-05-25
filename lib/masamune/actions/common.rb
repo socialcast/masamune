@@ -4,13 +4,6 @@ require 'ostruct'
 
 module Masamune::Actions
   module Common
-    def prompt
-    end
-
-    def interactive?
-      false
-    end
-
     def execute(*args, &block)
       opts = args.last.is_a?(Hash) ? args.pop : {safe: false}
       STDOUT.sync = STDERR.sync = true
@@ -22,6 +15,8 @@ module Masamune::Actions
       end
 
       Masamune::logger.debug(args)
+      Kernel.exec(*args) if opts[:replace]
+
       Open3.popen3(*args) do |stdin, stdout, stderr, wait_th|
         Thread.new {
           if opts[:stdin]
@@ -74,23 +69,9 @@ module Masamune::Actions
 
     def handle_stdout(stdout, &block)
       @line_no ||= 0
-
-      line_handler = ->(lines) do
-        return unless lines
-        lines.split("\n").each do |line|
-          yield line, @line_no
-          @line_no += 1
-        end
-      end
-
-      if interactive? && line = stdout.gets(prompt)
-        pre_prompt_lines, post_prompt_lines = line.split(prompt)
-        line_handler.call(pre_prompt_lines)
-        print prompt if line =~ /#{prompt}/
-        line_handler.call(post_prompt_lines)
-      elsif
-        line_handler.call(stdout.gets)
-      end
+      line = stdout.gets
+      yield line, @line_no
+      @line_no += 1
     end
 
     def handle_stderr(stderr, &block)

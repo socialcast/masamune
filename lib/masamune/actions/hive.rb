@@ -2,10 +2,6 @@ module Masamune::Actions
   module Hive
     include Masamune::Actions::Common
 
-    def prompt
-      'hive> '
-    end
-
     def interactive?
       !(options[:exec] || options[:file])
     end
@@ -13,7 +9,7 @@ module Masamune::Actions
     def hive(options)
       Dir.chdir(Masamune.configuration.var_dir) do
         if jobflow = Masamune.configuration.jobflow || options[:jobflow]
-          execute(*elastic_mapreduce_ssh(jobflow, 'hive', *hive_args(options))) do |line, line_no|
+          execute(*elastic_mapreduce_ssh(jobflow, 'hive', *hive_args(options)), :replace => interactive?) do |line, line_no|
             if line =~ /\Assh/ && line_no == 0
               Masamune.logger.debug(line)
             else
@@ -21,7 +17,7 @@ module Masamune::Actions
             end
           end
         else
-          execute('hive', *hive_args(options))
+          execute('hive', *hive_args(options), :replace => interactive?)
         end
       end
     end
