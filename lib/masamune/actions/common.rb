@@ -15,52 +15,46 @@ module Masamune::Actions
       end
 
       Masamune::logger.debug(args)
+
       Kernel.exec(*args) if opts[:replace]
 
-      Open3.popen3(*args) do |stdin, stdout, stderr, wait_th|
-        Thread.new {
-          if opts[:stdin]
-            while line = opts[:stdin].gets
-              stdin.puts line
-            end
-            stdin.close
-          else
-            while !stdin.closed? do
-              input = Readline.readline('', true).strip
-              stdin.puts input
-            end
+      stdin, stdout, stderr, wait_th = Open3.popen3(*args)
+      Thread.new {
+        if opts[:stdin]
+          while line = opts[:stdin].gets
+            stdin.puts line
           end
-        }
-
-        t_err = Thread.new {
-          while !stderr.eof?  do
-            handle_stderr(stderr)
+          stdin.close
+        else
+          while !stdin.closed? do
+            input = Readline.readline('', true).strip
+            stdin.puts input
           end
-        }
-
-        t_out = Thread.new {
-          while !stdout.eof?  do
-            handle_stdout(stdout) do |line, line_no|
-              if block_given?
-                yield line, line_no
-              else
-                puts line
-              end
-            end
-          end
-        }
-
-        trap 'SIGINT' do
-          wait_th.exit
-          exit
         end
+      }
 
-        wait_th.join
-        exit_code = wait_th.value if wait_th.value
+      t_err = Thread.new {
+        while !stderr.eof?  do
+          handle_stderr(stderr)
+        end
+      }
 
-        t_err.join
-        t_out.join
-      end
+      t_out = Thread.new {
+        while !stdout.eof?  do
+          handle_stdout(stdout) do |line, line_no|
+            if block_given?
+              yield line, line_no
+            else
+              puts line
+            end
+          end
+        end
+      }
+
+      wait_th.join
+      exit_code = wait_th.value if wait_th.value
+      t_err.join
+      t_out.join
       Masamune::logger.debug(exit_code)
       exit_code
     end
