@@ -14,6 +14,7 @@ class Masamune::Configuration
   attr_accessor :dryrun
   attr_accessor :elastic_mapreduce
   attr_accessor :jobflow
+  attr_accessor :hive_database
 
   def dryrun
     @dryrun ||= false
@@ -27,8 +28,8 @@ class Masamune::Configuration
     @elastic_mapreduce ||= false
   end
 
-  def jobflow
-    @jobflow ||= false
+  def hive_database
+    @hive_database ||= 'default'
   end
 
   def log_dir
