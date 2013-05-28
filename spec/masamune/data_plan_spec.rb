@@ -113,6 +113,8 @@ describe Masamune::DataPlan do
   end
 
   describe '#resolve' do
+    subject(:resolve) { plan.resolve(rule, targets) }
+
     context 'primary rule' do
       let(:rule) { 'primary' }
       let(:targets) {  [
@@ -127,9 +129,10 @@ describe Masamune::DataPlan do
           fs.touch!('table/y=2013/m=01/d=03')
           primary_command.should_not_receive(:call)
           secondary_command.should_not_receive(:call)
-          plan.resolve(rule, targets)
+          resolve
         end
 
+        it { should be_false }
         it 'should not call primary_command' do; end
         it 'should not call secondary_command' do; end
       end
@@ -143,10 +146,23 @@ describe Masamune::DataPlan do
           fs.touch!('table/y=2013/m=01/d=03')
           primary_command.should_receive(:call).with(['log/20130102.app1.log'], {})
           secondary_command.should_not_receive(:call)
-          plan.resolve(rule, targets)
+          resolve
         end
 
+        it { should be_true }
         it 'should call primary_command' do; end
+        it 'should not call secondary_command' do; end
+      end
+
+      context 'when source data does not exist' do
+        before do
+          primary_command.should_not_receive(:call)
+          secondary_command.should_not_receive(:call)
+          resolve
+        end
+
+        it { should be_false }
+        it 'should not call primary_command' do; end
         it 'should not call secondary_command' do; end
       end
     end
@@ -173,9 +189,10 @@ describe Masamune::DataPlan do
           fs.touch!('log/20130103.app1.log')
           primary_command.should_receive(:call).with(['log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log'], {}).and_call_original
           secondary_command.should_receive(:call).with(["table/y=2013/m=01/d=01", "table/y=2013/m=01/d=02", "table/y=2013/m=01/d=03"], {})
-          plan.resolve(rule, targets)
+          resolve
         end
 
+        it { should be_true }
         it 'should call primary_command' do; end
         it 'should not call secondary_command' do; end
       end

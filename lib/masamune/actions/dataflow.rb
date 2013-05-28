@@ -16,15 +16,20 @@ module Masamune::Actions
 
         # TODO allow multiple after_initialize blocks
         def after_initialize
-          self.input_files = if options[:inputs]
-            options[:inputs]
+          if options[:inputs]
+            self.input_files = options[:inputs]
           else
             start = DateTime.parse(options[:start])
             stop = DateTime.parse(options[:stop])
-            self.class.data_plan.targets(current_command_name, start, stop)
+            if input_files = self.class.data_plan.targets(current_command_name, start, stop)
+              unless self.class.data_plan.resolve(current_command_name, input_files, options)
+                abort "No matching input files for #{current_command_name} between #{options[:start]} and #{options[:stop]}"
+              end
+            end
+
+            # NOTE resolve has executed original thor task via anonymous proc - safe to exit
+            exit
           end
-          # TODO allow user to remove existing targets
-          self.class.data_plan.resolve(current_command_name, self.input_files, options)
         end
       end
     end

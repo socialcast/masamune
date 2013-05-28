@@ -88,8 +88,8 @@ class Masamune::DataPlan
   def resolve(rule, targets, runtime_options = {})
     matches, missing = analyze(rule, targets)
 
-    missing.each do |dep, matches|
-      resolve(dep, matches, runtime_options)
+    missing.each do |dep, missing_targets|
+      resolve(dep, missing_targets, runtime_options)
     end
 
     matches, missing = analyze(rule, targets) if missing.any?
@@ -97,6 +97,9 @@ class Masamune::DataPlan
     command, command_options = @commands[rule]
     if matches.any?
       command.call(matches, runtime_options)
+      true
+    else
+      false
     end
   end
 
