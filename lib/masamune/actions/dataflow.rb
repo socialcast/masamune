@@ -14,6 +14,10 @@ module Masamune::Actions
 
         private
 
+        def targets
+          self.input_files.map { |input_file| self.class.data_plan.target_for_source(current_command_name, input_file) }
+        end
+
         # TODO allow multiple after_initialize blocks
         def after_initialize
           if options[:inputs]

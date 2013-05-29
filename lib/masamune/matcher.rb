@@ -21,6 +21,16 @@ class Masamune::Matcher
     end
   end
 
+  def bind_date(date, options = {})
+    tz_from_options(options).utc_to_local(date).strftime(@pattern)
+  end
+
+  def free_date(example, options = {})
+    if matched_pattern = @matcher.match(example)
+      matched_date(matched_pattern)
+    end
+  end
+
   private
 
   def unbind_pattern(string)
@@ -39,5 +49,9 @@ class Masamune::Matcher
   def matched_date(matched_pattern)
     matched_attrs = [:year, :month, :day, :hour].select { |x| matched_pattern.names.map(&:to_sym).include?(x) }
     DateTime.new(*matched_attrs.map { |x| matched_pattern[x].to_i })
+  end
+
+  def tz_from_options(options = {})
+    ActiveSupport::TimeZone[options.fetch(:tz, 'UTC')]
   end
 end

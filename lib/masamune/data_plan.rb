@@ -37,6 +37,18 @@ class Masamune::DataPlan
     matches.map(&:first).first
   end
 
+  def target_for_source(rule, source_example)
+    source_template, source_options = @sources[rule]
+    target_template, target_options = @targets[rule]
+    source_matcher = Masamune::Matcher.new(source_template)
+    target_matcher = Masamune::Matcher.new(target_template)
+    target_date = source_matcher.free_date(source_example, source_options)
+    target_time = target_date.to_time.utc
+    target_path = target_matcher.bind_date(target_date, target_options)
+    target_step = self.class.rule_step(target_template)
+    OpenStruct.new(:path => target_path, :start => target_time, :stop => target_time + target_step)
+  end
+
   def targets(rule, start, stop)
     pattern, options = @targets[rule]
     start_time, stop_time = start.to_time.utc, stop.to_time.utc

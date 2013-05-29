@@ -62,6 +62,26 @@ describe Masamune::DataPlan do
     end
   end
 
+  describe '#target_for_source' do
+    subject { plan.target_for_source(rule, source) }
+
+    context 'primary' do
+      let(:rule) { 'primary' }
+      let(:source) { 'log/20130101.random.log' }
+      its(:start) { should == Date.civil(2013,01,01) }
+      its(:stop) { should == Date.civil(2013,01,02) }
+      its(:path) { should == 'table/y=2013/m=01/d=01' }
+    end
+
+    context 'secondary' do
+      let(:rule) { 'secondary' }
+      let(:source)  { 'table/y=2013/m=01/d=01' }
+      its(:start) { should == Date.civil(2013,01,01) }
+      its(:stop) { should == Date.civil(2013,01,02) }
+      its(:path) { should == 'report/2013-01-01' }
+    end
+  end
+
   describe '#sources' do
     subject { plan.sources(rule, target) }
 
