@@ -56,12 +56,21 @@ class Masamune::Configuration
     end
   end
 
+  def print(*a)
+    logger.info(*a)
+    puts a.join(' ') unless debug
+  end
+
   def trace(*a)
-    puts a.join(' ')
+    logger.info(*a)
+    puts a.join(' ') unless debug
   end
 
   def filesystem
-    @filesystem ||= Masamune::CachedFilesystem.new(Masamune::Filesystem.new)
+    @filesystem ||=
+      Masamune::CachedFilesystem.new(
+        Masamune::MethodLogger.new(
+          Masamune::Filesystem.new, :ignore => [:path, :exists?, :glob, :get_path, :add_path]))
   end
 
   def hadoop_streaming_jar

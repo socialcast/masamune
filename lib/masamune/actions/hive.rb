@@ -2,22 +2,24 @@ module Masamune::Actions
   module Hive
     include Masamune::Actions::Common
 
-    def interactive?
-      !(options[:exec] || options[:file])
-    end
+    def hive(opts = {})
+      if opts[:file]
+        Masamune.print("hive with file #{opts[:file]}")
+      elsif opts[:exec]
+        Masamune.print("hive with '#{opts[:exec].gsub(/\s+/, ' ').strip}'")
+      end
 
-    def hive(options)
+      interactive = !(opts[:exec] || opts[:file])
+
       Dir.chdir(Masamune.configuration.var_dir) do
-        if jobflow = Masamune.configuration.jobflow || options[:jobflow]
-          execute(*elastic_mapreduce_ssh(jobflow, 'hive', *hive_args(options)), :replace => interactive?, :fail_fast => true) do |line, line_no|
-            if line =~ /\Assh/ && line_no == 0
-              Masamune.logger.debug(line)
-            else
-              puts line
+        if jobflow = Masamune.configuration.jobflow || opts[:jobflow]
+          execute(*elastic_mapreduce_ssh(jobflow, 'hive', *hive_args(opts)), :replace => interactive, :fail_fast => true)
+        else
+          execute('hive', *hive_args(opts), :replace => interactive, :fail_fast => true) do |line, line_no|
+            unless opts[:exec]
+              Masamune::logger.debug(line)
             end
           end
-        else
-          execute('hive', *hive_args(options), :replace => interactive?, :fail_fast => true)
         end
       end
     end

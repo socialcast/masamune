@@ -15,6 +15,7 @@ module Masamune
   require 'masamune/filesystem'
   require 'masamune/cached_filesystem'
   require 'masamune/store'
+  require 'masamune/method_logger'
 
   class Client
     def configure
@@ -34,5 +35,7 @@ module Masamune
   end
 
   def_delegators :default_client, :configure, :configuration
-  def_delegators :configuration, :logger, :filesystem, :trace
+  def_delegators :configuration, :logger, :filesystem
+  # TODO encapsulate in CLI
+  def_delegators :configuration, :trace, :print
 end
