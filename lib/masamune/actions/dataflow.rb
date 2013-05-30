@@ -15,7 +15,16 @@ module Masamune::Actions
         private
 
         def targets
-          self.input_files.map { |input_file| self.class.data_plan.target_for_source(current_command_name, input_file) }
+          self.input_files.map do |input_file|
+            self.class.data_plan.target_for_source(current_command_name, input_file)
+          end.reject do |target_file|
+            if fs.exists?(target_file.path)
+              Masamune::print("skipping exsiting #{target_file.path}")
+              true
+            else
+              false
+            end
+          end
         end
 
         # TODO allow multiple after_initialize blocks
