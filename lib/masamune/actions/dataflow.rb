@@ -5,17 +5,17 @@ module Masamune::Actions
     def self.included(base)
       base.extend ClassMethods
       base.class_eval do
-        attr_accessor :input_files
+        attr_accessor :source_paths
 
-        # TODO start + stop XOR inputs
+        # TODO start + stop XOR sources
         class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
         class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
-        class_option :inputs, :type => :array, :desc => 'Input to process'
+        class_option :sources, :type => :array, :desc => 'Input to process'
 
         private
 
         def targets
-          self.input_files.map do |input_file|
+          self.source_paths.map do |input_file|
             self.class.data_plan.target_for_source(current_command_name, input_file)
           end.reject do |target_file|
             if fs.exists?(target_file.path)
@@ -29,13 +29,13 @@ module Masamune::Actions
 
         # TODO allow multiple after_initialize blocks
         def after_initialize
-          if options[:inputs]
-            self.input_files = options[:inputs]
+          if options[:sources]
+            self.source_paths = options[:sources]
           else
             start = DateTime.parse(options[:start])
             stop = DateTime.parse(options[:stop])
-            if input_files = self.class.data_plan.targets(current_command_name, start, stop)
-              unless self.class.data_plan.resolve(current_command_name, input_files, options)
+            if source_paths = self.class.data_plan.targets(current_command_name, start, stop)
+              unless self.class.data_plan.resolve(current_command_name, source_paths, options)
                 abort "No matching input files for #{current_command_name} between #{options[:start]} and #{options[:stop]}"
               end
             end
@@ -55,10 +55,10 @@ module Masamune::Actions
       def source(source, source_options = {})
         data_plan.add_source(command_name(source_options), source, source_options)
 
-        thor_wrapper = Proc.new do |inputs, runtime_options|
+        thor_wrapper = Proc.new do |sources, runtime_options|
           command_options = command_options(runtime_options)
-          Masamune.logger.debug([command_name(source_options), '--inputs', *inputs] + command_options)
-          self.start([command_name(source_options), '--inputs', *inputs] + command_options)
+          Masamune.logger.debug([command_name(source_options), '--sources', *sources] + command_options)
+          self.start([command_name(source_options), '--sources', *sources] + command_options)
         end
 
         data_plan.add_command(command_name(source_options), thor_wrapper)
