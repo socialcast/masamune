@@ -69,6 +69,7 @@ module Masamune
       end
     end
 
+    # TODO local, hdfs permutations
     def copy_file(src, dst)
       mkdir!(dst)
       case [type(src), type(dst)]
@@ -89,6 +90,21 @@ module Masamune
         execute_hadoop_fs('-rmr', s3n(dir, dir: true))
       else
         FileUtils.remove_dir(dir, true)
+      end
+    end
+
+    # TODO round out permutations
+    def move_file(src, dst)
+      mkdir!(File.dirname(dst))
+      case [type(src), type(dst)]
+      when [:hdfs, :hdfs]
+        execute_hadoop_fs('-mv', src, dst)
+      when [:s3, :s3]
+        execute('s3cmd', 'mv', src, dst)
+      when [:local, :s3]
+        execute('s3cmd', 'put', src, dst)
+      when [:local, :local]
+        FileUtils.mv(src, dst)
       end
     end
 

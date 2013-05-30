@@ -6,25 +6,49 @@ module Masamune::Actions
       if opts[:file]
         Masamune.print("hive with file #{opts[:file]}")
       elsif opts[:exec]
-        Masamune.print("hive with '#{opts[:exec].gsub(/\s+/, ' ').strip}'")
+        Masamune.print("hive exec '#{opts[:exec].gsub(/\s+/, ' ').strip}' #{'into ' + opts[:output] if opts[:output]}")
       end
 
       interactive = !(opts[:exec] || opts[:file])
 
+      setup(opts)
       Dir.chdir(Masamune.configuration.var_dir) do
         if jobflow = Masamune.configuration.jobflow || opts[:jobflow]
-          execute(*elastic_mapreduce_ssh(jobflow, 'hive', *hive_args(opts)), :replace => interactive, :fail_fast => true)
+          execute(*elastic_mapreduce_ssh(jobflow, 'hive', *hive_args(opts)), :replace => interactive, :fail_fast => true) do |line, line_no|
+            process(line, line_no)
+          end
         else
           execute('hive', *hive_args(opts), :replace => interactive, :fail_fast => true) do |line, line_no|
-            unless opts[:exec]
-              Masamune::logger.debug(line)
-            end
+            process(line, line_no)
           end
         end
       end
+      cleanup(opts)
     end
 
     private
+
+    def setup(opts)
+      if opts[:output]
+        @file ||= Tempfile.new('masamune')
+      end
+    end
+
+    def process(line, line_no)
+      if @file
+        @file.puts(line)
+      else
+        Masamune::logger.debug(line)
+      end
+    end
+
+    def cleanup(opts)
+      if opts[:output]
+        @file.close
+        fs.move_file(@file.path, opts[:output])
+        @file.unlink
+      end
+    end
 
     def elastic_mapreduce_ssh(jobflow, *args)
       ['elastic-mapreduce', '--jobflow', jobflow, '--ssh', %Q{"#{args.join(' ')}"}]
