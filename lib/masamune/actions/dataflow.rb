@@ -7,7 +7,6 @@ module Masamune::Actions
       base.class_eval do
         attr_accessor :source_paths
 
-        # TODO start + stop XOR sources
         class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
         class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
         class_option :sources, :type => :array, :desc => 'Input to process'
@@ -29,6 +28,8 @@ module Masamune::Actions
 
         # TODO allow multiple after_initialize blocks
         def after_initialize
+          raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources]
+
           if options[:sources]
             self.source_paths = options[:sources]
           else
