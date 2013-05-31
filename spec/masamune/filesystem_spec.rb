@@ -167,6 +167,18 @@ shared_examples_for 'Filesystem' do
       it { should be_false}
     end
   end
+
+  describe '#cat' do
+    before do
+      instance.write('dog', new_file)
+    end
+
+    subject do
+      instance.cat(new_file).string
+    end
+
+    it { should == 'dog' }
+  end
 end
 
 describe Masamune::Filesystem do

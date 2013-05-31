@@ -7,13 +7,16 @@ module Masamune
     end
 
     def add_path(symbol, path, options = {})
-      @paths[symbol] = path
+      @paths[symbol] = [path, options]
       mkdir!(path) if options[:mkdir]
       self
     end
 
     def get_path(symbol)
-      @paths[symbol] or raise "Path :#{symbol} not defined"
+      @paths.has_key?(symbol) or raise "Path :#{symbol} not defined"
+      path, options = @paths[symbol]
+      mkdir!(path) if options[:mkdir]
+      path
     end
     alias :path :get_path
 
@@ -105,6 +108,28 @@ module Masamune
         execute('s3cmd', 'put', src, dst)
       when [:local, :local]
         FileUtils.mv(src, dst)
+      end
+    end
+
+    def cat(*files)
+      StringIO.new.tap do |buf|
+        files.group_by { |path| type(path) }.each do |type, file_set|
+          case type
+          when :local
+            file_set.map do |file|
+              buf << File.read(file)
+            end
+          end
+        end
+      end
+    end
+
+    def write(buf, src)
+      case type(src)
+      when :local
+        File.open(src, 'w') do |file|
+          file.write buf
+        end
       end
     end
 
