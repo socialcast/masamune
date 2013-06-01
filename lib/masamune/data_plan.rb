@@ -80,7 +80,7 @@ class Masamune::DataPlan
   end
 
   def analyze(rule, targets)
-    matches, missing = [], Hash.new { |h,k| h[k] = [] }
+    matches, missing = Set.new, Hash.new { |h,k| h[k] = Set.new }
     targets.each do |target|
       unless fs.exists?(target)
         sources = sources(rule, target)
@@ -108,7 +108,7 @@ class Masamune::DataPlan
 
     command, command_options = @commands[rule]
     if matches.any?
-      command.call(matches, runtime_options)
+      command.call(matches.to_a, runtime_options)
       true
     else
       false
