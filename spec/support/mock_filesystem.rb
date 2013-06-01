@@ -16,8 +16,16 @@ class MockFilesystem
   end
 
   def glob(pattern, &block)
+    list = []
     entries.select { |elem| elem =~ Regexp.compile(pattern) }.each do |elem|
-      yield elem
+      if block_given?
+        yield elem
+      else
+        list << elem
+      end
+    end
+    unless block_given?
+      list
     end
   end
 end
