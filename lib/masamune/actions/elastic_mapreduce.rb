@@ -3,7 +3,6 @@ module Masamune::Actions
     include Masamune::Actions::Common
 
     def elastic_mapreduce_ssh(options = {})
-      Masamune.logger.debug(options[:stdin])
       stdin =
         case options[:stdin]
         when IO

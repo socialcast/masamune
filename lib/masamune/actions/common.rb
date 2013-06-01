@@ -45,7 +45,7 @@ module Masamune::Actions
             if block_given?
               yield line, line_no
             else
-              Masamune::logger.debug(line)
+              Masamune::logger.debug(line.chomp)
             end
           end
         end
