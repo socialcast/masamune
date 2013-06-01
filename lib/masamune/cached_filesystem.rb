@@ -5,23 +5,27 @@ module Masamune
     def initialize(filesystem)
       super
       @filesystem = filesystem
-      @paths = []
+      @paths = Set.new
       @missing = []
     end
 
     def exists?(file)
       return false if @missing.any? { |re| re.match(file) }
-      unless @paths.include?(file)
+      file_re = /\A#{Regexp.escape(file)}/
+      unless @paths.any? { |path| path[file_re] }
+        Masamune.logger.debug("MISS #{file}")
         path = file.split('/')
         dirname, basename = path[0 .. -2].join('/'), path[-1]
         paths = glob(File.join(dirname, '*'))
         if paths.any?
-          @paths += paths
+          @paths = @paths.union(paths)
         else
           @missing.push /\A#{Regexp.escape(dirname)}.*/
         end
+      else
+        Masamune.logger.debug("HIT #{file}")
       end
-      @paths.include?(file)
+      @paths.any? { |path| path[file_re] }
     end
 
     def __getobj__

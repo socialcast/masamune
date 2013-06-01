@@ -14,6 +14,9 @@ describe Masamune::CachedFilesystem do
       cached_filesystem.exists?('a/b/c/1.txt').should be_true
       cached_filesystem.exists?('a/b/c/2.txt').should be_true
       cached_filesystem.exists?('a/b/c/3.txt').should be_true
+      cached_filesystem.exists?('a').should be_true
+      cached_filesystem.exists?('a/b').should be_true
+      cached_filesystem.exists?('a/b/c').should be_true
     end
   end
 
