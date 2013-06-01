@@ -5,6 +5,10 @@ module Masamune
     def initialize(filesystem)
       super
       @filesystem = filesystem
+      clear!
+    end
+
+    def clear!
       @paths = Set.new
       @missing = []
     end
