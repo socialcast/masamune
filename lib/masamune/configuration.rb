@@ -14,6 +14,7 @@ class Masamune::Configuration
   attr_accessor :dryrun
   attr_accessor :elastic_mapreduce
   attr_accessor :jobflow
+  attr_accessor :hadoop_streaming_jar
   attr_accessor :hive_database
 
   def dryrun
