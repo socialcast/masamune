@@ -16,10 +16,6 @@ module Masamune::Actions
 
     private
 
-    def elastic_mapreduce_stream(jobflow, *args)
-      ['elastic-mapreduce', '--jobflow', jobflow, '--stream', %Q{"#{args.join(' ')}"}]
-    end
-
     def streaming_args(opts)
       args = []
       args << ['-input', opts[:input]]
@@ -32,8 +28,8 @@ module Masamune::Actions
     def elastic_mapreduce_streaming_args(opts)
       args = []
       args << ['-input', opts[:input]]
-      args << ['-mapper', 'mapper', '-cacheFile', "#{opts[:mapper]}#mapper"]
-      args << ['-reducer', 'reducer', '-cacheFile', "#{opts[:reducer]}#reducer"]
+      args << ['-mapper', opts[:mapper]]
+      args << ['-reducer', opts[:reducer]]
       args << ['-output', opts[:output]]
       args.flatten
     end

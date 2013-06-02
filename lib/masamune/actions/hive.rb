@@ -9,11 +9,15 @@ module Masamune::Actions
         Masamune.print("hive exec '#{opts[:exec].gsub(/\s+/, ' ').strip}' #{'into ' + opts[:output] if opts[:output]}")
       end
 
+      if Masamune.configuration.jobflow
+        opts[:jobflow] = Masamune.configuration.jobflow
+      end
+
       interactive = !(opts[:exec] || opts[:file])
 
       setup(opts)
       Dir.chdir(Masamune.configuration.var_dir) do
-        if jobflow = Masamune.configuration.jobflow || opts[:jobflow]
+        if jobflow = opts[:jobflow]
           execute(*elastic_mapreduce_ssh(jobflow, 'hive', *hive_args(opts)), :replace => interactive, :fail_fast => true) do |line, line_no|
             process(line, line_no)
           end
@@ -54,11 +58,11 @@ module Masamune::Actions
       ['elastic-mapreduce', '--jobflow', jobflow, '--ssh', %Q{"#{args.join(' ')}"}]
     end
 
-    def hive_args(options)
+    def hive_args(opts)
       args = []
       args << Masamune.configuration.command_options[:hive].call
-      args << ['-e', encode_sql(options[:exec], options[:jobflow])] if options[:exec]
-      args << ['-f', options[:file]] if options[:file]
+      args << ['-e', encode_sql(opts[:exec], opts[:jobflow])] if opts[:exec]
+      args << ['-f', opts[:file]] if opts[:file]
       args.flatten
     end
 
