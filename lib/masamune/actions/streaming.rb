@@ -2,6 +2,7 @@ module Masamune::Actions
   module Streaming
     include Masamune::Actions::Common
 
+    # FIXME remove paths that do not exist
     def streaming(opts, args)
       Masamune.print("streaming %s -> %s (%s/%s)" % [opts[:input], opts[:output], opts[:mapper], opts[:reducer]])
 
@@ -18,6 +19,7 @@ module Masamune::Actions
 
     def streaming_args(opts)
       args = []
+      args << Masamune.configuration.command_options[:streaming].call
       args << ['-input', opts[:input]]
       args << ['-mapper', opts[:mapper], '-file', opts[:mapper]]
       args << ['-reducer', opts[:reducer], '-file', opts[:reducer]]
@@ -27,6 +29,7 @@ module Masamune::Actions
 
     def elastic_mapreduce_streaming_args(opts)
       args = []
+      args << Masamune.configuration.command_options[:streaming].call
       args << ['-input', opts[:input]]
       args << ['-mapper', opts[:mapper]]
       args << ['-reducer', opts[:reducer]]
