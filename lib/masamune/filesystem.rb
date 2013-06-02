@@ -12,11 +12,15 @@ module Masamune
       self
     end
 
-    def get_path(symbol)
+    def get_path(symbol, *extra)
       @paths.has_key?(symbol) or raise "Path :#{symbol} not defined"
       path, options = @paths[symbol]
       mkdir!(path) if options[:mkdir]
-      path
+      if extra.any?
+        File.join(path, extra)
+      else
+        path
+      end
     end
     alias :path :get_path
 

@@ -26,6 +26,10 @@ shared_examples_for 'Filesystem' do
       instance.add_path(:home_dir, '/home')
     end
     it { instance.get_path(:home_dir).should == '/home' }
+
+    context 'with extra directories' do
+      it { instance.get_path(:home_dir, 'a', 'b', 'c').should == '/home/a/b/c' }
+    end
   end
 
   describe '#touch!' do
