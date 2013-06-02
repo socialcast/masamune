@@ -10,26 +10,38 @@ module Masamune
 
     def clear!
       @paths = Set.new
-      @missing = []
     end
 
     def exists?(file)
-      return false if @missing.any? { |re| re.match(file) }
-      file_re = /\A#{Regexp.escape(file)}/
-      unless @paths.any? { |path| path[file_re] }
-        Masamune.logger.debug("MISS #{file}")
-        path = file.split('/')
-        dirname, basename = path[0 .. -2].join('/'), path[-1]
-        paths = glob(File.join(dirname, '*'))
-        if paths.any?
-          @paths = @paths.union(paths)
+      dirname = dirname(file)
+      if @paths.include?(dirname)
+        if @paths.include?(file)
+          true
         else
-          @missing.push /\A#{Regexp.escape(dirname)}.*/
+          false
         end
       else
-        Masamune.logger.debug("HIT #{file}")
+        glob(File.join(dirname, '*')).each do |path|
+          @paths = @paths.union(subpaths(path))
+        end
+        @paths.include?(file)
       end
-      @paths.any? { |path| path[file_re] }
+    end
+
+    def dirname(file)
+      path = file.split('/')
+      dirname, basename = path[0 .. -2].join('/'), path[-1]
+      dirname
+    end
+
+    def subpaths(file)
+      [].tap do |result|
+        tmp = []
+        file.split('/').each do |part|
+          tmp << part
+          result << tmp.join('/')
+        end
+      end
     end
 
     def __getobj__
