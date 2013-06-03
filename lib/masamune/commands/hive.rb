@@ -2,25 +2,36 @@ require 'masamune/commands/shell'
 
 module Masamune::Commands
   class Hive
-    attr_accessor :file, :exec, :output
+    attr_accessor :file, :exec, :output, :quote
 
     def initialize(opts = {})
-      self.file   = opts[:file]
-      self.exec   = opts[:exec]
-      self.output = opts[:output]
-      @shell = Masamune::Commands::Shell.new(fail_fast: true, decorator: self)
+      self.file       = opts[:file]
+      self.exec       = opts[:exec]
+      self.output     = opts[:output]
+      self.quote      = opts[:quote] || false
     end
 
     def exec=(sql)
       if sql
-        @exec = sql
-        @exec.gsub!(/\s\s+/, ' ')
-        @exec.strip!
+        if quote
+          @exec = quote_sql(strip_sql(sql))
+        else
+          @exec = strip_sql(sql)
+        end
       end
     end
 
     def interactive?
       !(@exec || @file)
+    end
+
+    def command_args
+      args = []
+      args << 'hive'
+      args << Masamune.configuration.command_options[:hive].call
+      args << ['-e', @exec] if @exec
+      args << ['-f', @file] if @file
+      args.flatten
     end
 
     def before_execute
@@ -37,9 +48,9 @@ module Masamune::Commands
       end
     end
 
-    def execute(*args, &block)
+    def around_execute(&block)
       Dir.chdir(Masamune.configuration.var_dir) do
-        @shell.execute('hive', *command_args)
+        yield
       end
     end
 
@@ -61,26 +72,20 @@ module Masamune::Commands
 
     private
 
-    def command_args
-      args = []
-      args << Masamune.configuration.command_options[:hive].call
-      args << ['-e', @exec] if @exec
-      args << ['-f', @file] if @file
-      args.flatten
+    def strip_sql(sql)
+      out = sql.dup
+      out.gsub!(/\s\s+/, ' ')
+      out.strip!
+      out
     end
 
-=begin
     # force SQL be enclosed in single quotes, terminated with semicolon
-    def encode_sql(sql, quote = false)
-      if quote
-        out.gsub!(/\A'|'\z/,'') if out =~ /\A'/
-        out.gsub!(/;\z/,'')
-        out.gsub!("'", %q("'"))
-        %q{'} + out + %q{;'}
-      else
-        out
-      end
+    def quote_sql(sql)
+      out = sql.dup
+      out.gsub!(/\A'|'\z/,'') if out =~ /\A'/
+      out.gsub!(/;\z/,'')
+      out.gsub!("'", %q("'"))
+      %q{'} + out + %q{;'}
     end
-=end
   end
 end
