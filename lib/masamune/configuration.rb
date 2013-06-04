@@ -4,25 +4,29 @@ require 'masamune/multi_io'
 class Masamune::Configuration
   extend Forwardable
 
+  attr_accessor :quiet
+  attr_accessor :verbose
   attr_accessor :debug
+  attr_accessor :no_op
+  attr_accessor :dry_run
+  attr_accessor :jobflow
+
   attr_accessor :log_dir
   attr_accessor :log_file_template
   attr_accessor :var_dir
   attr_accessor :logger
   attr_accessor :filesystem
   attr_accessor :command_options
-  attr_accessor :dryrun
   attr_accessor :elastic_mapreduce
-  attr_accessor :jobflow
   attr_accessor :hadoop_streaming_jar
   attr_accessor :hive_database
 
-  def dryrun
-    @dryrun ||= false
-  end
-
-  def debug
-    @debug ||= false
+  def initialize
+    self.quiet    = false
+    self.verbose  = false
+    self.debug    = false
+    self.no_op    = false
+    self.dry_run  = false
   end
 
   def elastic_mapreduce
@@ -59,12 +63,12 @@ class Masamune::Configuration
 
   def print(*a)
     logger.info(*a)
-    puts a.join(' ') unless debug
+    puts a.join(' ') if !quiet && !debug
   end
 
   def trace(*a)
     logger.info(*a)
-    puts a.join(' ') unless debug
+    puts a.join(' ') if verbose && !debug
   end
 
   def filesystem

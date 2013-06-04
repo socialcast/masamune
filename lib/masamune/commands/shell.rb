@@ -31,12 +31,12 @@ module Masamune::Commands
       Kernel.exec(*command_args)
     end
 
+    require 'debugger'
     def before_execute
       Masamune::logger.debug(command_args)
-      exit_code = OpenStruct.new(:success? => false)
-      if Masamune::configuration.dryrun
-        Masamune::trace(args)
-        return exit_code unless @safe
+
+      if Masamune::configuration.verbose
+        Masamune::trace(command_args)
       end
 
       if @delegate.respond_to?(:before_execute)
@@ -51,6 +51,10 @@ module Masamune::Commands
     end
 
     def around_execute(&block)
+      if Masamune::configuration.no_op && !@safe
+        return OpenStruct.new(:success? => true)
+      end
+
       if @delegate.respond_to?(:around_execute)
         @delegate.around_execute(&block)
       else

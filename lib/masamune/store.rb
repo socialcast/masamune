@@ -15,7 +15,7 @@ module Masamune
     end
 
     def []=(key, val)
-      @pstore.transaction { @pstore[key]  = val } unless Masamune.configuration.dryrun
+      @pstore.transaction { @pstore[key]  = val } unless Masamune.configuration.no_op
     end
   end
 end
