@@ -9,22 +9,46 @@ module Masamune
     end
 
     def clear!
-      @paths = Set.new
+      @path_cache = Set.new
+      @glob_cache = Hash.new
     end
 
     def exists?(file)
       dirname = dirname(file)
-      if @paths.include?(dirname)
-        if @paths.include?(file)
+      if @path_cache.include?(dirname)
+        if @path_cache.include?(file)
           true
         else
           false
         end
       else
-        glob(File.join(dirname, '*')).each do |path|
-          @paths = @paths.union(subpaths(path))
+        glob(File.join(dirname, '*')) do |path|
+          @path_cache = @path_cache.union(sub_paths(path))
         end
-        @paths.include?(file)
+        @path_cache.include?(file)
+      end
+    end
+
+    def glob(path, &block)
+      @glob_cache[path] ||= begin
+        if block_given?
+          paths = Set.new
+          @filesystem.glob(path) do |path|
+            block.call(path)
+            paths.add(path)
+          end
+          paths.to_a
+        else
+          @filesystem.glob(path)
+        end
+      end
+    end
+
+    # FIXME cache eviction policy can be more precise
+    [:touch!, :mkdir!, :copy_file, :remove_dir, :move_file, :write].each do |meth|
+      define_method(meth) do |*args|
+        clear!
+        @filesystem.send(meth, *args)
       end
     end
 
@@ -34,7 +58,7 @@ module Masamune
       dirname
     end
 
-    def subpaths(file)
+    def sub_paths(file)
       [].tap do |result|
         tmp = []
         file.split('/').each do |part|

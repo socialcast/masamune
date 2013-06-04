@@ -86,4 +86,15 @@ class Masamune::Configuration
   def add_command_options(command, &block)
     command_options[command] = block.to_proc
   end
+
+  def as_options
+    opts = []
+    opts << '--quiet'   if verbose
+    opts << '--verbose' if verbose
+    opts << '--debug'   if debug
+    opts << '--no_op'   if no_op
+    opts << '--dry_run' if dry_run
+    opts << "--jobflow=#{jobflow}" if jobflow
+    opts
+  end
 end

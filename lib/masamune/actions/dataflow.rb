@@ -59,7 +59,6 @@ module Masamune::Actions
         thor_wrapper = Proc.new do |sources, runtime_options|
           command_options = command_options(runtime_options)
           Masamune.logger.debug([command_name(source_options), '--sources', *sources] + command_options)
-          Masamune.filesystem.clear! if Masamune.filesystem.respond_to?(:clear!)
           self.start([command_name(source_options), '--sources', *sources] + command_options)
         end
 
