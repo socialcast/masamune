@@ -32,7 +32,6 @@ module Masamune::Commands
       Kernel.exec(*command_args)
     end
 
-    require 'debugger'
     def before_execute
       Masamune::logger.debug(command_args)
 
