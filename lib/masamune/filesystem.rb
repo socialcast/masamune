@@ -24,7 +24,6 @@ module Masamune
     end
     alias :path :get_path
 
-    # TODO look into FileUtils :dryrun, :noop, :verbose
     def touch!(*files)
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
@@ -33,7 +32,7 @@ module Masamune
         when :s3
           execute_hadoop_fs('-touchz', *file_set.map { |f| s3n(f) })
         else
-          FileUtils.touch(*file_set)
+          FileUtils.touch(*file_set, file_util_args)
         end
       end
     end
@@ -57,7 +56,7 @@ module Masamune
         when :s3
           execute_hadoop_fs('-mkdir', *dir_set.map { |d| s3n(d, dir: true) })
         else
-          FileUtils.mkdir_p(*dir_set)
+          FileUtils.mkdir_p(*dir_set, file_util_args)
         end
       end
     end
@@ -85,7 +84,7 @@ module Masamune
       when [:s3, :s3]
         execute('s3cmd', 'cp', src, dst)
       when [:local, :local]
-        FileUtils.cp(src, dst)
+        FileUtils.cp(src, dst, file_util_args)
       end
     end
 
@@ -96,7 +95,7 @@ module Masamune
       when :s3
         execute_hadoop_fs('-rmr', s3n(dir, dir: true))
       else
-        FileUtils.remove_dir(dir, true)
+        FileUtils.rmtree(dir, file_util_args)
       end
     end
 
@@ -111,7 +110,7 @@ module Masamune
       when [:local, :s3]
         execute('s3cmd', 'put', src, dst)
       when [:local, :local]
-        FileUtils.mv(src, dst)
+        FileUtils.mv(src, dst, file_util_args)
       end
     end
 
@@ -173,6 +172,10 @@ module Masamune
       args = []
       args << Masamune.configuration.command_options[:hadoop_fs].call
       args.flatten
+    end
+
+    def file_util_args
+      {noop: Masamune.configuration.no_op, verbose: Masamune.configuration.verbose}
     end
 
     def execute_hadoop_fs(*args, &block)
