@@ -1,16 +1,17 @@
 module Masamune::Actions
   module ElasticMapreduce
-    include Masamune::Actions::Common
+    def elastic_mapreduce(opts = {})
+      opts = opts.dup
+      opts.merge!(jobflow: Masamune.configuration.jobflow)
 
-    def elastic_mapreduce_ssh(options = {})
-      stdin =
-        case options[:stdin]
-        when IO
-          options[:stdin]
-        when String
-          StringIO.new(options[:stdin])
-        end
-      execute('elastic-mapreduce', '--jobflow', Masamune.configuration.jobflow, '--ssh', :stdin => stdin)
+      command = Masamune::Commands::Shell.new(
+        Masamune::Commands::ElasticMapReduce.new(nil, opts), opts)
+
+      if command.interactive?
+        command.replace
+      else
+        command.execute
+      end
     end
   end
 end

@@ -5,7 +5,6 @@ module Masamune
   require 'masamune/thor'
   require 'masamune/thor_loader'
   require 'masamune/thor_data'
-  require 'masamune/actions/common'
   require 'masamune/actions/hive'
   require 'masamune/actions/s3cmd'
   require 'masamune/actions/streaming'

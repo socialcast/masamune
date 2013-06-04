@@ -1,6 +1,6 @@
 module Masamune
   class Filesystem
-    include Masamune::Actions::Common
+    include Masamune::Actions::Execute
 
     def initialize
       @paths = {}

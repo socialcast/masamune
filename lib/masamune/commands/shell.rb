@@ -4,11 +4,27 @@ require 'ostruct'
 
 module Masamune::Commands
   class Shell
+    attr_accessor :safe, :fail_fast, :input
+
     def initialize(delegate, opts = {})
-      @delegate   = delegate
-      @safe       = opts[:safe] || false
-      @fail_fast  = opts[:fail_fast] || false
-      @input      = opts[:input]
+      @delegate       = delegate
+      self.safe       = opts[:safe] || false
+      self.fail_fast  = opts[:fail_fast] || false
+      self.input      = opts[:input]
+    end
+
+    def input=(input)
+      @input =
+      case input
+      when nil
+        nil
+      when IO
+        input
+      when String
+        StringIO.new(input)
+      else
+        raise 'unknown input type'
+      end
     end
 
     def replace
@@ -43,7 +59,9 @@ module Masamune::Commands
     end
 
     def command_args
-      if @delegate.respond_to?(:command_args)
+      if @delegate.is_a?(Array)
+        @delegate
+      elsif @delegate.respond_to?(:command_args)
         @delegate.command_args
       else
         raise 'no command_args'
@@ -64,6 +82,7 @@ module Masamune::Commands
     end
 
     def execute_block
+      STDOUT.sync = STDERR.sync = true
       stdin, stdout, stderr, wait_th = Open3.popen3(*command_args)
       Thread.new {
         if @input

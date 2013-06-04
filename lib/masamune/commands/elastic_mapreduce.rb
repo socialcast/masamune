@@ -1,26 +1,37 @@
 module Masamune::Commands
   class ElasticMapReduce
-    attr_accessor :jobflow
+    attr_accessor :jobflow, :input
 
     def initialize(delegate, opts = {})
-      @delegate = delegate
+      @delegate    = delegate
       self.jobflow = opts[:jobflow]
+      self.input   = opts[:input]
+    end
+
+    def interactive?
+      !input
     end
 
     def command_args
-      ['elastic-mapreduce', '--jobflow', jobflow, '--ssh', %Q{"#{@delegate.command_args.join(' ')}"}]
+      args = ['elastic-mapreduce', '--jobflow', jobflow, '--ssh']
+      if @delegate.respond_to?(:command_args)
+        args << %Q{"#{@delegate.command_args.join(' ')}"}
+      end
+      args
     end
 
-    private
+    def proxy_methods
+      [:command_args]
+    end
+
+    def respond_to?(meth)
+      proxy_methods.include?(meth) || @delegate.respond_to?(meth)
+    end
 
     def method_missing(meth, *args)
       if @delegate.respond_to?(meth)
         @delegate.send(meth, *args)
       end
-    end
-
-    def respond_to?(meth)
-      @delegate.respond_to?(meth)
     end
   end
 end

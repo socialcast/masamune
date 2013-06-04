@@ -7,6 +7,7 @@ module Masamune::Actions
     def streaming(opts = {})
       opts = opts.dup
       opts.merge!(fail_fast: true)
+      opts.merge!(jobflow: Masamune.configuration.jobflow)
 
       command = if opts[:jobflow]
         opts.merge!(file_args: false)
