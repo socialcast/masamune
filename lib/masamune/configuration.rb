@@ -57,6 +57,8 @@ class Masamune::Configuration
     end
   end
 
+  STDOUT.sync = STDERR.sync = true
+
   def print(*a)
     logger.info(*a)
     puts a.join(' ') unless debug

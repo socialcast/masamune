@@ -1,44 +1,24 @@
 module Masamune::Actions
+  require 'masamune/commands/shell'
+  require 'masamune/commands/elastic_mapreduce'
+  require 'masamune/commands/streaming'
+
   module Streaming
-    include Masamune::Actions::Common
+    def streaming(opts = {})
+      opts = opts.dup
+      opts.merge!(fail_fast: true)
 
-    # FIXME remove paths that do not exist
-    def streaming(opts, args)
-      Masamune.print("streaming %s -> %s (%s/%s)" % [opts[:input], opts[:output], opts[:mapper], opts[:reducer]])
-
-      Dir.chdir(Masamune.configuration.var_dir) do
-        if jobflow = Masamune.configuration.jobflow || opts[:jobflow]
-          execute(*elastic_mapreduce_ssh(jobflow, 'hadoop', 'jar', Masamune.configuration.hadoop_streaming_jar, *args, *elastic_mapreduce_streaming_args(opts)), :fail_fast => true)
-        else
-          execute('hadoop', 'jar', Masamune.configuration.hadoop_streaming_jar, *args, *streaming_args(opts), :fail_fast => true)
-        end
+      command = if opts[:jobflow]
+        opts.merge!(file_args: false)
+        Masamune::Commands::Shell.new(
+          Masamune::Commands::ElasticMapReduce.new(
+            Masamune::Commands::Streaming.new(opts), opts), opts)
+      else
+        Masamune::Commands::Shell.new(
+          Masamune::Commands::Streaming.new(opts), opts)
       end
-    end
 
-    private
-
-    def streaming_args(opts)
-      args = []
-      args << Masamune.configuration.command_options[:streaming].call
-      args << ['-input', opts[:input]]
-      args << ['-mapper', opts[:mapper], '-file', opts[:mapper]]
-      args << ['-reducer', opts[:reducer], '-file', opts[:reducer]]
-      args << ['-output', opts[:output]]
-      args.flatten
-    end
-
-    def elastic_mapreduce_streaming_args(opts)
-      args = []
-      args << Masamune.configuration.command_options[:streaming].call
-      args << ['-input', opts[:input]]
-      args << ['-mapper', opts[:mapper]]
-      args << ['-reducer', opts[:reducer]]
-      args << ['-output', opts[:output]]
-      args.flatten
-    end
-
-    def elastic_mapreduce_ssh(jobflow, *args)
-      ['elastic-mapreduce', '--jobflow', jobflow, '--ssh', %Q{"#{args.join(' ')}"}]
+      command.execute
     end
   end
 end

@@ -16,6 +16,13 @@ module Masamune::Commands
     end
 
     def before_execute
+      Masamune::logger.debug(command_args)
+      exit_code = OpenStruct.new(:success? => false)
+      if Masamune::configuration.dryrun
+        Masamune::trace(args)
+        return exit_code unless @safe
+      end
+
       if @delegate.respond_to?(:before_execute)
         @delegate.before_execute
       end
@@ -28,6 +35,11 @@ module Masamune::Commands
     end
 
     def around_execute(&block)
+      if @delegate.respond_to?(:around_execute)
+        @delegate.around_execute(&block)
+      else
+        block.call
+      end
     end
 
     def command_args
@@ -39,18 +51,19 @@ module Masamune::Commands
     end
 
     def execute
-      Masamune::logger.debug(command_args)
-
-      STDOUT.sync = STDERR.sync = true
       exit_code = OpenStruct.new(:success? => false)
 
-      if Masamune::configuration.dryrun
-        Masamune::trace(args)
-        return exit_code unless @safe
-      end
-
       before_execute
+      exit_code = around_execute do
+        execute_block
+      end
+      after_execute
 
+      raise "fail_fast" if @fail_fast unless exit_code.success?
+      exit_code
+    end
+
+    def execute_block
       stdin, stdout, stderr, wait_th = Open3.popen3(*command_args)
       Thread.new {
         if @input
@@ -79,15 +92,11 @@ module Masamune::Commands
       }
 
       wait_th.join
-      exit_code = wait_th.value if wait_th.value
+      Masamune::logger.debug(wait_th.value)
+      wait_th.value
+    ensure
       t_err.join
       t_out.join
-
-      after_execute
-
-      Masamune::logger.debug(exit_code)
-      raise "fail_fast" if @fail_fast unless exit_code.success?
-      exit_code
     end
 
     def handle_stdout(line, line_no)
