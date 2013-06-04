@@ -9,7 +9,7 @@ module Masamune::Commands
     end
 
     def interactive?
-      !input
+      input == nil
     end
 
     def command_args
@@ -21,7 +21,7 @@ module Masamune::Commands
     end
 
     def proxy_methods
-      [:command_args]
+      [:command_args, :interactive?]
     end
 
     def respond_to?(meth)

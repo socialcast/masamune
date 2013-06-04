@@ -28,6 +28,7 @@ module Masamune::Commands
     end
 
     def replace
+      Masamune::logger.debug('replace: ' + command_args.join(' '))
       Kernel.exec(*command_args)
     end
 
