@@ -177,7 +177,7 @@ module Masamune
 
     def execute_hadoop_fs(*args, &block)
       if block_given?
-        execute('hadoop', 'fs', *hadoop_fs_args, *args) do |line|
+        execute('hadoop', 'fs', *hadoop_fs_args, *args) do |line, line_no|
           yield line
         end
       else
