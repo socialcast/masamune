@@ -37,10 +37,13 @@ class Masamune::Configuration
 
   def logger
     @logger ||= begin
-      # TODO symlink latest
-      log_file = File.open(File.join(filesystem.path(:log_dir), log_file_template), 'a')
-      log_file.sync = true
-      debug ? Logger.new(Masamune::MultiIO.new(STDERR, log_file)) : Logger.new(log_file)
+      log_file_io = if filesystem.has_path?(:log_dir)
+        # TODO symlink latest
+        log_file = File.open(File.join(filesystem.path(:log_dir), log_file_template), 'a')
+        log_file.sync = true
+        debug ? Masamune::MultiIO.new(STDERR, log_file) : log_file
+      end
+      Logger.new(log_file_io)
     end
   end
 
@@ -58,7 +61,7 @@ class Masamune::Configuration
     @filesystem ||=
       Masamune::CachedFilesystem.new(
         Masamune::MethodLogger.new(
-          Masamune::Filesystem.new, :ignore => [:path, :exists?, :glob, :get_path, :add_path]))
+          Masamune::Filesystem.new, :ignore => [:path, :get_path, :add_path, :has_path?, :exists?, :glob]))
   end
 
   def hadoop_streaming_jar

@@ -24,6 +24,10 @@ module Masamune
     end
     alias :path :get_path
 
+    def has_path?(symbol)
+      @paths.has_key?(symbol)
+    end
+
     def touch!(*files)
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
