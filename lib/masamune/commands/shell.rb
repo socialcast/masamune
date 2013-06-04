@@ -51,7 +51,7 @@ module Masamune::Commands
     end
 
     def around_execute(&block)
-      if Masamune::configuration.no_op && !@safe
+      if Masamune::configuration.no_op && !safe
         return OpenStruct.new(:success? => true)
       end
 
@@ -79,7 +79,7 @@ module Masamune::Commands
       end
       after_execute
 
-      raise "fail_fast" if @fail_fast unless exit_code.success?
+      raise "fail_fast" if fail_fast unless exit_code.success?
       exit_code
     end
 
@@ -87,8 +87,8 @@ module Masamune::Commands
       STDOUT.sync = STDERR.sync = true
       stdin, stdout, stderr, wait_th = Open3.popen3(*command_args)
       Thread.new {
-        if @input
-          while line = @input.gets
+        if input
+          while line = input.gets
             stdin.puts line
           end
           stdin.close

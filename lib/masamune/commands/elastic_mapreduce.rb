@@ -9,7 +9,11 @@ module Masamune::Commands
     end
 
     def interactive?
-      input == nil
+      if @delegate.respond_to?(:interactive?)
+        @delegate.interactive?
+      else
+        input == nil
+      end
     end
 
     def command_args

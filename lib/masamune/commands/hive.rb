@@ -22,7 +22,7 @@ module Masamune::Commands
     end
 
     def interactive?
-      !(@exec || @file)
+      !(exec || file)
     end
 
     def command_args
