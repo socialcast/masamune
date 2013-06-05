@@ -10,7 +10,7 @@ module Masamune::Actions
       opts.merge!(jobflow: Masamune.configuration.jobflow)
 
       command = if opts[:jobflow]
-        opts.merge!(encode: true)
+        opts.merge!(quote: true)
         Masamune::Commands::Shell.new(
           Masamune::Commands::ElasticMapReduce.new(
             Masamune::Commands::Hive.new(opts), opts), opts)

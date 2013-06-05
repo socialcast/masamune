@@ -6,9 +6,9 @@ module Masamune::Commands
 
     def initialize(opts = {})
       self.file       = opts[:file]
+      self.quote      = opts.fetch(:quote, false)
       self.exec       = opts[:exec]
       self.output     = opts[:output]
-      self.quote      = opts.fetch(:quote, false)
     end
 
     def exec=(sql)

@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Masamune::Commands::Streaming do
   let(:extra_args) { ['-D', %q(map.output.key.field.separator='\t')] }
 
-  let(:default_options) do
+  let(:general_options) do
     {
       input: 'input',
       output: 'output',
@@ -13,14 +13,15 @@ describe Masamune::Commands::Streaming do
     }
   end
   let(:command_options) { [] }
-  let(:special_options) { {} }
+  let(:context_options) { {} }
 
   before do
     Masamune.configuration.add_command_options(:streaming) do
       command_options
     end
   end
-  let(:instance) { Masamune::Commands::Streaming.new(default_options.merge(special_options)) }
+
+  let(:instance) { Masamune::Commands::Streaming.new(general_options.merge(context_options)) }
 
   describe '#command_args' do
     let(:pre_command_args) { ['hadoop', 'jar', Masamune::configuration.hadoop_streaming_jar] }
@@ -37,7 +38,7 @@ describe Masamune::Commands::Streaming do
     end
 
     context 'with quote' do
-      let(:special_options) { {quote: true} }
+      let(:context_options) { {quote: true} }
       let(:quoted_extra_args) { ['-D', %q(map.output.key.field.separator='"'\\\\t'"')] }
 
       subject { instance.command_args }
