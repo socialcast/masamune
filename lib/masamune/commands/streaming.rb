@@ -10,8 +10,8 @@ module Masamune::Commands
       self.output     = opts[:output]
       self.mapper     = opts[:mapper]
       self.reducer    = opts[:reducer]
-      self.extra_args = opts[:extra_args] || []
-      self.file_args  = opts[:file_args] || true
+      self.extra_args = opts.fetch(:extra_args, [])
+      self.file_args  = opts.fetch(:file_args, true)
     end
 
     def command_args

@@ -8,7 +8,7 @@ module Masamune::Commands
       self.file       = opts[:file]
       self.exec       = opts[:exec]
       self.output     = opts[:output]
-      self.quote      = opts[:quote] || false
+      self.quote      = opts.fetch(:quote, false)
     end
 
     def exec=(sql)

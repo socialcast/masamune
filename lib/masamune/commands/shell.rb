@@ -4,12 +4,15 @@ require 'ostruct'
 
 module Masamune::Commands
   class Shell
+    require 'masamune/proxy_delegate'
+    include Masamune::ProxyDelegate
+
     attr_accessor :safe, :fail_fast, :input
 
     def initialize(delegate, opts = {})
       @delegate       = delegate
-      self.safe       = opts[:safe] || false
-      self.fail_fast  = opts[:fail_fast] || false
+      self.safe       = opts.fetch(:safe, false)
+      self.fail_fast  = opts.fetch(:fail_fast, false)
       self.input      = opts[:input]
     end
 
