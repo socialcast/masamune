@@ -27,8 +27,16 @@ module Masamune::Commands
       args
     end
 
+    def handle_stdout(line, line_no)
+      if line_no == 0 && line =~ /\Assh/
+        @delegate.handle_stderr(line, line_no) if @delegate.respond_to?(:handle_stderr)
+      else
+        @delegate.handle_stdout(line, line_no) if @delegate.respond_to?(:handle_stdout)
+      end
+    end
+
     def proxy_methods
-      [:command_args, :interactive?]
+      [:command_args, :interactive?, :handle_stdout]
     end
   end
 end
