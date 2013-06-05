@@ -11,6 +11,7 @@ module Masamune::Actions
 
       command = if opts[:jobflow]
         opts.merge!(file_args: false)
+        opts.merge!(quote: true)
         Masamune::Commands::Shell.new(
           Masamune::Commands::ElasticMapReduce.new(
             Masamune::Commands::Streaming.new(opts), opts), opts)
