@@ -138,9 +138,9 @@ module Masamune::Commands
 
     private
 
-    def method_missing(meth, *args)
+    def method_missing(meth, *args, &block)
       if @delegate.respond_to?(meth)
-        @delegate.send(meth, *args)
+        @delegate.send(meth, *args, &block)
       end
     end
 
