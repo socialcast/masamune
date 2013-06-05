@@ -33,12 +33,12 @@ describe Masamune::Commands::Streaming do
     context 'with command_options' do
       let(:command_options) { ['-cacheFile', 'cache.rb' ] }
 
-      it { should == pre_command_args + command_options + extra_args + post_command_args }
+      it { should == pre_command_args + extra_args + command_options  + post_command_args }
     end
 
     context 'with quote' do
       let(:special_options) { {quote: true} }
-      let(:quoted_extra_args) { ['-D', %q(map.output.key.field.separator="'"\t"'")] }
+      let(:quoted_extra_args) { ['-D', %q(map.output.key.field.separator='"'\\\\t'"')] }
 
       subject { instance.command_args }
 
