@@ -38,9 +38,9 @@ class Masamune::Configuration
   def logger
     @logger ||= begin
       log_file_io = if filesystem.has_path?(:log_dir)
-        # TODO symlink latest
         log_file = File.open(File.join(filesystem.path(:log_dir), log_file_template), 'a')
         log_file.sync = true
+        FileUtils.ln_s(log_file, File.join(filesystem.path(:log_dir), 'latest'), force: true)
         debug ? Masamune::MultiIO.new(STDERR, log_file) : log_file
       end
       Logger.new(log_file_io)
