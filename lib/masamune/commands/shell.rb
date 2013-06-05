@@ -139,17 +139,11 @@ module Masamune::Commands
       end
     end
 
+    def proxy_methods
+      [:before_execute, :around_execute, :after_execute, :command_args, :handle_stdout, :handle_stderr]
+    end
+
     private
-
-    def method_missing(meth, *args, &block)
-      if @delegate.respond_to?(meth)
-        @delegate.send(meth, *args, &block)
-      end
-    end
-
-    def respond_to?(meth)
-      @delegate.respond_to?(meth)
-    end
 
     def handle_stdout_wrapper(stdout)
       @line_no ||= 0

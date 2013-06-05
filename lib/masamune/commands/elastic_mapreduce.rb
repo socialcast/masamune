@@ -1,5 +1,8 @@
 module Masamune::Commands
   class ElasticMapReduce
+    require 'masamune/proxy_delegate'
+    include Masamune::ProxyDelegate
+
     attr_accessor :jobflow, :input
 
     def initialize(delegate, opts = {})
@@ -26,16 +29,6 @@ module Masamune::Commands
 
     def proxy_methods
       [:command_args, :interactive?]
-    end
-
-    def respond_to?(meth)
-      proxy_methods.include?(meth) || @delegate.respond_to?(meth)
-    end
-
-    def method_missing(meth, *args, &block)
-      if @delegate.respond_to?(meth)
-        @delegate.send(meth, *args, &block)
-      end
     end
   end
 end
