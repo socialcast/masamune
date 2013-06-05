@@ -3,6 +3,10 @@ class MockFilesystem
     @files = []
   end
 
+  def has_path?(*a)
+    false
+  end
+
   def touch!(*files)
     @files += files
   end
