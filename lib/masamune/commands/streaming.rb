@@ -18,7 +18,7 @@ module Masamune::Commands
     def command_args
       args = ['hadoop', 'jar', Masamune.configuration.hadoop_streaming_jar]
       args << Masamune.configuration.command_options[:streaming].call
-      args << quote ? extra_args.map { |arg| quote_arg(arg) } : extra_args
+      args << (quote ? extra_args.map { |arg| quote_arg(arg) } : extra_args)
       args << ['-input', input]
       args << ['-mapper', mapper]
       args << ['-file', mapper] if file_args
@@ -42,7 +42,9 @@ module Masamune::Commands
 
     # FIXME quoting is a separate concern
     def quote_arg(arg)
-      arg.gsub("'", %q("'"))
+      out = arg.dup
+      out.gsub!("'", %q("'"))
+      out
     end
   end
 end
