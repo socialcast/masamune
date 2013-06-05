@@ -2,6 +2,7 @@ module Masamune::Actions
   require 'masamune/commands/shell'
   require 'masamune/commands/elastic_mapreduce'
   require 'masamune/commands/hive'
+  require 'masamune/commands/line_formatter'
 
   module Hive
     def hive(opts = {})
@@ -13,10 +14,12 @@ module Masamune::Actions
         opts.merge!(quote: true)
         Masamune::Commands::Shell.new(
           Masamune::Commands::ElasticMapReduce.new(
-            Masamune::Commands::Hive.new(opts), opts), opts)
+            Masamune::Commands::LineFormatter.new(
+              Masamune::Commands::Hive.new(opts), opts), opts), opts)
       else
         Masamune::Commands::Shell.new(
-          Masamune::Commands::Hive.new(opts), opts)
+          Masamune::Commands::LineFormatter.new(
+            Masamune::Commands::Hive.new(opts), opts), opts)
       end
 
       if command.interactive?

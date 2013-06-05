@@ -17,6 +17,8 @@ module Masamune
   require 'masamune/method_logger'
   require 'masamune/proxy_delegate'
 
+  require 'masamune/commands/line_formatter'
+
   class Client
     def configure
       yield configuration
