@@ -3,12 +3,13 @@ module Masamune::Commands
     require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
 
-    attr_accessor :jobflow, :input
+    attr_accessor :jobflow, :input, :mode
 
     def initialize(delegate, opts = {})
       @delegate    = delegate
       self.jobflow = opts[:jobflow]
       self.input   = opts[:input]
+      self.mode    = opts.fetch('mode', '--ssh')
     end
 
     def interactive?
@@ -20,7 +21,10 @@ module Masamune::Commands
     end
 
     def command_args
-      args = ['elastic-mapreduce', '--jobflow', jobflow, '--ssh']
+      args = []
+      args << 'elastic-mapreduce'
+      args += ['--jobflow', jobflow] if jobflow
+      args << mode
       if @delegate.respond_to?(:command_args)
         args << %Q{"#{@delegate.command_args.join(' ')}"}
       end

@@ -4,6 +4,10 @@ module Masamune::Actions
       opts = opts.dup
       opts.merge!(jobflow: Masamune.configuration.jobflow)
 
+      if opts.delete(:list)
+        opts.merge!(mode: '--list')
+      end
+
       command = Masamune::Commands::Shell.new(
         Masamune::Commands::ElasticMapReduce.new(nil, opts), opts)
 
