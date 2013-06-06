@@ -46,7 +46,11 @@ class Masamune::DataPlan
     target_time = target_date.to_time.utc
     target_path = target_matcher.bind_date(target_date, target_options)
     target_step = self.class.rule_step(target_template)
-    OpenStruct.new(:path => target_path, :start => target_time, :stop => target_time + target_step)
+
+    target_time_in_tz = target_time.in_time_zone(target_options.fetch(:tz, 'UTC'))
+    OpenStruct.new(:path => target_path, :start => target_time, :stop => target_time + target_step,
+        :start_date => target_time_in_tz.to_date.to_s, :start_hour => target_time_in_tz.hour,
+        :stop_date => (target_time_in_tz + target_step).to_date.to_s, :stop_hour => (target_time_in_tz + target_step).hour)
   end
 
   def targets(rule, start, stop)
