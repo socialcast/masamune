@@ -32,7 +32,9 @@ module Masamune::Commands
 
     def replace
       Masamune::logger.debug('replace: ' + command_args.join(' '))
-      Kernel.exec(*command_args)
+      around_execute do
+        Kernel.exec(*command_args)
+      end
     end
 
     def before_execute
