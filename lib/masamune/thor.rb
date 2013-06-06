@@ -7,6 +7,7 @@ module Masamune
         include Masamune::Actions::Filesystem
 
         namespace :masamune
+        class_option :help, :type => :boolean, :aliases => '-h', :desc => 'Show help', :default => false
         class_option :quiet, :type => :boolean, :aliases => '-q', :desc => 'Suppress all output', :default => false
         class_option :verbose, :type => :boolean, :aliases => '-v', :desc => 'Print command execution information', :default => false
         class_option :debug, :type => :boolean, :aliases => '-d', :desc => 'Print debugging information', :default => false
@@ -15,6 +16,10 @@ module Masamune
         class_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: elastic-mapreduce --list)', :required => Masamune.configuration.elastic_mapreduce
         def initialize(*a)
           super
+          if options[:help] || ARGV.include?('-h') || ARGV.include?('--help')
+            help
+            exit
+          end
           Masamune.configure do |config|
             config.quiet    = options[:quiet]
             config.verbose  = options[:verbose] || options[:dry_run]
