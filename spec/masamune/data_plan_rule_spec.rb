@@ -93,6 +93,12 @@ describe Masamune::DataPlanRule do
       let(:input) { 'requests/y=2013/m=4/d=30/h=20' }
       it { should be_true }
     end
+
+    context 'with wildcard pattern' do
+      let(:pattern) { 'request_logs/%Y%m%d*request.log' }
+      let(:input) { 'request_logs/20130524.random.request.log' }
+      it { should be_true }
+    end
   end
 
   describe '#generate' do

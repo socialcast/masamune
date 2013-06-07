@@ -121,6 +121,7 @@ class Masamune::DataPlanRule
     regexp.gsub!('%H', '(?<hour>\d{2})')
     regexp.gsub!('%k', '(?<hour>\d{2})')
     regexp.gsub!('%-k', '(?<hour>\d{1,2})')
+    regexp.gsub!('*', '.*?')
     Regexp.compile(regexp)
   end
 
