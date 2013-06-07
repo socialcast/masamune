@@ -8,26 +8,6 @@ describe Masamune::DataPlan do
     end
   end
 
-  describe '.rule_step' do
-    subject { Masamune::DataPlan.rule_step(input) }
-    context '24 hour' do
-      let(:input) { '%Y-%m-%d/%k' }
-      it { should == 1.hour.to_i }
-    end
-    context '12 hour' do
-      let(:input) { '%Y-%m-%d/%H' }
-      it { should == 1.hour.to_i }
-    end
-    context 'daily' do
-      let(:input) { '%Y-%m-%d' }
-      it { should == 1.day.to_i }
-    end
-    context 'default' do
-      let(:input) { nil }
-      it { should == 1.day.to_i }
-    end
-  end
-
   let(:plan) { Masamune::DataPlan.new }
   let(:primary_command) { Proc.new { } }
   let(:secondary_command) { Proc.new {} }
