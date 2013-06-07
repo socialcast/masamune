@@ -1,6 +1,7 @@
 require 'active_support'
 require 'active_support/core_ext/numeric/time'
 
+# TODO all operations should be on DataPlan::Elem, not String paths
 class Masamune::DataPlan
   def initialize
     @targets = Hash.new
@@ -36,7 +37,7 @@ class Masamune::DataPlan
 
   def sources_from_paths(*paths)
     [].tap do |sources|
-      paths.each do |path|
+      paths.flatten.each do |path|
         rule = rule_for_source(path)
         source_template = @sources[rule]
         sources << source_template.bind_path(path)
@@ -46,7 +47,7 @@ class Masamune::DataPlan
 
   def targets_from_paths(*paths)
     [].tap do |targets|
-      paths.each do |path|
+      paths.flatten.each do |path|
         rule = rule_for_target(path)
         target_template = @targets[rule]
         targets << target_template.bind_path(path)

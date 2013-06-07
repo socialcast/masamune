@@ -5,27 +5,41 @@ module Masamune::Actions
     def self.included(base)
       base.extend ClassMethods
       base.class_eval do
-        attr_accessor :sources, :targets
+        attr_accessor :existing_sources, :missing_targets
+        attr_accessor :desired_sources, :desired_targets
 
         class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
         class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
-        class_option :sources, :type => :array, :desc => 'Input to process'
+        class_option :sources, :type => :array, :desc => 'Data sources to process'
+        class_option :targets, :type => :array, :desc => 'Data targest to process'
 
         private
 
-        def sources=(source_paths)
-          self.class.data_plan.sources_from_paths(current_command_name, source_paths)
+        def desired_sources=(source_paths)
+          @desired_sources = self.class.data_plan.sources_from_paths(source_paths)
         end
 
-        def targets=(target_paths)
-          self.class.data_plan.targets_from_paths(current_command_name, target_paths)
+        def desired_targets=(target_paths)
+          @desired_targets = self.class.data_plan.targets_from_paths(target_paths)
         end
 
-        def targets
-          return @targets if @targets
-          @sources.map do |source|
-            self.class.data_plan.targets_for_source(current_command_name, source)
-          end.flatten.reject do |target|
+        def desired_sources
+          @desired_sources || []
+        end
+
+        def desired_targets
+          @desired_targets ||
+          desired_sources.map do |source|
+            self.class.data_plan.targets_for_source(current_command_name, source.path)
+          end.flatten
+        end
+
+        def existing_sources
+          desired_sources
+        end
+
+        def missing_targets
+          desired_targets.reject do |target|
             if fs.exists?(target.path)
               Masamune::print("skipping existing #{target.path}")
               true
@@ -40,23 +54,20 @@ module Masamune::Actions
           raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
           raise %q(Cannot specify both option '--sources' and option '--targets') if options[:sources] && options[:targets]
 
-          sources = options[:sources] if options[:sources]
-          targets = options[:targets] if options[:targets]
+          self.desired_sources = options[:sources] if options[:sources]
+          self.desired_targets = options[:targets] if options[:targets]
 
-          unless sources || targets
+          if desired_targets.empty? && options[:start] && options[:stop]
             start = DateTime.parse(options[:start])
             stop = DateTime.parse(options[:stop])
+            @desired_targets = self.class.data_plan.targets_for_date_range(current_command_name, start, stop)
 
-            # TODO encapsulate
-            if targets = self.class.data_plan.targets_for_date_range(current_command_name, start, stop)
-              unless self.class.data_plan.resolve(current_command_name, targets, options)
-                abort "No matching input files for #{current_command_name} between #{options[:start]} and #{options[:stop]}"
-              end
+            unless self.class.data_plan.resolve(current_command_name, desired_targets.map(&:path), options)
+              abort "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
             end
-
-            # NOTE resolve has executed original thor task via anonymous proc - safe to exit
-            exit
+            exit # NOTE resolve has executed original thor task via anonymous proc - safe to exit
           end
+          # NOTE flow continues to original thor task
         end
       end
     end

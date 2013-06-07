@@ -22,8 +22,16 @@ class Masamune::DataPlanElem
     @start_time
   end
 
+  def start_date
+    @start_time.to_date
+  end
+
   def stop_time
     @start_time.to_time.utc + @rule.time_step
+  end
+
+  def stop_date
+    stop_time.to_date
   end
 
   def wildcard?
