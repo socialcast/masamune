@@ -67,12 +67,17 @@ describe Masamune::DataPlanRule do
       instance.matches?(input)
     end
 
-    context 'when matches' do
+    context 'when input fully matches' do
       let(:input) { 'report/2013-01-02/00' }
       it { should be_true }
     end
 
-    context 'when no match' do
+    context 'when input partially matches' do
+      let(:input) { 'report/2013-01-02' }
+      it { should be_true }
+    end
+
+    context 'when input does not match' do
       let(:input) { 'report' }
       it { should be_false }
     end

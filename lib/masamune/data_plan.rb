@@ -2,98 +2,123 @@ require 'active_support'
 require 'active_support/core_ext/numeric/time'
 
 class Masamune::DataPlan
-  require 'masamune/actions/filesystem'
-  include Masamune::Actions::Filesystem
-
   def initialize
     @targets = Hash.new
     @sources = Hash.new
-    @matcher = Hash.new
     @commands = Hash.new
   end
 
-  def add_target(rule, target, options = {})
-    @targets[rule] = [target, options]
-    @matcher[rule] = Masamune::Matcher.new(target)
+  def add_target(rule, target, target_options = {})
+    @targets[rule] = Masamune::DataPlanRule.new(target, target_options)
   end
 
-  def add_source(rule, source, options = {})
-    @sources[rule] = [source, options]
+  def add_source(rule, source, source_options = {})
+    @sources[rule] = Masamune::DataPlanRule.new(source, source_options)
   end
 
-  def add_command(rule, command, options = {})
-    @commands[rule] = [command, options]
+  def add_command(rule, command, command_options = {})
+    @commands[rule] = [command, command_options]
   end
 
-  def bind_date(date, template, tz_name = 'UTC')
-    tz = ActiveSupport::TimeZone[tz_name]
-    tz.utc_to_local(date).strftime(template)
-  end
-
-  def rule_for_target(target)
-    matches = @matcher.select { |rule, matcher| matcher.matches?(target) }
-    raise "No rule matches #{target}" if matches.empty?
-    raise "Multiple rule matches #{target}" if matches.length > 1
+  def rule_for_source(source)
+    matches = @sources.select { |rule, matcher| matcher.matches?(source) }
+    raise "No rule matches source #{source}" if matches.empty?
+    raise "Multiple rules match source #{source}" if matches.length > 1
     matches.map(&:first).first
   end
 
-  def target_for_source(rule, source_example)
-    source_template, source_options = @sources[rule]
-    target_template, target_options = @targets[rule]
-    source_matcher = Masamune::Matcher.new(source_template)
-    target_matcher = Masamune::Matcher.new(target_template)
-    target_date = source_matcher.free_date(source_example, source_options)
-    target_time = target_date.to_time.utc
-    target_path = target_matcher.bind_date(target_date, target_options)
-    target_step = self.class.rule_step(target_template)
-
-    target_time_in_tz = target_time.in_time_zone(target_options.fetch(:tz, 'UTC'))
-    OpenStruct.new(:path => target_path, :start => target_time, :stop => target_time + target_step,
-        :start_date => target_time_in_tz.to_date.to_s, :start_hour => target_time_in_tz.hour,
-        :stop_date => (target_time_in_tz + target_step).to_date.to_s, :stop_hour => (target_time_in_tz + target_step).hour)
+  def rule_for_target(target)
+    matches = @targets.select { |rule, matcher| matcher.matches?(target) }
+    raise "No rule matches target #{target}" if matches.empty?
+    raise "Multiple rules match target #{target}" if matches.length > 1
+    matches.map(&:first).first
   end
 
-  def targets(rule, start, stop)
-    pattern, options = @targets[rule]
-    start_time, stop_time = start.to_time.utc, stop.to_time.utc
-    step = self.class.rule_step(pattern)
-    [].tap do |out|
-      current_time = start_time
-      while current_time <= stop_time do
-        out << bind_date(current_time, pattern, options.fetch(:tz, 'UTC'))
-        current_time += step
+  def sources_from_paths(*paths)
+    [].tap do |sources|
+      paths.each do |path|
+        rule = rule_for_source(path)
+        source_template = @sources[rule]
+        sources << source_template.bind_path(path)
       end
-    end.compact
+    end
   end
 
-  def sources(rule, target)
-    pattern, options = @sources[rule]
-    if result = @matcher[rule].bind(target, pattern, options.fetch(:tz, 'UTC'))
+  def targets_from_paths(*paths)
+    [].tap do |targets|
+      paths.each do |path|
+        rule = rule_for_target(path)
+        target_template = @targets[rule]
+        targets << target_template.bind_path(path)
+      end
+    end
+  end
+
+  def targets_for_date_range(rule, start, stop, &block)
+    if block_given?
+      targets_for_date_range_block(rule, start, stop, &block)
+    else
+      [].tap do |targets|
+        targets_for_date_range_block(rule, start, stop) do |target|
+          targets << target
+        end
+      end
+    end
+  end
+
+  def targets_for_date_range_block(rule, start, stop, &block)
+    target_template = @targets[rule]
+    target_template.generate(start.to_time.utc, stop.to_time.utc) do |target_instance|
+      yield target_instance
+    end
+  end
+
+  def targets_for_source(rule, source_instance, &block)
+    source_template = @sources[rule]
+    target_template = @targets[rule]
+    if block_given?
+      source_template.generate_via_unify_path(source_instance, target_template) do |target_instance|
+        yield target_instance
+      end
+    else
       [].tap do |out|
-        if options[:wildcard]
-          fs.glob(result) do |file|
-            out << file
+        targets_for_source(rule, source_instance) { |target_instance| out << target_instance }
+      end
+    end
+  end
+
+  def sources_for_target(rule, target_instance, &block)
+    source_template = @sources[rule]
+    target_template = @targets[rule]
+    if block_given?
+      target_template.generate_via_unify_path(target_instance, source_template) do |source_instance|
+        if source_instance.wildcard?
+          Masamune.filesystem.glob(source_instance.path) do |source_path|
+            sources_from_paths(source_path).each do |source|
+              yield source
+            end
           end
         else
-          out << result
+          yield source_instance
         end
-      end.compact
+      end
     else
-      []
+      [].tap do |out|
+        sources_for_target(rule, target_instance) { |source_instance| out << source_instance }
+      end
     end
   end
 
   def analyze(rule, targets)
     matches, missing = Set.new, Hash.new { |h,k| h[k] = Set.new }
     targets.each do |target|
-      unless fs.exists?(target)
-        sources = sources(rule, target)
-        sources.each do |source|
-          if fs.exists?(source)
+      unless Masamune.filesystem.exists?(target)
+        sources_for_target(rule, target) do |source|
+          if Masamune.filesystem.exists?(source.path)
             matches << source
           else
-            dep = rule_for_target(source)
-            missing[dep] << source
+            rule_dep = rule_for_target(source.path)
+            missing[rule_dep] << source
           end
         end
       end
@@ -104,29 +129,18 @@ class Masamune::DataPlan
   def resolve(rule, targets, runtime_options = {})
     matches, missing = analyze(rule, targets)
 
-    missing.each do |dep, missing_targets|
-      resolve(dep, missing_targets, runtime_options)
+    missing.each do |rule_dep, missing_sources|
+      resolve(rule_dep, missing_sources.map(&:path), runtime_options)
     end
 
     matches, missing = analyze(rule, targets) if missing.any?
 
     command, command_options = @commands[rule]
     if matches.any?
-      command.call(matches.to_a, runtime_options)
+      command.call(matches.map(&:path), runtime_options)
       true
     else
       false
-    end
-  end
-
-  def self.rule_step(pattern)
-    case pattern
-    when /%k/, /%H/
-      1.hour.to_i
-    when /%d/
-      1.day.to_i
-    else
-      1.day.to_i
     end
   end
 end

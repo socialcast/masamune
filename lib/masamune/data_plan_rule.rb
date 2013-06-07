@@ -4,13 +4,18 @@ require 'active_support/values/time_zone'
 require 'date'
 
 class Masamune::DataPlanElem
-  def initialize(rule, start_time)
+  def initialize(rule, start_time, options = {})
     @rule = rule
     @start_time = start_time
+    @options = options
   end
 
   def path
-    start_time.strftime(@rule.pattern)
+    if input_path && wildcard?
+      input_path
+    else
+      start_time.strftime(@rule.pattern)
+    end
   end
 
   def start_time
@@ -19,6 +24,14 @@ class Masamune::DataPlanElem
 
   def stop_time
     @start_time.to_time.utc + @rule.time_step
+  end
+
+  def wildcard?
+    @options.fetch(:wildcard, false)
+  end
+
+  def input_path
+    @options[:input_path]
   end
 
   def next
@@ -43,14 +56,14 @@ class Masamune::DataPlanRule
 
   def bind_date(input_date)
     output_date = tz.utc_to_local(input_date)
-    Masamune::DataPlanElem.new(self, output_date)
+    Masamune::DataPlanElem.new(self, output_date, @options)
   end
 
   def bind_path(input_path)
     matched_pattern = @matcher.match(input_path)
     raise "Cannot bind_path #{input_path} to #{@pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
-    Masamune::DataPlanElem.new(self, output_date)
+    Masamune::DataPlanElem.new(self, output_date, @options.merge(:input_path => input_path))
   end
 
   def unify_path(input_path, rule)
@@ -69,6 +82,15 @@ class Masamune::DataPlanRule
           elems << elem
         end
       end
+    end
+  end
+
+  # FIXME implement non 1:1 unification and substitution
+  def generate_via_unify_path(input_path, rule, &block)
+    if block_given?
+      yield unify_path(input_path, rule)
+    else
+      [unify_path(input_path, rule)]
     end
   end
 

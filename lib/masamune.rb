@@ -1,7 +1,7 @@
 module Masamune
   require 'masamune/configuration'
-  require 'masamune/matcher'
   require 'masamune/data_plan'
+  require 'masamune/data_plan_rule'
   require 'masamune/thor'
   require 'masamune/thor_loader'
   require 'masamune/thor_data'
