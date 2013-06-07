@@ -9,7 +9,7 @@ module Masamune
   require 'masamune/actions/s3cmd'
   require 'masamune/actions/streaming'
   require 'masamune/actions/filesystem'
-  require 'masamune/actions/dataflow'
+  require 'masamune/actions/data_flow'
   require 'masamune/actions/elastic_mapreduce'
   require 'masamune/filesystem'
   require 'masamune/cached_filesystem'

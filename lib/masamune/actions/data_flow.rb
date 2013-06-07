@@ -1,5 +1,5 @@
 module Masamune::Actions
-  module Dataflow
+  module DataFlow
     private
 
     def self.included(base)
@@ -77,22 +77,13 @@ module Masamune::Actions
     end
 
     module ClassMethods
-      def source(source, source_options = {})
-        data_plan.add_source(command_name(source_options), source, source_options)
-
-        thor_wrapper = Proc.new do |sources, runtime_options|
-          command_options = command_options(runtime_options)
-          Masamune.logger.debug([command_name(source_options), '--sources', *sources] + command_options)
-          # TODO try invoke
-          self.start([command_name(source_options), '--sources', *sources] + command_options)
-        end
-
-        # TODO trigger indepenent of order
-        data_plan.add_command(command_name(source_options), thor_wrapper)
+      def source(source, loadtime_options = {})
+        data_plan.add_source(command_name(loadtime_options), source, loadtime_options)
+        data_plan.add_command(command_name(loadtime_options), command_wrapper(loadtime_options))
       end
 
-      def target(target, target_options = {})
-        data_plan.add_target(command_name(target_options), target, target_options)
+      def target(target, loadtime_options = {})
+        data_plan.add_target(command_name(loadtime_options), target, loadtime_options)
       end
 
       def data_plan
@@ -107,12 +98,21 @@ module Masamune::Actions
       end
 
       # TODO infer command_name even when explicit :for is missing
-      def command_name(options = {})
-        options[:for]
+      def command_name(loadtime_options = {})
+        loadtime_options[:for]
       end
 
       def command_options(runtime_options)
         runtime_options.reject { |_,v| v == false }.map { |k,v| ["--#{k}", v == true ? nil : v] }.flatten.compact
+      end
+
+      def command_wrapper(loadtime_options)
+        Proc.new do |sources, runtime_options|
+          command_options = command_options(runtime_options)
+          Masamune.logger.debug([command_name(loadtime_options), '--sources', *sources] + command_options)
+          # TODO try using invoke
+          self.start([command_name(loadtime_options), '--sources', *sources] + command_options)
+        end
       end
     end
   end
