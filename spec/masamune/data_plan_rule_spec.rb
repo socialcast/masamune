@@ -73,8 +73,10 @@ describe Masamune::DataPlanRule do
     end
 
     context 'when input partially matches' do
-      let(:input) { 'report/2013-01-02' }
-      it { should be_true }
+      pending 'derived daily from hourly rollup' do
+        let(:input) { 'report/2013-01-02' }
+        it { should be_true }
+      end
     end
 
     context 'when input does not match' do
