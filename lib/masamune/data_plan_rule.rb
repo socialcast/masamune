@@ -1,12 +1,15 @@
 require 'active_support'
 require 'active_support/duration'
 require 'active_support/values/time_zone'
+require 'active_support/core_ext/time/calculations'
+require 'active_support/core_ext/date/calculations'
+require 'active_support/core_ext/date_time/calculations'
 require 'date'
 
 class Masamune::DataPlanElem
   def initialize(rule, start_time, options = {})
     @rule = rule
-    @start_time = start_time
+    self.start_time = start_time
     @options = options
   end
 
@@ -19,7 +22,17 @@ class Masamune::DataPlanElem
   end
 
   def start_time
-    @start_time
+    @start_time.to_time.utc
+  end
+
+  def start_time=(start_time)
+    @start_time =
+    case start_time
+    when Time
+      start_time.utc
+    when Date, DateTime
+      start_time.to_time.utc
+    end
   end
 
   def start_date
@@ -27,7 +40,7 @@ class Masamune::DataPlanElem
   end
 
   def stop_time
-    @start_time.to_time.utc + @rule.time_step
+    start_time.advance(@rule.time_step => 1)
   end
 
   def stop_date
@@ -96,11 +109,12 @@ class Masamune::DataPlanRule
 
   def generate_via_unify_path(input_path, rule, &block)
     instance = unify_path(input_path, rule)
-    start_value = instance.start_time.send(time_value)
+
+    stop_time = instance.start_time.advance(time_step => 1)
     begin
       yield instance
       instance = instance.next
-    end while start_value == instance.start_time.send(time_value)
+    end while instance.start_time < stop_time
   end
 
   def tz
@@ -109,29 +123,14 @@ class Masamune::DataPlanRule
 
   def time_step
     case @pattern
-    when /%k/, /%H/
-      1.hour.to_i
-    when /%d/
-      1.day.to_i
-    when /%m/
-      31.days.to_i
-    when /%Y/
-      366.days.to_i
-    else
-      raise "No time value step pattern #{@patter}"
-    end
-  end
-
-  def time_value
-    case @pattern
-    when /%k/, /%H/
-      :hour
-    when /%d/
-      :day
-    when /%m/
-      :month
-    when /%Y/
-      :year
+    when /%-?k/, /%-?H/
+      :hours
+    when /%-?d/
+      :days
+    when /%-?m/
+      :months
+    when /%-?Y/
+      :years
     else
       raise "No time value for pattern #{@patter}"
     end

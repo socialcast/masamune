@@ -104,6 +104,7 @@ describe Masamune::DataPlan do
       (1..31).each do |day|
         it { sources.map(&:path).should include 'table/y=2013/m=01/d=%02d' % day }
       end
+      it { sources.should have(31).items }
     end
 
     context 'invalid target' do

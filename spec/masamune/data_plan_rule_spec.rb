@@ -131,15 +131,31 @@ describe Masamune::DataPlanRule do
 
     context '24 hour' do
       let(:pattern) { '%Y-%m-%d/%k' }
-      it { should == 1.hour.to_i }
+      it { should == :hours }
+    end
+    context '24 hour (condensed)' do
+      let(:pattern) { '%Y-%m-%d/%-k' }
+      it { should == :hours }
     end
     context '12 hour' do
       let(:pattern) { '%Y-%m-%d/%H' }
-      it { should == 1.hour.to_i }
+      it { should == :hours }
+    end
+    context '12 hour (condensed)' do
+      let(:pattern) { '%Y-%m-%d/%-H' }
+      it { should == :hours }
     end
     context 'daily' do
       let(:pattern) { '%Y-%m-%d' }
-      it { should == 1.day.to_i }
+      it { should == :days }
+    end
+    context 'monthly' do
+      let(:pattern) { '%Y-%m' }
+      it { should == :months }
+    end
+    context 'yearly' do
+      let(:pattern) { '%Y' }
+      it { should == :years }
     end
   end
 end
