@@ -58,8 +58,9 @@ class Masamune::DataPlanRule
     @pattern
   end
 
-  def matches?(input)
-    @matcher.match(input) != nil
+  def matches?(input_path)
+    matched_pattern = @matcher.match(input_path)
+    matched_pattern.present? && matched_pattern[:rest].blank?
   end
 
   def bind_date(input_date)
@@ -93,13 +94,13 @@ class Masamune::DataPlanRule
     end
   end
 
-  # FIXME implement non 1:1 unification and substitution
   def generate_via_unify_path(input_path, rule, &block)
-    if block_given?
-      yield unify_path(input_path, rule)
-    else
-      [unify_path(input_path, rule)]
-    end
+    instance = unify_path(input_path, rule)
+    start_value = instance.start_time.send(time_value)
+    begin
+      yield instance
+      instance = instance.next
+    end while start_value == instance.start_time.send(time_value)
   end
 
   def tz
@@ -112,8 +113,27 @@ class Masamune::DataPlanRule
       1.hour.to_i
     when /%d/
       1.day.to_i
+    when /%m/
+      31.days.to_i
+    when /%Y/
+      366.days.to_i
     else
-      1.day.to_i
+      raise "No time value step pattern #{@patter}"
+    end
+  end
+
+  def time_value
+    case @pattern
+    when /%k/, /%H/
+      :hour
+    when /%d/
+      :day
+    when /%m/
+      :month
+    when /%Y/
+      :year
+    else
+      raise "No time value for pattern #{@patter}"
     end
   end
 
@@ -129,7 +149,8 @@ class Masamune::DataPlanRule
     regexp.gsub!('%H', '(?<hour>\d{2})')
     regexp.gsub!('%k', '(?<hour>\d{2})')
     regexp.gsub!('%-k', '(?<hour>\d{1,2})')
-    regexp.gsub!('*', '.*?')
+    regexp.gsub!('*', '(?<glob>.*?)')
+    regexp.gsub!(/$/, '(?<rest>.*?)\z')
     Regexp.compile(regexp)
   end
 
