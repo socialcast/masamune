@@ -10,15 +10,19 @@ describe Masamune::DataPlan do
 
   let(:plan) { Masamune::DataPlan.new }
   let(:primary_command) { Proc.new { } }
-  let(:secondary_command) { Proc.new {} }
+  let(:derived_daily_command) { Proc.new {} }
+  let(:derived_monthly_command) { Proc.new {} }
 
   before do
     plan.add_target('primary', 'table/y=%Y/m=%m/d=%d')
     plan.add_source('primary', 'log/%Y%m%d.*.log', :wildcard => true)
     plan.add_command('primary', primary_command)
-    plan.add_target('secondary', 'report/%Y-%m-%d')
-    plan.add_source('secondary', 'table/y=%Y/m=%m/d=%d')
-    plan.add_command('secondary', secondary_command)
+    plan.add_target('derived_daily', 'daily/%Y-%m-%d')
+    plan.add_source('derived_daily', 'table/y=%Y/m=%m/d=%d')
+    plan.add_command('derived_daily', derived_daily_command)
+    plan.add_target('derived_monthly', 'monthly/%Y-%m')
+    plan.add_source('derived_monthly', 'table/y=%Y/m=%m/d=%d')
+    plan.add_command('derived_monthly', derived_monthly_command)
   end
 
   describe '#targets_for_date_range' do
@@ -34,11 +38,11 @@ describe Masamune::DataPlan do
       it { should include 'table/y=2013/m=01/d=03' }
     end
 
-    context 'secondary' do
-      let(:rule) { 'secondary' }
-      it { should include 'report/2013-01-01' }
-      it { should include 'report/2013-01-02' }
-      it { should include 'report/2013-01-03' }
+    context 'derived_daily' do
+      let(:rule) { 'derived_daily' }
+      it { should include 'daily/2013-01-01' }
+      it { should include 'daily/2013-01-02' }
+      it { should include 'daily/2013-01-03' }
     end
   end
 
@@ -56,13 +60,13 @@ describe Masamune::DataPlan do
       it { targets.first.path.should == 'table/y=2013/m=01/d=01' }
     end
 
-    context 'secondary' do
-      let(:rule) { 'secondary' }
+    context 'derived_daily' do
+      let(:rule) { 'derived_daily' }
       let(:source)  { 'table/y=2013/m=01/d=01' }
 
       it { targets.first.start_time.should == Date.civil(2013,01,01) }
       it { targets.first.stop_time.should == Date.civil(2013,01,02) }
-      it { targets.first.path.should == 'report/2013-01-01' }
+      it { targets.first.path.should == 'daily/2013-01-01' }
     end
   end
 
@@ -86,15 +90,25 @@ describe Masamune::DataPlan do
       it { sources.last.path.should == 'log/20130101.app2.log' }
     end
 
-    context 'valid target associated with source files' do
-      let(:rule) { 'secondary' }
-      let(:target) { 'report/2013-01-03' }
+    context 'valid target associated with a single source file' do
+      let(:rule) { 'derived_daily' }
+      let(:target) { 'daily/2013-01-03' }
 
       it { sources.first.path.should == 'table/y=2013/m=01/d=03' }
     end
 
+    context 'valid target associated with a group of source files' do
+      let(:rule) { 'derived_monthly' }
+      let(:target) { 'monthly/2013-01' }
+
+      (1..31).each do |day|
+        it { sources.map(&:path).should include 'table/y=2013/m=01/d=%02d' % day }
+      end
+      it { sources.should have(31).items }
+    end
+
     context 'invalid target' do
-      let(:rule) { 'secondary' }
+      let(:rule) { 'derived_daily' }
       let(:target) {  'table/y=2013/m=01/d=01' }
       it { expect { subject }.to raise_error }
     end
@@ -108,13 +122,18 @@ describe Masamune::DataPlan do
       it { should == 'primary' }
     end
 
-    context 'secondary target' do
-      let(:target) { 'report/2013-01-03' }
-      it { should == 'secondary' }
+    context 'derived_daily target' do
+      let(:target) { 'daily/2013-01-03' }
+      it { should == 'derived_daily' }
+    end
+
+    context 'derived_monthly target' do
+      let(:target) { 'monthly/2013-01' }
+      it { should == 'derived_monthly' }
     end
 
     context 'invalid target' do
-      let(:target) { 'report' }
+      let(:target) { 'daily' }
       it { expect { subject }.to raise_error }
     end
   end
@@ -135,13 +154,13 @@ describe Masamune::DataPlan do
           fs.touch!('table/y=2013/m=01/d=02')
           fs.touch!('table/y=2013/m=01/d=03')
           primary_command.should_not_receive(:call)
-          secondary_command.should_not_receive(:call)
+          derived_daily_command.should_not_receive(:call)
           resolve
         end
 
         it { should be_false }
         it 'should not call primary_command' do; end
-        it 'should not call secondary_command' do; end
+        it 'should not call derived_daily_command' do; end
       end
 
       context 'when partial target data exists' do
@@ -152,35 +171,29 @@ describe Masamune::DataPlan do
           fs.touch!('table/y=2013/m=01/d=01')
           fs.touch!('table/y=2013/m=01/d=03')
           primary_command.should_receive(:call).with(['log/20130102.app1.log'], {})
-          secondary_command.should_not_receive(:call)
+          derived_daily_command.should_not_receive(:call)
           resolve
         end
 
         it { should be_true }
         it 'should call primary_command' do; end
-        it 'should not call secondary_command' do; end
+        it 'should not call derived_daily_command' do; end
       end
 
       context 'when source data does not exist' do
         before do
           primary_command.should_not_receive(:call)
-          secondary_command.should_not_receive(:call)
+          derived_daily_command.should_not_receive(:call)
           resolve
         end
 
         it { should be_false }
         it 'should not call primary_command' do; end
-        it 'should not call secondary_command' do; end
+        it 'should not call derived_daily_command' do; end
       end
     end
 
-    context 'secondary rule' do
-      let(:rule) { 'secondary' }
-      let(:targets) {  [
-        'report/2013-01-01',
-        'report/2013-01-02',
-        'report/2013-01-03' ] }
-
+    shared_examples_for 'derived daily data' do
       let(:primary_command) {
         Proc.new do
           fs.touch!('table/y=2013/m=01/d=01')
@@ -195,13 +208,34 @@ describe Masamune::DataPlan do
           fs.touch!('log/20130102.app1.log')
           fs.touch!('log/20130103.app1.log')
           primary_command.should_receive(:call).with(['log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log'], {}).and_call_original
-          secondary_command.should_receive(:call).with(["table/y=2013/m=01/d=01", "table/y=2013/m=01/d=02", "table/y=2013/m=01/d=03"], {})
+          derived_command.should_receive(:call).with(["table/y=2013/m=01/d=01", "table/y=2013/m=01/d=02", "table/y=2013/m=01/d=03"], {})
           resolve
         end
 
         it { should be_true }
         it 'should call primary_command' do; end
-        it 'should not call secondary_command' do; end
+        it 'should not call derived_command' do; end
+      end
+    end
+
+    context 'derived_daily rule' do
+      let(:rule) { 'derived_daily' }
+      let(:targets) {  [
+        'daily/2013-01-01',
+        'daily/2013-01-02',
+        'daily/2013-01-03' ] }
+
+      it_behaves_like 'derived daily data' do
+        let(:derived_command) { derived_daily_command }
+      end
+    end
+
+    context 'derived_monthly rule' do
+      let(:rule) { 'derived_monthly' }
+      let(:targets) {  ['monthly/2013-01'] }
+
+      it_behaves_like 'derived daily data' do
+        let(:derived_command) { derived_monthly_command }
       end
     end
   end

@@ -1,12 +1,15 @@
 require 'active_support'
 require 'active_support/duration'
 require 'active_support/values/time_zone'
+require 'active_support/core_ext/time/calculations'
+require 'active_support/core_ext/date/calculations'
+require 'active_support/core_ext/date_time/calculations'
 require 'date'
 
 class Masamune::DataPlanElem
   def initialize(rule, start_time, options = {})
     @rule = rule
-    @start_time = start_time
+    self.start_time = start_time
     @options = options
   end
 
@@ -19,7 +22,17 @@ class Masamune::DataPlanElem
   end
 
   def start_time
-    @start_time
+    @start_time.to_time.utc
+  end
+
+  def start_time=(start_time)
+    @start_time =
+    case start_time
+    when Time
+      start_time.utc
+    when Date, DateTime
+      start_time.to_time.utc
+    end
   end
 
   def start_date
@@ -27,7 +40,7 @@ class Masamune::DataPlanElem
   end
 
   def stop_time
-    @start_time.to_time.utc + @rule.time_step
+    start_time.advance(@rule.time_step => 1)
   end
 
   def stop_date
@@ -58,8 +71,9 @@ class Masamune::DataPlanRule
     @pattern
   end
 
-  def matches?(input)
-    @matcher.match(input) != nil
+  def matches?(input_path)
+    matched_pattern = @matcher.match(input_path)
+    matched_pattern.present? && matched_pattern[:rest].blank?
   end
 
   def bind_date(input_date)
@@ -93,13 +107,14 @@ class Masamune::DataPlanRule
     end
   end
 
-  # FIXME implement non 1:1 unification and substitution
   def generate_via_unify_path(input_path, rule, &block)
-    if block_given?
-      yield unify_path(input_path, rule)
-    else
-      [unify_path(input_path, rule)]
-    end
+    instance = unify_path(input_path, rule)
+
+    stop_time = instance.start_time.advance(time_step => 1)
+    begin
+      yield instance
+      instance = instance.next
+    end while instance.start_time < stop_time
   end
 
   def tz
@@ -108,12 +123,16 @@ class Masamune::DataPlanRule
 
   def time_step
     case @pattern
-    when /%k/, /%H/
-      1.hour.to_i
-    when /%d/
-      1.day.to_i
+    when /%-?k/, /%-?H/
+      :hours
+    when /%-?d/
+      :days
+    when /%-?m/
+      :months
+    when /%-?Y/
+      :years
     else
-      1.day.to_i
+      raise "No time value for pattern #{@patter}"
     end
   end
 
@@ -129,7 +148,8 @@ class Masamune::DataPlanRule
     regexp.gsub!('%H', '(?<hour>\d{2})')
     regexp.gsub!('%k', '(?<hour>\d{2})')
     regexp.gsub!('%-k', '(?<hour>\d{1,2})')
-    regexp.gsub!('*', '.*?')
+    regexp.gsub!('*', '(?<glob>.*?)')
+    regexp.gsub!(/$/, '(?<rest>.*?)\z')
     Regexp.compile(regexp)
   end
 
