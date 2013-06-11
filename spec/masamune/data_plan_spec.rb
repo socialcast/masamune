@@ -138,32 +138,6 @@ describe Masamune::DataPlan do
     end
   end
 
-=begin
-  describe '#rule_for_source' do
-    subject { plan.rule_for_source(source) }
-
-    context 'primary source' do
-      let(:source) { 'log/20130101.random.1.log' }
-      it { should == 'primary' }
-    end
-
-    context 'derived_daily source' do
-      let(:source) { 'table/y=2013/m=01/d=01' }
-      it { expect { subject }.to raise_error /Multiple rules match/ }
-    end
-
-    context 'derived_monthly source' do
-      let(:source) { 'table/y=2013/m=01' }
-      it { should == 'derived_monthly' }
-    end
-
-    context 'invalid source' do
-      let(:source) { 'daily' }
-      it { expect { subject }.to raise_error }
-    end
-  end
-=end
-
   describe '#resolve' do
     subject(:resolve) { plan.resolve(rule, targets) }
 

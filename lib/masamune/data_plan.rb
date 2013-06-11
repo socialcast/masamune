@@ -21,13 +21,6 @@ class Masamune::DataPlan
     @commands[rule] = [command, command_options]
   end
 
-  def rule_for_source(source)
-    matches = @sources.select { |rule, matcher| matcher.matches?(source) }
-    raise "No rule matches source #{source}" if matches.empty?
-    raise "Multiple rules match source #{source}" if matches.length > 1
-    matches.map(&:first).first
-  end
-
   def rule_for_target(target)
     matches = @targets.select { |rule, matcher| matcher.matches?(target) }
     raise "No rule matches target #{target}" if matches.empty?
@@ -35,21 +28,19 @@ class Masamune::DataPlan
     matches.map(&:first).first
   end
 
-  def sources_from_paths(*paths)
+  def sources_from_paths(rule, *paths)
+    source_template = @sources[rule]
     [].tap do |sources|
       paths.flatten.each do |path|
-        rule = rule_for_source(path)
-        source_template = @sources[rule]
         sources << source_template.bind_path(path)
       end
     end
   end
 
-  def targets_from_paths(*paths)
+  def targets_from_paths(rule, *paths)
+    target_template = @targets[rule]
     [].tap do |targets|
       paths.flatten.each do |path|
-        rule = rule_for_target(path)
-        target_template = @targets[rule]
         targets << target_template.bind_path(path)
       end
     end
@@ -95,7 +86,7 @@ class Masamune::DataPlan
       target_template.generate_via_unify_path(target_instance, source_template) do |source_instance|
         if source_instance.wildcard?
           Masamune.filesystem.glob(source_instance.path) do |source_path|
-            sources_from_paths(source_path).each do |source|
+            sources_from_paths(rule, source_path).each do |source|
               yield source
             end
           end

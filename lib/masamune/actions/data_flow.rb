@@ -16,11 +16,11 @@ module Masamune::Actions
         private
 
         def desired_sources=(source_paths)
-          @desired_sources = self.class.data_plan.sources_from_paths(source_paths)
+          @desired_sources = self.class.data_plan.sources_from_paths(current_command_name, source_paths)
         end
 
         def desired_targets=(target_paths)
-          @desired_targets = self.class.data_plan.targets_from_paths(target_paths)
+          @desired_targets = self.class.data_plan.targets_from_paths(current_command_name, target_paths)
         end
 
         def desired_sources
