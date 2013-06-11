@@ -27,6 +27,11 @@ class Masamune::Configuration
     self.dry_run  = false
   end
 
+  def debug=(debug)
+    @debug = debug
+    @logger = nil
+  end
+
   def elastic_mapreduce
     @elastic_mapreduce ||= false
   end

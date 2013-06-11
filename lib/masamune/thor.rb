@@ -16,10 +16,12 @@ module Masamune
         class_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: elastic-mapreduce --list)', :required => Masamune.configuration.elastic_mapreduce
         def initialize(*a)
           super
-          if options[:help] || ARGV.include?('-h') || ARGV.include?('--help')
+
+          if options[:help] || ARGV.include?('-h') || ARGV.include?('--help') || current_command.class == ::Thor::DynamicCommand
             help
             exit
           end
+
           Masamune.configure do |config|
             config.quiet    = options[:quiet]
             config.verbose  = options[:verbose] || options[:dry_run]
@@ -34,6 +36,10 @@ module Masamune
         private
 
         def after_initialize(*a); end
+      end
+
+      def current_command
+        @_initializer.last[:current_command]
       end
     end
   end
