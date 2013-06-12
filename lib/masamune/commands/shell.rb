@@ -44,6 +44,10 @@ module Masamune::Commands
         Masamune::trace(command_args)
       end
 
+      unless absolute_path(command_bin).present?
+        raise "#{command_bin} missing from $PATH"
+      end
+
       if @delegate.respond_to?(:before_execute)
         @delegate.before_execute
       end
@@ -73,6 +77,10 @@ module Masamune::Commands
       else
         raise 'no command_args'
       end
+    end
+
+    def command_bin
+      command_args.first
     end
 
     def execute
@@ -146,6 +154,10 @@ module Masamune::Commands
     end
 
     private
+
+    def absolute_path(comand_bin)
+      `which #{command_bin}`.chomp
+    end
 
     def handle_stdout_wrapper(stdout)
       @line_no ||= 0
