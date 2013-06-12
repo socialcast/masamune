@@ -198,7 +198,7 @@ module Masamune
 
     def qualify_file(dir, file)
       if prefix = remote_prefix(dir) and file !~ /\A#{Regexp.escape(prefix)}/
-        prefix.sub(%r{//+}, '//') + file
+        prefix + file.sub(%r{\A/+}, '')
       else
         file
       end
@@ -207,8 +207,8 @@ module Masamune
 
     def remote_prefix(dir)
       dir[%r{s3n?://.*?/}] ||
-      dir[%r{file://.*?/}] ||
-      dir[%r{hdfs://.*?/}]
+      dir[%r{file:///}] ||
+      dir[%r{hdfs:///}]
     end
 
     module ClassMethods
