@@ -197,13 +197,19 @@ module Masamune
     end
 
     def qualify_file(dir, file)
-      if prefix = dir[%r{s3n?://.*?/}] and file !~ /\A#{Regexp.escape(prefix)}/
-        File.join(prefix, file)
+      if prefix = remote_prefix(dir) and file !~ /\A#{Regexp.escape(prefix)}/
+        prefix.sub(%r{//+}, '//') + file
       else
         file
       end
     end
     alias :q :qualify_file
+
+    def remote_prefix(dir)
+      dir[%r{s3n?://.*?/}] ||
+      dir[%r{file://.*?/}] ||
+      dir[%r{hdfs://.*?/}]
+    end
 
     module ClassMethods
       def s3n(file, options = {})

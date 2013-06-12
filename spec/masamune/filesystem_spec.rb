@@ -121,7 +121,7 @@ shared_examples_for 'Filesystem' do
     context 'hdfs one matches' do
       let(:pattern) { File.join(File.dirname(old_file), '*') }
       it { should_not be_empty }
-      it { expect { |b| instance.glob('file://' + pattern, &b) }.to yield_with_args(old_file) }
+      it { expect { |b| instance.glob('file://' + pattern, &b) }.to yield_with_args('file://' + old_file) }
     end
 
     context 's3 no matches' do
@@ -239,10 +239,12 @@ end
 
 describe Masamune::Filesystem do
   let(:instance) { filesystem }
+
   it_behaves_like 'Filesystem'
 end
 
 describe Masamune::CachedFilesystem do
   let(:instance) { described_class.new(filesystem) }
+
   it_behaves_like 'Filesystem'
 end
