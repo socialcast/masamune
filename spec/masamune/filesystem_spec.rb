@@ -6,7 +6,6 @@ require 'securerandom'
 
 # TODO expect execute for hdfs
 shared_examples_for 'Filesystem' do
-  let(:instance) { Masamune::Filesystem.new }
   let(:old_dir) { Dir.mktmpdir('masamune') }
   let(:new_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
   let(:new_file) { File.join(old_dir, SecureRandom.hex) }
@@ -120,7 +119,7 @@ shared_examples_for 'Filesystem' do
     context 'hdfs one matches' do
       let(:pattern) { File.join(File.dirname(old_file), '*') }
       it { should_not be_empty }
-      it { expect { |b| instance.glob('file://' + pattern, &b) }.to yield_with_args(old_file) }
+      it { expect { |b| instance.glob('file://' + pattern, &b) }.to yield_with_args('file://' + old_file) }
     end
   end
 
@@ -186,9 +185,14 @@ shared_examples_for 'Filesystem' do
 end
 
 describe Masamune::Filesystem do
+  let(:instance) { described_class.new }
+
   it_behaves_like 'Filesystem'
 end
 
 describe Masamune::CachedFilesystem do
+  let(:filesystem) { Masamune::Filesystem.new }
+  let(:instance) { described_class.new(filesystem) }
+
   it_behaves_like 'Filesystem'
 end
