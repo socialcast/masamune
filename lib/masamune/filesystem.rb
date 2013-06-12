@@ -34,7 +34,7 @@ module Masamune
         when :hdfs
           execute_hadoop_fs('-touchz', *file_set)
         when :s3
-          execute_hadoop_fs('-touchz', *file_set.map { |f| s3n(f) })
+          # NOTE intentionally skip
         else
           FileUtils.touch(*file_set, file_util_args)
         end
@@ -46,7 +46,7 @@ module Masamune
       when :hdfs
         execute_hadoop_fs('-test', '-e', file, safe: true).success?
       when :s3
-        execute_hadoop_fs('-test', '-e', s3n(file), safe: true).success?
+        glob(file).present?
       else
         File.exists?(file)
       end
@@ -58,7 +58,7 @@ module Masamune
         when :hdfs
           execute_hadoop_fs('-mkdir', *dir_set)
         when :s3
-          execute_hadoop_fs('-mkdir', *dir_set.map { |d| s3n(d, dir: true) })
+          # NOTE intentionally skip
         else
           FileUtils.mkdir_p(*dir_set, file_util_args)
         end
@@ -71,11 +71,11 @@ module Masamune
           yield file
         end
       else
-        result = []
-        glob_with_block(pattern) do |file|
-          result << file
+        [].tap do |result|
+          glob_with_block(pattern) do |file|
+            result << file
+          end
         end
-        result
       end
     end
 
@@ -93,11 +93,12 @@ module Masamune
     end
 
     def remove_dir(dir)
+      # FIXME never rm blank or slash
       case type(dir)
       when :hdfs
         execute_hadoop_fs('-rmr', dir)
       when :s3
-        execute_hadoop_fs('-rmr', s3n(dir, dir: true))
+        execute('s3cmd', 'del', '--recursive', s3b(dir, dir:true))
       else
         FileUtils.rmtree(dir, file_util_args)
       end
@@ -150,8 +151,11 @@ module Masamune
           yield q(pattern, line.split(/\s+/).last)
         end
       when :s3
-        execute_hadoop_fs('-ls', s3n(pattern), safe: true) do |line|
-          next if line =~ /\AFound \d+ items/
+        head_glob, *tail_glob = pattern.split('*')
+        tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
+        execute('s3cmd', 'ls', s3b(head_glob + '*'), safe: true) do |line|
+          next if line =~ /\$folder$/
+          next unless line =~ tail_regexp
           yield q(pattern, line.split(/\s+/).last)
         end
       else

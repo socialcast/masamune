@@ -64,7 +64,7 @@ module Masamune::Actions
             @desired_targets = self.class.data_plan.targets_for_date_range(current_command_name, start, stop)
 
             unless self.class.data_plan.resolve(current_command_name, desired_targets.map(&:path), options)
-              abort "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
+              Masamune.print "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
             end
             exit # NOTE resolve has executed original thor task via anonymous proc - safe to exit
           end
