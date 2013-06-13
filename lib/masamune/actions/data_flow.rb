@@ -27,11 +27,12 @@ module Masamune::Actions
           @desired_sources || []
         end
 
+        # FIXME ensure uniqueness in spec
         def desired_targets
           @desired_targets ||
           desired_sources.map do |source|
             self.class.data_plan.targets_for_source(current_command_name, source.path)
-          end.flatten
+          end.uniq.flatten
         end
 
         def existing_sources

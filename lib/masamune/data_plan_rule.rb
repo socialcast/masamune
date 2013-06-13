@@ -6,65 +6,18 @@ require 'active_support/core_ext/date/calculations'
 require 'active_support/core_ext/date_time/calculations'
 require 'date'
 
-class Masamune::DataPlanElem
-  def initialize(rule, start_time, options = {})
-    @rule = rule
-    self.start_time = start_time
-    @options = options
-  end
-
-  def path
-    if input_path && wildcard?
-      input_path
-    else
-      start_time.strftime(@rule.pattern)
-    end
-  end
-
-  def start_time
-    @start_time.to_time.utc
-  end
-
-  def start_time=(start_time)
-    @start_time =
-    case start_time
-    when Time
-      start_time.utc
-    when Date, DateTime
-      start_time.to_time.utc
-    end
-  end
-
-  def start_date
-    @start_time.to_date
-  end
-
-  def stop_time
-    start_time.advance(@rule.time_step => 1)
-  end
-
-  def stop_date
-    stop_time.to_date
-  end
-
-  def wildcard?
-    @options.fetch(:wildcard, false)
-  end
-
-  def input_path
-    @options[:input_path]
-  end
-
-  def next
-    self.class.new(@rule, stop_time)
-  end
-end
-
 class Masamune::DataPlanRule
+  attr_reader :pattern, :options
+
   def initialize(pattern, options = {})
     @pattern = pattern
     @options = options
     @matcher = unbind_pattern(pattern)
+  end
+
+  def ==(other)
+    pattern == other.pattern &&
+    options == other.options
   end
 
   def pattern
