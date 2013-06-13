@@ -7,6 +7,8 @@ require 'active_support/core_ext/date_time/calculations'
 require 'date'
 
 class Masamune::DataPlanRule
+  include Masamune::Accumulate
+
   attr_reader :pattern, :options
 
   def initialize(pattern, options = {})
@@ -49,16 +51,13 @@ class Masamune::DataPlanRule
   end
 
   def generate(start_time, stop_time, &block)
-    if block_given?
-      generate_with_block(start_time, stop_time, &block)
-    else
-      [].tap do |elems|
-        generate_with_block(start_time, stop_time) do |elem|
-          elems << elem
-        end
-      end
-    end
+    instance = bind_date(start_time)
+    begin
+      yield instance
+      instance = instance.next
+    end while instance.start_time <= stop_time
   end
+  method_accumulate :generate
 
   def generate_via_unify_path(input_path, rule, &block)
     instance = unify_path(input_path, rule)
@@ -69,6 +68,7 @@ class Masamune::DataPlanRule
       instance = instance.next
     end while instance.start_time < stop_time
   end
+  method_accumulate :generate_via_unify_path
 
   def tz
     ActiveSupport::TimeZone[@options.fetch(:tz, 'UTC')]
@@ -109,13 +109,5 @@ class Masamune::DataPlanRule
   def matched_date(matched_pattern)
     matched_attrs = [:year, :month, :day, :hour].select { |x| matched_pattern.names.map(&:to_sym).include?(x) }
     DateTime.new(*matched_attrs.map { |x| matched_pattern[x].to_i })
-  end
-
-  def generate_with_block(start_time, stop_time, &block)
-    instance = bind_date(start_time)
-    begin
-      yield instance
-      instance = instance.next
-    end while instance.start_time <= stop_time
   end
 end

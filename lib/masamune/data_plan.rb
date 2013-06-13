@@ -3,6 +3,8 @@ require 'active_support/core_ext/numeric/time'
 
 # TODO all operations should be on DataPlan::Elem, not String paths
 class Masamune::DataPlan
+  include Masamune::Accumulate
+
   def initialize
     @targets = Hash.new
     @sources = Hash.new
@@ -28,78 +30,55 @@ class Masamune::DataPlan
     matches.map(&:first).first
   end
 
-  def sources_from_paths(rule, *paths)
+  def sources_from_paths(rule, *paths, &block)
     source_template = @sources[rule]
-    [].tap do |sources|
-      paths.flatten.each do |path|
-        sources << source_template.bind_path(path)
-      end
+    paths.flatten.each do |path|
+      yield source_template.bind_path(path)
     end
   end
+  method_accumulate :sources_from_paths
 
-  def targets_from_paths(rule, *paths)
+  def targets_from_paths(rule, *paths, &block)
     target_template = @targets[rule]
-    [].tap do |targets|
-      paths.flatten.each do |path|
-        targets << target_template.bind_path(path)
-      end
+    paths.flatten.each do |path|
+      yield target_template.bind_path(path)
     end
   end
+  method_accumulate :targets_from_paths
 
   def targets_for_date_range(rule, start, stop, &block)
-    if block_given?
-      targets_for_date_range_block(rule, start, stop, &block)
-    else
-      [].tap do |targets|
-        targets_for_date_range_block(rule, start, stop) do |target|
-          targets << target
-        end
-      end
-    end
-  end
-
-  def targets_for_date_range_block(rule, start, stop, &block)
     target_template = @targets[rule]
     target_template.generate(start.to_time.utc, stop.to_time.utc) do |target_instance|
       yield target_instance
     end
   end
+  method_accumulate :targets_for_date_range
 
   def targets_for_source(rule, source_instance, &block)
     source_template = @sources[rule]
     target_template = @targets[rule]
-    if block_given?
-      source_template.generate_via_unify_path(source_instance, target_template) do |target_instance|
-        yield target_instance
-      end
-    else
-      [].tap do |out|
-        targets_for_source(rule, source_instance) { |target_instance| out << target_instance }
-      end
+    source_template.generate_via_unify_path(source_instance, target_template) do |target_instance|
+      yield target_instance
     end
   end
+  method_accumulate :targets_for_source
 
   def sources_for_target(rule, target_instance, &block)
     source_template = @sources[rule]
     target_template = @targets[rule]
-    if block_given?
-      target_template.generate_via_unify_path(target_instance, source_template) do |source_instance|
-        if source_instance.wildcard?
-          Masamune.filesystem.glob(source_instance.path) do |source_path|
-            sources_from_paths(rule, source_path).each do |source|
-              yield source
-            end
+    target_template.generate_via_unify_path(target_instance, source_template) do |source_instance|
+      if source_instance.wildcard?
+        Masamune.filesystem.glob(source_instance.path) do |source_path|
+          sources_from_paths(rule, source_path).each do |source|
+            yield source
           end
-        else
-          yield source_instance
         end
-      end
-    else
-      [].tap do |out|
-        sources_for_target(rule, target_instance) { |source_instance| out << source_instance }
+      else
+        yield source_instance
       end
     end
   end
+  method_accumulate :sources_for_target
 
   def analyze(rule, targets)
     matches, missing = Set.new, Hash.new { |h,k| h[k] = Set.new }

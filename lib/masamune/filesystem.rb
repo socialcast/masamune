@@ -1,5 +1,6 @@
 module Masamune
   class Filesystem
+    include Masamune::Accumulate
     include Masamune::Actions::Execute
 
     def initialize
@@ -66,18 +67,27 @@ module Masamune
     end
 
     def glob(pattern, &block)
-      if block_given?
-        glob_with_block(pattern) do |file|
-          yield file
+      case type(pattern)
+      when :hdfs
+        execute_hadoop_fs('-ls', pattern, safe: true) do |line|
+          next if line =~ /\AFound \d+ items/
+          yield q(pattern, line.split(/\s+/).last)
+        end
+      when :s3
+        head_glob, *tail_glob = pattern.split('*')
+        tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
+        execute('s3cmd', 'ls', s3b(head_glob + '*'), safe: true) do |line|
+          next if line =~ /\$folder$/
+          next unless line =~ tail_regexp
+          yield q(pattern, line.split(/\s+/).last)
         end
       else
-        [].tap do |result|
-          glob_with_block(pattern) do |file|
-            result << file
-          end
+        Dir.glob(pattern) do |file|
+          yield file
         end
       end
     end
+    method_accumulate :glob
 
     # TODO local, hdfs permutations
     def copy_file(src, dst)
@@ -142,28 +152,6 @@ module Masamune
     end
 
     private
-
-    def glob_with_block(pattern, &block)
-      case type(pattern)
-      when :hdfs
-        execute_hadoop_fs('-ls', pattern, safe: true) do |line|
-          next if line =~ /\AFound \d+ items/
-          yield q(pattern, line.split(/\s+/).last)
-        end
-      when :s3
-        head_glob, *tail_glob = pattern.split('*')
-        tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
-        execute('s3cmd', 'ls', s3b(head_glob + '*'), safe: true) do |line|
-          next if line =~ /\$folder$/
-          next unless line =~ tail_regexp
-          yield q(pattern, line.split(/\s+/).last)
-        end
-      else
-        Dir.glob(pattern) do |file|
-          yield file
-        end
-      end
-    end
 
     def type(path)
       case path

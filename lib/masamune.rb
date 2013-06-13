@@ -1,6 +1,7 @@
 require 'thread'
 
 module Masamune
+  require 'masamune/accumulate'
   require 'masamune/configuration'
   require 'masamune/data_plan'
   require 'masamune/data_plan_rule'
