@@ -1,3 +1,5 @@
+require 'thread'
+
 module Masamune
   require 'masamune/configuration'
   require 'masamune/data_plan'
@@ -26,7 +28,11 @@ module Masamune
     end
 
     def configuration
-      @configuration ||= Masamune::Configuration.new
+      @configuration ||= Masamune::Configuration.new(self)
+    end
+
+    def mutex
+      @mutex ||= Mutex.new
     end
   end
 

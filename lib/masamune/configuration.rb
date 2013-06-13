@@ -4,6 +4,7 @@ require 'masamune/multi_io'
 class Masamune::Configuration
   extend Forwardable
 
+  attr_accessor :client
   attr_accessor :quiet
   attr_accessor :verbose
   attr_accessor :debug
@@ -19,7 +20,8 @@ class Masamune::Configuration
   attr_accessor :hadoop_streaming_jar
   attr_accessor :hive_database
 
-  def initialize
+  def initialize(client)
+    self.client   = client
     self.quiet    = false
     self.verbose  = false
     self.debug    = false
@@ -53,13 +55,17 @@ class Masamune::Configuration
   end
 
   def print(*a)
-    logger.info(*a)
-    puts a.join(' ') if !quiet && !debug
+    client.mutex.synchronize do
+      logger.info(*a)
+      puts a.join(' ') if !quiet && !debug
+    end
   end
 
   def trace(*a)
-    logger.info(*a)
-    puts a.join(' ') if verbose && !debug
+    client.mutex.synchronize do
+      logger.info(*a)
+      puts a.join(' ') if verbose && !debug
+    end
   end
 
   def filesystem
