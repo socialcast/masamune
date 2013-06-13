@@ -4,9 +4,8 @@ module Masamune::Commands
   class Streaming
     attr_accessor :input, :output, :mapper, :reducer, :extra_args, :file_args, :quote
 
-    # FIXME remove input paths that do not exist, warn
     def initialize(opts = {})
-      self.input      = opts[:input]
+      self.input      = Array.wrap(opts[:input])
       self.output     = opts[:output]
       self.mapper     = opts[:mapper]
       self.reducer    = opts[:reducer]
@@ -19,7 +18,7 @@ module Masamune::Commands
       args = ['hadoop', 'jar', Masamune.configuration.hadoop_streaming_jar]
       args << (quote ? extra_args.map { |arg| quote_arg(arg) } : extra_args)
       args << Masamune.configuration.command_options[:streaming].call
-      args << ['-input', input]
+      args << ['-input', *input]
       args << ['-mapper', mapper]
       args << ['-file', mapper] if file_args
       args << ['-reducer', reducer]
@@ -29,7 +28,15 @@ module Masamune::Commands
     end
 
     def before_execute
-      Masamune.print("streaming %s -> %s (%s/%s)" % [input, output, mapper, reducer])
+      self.input.reject! do |path|
+        if Masamune.filesystem.exists?(path)
+          false
+        else
+          Masamune.logger.debug("Removing missing input #{path} from streaming command")
+          true
+        end
+      end
+      Masamune.print("streaming %s -> %s (%s/%s)" % [input.join(' '), output, mapper, reducer])
     end
 
     def around_execute(&block)
