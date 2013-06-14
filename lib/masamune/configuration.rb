@@ -78,6 +78,15 @@ class Masamune::Configuration
     @logger = nil
   end
 
+  def log_file_template
+    @log_file_template || "#{Time.now.to_i}-#{$$}.log"
+  end
+
+  def log_file_template=(log_file_template)
+    @log_file_template = log_file_template
+    @logger = nil
+  end
+
   def logger
     @logger ||= begin
       log_file_io = if filesystem.has_path?(:log_dir)
