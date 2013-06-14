@@ -29,6 +29,10 @@ module Masamune
       @paths.has_key?(symbol)
     end
 
+    def paths
+      @paths
+    end
+
     def touch!(*files)
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
@@ -166,7 +170,7 @@ module Masamune
 
     def hadoop_fs_args(options = {})
       args = []
-      args << Masamune.configuration.command_options[:hadoop_fs].call
+      args << Masamune.configuration.hadoop_filesystem[:options].to_a
       args.flatten
     end
 

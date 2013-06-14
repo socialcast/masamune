@@ -1,4 +1,10 @@
 require 'logger'
+require 'forwardable'
+require 'yaml'
+require 'erb'
+require 'pp'
+
+require 'masamune/version'
 require 'masamune/multi_io'
 
 class Masamune::Configuration
@@ -12,13 +18,31 @@ class Masamune::Configuration
   attr_accessor :dry_run
   attr_accessor :jobflow
 
-  attr_accessor :log_file_template
   attr_accessor :logger
   attr_accessor :filesystem
-  attr_accessor :command_options
-  attr_accessor :elastic_mapreduce
-  attr_accessor :hadoop_streaming_jar
-  attr_accessor :hive_database
+
+  attr_accessor :log_file_template
+
+  COMMANDS = %w(hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd)
+  COMMANDS.each do |command|
+    define_method(command) do
+      unless instance_variable_get("@#{command}")
+        if respond_to?(:"default_#{command}_attributes")
+          instance_variable_set("@#{command}", send(:"default_#{command}_attributes"))
+        else
+          instance_variable_set("@#{command}", send(:default_command_attributes))
+        end
+      end
+      instance_variable_get("@#{command}").symbolize_keys!
+      instance_variable_get("@#{command}")
+    end
+
+    define_method("#{command}=") do |attributes|
+      send(command).tap do |instance|
+        instance.merge!(attributes)
+      end
+    end
+  end
 
   def initialize(client)
     self.client   = client
@@ -29,17 +53,29 @@ class Masamune::Configuration
     self.dry_run  = false
   end
 
+  def load(file)
+    load_yaml_erb_file(file).each_pair do |command, value|
+      send("#{command}=", value) if COMMANDS.include?(command)
+    end
+  end
+
+  def to_s
+    io = StringIO.new
+    rep = {"path" => filesystem.paths}
+    COMMANDS.each do |command|
+      rep[command] = send(command)
+    end
+    PP.pp(rep, io)
+    io.string
+  end
+
+  def version
+    "masamune #{Masamune::VERSION}"
+  end
+
   def debug=(debug)
     @debug = debug
     @logger = nil
-  end
-
-  def elastic_mapreduce
-    @elastic_mapreduce ||= false
-  end
-
-  def hive_database
-    @hive_database ||= 'default'
   end
 
   def logger
@@ -69,33 +105,12 @@ class Masamune::Configuration
   end
 
   def filesystem
-    @filesystem ||=
-      Masamune::CachedFilesystem.new(
-        Masamune::MethodLogger.new(
-          Masamune::Filesystem.new, :ignore => [:path, :get_path, :add_path, :has_path?, :exists?, :glob]))
-  end
-
-  def hadoop_streaming_jar
-    @hadoop_streaming_jar ||= begin
-      case RUBY_PLATFORM
-      when /darwin/
-        '/usr/local/Cellar/hadoop/1.1.2/libexec/contrib/streaming/hadoop-streaming-1.1.2.jar'
-      when /linux/
-        '/usr/lib/hadoop-mapreduce/hadoop-streaming.jar'
-      else
-        raise 'hadoop_streaming_jar not found'
-      end
+    @filesystem ||= begin
+      filesystem = Masamune::Filesystem.new
+      filesystem.add_path :root_dir, File.expand_path('../../../', __FILE__)
+      filesystem = Masamune::MethodLogger.new(filesystem, :ignore => [:path, :paths, :get_path, :add_path, :has_path?, :exists?, :glob])
+      Masamune::CachedFilesystem.new(filesystem)
     end
-  end
-
-  def command_options
-    @command_options ||= {}.tap do |h|
-      h.default = Proc.new { [] }
-    end
-  end
-
-  def add_command_options(command, &block)
-    command_options[command] = block.to_proc
   end
 
   def as_options
@@ -107,5 +122,38 @@ class Masamune::Configuration
     opts << '--dry_run' if dry_run
     opts << "--jobflow=#{jobflow}" if jobflow
     opts
+  end
+
+  def_delegators :filesystem, :add_path, :get_path
+
+  def load_yaml_erb_file(file)
+    YAML.load(ERB.new(File.read(file)).result(binding))
+  end
+
+  def default_command_attributes
+    {:options => {}}
+  end
+
+  def default_hive_attributes
+    {:database => 'default', :options => {}}
+  end
+
+  def default_hadoop_streaming_attributes
+    {:jar => default_hadoop_streaming_jar, :options => {}}
+  end
+
+  def default_hadoop_streaming_jar
+    case RUBY_PLATFORM
+    when /darwin/
+      '/usr/local/Cellar/hadoop/1.1.2/libexec/contrib/streaming/hadoop-streaming-1.1.2.jar'
+    when /linux/
+      '/usr/lib/hadoop-mapreduce/hadoop-streaming.jar'
+    else
+      raise 'hadoop_streaming_jar not found'
+    end
+  end
+
+  def default_elastic_mapreduce_attributes
+    {:enabled => false, :options => {}}
   end
 end

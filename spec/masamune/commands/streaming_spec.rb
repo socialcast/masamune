@@ -20,9 +20,7 @@ describe Masamune::Commands::Streaming do
   before do
     Masamune.configure do |config|
       config.filesystem = filesystem
-      config.add_command_options(:streaming) do
-        command_options
-      end
+      config.hadoop_streaming[:options] = command_options
     end
   end
 
@@ -47,7 +45,7 @@ describe Masamune::Commands::Streaming do
   end
 
   describe '#command_args' do
-    let(:pre_command_args) { ['hadoop', 'jar', Masamune.configuration.hadoop_streaming_jar] }
+    let(:pre_command_args) { ['hadoop', 'jar', Masamune.configuration.default_hadoop_streaming_jar] }
     let(:post_command_args) { ['-input', 'input.txt', '-mapper', 'mapper.rb', '-file', 'mapper.rb', '-reducer', 'reducer.rb', '-file', 'reducer.rb', '-output', 'output_dir'] }
 
     subject { instance.command_args }

@@ -1,0 +1,17 @@
+<%
+  add_path :var_dir, "#{get_path(:root_dir)}/var/", :mkdir => true
+  add_path :warehouse_dir, "#{get_path(:var_dir)}/warehouse/", :mkdir => true
+%>
+---
+  hive:
+    database: masamune
+    options:
+      --hiveconf: 'hive.metastore.warehouse.dir=<%= get_path(:warehouse_dir) %>'
+  s3cmd:
+    options:
+      --config: <%= ENV['HOME'] %>/.s3cfg
+  elastic_mapreduce:
+    path: '/opt/elastic-mapreduce-ruby'
+    enabled: true
+    options:
+      --credentials: <%= ENV['HOME'] %>/.amazon/credentials.json

@@ -23,12 +23,13 @@ module Masamune::Commands
     def command_args
       args = []
       args << 'elastic-mapreduce'
-      args += ['--jobflow', jobflow] if jobflow
+      args << Masamune.configuration.elastic_mapreduce[:options].to_a
+      args << ['--jobflow', jobflow] if jobflow
       args << mode
       if @delegate.respond_to?(:command_args)
         args << %Q{"#{@delegate.command_args.join(' ')}"}
       end
-      args
+      args.flatten
     end
 
     def handle_stdout(line, line_no)

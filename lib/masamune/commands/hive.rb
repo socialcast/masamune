@@ -28,7 +28,7 @@ module Masamune::Commands
     def command_args
       args = []
       args << 'hive'
-      args << Masamune.configuration.command_options[:hive].call
+      args << Masamune.configuration.hive[:options].to_a
       args << ['-e', @exec] if @exec
       args << ['-f', @file] if @file
       args.flatten
