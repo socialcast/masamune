@@ -53,9 +53,9 @@ describe Masamune::Commands::Streaming do
     it { should == pre_command_args + extra_args + post_command_args }
 
     context 'with command_options' do
-      let(:command_options) { ['-cacheFile', 'cache.rb' ] }
+      let(:command_options) { [{'-cacheFile' => 'cache.rb'}] }
 
-      it { should == pre_command_args + extra_args + command_options  + post_command_args }
+      it { should == pre_command_args + extra_args + command_options.map(&:to_a).flatten + post_command_args }
     end
 
     context 'with quote' do

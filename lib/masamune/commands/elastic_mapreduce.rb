@@ -23,7 +23,7 @@ module Masamune::Commands
     def command_args
       args = []
       args << 'elastic-mapreduce'
-      args << Masamune.configuration.elastic_mapreduce[:options].to_a
+      args << Masamune.configuration.elastic_mapreduce[:options].map(&:to_a)
       args << ['--jobflow', jobflow] if jobflow
       args << mode
       if @delegate.respond_to?(:command_args)

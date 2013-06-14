@@ -17,7 +17,7 @@ module Masamune::Commands
     def command_args
       args = ['hadoop', 'jar', Masamune.configuration.hadoop_streaming[:jar]]
       args << (quote ? extra_args.map { |arg| quote_arg(arg) } : extra_args)
-      args << Masamune.configuration.hadoop_streaming[:options].to_a
+      args << Masamune.configuration.hadoop_streaming[:options].map(&:to_a)
       args << ['-input', *input]
       args << ['-mapper', mapper]
       args << ['-file', mapper] if file_args

@@ -170,7 +170,7 @@ module Masamune
 
     def hadoop_fs_args(options = {})
       args = []
-      args << Masamune.configuration.hadoop_filesystem[:options].to_a
+      args << Masamune.configuration.hadoop_filesystem[:options].map(&:to_a)
       args.flatten
     end
 
