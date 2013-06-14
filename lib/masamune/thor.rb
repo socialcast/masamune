@@ -14,7 +14,7 @@ module Masamune
         class_option :no_op, :type => :boolean, :desc => 'Do not execute commands that modify state', :default => false
         class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Combination of --no-op and --verbose', :default => false
         class_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: elastic-mapreduce --list)', :required => Masamune.configuration.elastic_mapreduce[:enabled]
-        class_option :config, :aliases => '-f', :desc => 'Configuration file'
+        class_option :config, :desc => 'Configuration file'
         class_option :version, :desc => 'Print version and exit'
         def initialize(*a)
           super
