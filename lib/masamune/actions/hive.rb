@@ -1,26 +1,29 @@
 module Masamune::Actions
   require 'masamune/commands/shell'
   require 'masamune/commands/elastic_mapreduce'
-  require 'masamune/commands/hive'
   require 'masamune/commands/line_formatter'
+  require 'masamune/commands/hive'
 
   module Hive
     def hive(opts = {})
       opts = opts.dup
-      opts.merge!(fail_fast: true)
-      opts.merge!(jobflow: Masamune.configuration.jobflow)
 
-      command = if opts[:jobflow]
-        opts.merge!(quote: true)
-        Masamune::Commands::Shell.new(
-          Masamune::Commands::ElasticMapReduce.new(
-            Masamune::Commands::LineFormatter.new(
-              Masamune::Commands::Hive.new(opts), opts), opts), opts)
+      jobflow = opts[:jobflow] || Masamune.configuration.jobflow
+
+      command = if jobflow
+        Masamune::Commands::Hive.new(opts.merge(quote: true))
       else
-        Masamune::Commands::Shell.new(
-          Masamune::Commands::LineFormatter.new(
-            Masamune::Commands::Hive.new(opts), opts), opts)
+        Masamune::Commands::Hive.new(opts)
       end
+
+      command = if jobflow
+        Masamune::Commands::ElasticMapReduce.new(command, jobflow: jobflow)
+      else
+        command
+      end
+
+      command = Masamune::Commands::LineFormatter.new(command, opts)
+      command = Masamune::Commands::Shell.new(command, fail_fast: true)
 
       if command.interactive?
         command.replace
