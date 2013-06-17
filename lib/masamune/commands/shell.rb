@@ -117,20 +117,24 @@ module Masamune::Commands
         while !stderr.eof?  do
           handle_stderr_wrapper(stderr)
         end
+        stderr.close
       }
 
       t_out = Thread.new {
         while !stdout.eof?  do
           handle_stdout_wrapper(stdout)
         end
+        stdout.close
       }
 
+      t_err.join if t_err
+      t_out.join if t_out
       wait_th.join
       Masamune::logger.debug(wait_th.value)
       wait_th.value
     ensure
-      t_err.join
-      t_out.join
+      t_err.join if t_err
+      t_out.join if t_out
     end
 
     def handle_stdout(line, line_no)
