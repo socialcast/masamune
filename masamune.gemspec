@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.files = Dir['{bin,lib}/**/*'] + ['LICENSE', 'Rakefile', 'README.md']
   s.test_files = Dir['spec/**/*']
   s.require_path = 'lib'
-  s.executables = ['hive', 'elastic-mapreduce']
+  s.executables = ['masamune-hive', 'masamune-elastic-mapreduce']
 
   s.add_dependency('thor')
   s.add_dependency('activesupport')
