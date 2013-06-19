@@ -124,7 +124,7 @@ class Masamune::Configuration
 
   def as_options
     opts = []
-    opts << '--quiet'   if verbose
+    opts << '--quiet'   if quiet
     opts << '--verbose' if verbose
     opts << '--debug'   if debug
     opts << '--no_op'   if no_op
