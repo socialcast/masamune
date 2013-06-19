@@ -50,6 +50,12 @@ module Masamune::Actions
           end
         end
 
+        def parse_datetime_type(value)
+          DateTime.parse(value)
+        rescue ArgumentError
+          raise Thor::MalformattedArgumentError, "Expected date time value for '--start'; got #{value}"
+        end
+
         # TODO allow multiple after_initialize blocks
         def after_initialize
           raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
@@ -59,8 +65,8 @@ module Masamune::Actions
           self.desired_targets = self.class.load_paths_from_file(options[:targets]) if options[:targets]
 
           if desired_targets.empty? && options[:start] && options[:stop]
-            start = DateTime.parse(options[:start])
-            stop = DateTime.parse(options[:stop])
+            start = parse_datetime_type(options[:start])
+            stop = parse_datetime_type(options[:stop])
 
             @desired_targets = self.class.data_plan.targets_for_date_range(current_command_name, start, stop)
 

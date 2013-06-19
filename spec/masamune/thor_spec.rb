@@ -60,5 +60,11 @@ describe Masamune::Thor do
         stderr.string.should =~ /\ANo matching missing targets/
       end
     end
+
+    context 'with command and invalid --start' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', 'xxx'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--start'; got/ }
+    end
   end
 end
