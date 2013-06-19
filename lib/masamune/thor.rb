@@ -19,7 +19,7 @@ module Masamune
         def initialize(*a)
           super
 
-          if options[:help] || ARGV.include?('-h') || ARGV.include?('--help') || current_command.class == ::Thor::DynamicCommand
+          if options[:help] || current_command.name == 'help' || ARGV.include?('-h') || ARGV.include?('--help')
             help
             exit
           end
