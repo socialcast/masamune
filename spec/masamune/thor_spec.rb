@@ -51,6 +51,21 @@ describe Masamune::Thor do
       it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--start'/ }
     end
 
+    context 'with command and invalid --start' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', 'xxx'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--start'; got/ }
+    end
+
+    context 'with command and --dry_run' do
+      let(:command) { 'command' }
+      let(:options) { ['--dry_run'] }
+      before do
+        klass.any_instance.should_receive(:hive).with(exec: 'show tables;', safe: true, fail_fast: false).and_return(mock(success?: false))
+      end
+      it { expect { subject }.to raise_error Thor::InvocationError, /Dry run of hive failed/ }
+    end
+
     context 'with command and --start and no matching targets' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
@@ -59,12 +74,6 @@ describe Masamune::Thor do
         stdout.string.should be_blank
         stderr.string.should =~ /\ANo matching missing targets/
       end
-    end
-
-    context 'with command and invalid --start' do
-      let(:command) { 'command' }
-      let(:options) { ['--start', 'xxx'] }
-      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--start'; got/ }
     end
 
     context 'when elastic_mapreduce is enabled' do

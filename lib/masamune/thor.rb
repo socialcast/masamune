@@ -54,6 +54,10 @@ module Masamune
             raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{options[:jobflow]}' for '--jobflow' doesn't exist) unless elastic_mapreduce(list: true, jobflow: options[:jobflow], fail_fast: false).success?
           end
 
+          if options[:dry_run]
+            raise ::Thor::InvocationError, 'Dry run of hive failed' unless hive(exec: 'show tables;', safe: true, fail_fast: false).success?
+          end
+
           after_initialize
         end
 
