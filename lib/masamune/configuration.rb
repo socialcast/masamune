@@ -17,6 +17,7 @@ class Masamune::Configuration
   attr_accessor :no_op
   attr_accessor :dry_run
   attr_accessor :jobflow
+  attr_accessor :context
 
   attr_accessor :logger
   attr_accessor :filesystem
@@ -78,6 +79,14 @@ class Masamune::Configuration
     @logger = nil
   end
 
+  def log_enabled?
+    if self.client.context && client.context.respond_to?(:log_enabled?)
+      self.client.context.log_enabled?
+    else
+      true
+    end
+  end
+
   def log_file_template
     @log_file_template || "#{Time.now.to_i}-#{$$}.log"
   end
@@ -89,7 +98,7 @@ class Masamune::Configuration
 
   def logger
     @logger ||= begin
-      log_file_io = if filesystem.has_path?(:log_dir)
+      log_file_io = if log_enabled? && filesystem.has_path?(:log_dir)
         log_file = File.open(File.join(filesystem.path(:log_dir), log_file_template), 'a')
         log_file.sync = true
         FileUtils.ln_s(log_file, File.join(filesystem.path(:log_dir), 'latest'), force: true)

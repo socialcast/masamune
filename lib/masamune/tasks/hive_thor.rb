@@ -17,5 +17,11 @@ module Masamune::Tasks
       hive(options)
     end
     default_task :hive_exec
+
+    no_tasks do
+      def log_enabled?
+        false
+      end
+    end
   end
 end

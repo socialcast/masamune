@@ -27,6 +27,7 @@ module Masamune
           end
 
           Masamune.configure do |config|
+            config.client.context = self
             # TODO also try /etc/masamune/config.yml, /etc/masamune/config.yml.erb, $HOME/.masamune/config.yml
             if options[:config]
               config.load(options[:config])

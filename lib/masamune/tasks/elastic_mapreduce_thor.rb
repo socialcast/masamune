@@ -18,6 +18,12 @@ module Masamune::Tasks
     end
     default_task :elastic_mapreduce_exec
 
+    no_tasks do
+      def log_enabled?
+        false
+      end
+    end
+
     private
 
     def before_initialize

@@ -22,6 +22,8 @@ module Masamune
   require 'masamune/proxy_delegate'
 
   class Client
+    attr_accessor :context
+
     def configure
       yield configuration
     end
