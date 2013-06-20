@@ -6,7 +6,7 @@ module Masamune::Actions
 
   module Hive
     def hive(opts = {})
-      opts = opts.dup
+      opts = opts.to_hash.symbolize_keys
 
       jobflow = opts[:jobflow] || Masamune.configuration.jobflow
 

@@ -58,10 +58,6 @@ module Masamune::Actions
 
         # TODO allow multiple after_initialize blocks
         def after_initialize
-          if Masamune.configuration.elastic_mapreduce[:enabled]
-            raise Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless options[:jobflow]
-          end
-
           raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
           raise %q(Cannot specify both option '--sources' and option '--targets') if options[:sources] && options[:targets]
 

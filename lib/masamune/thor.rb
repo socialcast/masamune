@@ -6,6 +6,7 @@ module Masamune
     def self.included(thor)
       thor.class_eval do
         include Masamune::Actions::Filesystem
+        include Masamune::Actions::ElasticMapreduce
 
         namespace :masamune
         class_option :help, :type => :boolean, :aliases => '-h', :desc => 'Show help', :default => false
@@ -20,8 +21,8 @@ module Masamune
         def initialize(*a)
           super
 
-          if options[:help] || current_command.name == 'help' || ARGV.include?('-h') || ARGV.include?('--help')
-            help
+          if display_help?
+            display_help
             exit
           end
 
@@ -45,12 +46,28 @@ module Masamune
             end
           end
 
+          before_initialize
+
+          if Masamune.configuration.elastic_mapreduce[:enabled]
+            raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless options[:jobflow]
+            raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{options[:jobflow]}' for '--jobflow' doesn't exist) unless elastic_mapreduce(list: true, jobflow: options[:jobflow], fail_fast: false).success?
+          end
+
           after_initialize
         end
 
         private
 
+        def before_initialize(*a); end
         def after_initialize(*a); end
+
+        def display_help?
+          options[:help] || current_command.name == 'help' || ARGV.include?('-h') || ARGV.include?('--help')
+        end
+
+        def display_help
+          help
+        end
       end
 
       def current_command

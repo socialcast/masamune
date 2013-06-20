@@ -94,6 +94,8 @@ class Masamune::Configuration
         log_file.sync = true
         FileUtils.ln_s(log_file, File.join(filesystem.path(:log_dir), 'latest'), force: true)
         debug ? Masamune::MultiIO.new(STDERR, log_file) : log_file
+      else
+        debug ? STDERR : nil
       end
       Logger.new(log_file_io)
     end

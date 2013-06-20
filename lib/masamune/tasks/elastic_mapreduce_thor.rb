@@ -14,10 +14,17 @@ module Masamune::Tasks
     method_option :list, :type => :boolean, :desc => 'List all job flows created in the last 2 days', :default => false
     method_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: --list)'
     def elastic_mapreduce_exec
-      abort 'ElasticMapreduce is not enabled' unless Masamune.configuration.elastic_mapreduce[:enabled]
-      abort %q(No value provided for required options '--jobflow (Hint: --list)') unless options[:list] || options[:jobflow]
-      elastic_mapreduce(options)
+      elastic_mapreduce(options.merge(interactive: true))
     end
     default_task :elastic_mapreduce_exec
+
+    private
+
+    def before_initialize
+      abort 'ElasticMapreduce is not enabled' unless Masamune.configuration.elastic_mapreduce[:enabled]
+      if options[:list]
+        elastic_mapreduce(options.merge(replace: true))
+      end
+    end
   end
 end

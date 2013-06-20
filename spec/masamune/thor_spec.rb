@@ -11,7 +11,7 @@ describe Masamune::Thor do
     $stdout, $stderr = tmp_stdout, tmp_stderr
   end
 
-  let(:instance) do
+  let(:klass) do
     Class.new(Thor) do
       include Masamune::Thor
       include Masamune::Actions::DataFlow
@@ -34,7 +34,7 @@ describe Masamune::Thor do
 
     subject do
       capture(stdout, stderr) do
-        instance.start([command, *options].compact)
+        klass.start([command, *options].compact)
       end
     end
 
@@ -51,7 +51,7 @@ describe Masamune::Thor do
       it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--start'/ }
     end
 
-    context 'with command and --start and matching targets' do
+    context 'with command and --start and no matching targets' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
       it do
@@ -65,6 +65,29 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--start', 'xxx'] }
       it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--start'; got/ }
+    end
+
+    context 'when elastic_mapreduce is enabled' do
+      before do
+        Masamune.configure do |config|
+          config.elastic_mapreduce[:enabled] = true
+        end
+      end
+
+      context 'with command and --start and no --jobflow' do
+        let(:command) { 'command' }
+        let(:options) { ['--start', '2013-01-01'] }
+        it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--jobflow'/ }
+      end
+
+      context 'with command and --start and invalid --jobflow' do
+        let(:command) { 'command' }
+        let(:options) { ['--start', '2013-01-01', '--jobflow', 'xxx'] }
+        before do
+          klass.any_instance.should_receive(:elastic_mapreduce).with(list: true, jobflow: 'xxx', fail_fast: false).and_return(mock(success?: false))
+        end
+        it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /'--jobflow' doesn't exist/ }
+      end
     end
   end
 end
