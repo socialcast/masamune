@@ -8,19 +8,28 @@ module Masamune
     end
 
     def add_path(symbol, path, options = {})
-      @paths[symbol] = [path, options]
-      mkdir!(path) if options[:mkdir]
+      eager_path = eager_load_path path
+      @paths[symbol] = [eager_path, options]
+      mkdir!(eager_path) if options[:mkdir]
       self
     end
 
     def get_path(symbol, *extra)
-      @paths.has_key?(symbol) or raise "Path :#{symbol} not defined"
-      path, options = @paths[symbol]
-      mkdir!(path) if options[:mkdir]
-      if extra.any?
-        File.join(path, extra)
+      lazy_path = lambda do
+        @paths.has_key?(symbol) or raise "Path :#{symbol} not defined"
+        path, options = @paths[symbol]
+        mkdir!(path) if options[:mkdir]
+        if extra.any?
+          File.join(path, extra)
+        else
+          path
+        end
+      end
+
+      if eager_load_paths?
+        eager_load_path lazy_path.call
       else
-        path
+        lazy_path
       end
     end
     alias :path :get_path
@@ -157,6 +166,21 @@ module Masamune
     end
 
     private
+
+    def eager_load_path(path)
+      case path
+      when String
+        path
+      when Proc
+        path.call
+      else
+        raise "Unknown path #{path.inspect}"
+      end
+    end
+
+    def eager_load_paths?
+      @paths.reject { |key,_| key == :root_dir }.any?
+    end
 
     def type(path)
       case path

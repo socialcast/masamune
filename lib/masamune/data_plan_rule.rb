@@ -14,7 +14,6 @@ class Masamune::DataPlanRule
   def initialize(pattern, options = {})
     @pattern = pattern
     @options = options
-    @matcher = unbind_pattern(pattern)
   end
 
   def ==(other)
@@ -23,11 +22,11 @@ class Masamune::DataPlanRule
   end
 
   def pattern
-    @pattern
+    @pattern.respond_to?(:call) ? @pattern.call : @pattern
   end
 
   def matches?(input_path)
-    matched_pattern = @matcher.match(input_path)
+    matched_pattern = matcher.match(input_path)
     matched_pattern.present? && matched_pattern[:rest].blank?
   end
 
@@ -37,15 +36,15 @@ class Masamune::DataPlanRule
   end
 
   def bind_path(input_path)
-    matched_pattern = @matcher.match(input_path)
-    raise "Cannot bind_path #{input_path} to #{@pattern}" unless matched_pattern
+    matched_pattern = matcher.match(input_path)
+    raise "Cannot bind_path #{input_path} to #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
     Masamune::DataPlanElem.new(self, output_date, @options.merge(:input_path => input_path))
   end
 
   def unify_path(input_path, rule)
-    matched_pattern = @matcher.match(input_path)
-    raise "Cannot unify_path #{input_path} with #{rule.pattern}, does not match #{@pattern}" unless matched_pattern
+    matched_pattern = matcher.match(input_path)
+    raise "Cannot unify_path #{input_path} with #{rule.pattern}, does not match #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
     rule.bind_date(output_date)
   end
@@ -75,7 +74,7 @@ class Masamune::DataPlanRule
   end
 
   def time_step
-    case @pattern
+    case pattern
     when /%-?k/, /%-?H/
       :hours
     when /%-?d/
@@ -91,19 +90,21 @@ class Masamune::DataPlanRule
 
   private
 
-  def unbind_pattern(string)
-    regexp = string.dup
-    regexp.gsub!('%Y', '(?<year>\d{4})')
-    regexp.gsub!('%m', '(?<month>\d{2})')
-    regexp.gsub!('%-m', '(?<month>\d{1,2})')
-    regexp.gsub!('%d', '(?<day>\d{2})')
-    regexp.gsub!('%-d', '(?<day>\d{1,2})')
-    regexp.gsub!('%H', '(?<hour>\d{2})')
-    regexp.gsub!('%k', '(?<hour>\d{2})')
-    regexp.gsub!('%-k', '(?<hour>\d{1,2})')
-    regexp.gsub!('*', '(?<glob>.*?)')
-    regexp.gsub!(/$/, '(?<rest>.*?)\z')
-    Regexp.compile(regexp)
+  def matcher
+    @matcher ||= begin
+      regexp = pattern.dup
+      regexp.gsub!('%Y', '(?<year>\d{4})')
+      regexp.gsub!('%m', '(?<month>\d{2})')
+      regexp.gsub!('%-m', '(?<month>\d{1,2})')
+      regexp.gsub!('%d', '(?<day>\d{2})')
+      regexp.gsub!('%-d', '(?<day>\d{1,2})')
+      regexp.gsub!('%H', '(?<hour>\d{2})')
+      regexp.gsub!('%k', '(?<hour>\d{2})')
+      regexp.gsub!('%-k', '(?<hour>\d{1,2})')
+      regexp.gsub!('*', '(?<glob>.*?)')
+      regexp.gsub!(/$/, '(?<rest>.*?)\z')
+      Regexp.compile(regexp)
+    end
   end
 
   def matched_date(matched_pattern)

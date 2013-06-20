@@ -23,13 +23,23 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#get_path' do
-    before do
-      instance.add_path(:home_dir, '/home')
-    end
-    it { instance.get_path(:home_dir).should == '/home' }
+    context 'after add_path is called' do
+      before do
+        instance.add_path(:home_dir, '/home')
+      end
+      it { instance.get_path(:home_dir).should == '/home' }
 
-    context 'with extra directories' do
-      it { instance.get_path(:home_dir, 'a', 'b', 'c').should == '/home/a/b/c' }
+      context 'with extra directories' do
+        it { instance.get_path(:home_dir, 'a', 'b', 'c').should == '/home/a/b/c' }
+      end
+
+      context 'with extra directories delimited by "/"' do
+        it { instance.get_path(:home_dir, '/a/b', 'c').should == '/home/a/b/c' }
+      end
+    end
+
+    context 'before add_path is called' do
+      it { instance.get_path(:home_dir).should be_a(Proc) }
     end
   end
 
