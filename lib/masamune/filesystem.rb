@@ -113,6 +113,7 @@ module Masamune
         execute_hadoop_fs('-rmr', dir)
       when :s3
         execute('s3cmd', 'del', '--recursive', s3b(dir, dir:true))
+        execute('s3cmd', 'del', '--recursive', s3b("#{dir}_$folder$"))
       else
         FileUtils.rmtree(dir, file_util_args)
       end

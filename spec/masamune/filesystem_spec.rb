@@ -217,6 +217,7 @@ shared_examples_for 'Filesystem' do
     context 's3 dir' do
       before do
         filesystem.should_receive(:execute).with('s3cmd', 'del', '--recursive', 's3://bucket/dir/')
+        filesystem.should_receive(:execute).with('s3cmd', 'del', '--recursive', 's3://bucket/dir_$folder$')
         instance.remove_dir('s3://bucket/dir')
       end
 
