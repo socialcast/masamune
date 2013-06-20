@@ -33,7 +33,12 @@ module Masamune::Commands
     def replace
       Masamune::logger.debug('replace: ' + command_args.join(' '))
       around_execute do
-        Kernel.exec(*command_args)
+        pid = fork {
+          exec(*command_args)
+        }
+        STDERR.reopen(STDOUT)
+        Process.waitpid(pid) if pid
+        exit
       end
     end
 
