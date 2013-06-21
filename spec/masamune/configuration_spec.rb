@@ -56,19 +56,32 @@ describe Masamune::Configuration do
   end
 
   describe '#hive=' do
-    before do
-      instance.hive['options'] = [{'-f' => 'flag'}]
-    end
-
     subject do
       instance.hive
     end
 
-    context 'after overriding options' do
+    context 'overriding existing options' do
       before do
+        instance.hive['options'] = [{'-f' => 'flag'}]
         instance.hive = {:options => [{'-i' => 'first'}, {'-i' => 'last'}]}
       end
       it { should == {:database => 'default', :options => [{'-f' => 'flag'}, {'-i' => 'first'}, {'-i' => 'last'}]} }
+    end
+
+    context 'defining new options' do
+      before do
+        instance.hive['options'] = nil
+        instance.hive = {:options => [{'-i' => 'first'}, {'-i' => 'last'}]}
+      end
+      it { should == {:database => 'default', :options => [{'-i' => 'first'}, {'-i' => 'last'}]} }
+    end
+
+    context 'preserving existing options' do
+      before do
+        instance.hive['options'] = [{'-f' => 'flag'}]
+        instance.hive = {:database => 'test'}
+      end
+      it { should == {:database => 'test', :options => [{'-f' => 'flag'}]} }
     end
   end
 end

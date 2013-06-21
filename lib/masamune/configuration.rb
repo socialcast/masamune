@@ -40,7 +40,10 @@ class Masamune::Configuration
 
     define_method("#{command}=") do |attributes|
       send(command).tap do |instance|
-        instance[:options] += attributes.delete(:options)
+        instance[:options] ||= []
+        if options = attributes.delete(:options)
+          instance[:options] += options
+        end
         instance.merge!(attributes)
       end
     end
