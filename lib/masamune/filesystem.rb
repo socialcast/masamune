@@ -149,6 +149,8 @@ module Masamune
           case type
           when :local
             file_set.map do |file|
+              next unless File.exists?(file)
+              next if File.directory?(file)
               buf << File.read(file)
             end
           end
@@ -156,10 +158,11 @@ module Masamune
       end
     end
 
-    def write(buf, src)
-      case type(src)
+    def write(buf, dst)
+      case type(dst)
       when :local
-        File.open(src, 'w') do |file|
+        mkdir!(File.dirname(dst))
+        File.open(dst, 'w') do |file|
           file.write buf
         end
       end

@@ -236,15 +236,30 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#cat' do
-    before do
-      instance.write('dog', new_file)
+    context 'simple file' do
+      before do
+        instance.write('dog', new_file)
+      end
+
+      subject do
+        instance.cat(new_file).string
+      end
+
+      it { should == 'dog' }
     end
 
-    subject do
-      instance.cat(new_file).string
-    end
+    context 'result of directory glob' do
+      before do
+        instance.add_path(:new_dir, new_dir)
+        instance.write('dog', instance.path(:new_dir, 'a', 'b', 'c', 'dog'))
+      end
 
-    it { should == 'dog' }
+      subject do
+        instance.cat(*instance.glob(instance.path(:new_dir, '**', '*'))).string
+      end
+
+      it { should == 'dog' }
+    end
   end
 end
 
