@@ -59,8 +59,10 @@ class Masamune::Configuration
   end
 
   def load(file)
-    load_yaml_erb_file(file).each_pair do |command, value|
-      send("#{command}=", value) if COMMANDS.include?(command)
+    @load_once ||= begin
+      load_yaml_erb_file(file).each_pair do |command, value|
+        send("#{command}=", value) if COMMANDS.include?(command)
+      end
     end
   end
 
