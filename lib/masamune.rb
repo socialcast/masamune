@@ -44,6 +44,10 @@ module Masamune
     @default_client ||= Client.new
   end
 
+  def default_config_file
+    @default_config_file ||= File.join(File.expand_path('../../', __FILE__), 'conf', 'masamune.yml.erb')
+  end
+
   def_delegators :default_client, :configure, :configuration
   def_delegators :configuration, :logger, :filesystem
   # TODO encapsulate in CLI
