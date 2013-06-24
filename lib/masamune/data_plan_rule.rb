@@ -84,7 +84,7 @@ class Masamune::DataPlanRule
     when /%-?Y/
       :years
     else
-      raise "No time value for pattern #{@patter}"
+      raise "No time value for pattern #{pattern}"
     end
   end
 
