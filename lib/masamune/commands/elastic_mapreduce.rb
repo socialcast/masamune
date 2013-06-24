@@ -26,7 +26,7 @@ module Masamune::Commands
       args << Masamune.configuration.elastic_mapreduce[:options].map(&:to_a)
       args << ['--jobflow', jobflow] if jobflow
       args << extra_args
-      if @delegate.respond_to?(:command_args) || @delegate.interactive?
+      if @delegate.respond_to?(:command_args) || @delegate.interactive? || input
         args << '--ssh'
       end
       if @delegate.respond_to?(:command_args)
