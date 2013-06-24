@@ -5,10 +5,12 @@ module Masamune::Actions
   require 'masamune/commands/hive'
 
   module Hive
-    def hive(opts = {})
+    def hive(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
 
       jobflow = opts[:jobflow] || Masamune.configuration.jobflow
+
+      opts.merge!(block: block.to_proc) if block_given?
 
       command = if jobflow
         Masamune::Commands::Hive.new(opts.merge(quote: true))

@@ -2,13 +2,14 @@ require 'masamune/commands/shell'
 
 module Masamune::Commands
   class Hive
-    attr_accessor :file, :exec, :output, :quote
+    attr_accessor :file, :exec, :output, :quote, :block
 
     def initialize(opts = {})
       self.file       = opts[:file]
       self.quote      = opts.fetch(:quote, false)
       self.exec       = opts[:exec]
       self.output     = opts[:output]
+      self.block      = opts[:block]
     end
 
     def exec=(sql)
@@ -63,6 +64,7 @@ module Masamune::Commands
     end
 
     def handle_stdout(line, line_no)
+      block.call(line) if block
       if @tmpfile
         @tmpfile.puts(line)
       else
