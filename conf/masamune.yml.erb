@@ -12,6 +12,6 @@
       - --config: <%= ENV['HOME'] %>/.s3cfg
   elastic_mapreduce:
     path: '/opt/elastic-mapreduce-ruby'
-    enabled: true
+    enabled: false
     options:
       - --credentials: <%= ENV['HOME'] %>/.amazon/credentials.json

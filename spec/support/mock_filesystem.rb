@@ -7,6 +7,14 @@ class MockFilesystem
     false
   end
 
+  def add_path(*a)
+    false
+  end
+
+  def get_path(*a)
+    false
+  end
+
   def touch!(*files)
     @files += files
   end
