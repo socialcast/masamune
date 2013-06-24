@@ -36,6 +36,7 @@ module Masamune::Commands
           true
         end
       end
+      self.input.map! { |path| "#{path}/*" }
       Masamune.print("streaming %s -> %s (%s/%s)" % [input.join(' '), output, mapper, reducer])
     end
 
