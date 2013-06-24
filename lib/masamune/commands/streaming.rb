@@ -36,7 +36,15 @@ module Masamune::Commands
           true
         end
       end
-      self.input.map! { |path| "#{path}/*" }
+      self.input.map! do |path|
+        if path =~ /part_.*\Z/ || path =~ /\..*\Z/
+          path
+        elsif path =~ %r{/\Z}
+          path + '*'
+        else
+          path + '/*'
+        end
+      end
       Masamune.print("streaming %s -> %s (%s/%s)" % [input.join(' '), output, mapper, reducer])
     end
 

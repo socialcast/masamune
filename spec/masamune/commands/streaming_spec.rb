@@ -4,10 +4,11 @@ describe Masamune::Commands::Streaming do
   # TODO use mock filesystem when checking for existance of files
   let(:extra_args) { ['-D', %q(map.output.key.field.separator='\t')] }
   let(:filesystem) { MockFilesystem.new }
+  let(:input_option) { 'input.txt' }
 
   let(:general_options) do
     {
-      input: 'input.txt',
+      input: input_option,
       output: 'output_dir',
       mapper: 'mapper.rb',
       reducer: 'reducer.rb',
@@ -27,12 +28,31 @@ describe Masamune::Commands::Streaming do
   subject(:instance) { described_class.new(general_options.merge(context_options)) }
 
   describe '#before_execute' do
-    context 'input path exists' do
+    context 'input path with suffix exists' do
+      let(:input_option) { 'dir/input.txt' }
       before do
-        filesystem.touch!('input.txt')
+        filesystem.touch!('dir/input.txt')
         instance.before_execute
       end
-      its(:input) { should == ['input.txt'] }
+      its(:input) { should == ['dir/input.txt'] }
+    end
+
+    context 'input path hadoop part' do
+      let(:input_option) { 'dir/part_0000' }
+      before do
+        filesystem.touch!('dir/part_0000')
+        instance.before_execute
+      end
+      its(:input) { should == ['dir/part_0000'] }
+    end
+
+    context 'input path directory' do
+      let(:input_option) { 'dir' }
+      before do
+        filesystem.touch!('dir')
+        instance.before_execute
+      end
+      its(:input) { should == ['dir/*'] }
     end
 
     context 'input path does not exist' do
