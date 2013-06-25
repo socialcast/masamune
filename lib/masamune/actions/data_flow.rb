@@ -10,8 +10,8 @@ module Masamune::Actions
 
         class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
         class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
-        class_option :sources, :type => :array, :desc => 'Data sources to process'
-        class_option :targets, :type => :array, :desc => 'Data targest to process'
+        class_option :sources, :desc => 'File of data sources to process'
+        class_option :targets, :desc => 'File of data targets to process'
 
         private
 
@@ -27,11 +27,12 @@ module Masamune::Actions
           @desired_sources || []
         end
 
+        # FIXME ensure uniqueness in spec
         def desired_targets
           @desired_targets ||
           desired_sources.map do |source|
             self.class.data_plan.targets_for_source(current_command_name, source.path)
-          end.flatten
+          end.uniq.flatten
         end
 
         def existing_sources
@@ -49,22 +50,28 @@ module Masamune::Actions
           end
         end
 
+        def parse_datetime_type(value)
+          DateTime.parse(value)
+        rescue ArgumentError
+          raise Thor::MalformattedArgumentError, "Expected date time value for '--start'; got #{value}"
+        end
+
         # TODO allow multiple after_initialize blocks
         def after_initialize
           raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
           raise %q(Cannot specify both option '--sources' and option '--targets') if options[:sources] && options[:targets]
 
-          self.desired_sources = options[:sources] if options[:sources]
-          self.desired_targets = options[:targets] if options[:targets]
+          self.desired_sources = self.class.load_paths_from_file(options[:sources]) if options[:sources]
+          self.desired_targets = self.class.load_paths_from_file(options[:targets]) if options[:targets]
 
           if desired_targets.empty? && options[:start] && options[:stop]
-            start = DateTime.parse(options[:start])
-            stop = DateTime.parse(options[:stop])
+            start = parse_datetime_type(options[:start])
+            stop = parse_datetime_type(options[:stop])
 
             @desired_targets = self.class.data_plan.targets_for_date_range(current_command_name, start, stop)
 
             unless self.class.data_plan.resolve(current_command_name, desired_targets.map(&:path), options)
-              Masamune.print "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
+              abort "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
             end
             exit # NOTE resolve has executed original thor task via anonymous proc - safe to exit
           end
@@ -91,6 +98,10 @@ module Masamune::Actions
         @data_plan ||= Masamune::DataPlan.new
       end
 
+      def load_paths_from_file(file)
+        File.read(file).split(/\s+/)
+      end
+
       private
 
       # If internal call to Thor::Base.start fails, exit
@@ -110,10 +121,17 @@ module Masamune::Actions
       def command_wrapper(loadtime_options)
         Proc.new do |sources, runtime_options|
           command_options = command_options(runtime_options)
-          Masamune.logger.debug([command_name(loadtime_options), '--sources', *sources] + command_options)
+          Masamune.logger.debug([command_name(loadtime_options), '--sources', save_paths_to_file(sources)] + command_options)
           # TODO try using invoke
-          self.start([command_name(loadtime_options), '--sources', *sources] + command_options)
+          self.start([command_name(loadtime_options), '--sources', save_paths_to_file(sources)] + command_options)
         end
+      end
+
+      def save_paths_to_file(*paths)
+        Tempfile.new('masamune').tap do |file|
+          file.write(paths.join("\n"))
+          file.close
+        end.path
       end
     end
   end

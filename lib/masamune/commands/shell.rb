@@ -33,7 +33,12 @@ module Masamune::Commands
     def replace
       Masamune::logger.debug('replace: ' + command_args.join(' '))
       around_execute do
-        Kernel.exec(*command_args)
+        pid = fork {
+          exec(*command_args)
+        }
+        STDERR.reopen(STDOUT)
+        Process.waitpid(pid) if pid
+        exit
       end
     end
 
@@ -42,10 +47,6 @@ module Masamune::Commands
 
       if Masamune::configuration.verbose
         Masamune::trace(command_args)
-      end
-
-      unless absolute_path(command_bin).present?
-        raise "#{command_bin} missing from $PATH"
       end
 
       if @delegate.respond_to?(:before_execute)
@@ -117,20 +118,24 @@ module Masamune::Commands
         while !stderr.eof?  do
           handle_stderr_wrapper(stderr)
         end
+        stderr.close
       }
 
       t_out = Thread.new {
         while !stdout.eof?  do
           handle_stdout_wrapper(stdout)
         end
+        stdout.close
       }
 
+      t_err.join if t_err
+      t_out.join if t_out
       wait_th.join
       Masamune::logger.debug(wait_th.value)
       wait_th.value
     ensure
-      t_err.join
-      t_out.join
+      t_err.join if t_err
+      t_out.join if t_out
     end
 
     def handle_stdout(line, line_no)
@@ -154,10 +159,6 @@ module Masamune::Commands
     end
 
     private
-
-    def absolute_path(comand_bin)
-      `which #{command_bin}`.chomp
-    end
 
     def handle_stdout_wrapper(stdout)
       @line_no ||= 0

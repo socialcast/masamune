@@ -23,13 +23,23 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#get_path' do
-    before do
-      instance.add_path(:home_dir, '/home')
-    end
-    it { instance.get_path(:home_dir).should == '/home' }
+    context 'after add_path is called' do
+      before do
+        instance.add_path(:home_dir, '/home')
+      end
+      it { instance.get_path(:home_dir).should == '/home' }
 
-    context 'with extra directories' do
-      it { instance.get_path(:home_dir, 'a', 'b', 'c').should == '/home/a/b/c' }
+      context 'with extra directories' do
+        it { instance.get_path(:home_dir, 'a', 'b', 'c').should == '/home/a/b/c' }
+      end
+
+      context 'with extra directories delimited by "/"' do
+        it { instance.get_path(:home_dir, '/a/b', 'c').should == '/home/a/b/c' }
+      end
+    end
+
+    context 'before add_path is called' do
+      it { instance.get_path(:home_dir).should be_a(Proc) }
     end
   end
 
@@ -217,6 +227,7 @@ shared_examples_for 'Filesystem' do
     context 's3 dir' do
       before do
         filesystem.should_receive(:execute).with('s3cmd', 'del', '--recursive', 's3://bucket/dir/')
+        filesystem.should_receive(:execute).with('s3cmd', 'del', '--recursive', 's3://bucket/dir_$folder$')
         instance.remove_dir('s3://bucket/dir')
       end
 
@@ -225,15 +236,30 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#cat' do
-    before do
-      instance.write('dog', new_file)
+    context 'simple file' do
+      before do
+        instance.write('dog', new_file)
+      end
+
+      subject do
+        instance.cat(new_file).string
+      end
+
+      it { should == 'dog' }
     end
 
-    subject do
-      instance.cat(new_file).string
-    end
+    context 'result of directory glob' do
+      before do
+        instance.add_path(:new_dir, new_dir)
+        instance.write('dog', instance.path(:new_dir, 'a', 'b', 'c', 'dog'))
+      end
 
-    it { should == 'dog' }
+      subject do
+        instance.cat(*instance.glob(instance.path(:new_dir, '**', '*'))).string
+      end
+
+      it { should == 'dog' }
+    end
   end
 end
 

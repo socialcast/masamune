@@ -5,21 +5,23 @@ module Masamune::Actions
 
   module Streaming
     def streaming(opts = {})
-      opts = opts.dup
-      opts.merge!(fail_fast: true)
-      opts.merge!(jobflow: Masamune.configuration.jobflow)
+      opts = opts.to_hash.symbolize_keys
 
-      command = if opts[:jobflow]
-        opts.merge!(file_args: false)
-        opts.merge!(quote: true)
-        Masamune::Commands::Shell.new(
-          Masamune::Commands::ElasticMapReduce.new(
-            Masamune::Commands::Streaming.new(opts), opts), opts)
+      jobflow = opts[:jobflow] || Masamune.configuration.jobflow
+
+      command = if jobflow
+        Masamune::Commands::Streaming.new(opts.merge(quote: true, file_args: false))
       else
-        Masamune::Commands::Shell.new(
-          Masamune::Commands::Streaming.new(opts), opts)
+        Masamune::Commands::Streaming.new(opts)
       end
 
+      command = if jobflow
+        Masamune::Commands::ElasticMapReduce.new(command, jobflow: jobflow)
+      else
+        command
+      end
+
+      command = Masamune::Commands::Shell.new(command, fail_fast: true)
       command.execute
     end
   end

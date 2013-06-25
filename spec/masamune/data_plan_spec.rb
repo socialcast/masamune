@@ -36,6 +36,7 @@ describe Masamune::DataPlan do
       it { should include 'table/y=2013/m=01/d=01' }
       it { should include 'table/y=2013/m=01/d=02' }
       it { should include 'table/y=2013/m=01/d=03' }
+      it { should have(3).items }
     end
 
     context 'derived_daily' do
@@ -43,6 +44,13 @@ describe Masamune::DataPlan do
       it { should include 'daily/2013-01-01' }
       it { should include 'daily/2013-01-02' }
       it { should include 'daily/2013-01-03' }
+      it { should have(3).items }
+    end
+
+    context 'derived_monthly' do
+      let(:rule) { 'derived_monthly' }
+      it { should include 'monthly/2013-01' }
+      it { should have(1).items }
     end
   end
 
@@ -67,6 +75,15 @@ describe Masamune::DataPlan do
       it { targets.first.start_time.should == Date.civil(2013,01,01) }
       it { targets.first.stop_time.should == Date.civil(2013,01,02) }
       it { targets.first.path.should == 'daily/2013-01-01' }
+    end
+
+    context 'derived_monthly' do
+      let(:rule) { 'derived_monthly' }
+      let(:source)  { 'table/y=2013/m=01/d=01' }
+
+      it { targets.first.start_time.should == Date.civil(2013,01,01) }
+      it { targets.first.stop_time.should == Date.civil(2013,02,01) }
+      it { targets.first.path.should == 'monthly/2013-01' }
     end
   end
 

@@ -1,5 +1,6 @@
 module Masamune
   class Filesystem
+    include Masamune::Accumulate
     include Masamune::Actions::Execute
 
     def initialize
@@ -7,25 +8,38 @@ module Masamune
     end
 
     def add_path(symbol, path, options = {})
-      @paths[symbol] = [path, options]
-      mkdir!(path) if options[:mkdir]
+      eager_path = eager_load_path path
+      @paths[symbol] = [eager_path, options]
+      mkdir!(eager_path) if options[:mkdir]
       self
     end
 
     def get_path(symbol, *extra)
-      @paths.has_key?(symbol) or raise "Path :#{symbol} not defined"
-      path, options = @paths[symbol]
-      mkdir!(path) if options[:mkdir]
-      if extra.any?
-        File.join(path, extra)
+      lazy_path = lambda do
+        @paths.has_key?(symbol) or raise "Path :#{symbol} not defined"
+        path, options = @paths[symbol]
+        mkdir!(path) if options[:mkdir]
+        if extra.any?
+          File.join(path, extra)
+        else
+          path
+        end
+      end
+
+      if eager_load_paths?
+        eager_load_path lazy_path.call
       else
-        path
+        lazy_path
       end
     end
     alias :path :get_path
 
     def has_path?(symbol)
       @paths.has_key?(symbol)
+    end
+
+    def paths
+      @paths
     end
 
     def touch!(*files)
@@ -66,18 +80,27 @@ module Masamune
     end
 
     def glob(pattern, &block)
-      if block_given?
-        glob_with_block(pattern) do |file|
-          yield file
+      case type(pattern)
+      when :hdfs
+        execute_hadoop_fs('-ls', pattern, safe: true) do |line|
+          next if line =~ /\AFound \d+ items/
+          yield q(pattern, line.split(/\s+/).last)
+        end
+      when :s3
+        head_glob, *tail_glob = pattern.split('*')
+        tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
+        execute('s3cmd', 'ls', s3b(head_glob + '*'), safe: true) do |line|
+          next if line =~ /\$folder$/
+          next unless line =~ tail_regexp
+          yield q(pattern, line.split(/\s+/).last)
         end
       else
-        [].tap do |result|
-          glob_with_block(pattern) do |file|
-            result << file
-          end
+        Dir.glob(pattern) do |file|
+          yield file
         end
       end
     end
+    method_accumulate :glob
 
     # TODO local, hdfs permutations
     def copy_file(src, dst)
@@ -99,6 +122,7 @@ module Masamune
         execute_hadoop_fs('-rmr', dir)
       when :s3
         execute('s3cmd', 'del', '--recursive', s3b(dir, dir:true))
+        execute('s3cmd', 'del', '--recursive', s3b("#{dir}_$folder$"))
       else
         FileUtils.rmtree(dir, file_util_args)
       end
@@ -125,6 +149,8 @@ module Masamune
           case type
           when :local
             file_set.map do |file|
+              next unless File.exists?(file)
+              next if File.directory?(file)
               buf << File.read(file)
             end
           end
@@ -132,10 +158,11 @@ module Masamune
       end
     end
 
-    def write(buf, src)
-      case type(src)
+    def write(buf, dst)
+      case type(dst)
       when :local
-        File.open(src, 'w') do |file|
+        mkdir!(File.dirname(dst))
+        File.open(dst, 'w') do |file|
           file.write buf
         end
       end
@@ -143,26 +170,19 @@ module Masamune
 
     private
 
-    def glob_with_block(pattern, &block)
-      case type(pattern)
-      when :hdfs
-        execute_hadoop_fs('-ls', pattern, safe: true) do |line|
-          next if line =~ /\AFound \d+ items/
-          yield q(pattern, line.split(/\s+/).last)
-        end
-      when :s3
-        head_glob, *tail_glob = pattern.split('*')
-        tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
-        execute('s3cmd', 'ls', s3b(head_glob + '*'), safe: true) do |line|
-          next if line =~ /\$folder$/
-          next unless line =~ tail_regexp
-          yield q(pattern, line.split(/\s+/).last)
-        end
+    def eager_load_path(path)
+      case path
+      when String
+        path
+      when Proc
+        path.call
       else
-        Dir.glob(pattern) do |file|
-          yield file
-        end
+        raise "Unknown path #{path.inspect}"
       end
+    end
+
+    def eager_load_paths?
+      @paths.reject { |key,_| key == :root_dir }.any?
     end
 
     def type(path)
@@ -178,7 +198,7 @@ module Masamune
 
     def hadoop_fs_args(options = {})
       args = []
-      args << Masamune.configuration.command_options[:hadoop_fs].call
+      args << Masamune.configuration.hadoop_filesystem[:options].map(&:to_a)
       args.flatten
     end
 
@@ -198,7 +218,7 @@ module Masamune
 
     def qualify_file(dir, file)
       if prefix = remote_prefix(dir) and file !~ /\A#{Regexp.escape(prefix)}/
-        prefix.sub(%r{//+}, '//') + file
+        prefix + file.sub(%r{\A/+}, '')
       else
         file
       end
@@ -207,8 +227,8 @@ module Masamune
 
     def remote_prefix(dir)
       dir[%r{s3n?://.*?/}] ||
-      dir[%r{file://.*?/}] ||
-      dir[%r{hdfs://.*?/}]
+      dir[%r{file:///}] ||
+      dir[%r{hdfs:///}]
     end
 
     module ClassMethods

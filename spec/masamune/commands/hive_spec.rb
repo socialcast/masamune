@@ -6,9 +6,7 @@ describe Masamune::Commands::Hive do
   let(:context_options) { {} }
 
   before do
-    Masamune.configuration.add_command_options(:hive) do
-      command_options
-    end
+    Masamune.configuration.hive[:options] = command_options
   end
 
   let(:instance) { Masamune::Commands::Hive.new(general_options.merge(context_options)) }

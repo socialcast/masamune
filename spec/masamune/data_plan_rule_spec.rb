@@ -6,6 +6,22 @@ describe Masamune::DataPlanRule do
 
   let(:instance) { described_class.new(pattern, options) }
 
+  describe '#pattern' do
+    subject do
+      instance.pattern
+    end
+
+    context 'with string' do
+      let(:pattern) { 'report/%Y-%m-%d/%H' }
+      it { should == 'report/%Y-%m-%d/%H' }
+    end
+
+    context 'with lamda' do
+      let(:pattern) { lambda { 'report/%Y-%m-%d/%H' } }
+      it { should == 'report/%Y-%m-%d/%H' }
+    end
+  end
+
   describe '#bind_date' do
     subject do
       instance.bind_date(input_date)

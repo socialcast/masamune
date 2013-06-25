@@ -1,7 +1,11 @@
+require 'thread'
+
 module Masamune
+  require 'masamune/accumulate'
   require 'masamune/configuration'
   require 'masamune/data_plan'
   require 'masamune/data_plan_rule'
+  require 'masamune/data_plan_elem'
   require 'masamune/thor'
   require 'masamune/thor_loader'
   require 'masamune/thor_data'
@@ -17,15 +21,19 @@ module Masamune
   require 'masamune/method_logger'
   require 'masamune/proxy_delegate'
 
-  require 'masamune/commands/line_formatter'
-
   class Client
+    attr_accessor :context
+
     def configure
       yield configuration
     end
 
     def configuration
-      @configuration ||= Masamune::Configuration.new
+      @configuration ||= Masamune::Configuration.new(self)
+    end
+
+    def mutex
+      @mutex ||= Mutex.new
     end
   end
 
@@ -34,6 +42,10 @@ module Masamune
 
   def default_client
     @default_client ||= Client.new
+  end
+
+  def default_config_file
+    @default_config_file ||= File.join(File.expand_path('../../', __FILE__), 'conf', 'masamune.yml.erb')
   end
 
   def_delegators :default_client, :configure, :configuration
