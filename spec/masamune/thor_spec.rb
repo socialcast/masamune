@@ -82,6 +82,16 @@ describe Masamune::Thor do
       end
     end
 
+    context 'with command and natural language --start and no matching targets' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', 'yesterday'] }
+      it do
+        expect { subject }.to raise_error SystemExit
+        stdout.string.should be_blank
+        stderr.string.should =~ /\ANo matching missing targets/
+      end
+    end
+
     context 'when elastic_mapreduce is enabled' do
       before do
         Masamune.configure do |config|

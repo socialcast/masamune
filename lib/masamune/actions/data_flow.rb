@@ -1,3 +1,5 @@
+require 'chronic'
+
 module Masamune::Actions
   module DataFlow
     private
@@ -52,9 +54,7 @@ module Masamune::Actions
 
         def parse_datetime_type(key)
           value = options[key]
-          DateTime.parse(value)
-        rescue ArgumentError
-          raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
+          Chronic.parse(value) or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
         end
 
         # TODO allow multiple after_initialize blocks
