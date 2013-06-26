@@ -39,8 +39,11 @@ describe Masamune::Thor do
     end
 
     context 'without command' do
-      it do
-        expect { subject }.to raise_error SystemExit
+      it 'exits with status code 0 and prints usage' do
+        expect { subject }.to raise_error { |e|
+          e.should be_a(SystemExit)
+          e.status.should == 0
+        }
         stdout.string.should =~ /^Commands:/
         stderr.string.should be_blank
       end
@@ -75,8 +78,11 @@ describe Masamune::Thor do
     context 'with command and --start and no matching targets' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
-      it do
-        expect { subject }.to raise_error SystemExit
+      it 'exits with status code 1 and prints error message' do
+        expect { subject }.to raise_error { |e|
+          e.should be_a(SystemExit)
+          e.status.should == 1
+        }
         stdout.string.should be_blank
         stderr.string.should =~ /\ANo matching missing targets/
       end
@@ -85,8 +91,11 @@ describe Masamune::Thor do
     context 'with command and natural language --start and no matching targets' do
       let(:command) { 'command' }
       let(:options) { ['--start', 'yesterday'] }
-      it do
-        expect { subject }.to raise_error SystemExit
+      it 'exits with status code 1 and prints error message' do
+        expect { subject }.to raise_error { |e|
+          e.should be_a(SystemExit)
+          e.status.should == 1
+        }
         stdout.string.should be_blank
         stderr.string.should =~ /\ANo matching missing targets/
       end
