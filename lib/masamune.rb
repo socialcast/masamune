@@ -17,7 +17,6 @@ module Masamune
   require 'masamune/actions/elastic_mapreduce'
   require 'masamune/filesystem'
   require 'masamune/cached_filesystem'
-  require 'masamune/store'
   require 'masamune/method_logger'
   require 'masamune/proxy_delegate'
 
