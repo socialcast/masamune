@@ -1,7 +1,9 @@
 require 'thread'
 
 module Masamune
+  require 'masamune/commands'
   require 'masamune/accumulate'
+  require 'masamune/actions'
   require 'masamune/configuration'
   require 'masamune/data_plan'
   require 'masamune/data_plan_rule'
@@ -9,12 +11,6 @@ module Masamune
   require 'masamune/thor'
   require 'masamune/thor_loader'
   require 'masamune/thor_data'
-  require 'masamune/actions/hive'
-  require 'masamune/actions/s3cmd'
-  require 'masamune/actions/streaming'
-  require 'masamune/actions/filesystem'
-  require 'masamune/actions/data_flow'
-  require 'masamune/actions/elastic_mapreduce'
   require 'masamune/filesystem'
   require 'masamune/cached_filesystem'
   require 'masamune/method_logger'

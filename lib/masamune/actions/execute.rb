@@ -1,7 +1,5 @@
 module Masamune::Actions
   module Execute
-    require 'masamune/commands/shell'
-
     def execute(*args, &block)
       opts = args.last.is_a?(Hash) ? args.pop : {}
       opts = opts.to_hash.symbolize_keys

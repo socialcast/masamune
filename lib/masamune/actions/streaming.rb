@@ -1,8 +1,4 @@
 module Masamune::Actions
-  require 'masamune/commands/shell'
-  require 'masamune/commands/elastic_mapreduce'
-  require 'masamune/commands/streaming'
-
   module Streaming
     def streaming(opts = {})
       opts = opts.to_hash.symbolize_keys

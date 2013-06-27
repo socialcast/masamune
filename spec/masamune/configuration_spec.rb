@@ -7,52 +7,52 @@ describe Masamune::Configuration do
   describe '#hive' do
     subject { instance.hive }
 
-    it { should == {:database => 'default', :options => []} }
+    it { should == {:path => 'hive', :database => 'default', :options => []} }
 
     context 'after adding a symbol key' do
       before do
         instance.hive[:random] = '123'
       end
-      it { should == {:database => 'default', :options => [], :random => '123' } }
+      it { should == {:path => 'hive', :database => 'default', :options => [], :random => '123' } }
     end
 
     context 'after adding a string key' do
       before do
         instance.hive['random'] = '123'
       end
-      it { should == {:database => 'default', :options => [], :random => '123' } }
+      it { should == {:path => 'hive', :database => 'default', :options => [], :random => '123' } }
     end
 
     context 'after adding a override key' do
       before do
         instance.hive['database'] = 'test'
       end
-      it { should == {:database => 'test', :options => []} }
+      it { should == {:path => 'hive', :database => 'test', :options => []} }
     end
   end
 
   describe '#hadoop_streaming' do
     subject { instance.hadoop_streaming }
 
-    it { should == {:jar => instance.default_hadoop_streaming_jar, :options => []} }
+    it { should == {:path => 'hadoop', :jar => instance.default_hadoop_streaming_jar, :options => []} }
   end
 
   describe '#hadoop_filesystem' do
     subject { instance.hadoop_filesystem }
 
-    it { should == {:options => []} }
+    it { should == {:path => 'hadoop', :options => []} }
   end
 
   describe '#elastic_mapreduce' do
     subject { instance.elastic_mapreduce }
 
-    it { should == {:enabled => false, :options => []} }
+    it { should == {:path => 'elastic-mapreduce', :enabled => false, :options => []} }
   end
 
   describe '#s3cmd' do
     subject { instance.s3cmd}
 
-    it { should == {:options => []} }
+    it { should == {:path => 's3cmd', :options => []} }
   end
 
   describe '#hive=' do
@@ -65,7 +65,7 @@ describe Masamune::Configuration do
         instance.hive['options'] = [{'-f' => 'flag'}]
         instance.hive = {:options => [{'-i' => 'first'}, {'-i' => 'last'}]}
       end
-      it { should == {:database => 'default', :options => [{'-f' => 'flag'}, {'-i' => 'first'}, {'-i' => 'last'}]} }
+      it { should == {:path => 'hive', :database => 'default', :options => [{'-f' => 'flag'}, {'-i' => 'first'}, {'-i' => 'last'}]} }
     end
 
     context 'defining new options' do
@@ -73,7 +73,7 @@ describe Masamune::Configuration do
         instance.hive['options'] = nil
         instance.hive = {:options => [{'-i' => 'first'}, {'-i' => 'last'}]}
       end
-      it { should == {:database => 'default', :options => [{'-i' => 'first'}, {'-i' => 'last'}]} }
+      it { should == {:path => 'hive', :database => 'default', :options => [{'-i' => 'first'}, {'-i' => 'last'}]} }
     end
 
     context 'preserving existing options' do
@@ -81,7 +81,7 @@ describe Masamune::Configuration do
         instance.hive['options'] = [{'-f' => 'flag'}]
         instance.hive = {:database => 'test'}
       end
-      it { should == {:database => 'test', :options => [{'-f' => 'flag'}]} }
+      it { should == {:path => 'hive', :database => 'test', :options => [{'-f' => 'flag'}]} }
     end
   end
 end

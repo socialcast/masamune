@@ -1,5 +1,3 @@
-require 'masamune/commands/shell'
-
 module Masamune::Commands
   class Streaming
     attr_accessor :input, :output, :mapper, :reducer, :extra_args, :file_args, :quote
@@ -15,7 +13,9 @@ module Masamune::Commands
     end
 
     def command_args
-      args = ['hadoop', 'jar', Masamune.configuration.hadoop_streaming[:jar]]
+      args = []
+      args << Masamune.configuration.hadoop_streaming[:path]
+      args << ['jar', Masamune.configuration.hadoop_streaming[:jar]]
       args << (quote ? extra_args.map { |arg| quote_arg(arg) } : extra_args)
       args << Masamune.configuration.hadoop_streaming[:options].map(&:to_a)
       args << ['-input', *input]

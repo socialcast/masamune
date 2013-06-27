@@ -1,8 +1,4 @@
 module Masamune::Actions
-  require 'masamune/commands/shell'
-  require 'masamune/commands/interactive'
-  require 'masamune/commands/elastic_mapreduce'
-
   module ElasticMapreduce
     def elastic_mapreduce(opts = {})
       opts = opts.to_hash.symbolize_keys

@@ -161,11 +161,11 @@ class Masamune::Configuration
   end
 
   def default_hive_attributes
-    {:database => 'default', :options => []}
+    {:path => 'hive', :database => 'default', :options => []}
   end
 
   def default_hadoop_streaming_attributes
-    {:jar => default_hadoop_streaming_jar, :options => []}
+    {:path => 'hadoop', :jar => default_hadoop_streaming_jar, :options => []}
   end
 
   def default_hadoop_streaming_jar
@@ -179,7 +179,15 @@ class Masamune::Configuration
     end
   end
 
+  def default_hadoop_filesystem_attributes
+    {:path => 'hadoop', :options => []}
+  end
+
   def default_elastic_mapreduce_attributes
-    {:enabled => false, :options => []}
+    {:path => 'elastic-mapreduce', :enabled => false, :options => []}
+  end
+
+  def default_s3cmd_attributes
+    {:path => 's3cmd', :options => []}
   end
 end

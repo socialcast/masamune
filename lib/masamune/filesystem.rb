@@ -1,6 +1,7 @@
 module Masamune
   class Filesystem
     include Masamune::Accumulate
+    include Masamune::Actions::S3Cmd
     include Masamune::Actions::Execute
 
     def initialize
@@ -89,7 +90,7 @@ module Masamune
       when :s3
         head_glob, *tail_glob = pattern.split('*')
         tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
-        execute('s3cmd', 'ls', s3b(head_glob + '*'), safe: true) do |line|
+        s3cmd('ls', s3b(head_glob + '*'), safe: true) do |line|
           next if line =~ /\$folder$/
           next unless line =~ tail_regexp
           yield q(pattern, line.split(/\s+/).last)
@@ -109,7 +110,7 @@ module Masamune
       when [:hdfs, :hdfs]
         execute_hadoop_fs('-cp', src, dst)
       when [:s3, :s3]
-        execute('s3cmd', 'cp', src, dst)
+        s3cmd('cp', src, dst)
       when [:local, :local]
         FileUtils.cp(src, dst, file_util_args)
       end
@@ -121,8 +122,8 @@ module Masamune
       when :hdfs
         execute_hadoop_fs('-rmr', dir)
       when :s3
-        execute('s3cmd', 'del', '--recursive', s3b(dir, dir:true))
-        execute('s3cmd', 'del', '--recursive', s3b("#{dir}_$folder$"))
+        s3cmd('del', '--recursive', s3b(dir, dir:true))
+        s3cmd('del', '--recursive', s3b("#{dir}_$folder$"))
       else
         FileUtils.rmtree(dir, file_util_args)
       end
@@ -135,9 +136,9 @@ module Masamune
       when [:hdfs, :hdfs]
         execute_hadoop_fs('-mv', src, dst)
       when [:s3, :s3]
-        execute('s3cmd', 'mv', src, dst)
+        s3cmd('mv', src, dst)
       when [:local, :s3]
-        execute('s3cmd', 'put', src, dst)
+        s3cmd('put', src, dst)
       when [:local, :local]
         FileUtils.mv(src, dst, file_util_args)
       end
@@ -196,8 +197,10 @@ module Masamune
       end
     end
 
-    def hadoop_fs_args(options = {})
+    def hadoop_fs_command(options = {})
       args = []
+      args << Masamune.configuration.hadoop_filesystem[:path]
+      args << 'fs'
       args << Masamune.configuration.hadoop_filesystem[:options].map(&:to_a)
       args.flatten
     end
@@ -208,11 +211,11 @@ module Masamune
 
     def execute_hadoop_fs(*args, &block)
       if block_given?
-        execute('hadoop', 'fs', *hadoop_fs_args, *args) do |line, line_no|
+        execute(*hadoop_fs_command, *args) do |line, line_no|
           yield line
         end
       else
-        execute('hadoop', 'fs', *hadoop_fs_args, *args)
+        execute(*hadoop_fs_command, *args)
       end
     end
 
@@ -230,23 +233,5 @@ module Masamune
       dir[%r{file:///}] ||
       dir[%r{hdfs:///}]
     end
-
-    module ClassMethods
-      def s3n(file, options = {})
-        file.dup.tap do |out|
-          out.sub!(%r{\As3://}, 's3n://')
-          out.sub!(%r{/?\z}, '/') if options[:dir]
-        end
-      end
-
-      def s3b(file, options = {})
-        file.dup.tap do |out|
-          out.sub!(%r{\As3n://}, 's3://')
-          out.sub!(%r{/?\z}, '/') if options[:dir]
-        end
-      end
-    end
-
-    include ClassMethods
   end
 end
