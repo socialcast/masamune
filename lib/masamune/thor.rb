@@ -59,6 +59,7 @@ module Masamune
 
             if options[:version]
               puts config.version
+              puts options if options[:verbose]
               puts config.to_s if options[:verbose]
               exit
             end
