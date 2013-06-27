@@ -39,7 +39,9 @@ class Masamune::Configuration
     end
 
     define_method("#{command}=") do |attributes|
+      attributes.symbolize_keys!
       send(command).tap do |instance|
+        resolve_path(command, attributes[:path]) if attributes[:path]
         instance[:options] ||= []
         if options = attributes.delete(:options)
           instance[:options] += options
@@ -189,5 +191,9 @@ class Masamune::Configuration
 
   def default_s3cmd_attributes
     {:path => 's3cmd', :options => []}
+  end
+
+  def resolve_path(command, path)
+    `which #{path}`.chomp.present? or raise ::Thor::InvocationError, "Invalid path #{path} for command #{command}"
   end
 end

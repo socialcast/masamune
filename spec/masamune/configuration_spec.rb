@@ -60,6 +60,34 @@ describe Masamune::Configuration do
       instance.hive
     end
 
+    context 'overriding path with valid path symbol' do
+      before do
+        instance.hive = { path: 'whoami' }
+      end
+      it { should == {:path => 'whoami', :database => 'default', :options => []} }
+    end
+
+    context 'overriding path with valid path string' do
+      before do
+        instance.hive = { 'path' => 'whoami' }
+      end
+      it { should == {:path => 'whoami', :database => 'default', :options => []} }
+    end
+
+    context 'overriding path with non resolvable path' do
+      subject do
+        instance.hive = { path: 'whoami_' }
+      end
+      it { expect { subject }.to raise_error Thor::InvocationError, 'Invalid path whoami_ for command hive' }
+    end
+
+    context 'overriding path an absolute path' do
+      before do
+        instance.hive = {path: '/usr/bin/whoami'}
+      end
+      it { should == {path: '/usr/bin/whoami', database: 'default', options: []} }
+    end
+
     context 'overriding existing options' do
       before do
         instance.hive['options'] = [{'-f' => 'flag'}]
