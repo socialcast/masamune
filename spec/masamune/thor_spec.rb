@@ -75,6 +75,17 @@ describe Masamune::Thor do
       it { expect { subject }.to raise_error Thor::InvocationError, /Dry run of hive failed/ }
     end
 
+    context 'with command and -- --extra --args' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01', '--', '--extra', '--args'] }
+      before do
+        klass.any_instance.should_receive(:extra=).with(['--extra', '--args'])
+      end
+      it do
+        expect { subject }.to raise_error SystemExit
+      end
+    end
+
     context 'with command and --start and no matching targets' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
@@ -122,6 +133,32 @@ describe Masamune::Thor do
         end
         it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /'--jobflow' doesn't exist/ }
       end
+    end
+  end
+
+  context '.parse_extra' do
+    subject do
+      klass.parse_extra(argv)
+    end
+
+    context 'without --' do
+      let(:argv) { ['--flag', 'true'] }
+      it { should == [['--flag', 'true'],[]] }
+    end
+
+    context 'with -- and no following arguments' do
+      let(:argv) { ['--flag', 'true', '--'] }
+      it { should == [['--flag', 'true'],[]] }
+    end
+
+    context 'with -- and a single extra argument' do
+      let(:argv) { ['--flag', 'true', '--', '--more'] }
+      it { should == [['--flag', 'true'], ['--more']] }
+    end
+
+    context 'with -- and multiple extra agruments' do
+      let(:argv) { ['--flag', 'true', '--', '--more', 'flag'] }
+      it { should == [['--flag', 'true'], ['--more', 'flag']] }
     end
   end
 end
