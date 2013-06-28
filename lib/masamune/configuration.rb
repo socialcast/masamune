@@ -89,6 +89,7 @@ class Masamune::Configuration
   end
 
   def jobflow
+    return unless elastic_mapreduce[:enabled]
     @jobflow || defined_jobflows.fetch(:default, nil)
   end
 

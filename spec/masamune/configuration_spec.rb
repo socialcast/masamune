@@ -114,6 +114,10 @@ describe Masamune::Configuration do
   end
 
   describe '#jobflow=' do
+    before do
+      instance.elastic_mapreduce[:enabled] = true
+    end
+
     subject do
       instance.jobflow
     end
@@ -124,6 +128,14 @@ describe Masamune::Configuration do
         instance.jobflow = 'j-value'
       end
       it { should == 'j-value' }
+
+      context 'when elastic_mapreduce[:enabled] is false' do
+        before do
+          instance.elastic_mapreduce[:enabled] = false
+          instance.jobflow = 'j-value'
+        end
+        it { should be_nil }
+      end
     end
 
     context 'with jobflow symbol when configured jobflows not defined' do
