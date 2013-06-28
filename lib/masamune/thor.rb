@@ -3,6 +3,12 @@ require 'thor'
 
 module Masamune
   module Thor
+    SYSTEM_CONFIG_FILES = [
+      '/etc/masamune/config.yml',
+      '/etc/masamune/config.yml.erb',
+      "#{ENV['HOME']}/.masamune/config.yml"
+    ]
+
     module ExtraArguments
       def parse_extra(argv)
         if i = argv.index('--')
@@ -45,9 +51,11 @@ module Masamune
 
           Masamune.configure do |config|
             config.client.context = self
-            # TODO also try /etc/masamune/config.yml, /etc/masamune/config.yml.erb, $HOME/.masamune/config.yml
+
             if options[:config]
               config.load(options[:config])
+            elsif system_config_file = config.filesystem.resolve_file(SYSTEM_CONFIG_FILES)
+              config.load(system_config_file)
             end
 
             config.quiet    = options[:quiet]

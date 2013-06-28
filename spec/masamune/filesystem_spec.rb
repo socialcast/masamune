@@ -43,6 +43,30 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  describe '#resolve_file' do
+    subject { instance.resolve_file(paths) }
+
+    context 'with nil' do
+      let(:paths) { nil }
+      it { should be_nil }
+    end
+
+    context 'with empty' do
+      let(:paths) { [] }
+      it { should be_nil }
+    end
+
+    context 'with one file' do
+      let(:paths) { old_file }
+      it { should == old_file }
+    end
+
+    context 'with directories and file' do
+      let(:paths) { [old_dir, new_dir, new_file, old_file] }
+      it { should == old_file }
+    end
+  end
+
   describe '#touch!' do
     subject do
       File.exists?(new_file)

@@ -65,6 +65,7 @@ class Masamune::Configuration
       load_yaml_erb_file(file).each_pair do |command, value|
         send("#{command}=", value) if COMMANDS.include?(command)
       end
+      logger.debug("Loaded configuration #{file}")
     end
   end
 

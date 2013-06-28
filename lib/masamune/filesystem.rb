@@ -43,6 +43,10 @@ module Masamune
       @paths
     end
 
+    def resolve_file(paths = [])
+      Array.wrap(paths).select { |path| File.exists?(path) && File.file?(path) }.first
+    end
+
     def touch!(*files)
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
