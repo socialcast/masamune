@@ -94,7 +94,7 @@ describe Masamune::Thor do
           e.should be_a(SystemExit)
           e.status.should == 1
         }
-        stdout.string.should be_blank
+        stdout.string.should =~ /\AUsing '.*' for --start/
         stderr.string.should =~ /\ANo matching missing targets/
       end
     end
@@ -107,7 +107,7 @@ describe Masamune::Thor do
           e.should be_a(SystemExit)
           e.status.should == 1
         }
-        stdout.string.should be_blank
+        stdout.string.should =~ /\AUsing '.*' for --start/
         stderr.string.should =~ /\ANo matching missing targets/
       end
     end

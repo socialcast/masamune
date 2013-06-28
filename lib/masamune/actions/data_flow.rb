@@ -54,7 +54,9 @@ module Masamune::Actions
 
         def parse_datetime_type(key)
           value = options[key]
-          Chronic.parse(value) or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
+          Chronic.parse(value).tap do |datetime_value|
+            Masamune::print("Using '#{datetime_value}' for --#{key}") if value != datetime_value
+          end or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
         end
 
         # TODO allow multiple after_initialize blocks
