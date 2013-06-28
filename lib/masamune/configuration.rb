@@ -39,7 +39,9 @@ class Masamune::Configuration
     end
 
     define_method("#{command}=") do |attributes|
+      attributes.symbolize_keys!
       send(command).tap do |instance|
+        resolve_path(command, attributes[:path]) if attributes[:path]
         instance[:options] ||= []
         if options = attributes.delete(:options)
           instance[:options] += options
@@ -63,6 +65,7 @@ class Masamune::Configuration
       load_yaml_erb_file(file).each_pair do |command, value|
         send("#{command}=", value) if COMMANDS.include?(command)
       end
+      logger.debug("Loaded configuration #{file}")
     end
   end
 
@@ -83,6 +86,16 @@ class Masamune::Configuration
   def debug=(debug)
     @debug = debug
     @logger = nil
+  end
+
+  def jobflow
+    return unless elastic_mapreduce[:enabled]
+    @jobflow || defined_jobflows.fetch(:default, nil)
+  end
+
+  def jobflow=(jobflow)
+    return unless jobflow
+    @jobflow = defined_jobflows.fetch(jobflow.to_sym, jobflow.to_s)
   end
 
   def log_enabled?
@@ -161,11 +174,11 @@ class Masamune::Configuration
   end
 
   def default_hive_attributes
-    {:database => 'default', :options => []}
+    {:path => 'hive', :database => 'default', :options => []}
   end
 
   def default_hadoop_streaming_attributes
-    {:jar => default_hadoop_streaming_jar, :options => []}
+    {:path => 'hadoop', :jar => default_hadoop_streaming_jar, :options => []}
   end
 
   def default_hadoop_streaming_jar
@@ -179,7 +192,24 @@ class Masamune::Configuration
     end
   end
 
-  def default_elastic_mapreduce_attributes
-    {:enabled => false, :options => []}
+  def default_hadoop_filesystem_attributes
+    {:path => 'hadoop', :options => []}
   end
+
+  def default_elastic_mapreduce_attributes
+    {:path => 'elastic-mapreduce', :enabled => false, :options => []}
+  end
+
+  def default_s3cmd_attributes
+    {:path => 's3cmd', :options => []}
+  end
+
+  def resolve_path(command, path)
+    `which #{path}`.chomp.present? or raise ::Thor::InvocationError, "Invalid path #{path} for command #{command}"
+  end
+
+  def defined_jobflows
+    @defined_jobflows ||= (elastic_mapreduce.fetch(:jobflows, {}) || {}).symbolize_keys
+  end
+
 end

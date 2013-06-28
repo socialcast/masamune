@@ -11,7 +11,9 @@
     options:
       - --config: <%= ENV['HOME'] %>/.s3cfg
   elastic_mapreduce:
-    path: '/opt/elastic-mapreduce-ruby'
-    enabled: false
+    path: elastic-mapreduce
+    jobflows:
+      build: 'j-BUILD'
+    enabled: <%= ARGV.include?('-j') || ARGV.include?('--jobflow') %>
     options:
       - --credentials: <%= ENV['HOME'] %>/.amazon/credentials.json

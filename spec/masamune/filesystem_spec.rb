@@ -43,6 +43,30 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  describe '#resolve_file' do
+    subject { instance.resolve_file(paths) }
+
+    context 'with nil' do
+      let(:paths) { nil }
+      it { should be_nil }
+    end
+
+    context 'with empty' do
+      let(:paths) { [] }
+      it { should be_nil }
+    end
+
+    context 'with one file' do
+      let(:paths) { old_file }
+      it { should == old_file }
+    end
+
+    context 'with directories and file' do
+      let(:paths) { [old_dir, new_dir, new_file, old_file] }
+      it { should == old_file }
+    end
+  end
+
   describe '#touch!' do
     subject do
       File.exists?(new_file)
@@ -138,7 +162,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        filesystem.should_receive(:execute).with('s3cmd', 'ls', "s3://bucket/dir/*", safe: true)
+        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true)
       end
 
       it { should be_empty }
@@ -148,7 +172,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        filesystem.should_receive(:execute).with('s3cmd', 'ls', "s3://bucket/dir/*", safe: true).
+        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
       end
@@ -161,7 +185,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*' }
 
       before do
-        filesystem.should_receive(:execute).with('s3cmd', 'ls', "s3://bucket/dir/*", safe: true).
+        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true).
           and_yield(%q(                       DIR   s3://bucket/dir/file_$folder$)).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
@@ -195,7 +219,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to s3 dir' do
       before do
-        filesystem.should_receive(:execute).with('s3cmd', 'cp', 's3://bucket/old_file', 's3://bucket/new_dir')
+        filesystem.should_receive(:s3cmd).with('cp', 's3://bucket/old_file', 's3://bucket/new_dir')
         instance.copy_file('s3://bucket/old_file', 's3://bucket/new_dir')
       end
 
@@ -226,8 +250,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir' do
       before do
-        filesystem.should_receive(:execute).with('s3cmd', 'del', '--recursive', 's3://bucket/dir/')
-        filesystem.should_receive(:execute).with('s3cmd', 'del', '--recursive', 's3://bucket/dir_$folder$')
+        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir/')
+        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir_$folder$')
         instance.remove_dir('s3://bucket/dir')
       end
 

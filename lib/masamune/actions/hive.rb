@@ -1,9 +1,4 @@
 module Masamune::Actions
-  require 'masamune/commands/shell'
-  require 'masamune/commands/elastic_mapreduce'
-  require 'masamune/commands/line_formatter'
-  require 'masamune/commands/hive'
-
   module Hive
     def hive(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys

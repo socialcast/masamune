@@ -39,8 +39,11 @@ describe Masamune::Thor do
     end
 
     context 'without command' do
-      it do
-        expect { subject }.to raise_error SystemExit
+      it 'exits with status code 0 and prints usage' do
+        expect { subject }.to raise_error { |e|
+          e.should be_a(SystemExit)
+          e.status.should == 0
+        }
         stdout.string.should =~ /^Commands:/
         stderr.string.should be_blank
       end
@@ -57,6 +60,12 @@ describe Masamune::Thor do
       it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--start'; got/ }
     end
 
+    context 'with command and invalid --stop' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01', '--stop', 'xxx'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--stop'; got/ }
+    end
+
     context 'with command and --dry_run' do
       let(:command) { 'command' }
       let(:options) { ['--dry_run'] }
@@ -66,12 +75,39 @@ describe Masamune::Thor do
       it { expect { subject }.to raise_error Thor::InvocationError, /Dry run of hive failed/ }
     end
 
+    context 'with command and -- --extra --args' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01', '--', '--extra', '--args'] }
+      before do
+        klass.any_instance.should_receive(:extra=).with(['--extra', '--args'])
+      end
+      it do
+        expect { subject }.to raise_error SystemExit
+      end
+    end
+
     context 'with command and --start and no matching targets' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
-      it do
-        expect { subject }.to raise_error SystemExit
-        stdout.string.should be_blank
+      it 'exits with status code 1 and prints error message' do
+        expect { subject }.to raise_error { |e|
+          e.should be_a(SystemExit)
+          e.status.should == 1
+        }
+        stdout.string.should =~ /\AUsing '.*' for --start/
+        stderr.string.should =~ /\ANo matching missing targets/
+      end
+    end
+
+    context 'with command and natural language --start and no matching targets' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', 'yesterday'] }
+      it 'exits with status code 1 and prints error message' do
+        expect { subject }.to raise_error { |e|
+          e.should be_a(SystemExit)
+          e.status.should == 1
+        }
+        stdout.string.should =~ /\AUsing '.*' for --start/
         stderr.string.should =~ /\ANo matching missing targets/
       end
     end
@@ -93,10 +129,41 @@ describe Masamune::Thor do
         let(:command) { 'command' }
         let(:options) { ['--start', '2013-01-01', '--jobflow', 'xxx'] }
         before do
-          klass.any_instance.should_receive(:elastic_mapreduce).with(list: true, jobflow: 'xxx', fail_fast: false).and_return(mock(success?: false))
+          klass.any_instance.should_receive(:elastic_mapreduce).with(extra: '--list', jobflow: 'xxx', fail_fast: false).and_return(mock(success?: false))
         end
         it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /'--jobflow' doesn't exist/ }
       end
+    end
+  end
+
+  context '.parse_extra' do
+    subject do
+      klass.parse_extra(argv)
+    end
+
+    context 'without --' do
+      let(:argv) { ['--flag', 'true'] }
+      it { should == [['--flag', 'true'],[]] }
+    end
+
+    context 'with -- and no following arguments' do
+      let(:argv) { ['--flag', 'true', '--'] }
+      it { should == [['--flag', 'true'],[]] }
+    end
+
+    context 'with -- and a single extra argument' do
+      let(:argv) { ['--flag', 'true', '--', '--more'] }
+      it { should == [['--flag', 'true'], ['--more']] }
+    end
+
+    context 'with -- and multiple extra agruments' do
+      let(:argv) { ['--flag', 'true', '--', '--more', 'flag'] }
+      it { should == [['--flag', 'true'], ['--more', 'flag']] }
+    end
+
+    context 'with leading -- and a single extra argument' do
+      let(:argv) { ['--', '--more'] }
+      it { should == [[], ['--more']] }
     end
   end
 end

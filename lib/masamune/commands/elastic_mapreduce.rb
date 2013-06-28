@@ -3,18 +3,20 @@ module Masamune::Commands
     require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
 
-    attr_accessor :jobflow, :input, :extra_args
+    attr_accessor :jobflow, :input, :extra
 
     def initialize(delegate, opts = {})
       @delegate    = delegate
       self.jobflow = opts[:jobflow]
       self.input   = opts[:input]
-      self.extra_args = opts.fetch(:extra_args, [])
+      self.extra   = opts.fetch(:extra, [])
     end
 
     def interactive?
       if @delegate.respond_to?(:interactive?)
         @delegate.interactive?
+      elsif extra.any?
+        true
       else
         input == nil
       end
@@ -22,16 +24,12 @@ module Masamune::Commands
 
     def command_args
       args = []
-      args << 'elastic-mapreduce'
+      args << Masamune.configuration.elastic_mapreduce[:path]
       args << Masamune.configuration.elastic_mapreduce[:options].map(&:to_a)
       args << ['--jobflow', jobflow] if jobflow
-      args << extra_args
-      if @delegate.respond_to?(:command_args) || @delegate.interactive? || input
-        args << '--ssh'
-      end
-      if @delegate.respond_to?(:command_args)
-        args << %Q{"#{@delegate.command_args.join(' ')}"}
-      end
+      args << extra
+      args << '--ssh' if ssh_command?
+      args << %Q{"#{@delegate.command_args.join(' ')}"} if @delegate.respond_to?(:command_args)
       args.flatten
     end
 
@@ -45,6 +43,12 @@ module Masamune::Commands
 
     def proxy_methods
       [:command_args, :interactive?, :handle_stdout]
+    end
+
+    private
+
+    def ssh_command?
+      @delegate.respond_to?(:command_args) || input
     end
   end
 end
