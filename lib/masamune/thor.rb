@@ -16,7 +16,11 @@ module Masamune
     module ExtraArguments
       def parse_extra(argv)
         if i = argv.index('--')
-          [argv[0 .. i-1], argv[i+1..-1]]
+          if i > 0
+            [argv[0 .. i-1], argv[i+1..-1]]
+          else
+            [[], argv[i+1..-1]]
+          end
         else
           [argv, []]
         end

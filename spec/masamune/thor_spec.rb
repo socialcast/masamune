@@ -160,5 +160,10 @@ describe Masamune::Thor do
       let(:argv) { ['--flag', 'true', '--', '--more', 'flag'] }
       it { should == [['--flag', 'true'], ['--more', 'flag']] }
     end
+
+    context 'with leading -- and a single extra argument' do
+      let(:argv) { ['--', '--more'] }
+      it { should == [[], ['--more']] }
+    end
   end
 end
