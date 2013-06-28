@@ -12,6 +12,9 @@
       - --config: <%= ENV['HOME'] %>/.s3cfg
   elastic_mapreduce:
     path: elastic-mapreduce
+    jobflows:
+      default: 'j-DEFAULT'
+      build: 'j-BUILD'
     enabled: <%= ARGV.include?('-j') || ARGV.include?('--jobflow') %>
     options:
       - --credentials: <%= ENV['HOME'] %>/.amazon/credentials.json

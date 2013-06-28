@@ -112,4 +112,47 @@ describe Masamune::Configuration do
       it { should == {:path => 'hive', :database => 'test', :options => [{'-f' => 'flag'}]} }
     end
   end
+
+  describe '#jobflow=' do
+    subject do
+      instance.jobflow
+    end
+    it { should be_nil }
+
+    context 'with jobflow value' do
+      before do
+        instance.jobflow = 'j-value'
+      end
+      it { should == 'j-value' }
+    end
+
+    context 'with jobflow symbol when configured jobflows not defined' do
+      before do
+        instance.elastic_mapreduce[:jobflows] = nil
+        instance.jobflow = 'j-value'
+      end
+      it { should == 'j-value' }
+    end
+
+    context 'with jobflow symbol when configured jobflows defined' do
+      before do
+        instance.elastic_mapreduce[:jobflows] = {build: 'j-build'}
+        instance.jobflow = 'build'
+      end
+      it { should == 'j-build' }
+    end
+
+    context 'with default jobflow symbol defined' do
+      before do
+        instance.elastic_mapreduce[:jobflows] = {default: 'j-default'}
+      end
+      it { should == 'j-default' }
+      context 'with runtime override' do
+        before do
+          instance.jobflow = 'j-override'
+        end
+        it { should == 'j-override' }
+      end
+    end
+  end
 end

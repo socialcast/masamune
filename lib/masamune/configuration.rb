@@ -88,6 +88,15 @@ class Masamune::Configuration
     @logger = nil
   end
 
+  def jobflow
+    @jobflow || elastic_mapreduce.fetch(:jobflows, {}).fetch(:default, nil)
+  end
+
+  def jobflow=(jobflow)
+    return unless jobflow
+    @jobflow = (elastic_mapreduce.fetch(:jobflows, {}) || {}).fetch(jobflow.to_sym, jobflow.to_s)
+  end
+
   def log_enabled?
     if self.client.context && client.context.respond_to?(:log_enabled?)
       self.client.context.log_enabled?
