@@ -129,7 +129,7 @@ describe Masamune::Thor do
         let(:command) { 'command' }
         let(:options) { ['--start', '2013-01-01', '--jobflow', 'xxx'] }
         before do
-          klass.any_instance.should_receive(:elastic_mapreduce).with(list: true, jobflow: 'xxx', fail_fast: false).and_return(mock(success?: false))
+          klass.any_instance.should_receive(:elastic_mapreduce).with(extra: '--list', jobflow: 'xxx', fail_fast: false).and_return(mock(success?: false))
         end
         it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /'--jobflow' doesn't exist/ }
       end

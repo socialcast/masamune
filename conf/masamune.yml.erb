@@ -13,7 +13,6 @@
   elastic_mapreduce:
     path: elastic-mapreduce
     jobflows:
-      default: 'j-DEFAULT'
       build: 'j-BUILD'
     enabled: <%= ARGV.include?('-j') || ARGV.include?('--jobflow') %>
     options:

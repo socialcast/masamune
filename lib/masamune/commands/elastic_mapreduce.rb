@@ -28,10 +28,8 @@ module Masamune::Commands
       args << Masamune.configuration.elastic_mapreduce[:options].map(&:to_a)
       args << ['--jobflow', jobflow] if jobflow
       args << extra
-      if @delegate.respond_to?(:command_args)
-        args << '--ssh'
-        args << %Q{"#{@delegate.command_args.join(' ')}"}
-      end
+      args << '--ssh' if ssh_command?
+      args << %Q{"#{@delegate.command_args.join(' ')}"} if @delegate.respond_to?(:command_args)
       args.flatten
     end
 
@@ -45,6 +43,12 @@ module Masamune::Commands
 
     def proxy_methods
       [:command_args, :interactive?, :handle_stdout]
+    end
+
+    private
+
+    def ssh_command?
+      @delegate.respond_to?(:command_args) || input
     end
   end
 end

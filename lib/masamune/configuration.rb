@@ -89,12 +89,12 @@ class Masamune::Configuration
   end
 
   def jobflow
-    @jobflow || elastic_mapreduce.fetch(:jobflows, {}).fetch(:default, nil)
+    @jobflow || defined_jobflows.fetch(:default, nil)
   end
 
   def jobflow=(jobflow)
     return unless jobflow
-    @jobflow = (elastic_mapreduce.fetch(:jobflows, {}) || {}).fetch(jobflow.to_sym, jobflow.to_s)
+    @jobflow = defined_jobflows.fetch(jobflow.to_sym, jobflow.to_s)
   end
 
   def log_enabled?
@@ -206,4 +206,9 @@ class Masamune::Configuration
   def resolve_path(command, path)
     `which #{path}`.chomp.present? or raise ::Thor::InvocationError, "Invalid path #{path} for command #{command}"
   end
+
+  def defined_jobflows
+    @defined_jobflows ||= (elastic_mapreduce.fetch(:jobflows, {}) || {}).symbolize_keys
+  end
+
 end
