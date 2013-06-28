@@ -6,6 +6,10 @@ module Masamune
     SYSTEM_CONFIG_FILES = [
       '/etc/masamune/config.yml',
       '/etc/masamune/config.yml.erb',
+      '/opt/masamune/etc/config.yml',
+      '/opt/masamune/etc/config.yml.erb',
+      '/opt/etc/masamune/config.yml',
+      '/opt/etc/masamune/config.yml.erb',
       "#{ENV['HOME']}/.masamune/config.yml"
     ]
 
