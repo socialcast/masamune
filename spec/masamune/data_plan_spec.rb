@@ -258,6 +258,21 @@ describe Masamune::DataPlan do
         it 'should not call primary_command' do; end
         it 'should not call derived_daily_command' do; end
       end
+
+      context 'when source data outside of window does not exist' do
+        let(:primary_options) { {:wildcard => true, :window => 1} }
+
+        before do
+          fs.touch!('log/20130101.app1.log')
+          primary_command.should_receive(:call).with(['log/20130101.app1.log'], {})
+          derived_daily_command.should_not_receive(:call)
+          resolve
+        end
+
+        it { should be_true }
+        it 'should not call primary_command' do; end
+        it 'should not call derived_daily_command' do; end
+      end
     end
 
     shared_examples_for 'derived daily data' do

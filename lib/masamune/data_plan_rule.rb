@@ -100,6 +100,11 @@ class Masamune::DataPlanRule
   end
   method_accumulate :adjacent_matches
 
+  # FIXME terminal nodes need to be derived from graph
+  def terminal?
+    @options.fetch(:wildcard, false)
+  end
+
   private
 
   def matcher

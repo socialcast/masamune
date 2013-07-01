@@ -93,6 +93,7 @@ class Masamune::DataPlan
           if Masamune.filesystem.exists?(source.path)
             matches << source
           else
+            next if source.terminal?
             rule_dep = rule_for_target(source.path)
             missing[rule_dep] << source
           end

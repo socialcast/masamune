@@ -47,6 +47,10 @@ class Masamune::DataPlanElem
     @options.fetch(:wildcard, false)
   end
 
+  def terminal?
+    @rule.terminal?
+  end
+
   def glob
     @options[:glob]
   end
