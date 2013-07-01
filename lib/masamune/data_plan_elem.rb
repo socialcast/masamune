@@ -10,8 +10,8 @@ class Masamune::DataPlanElem
   end
 
   def path
-    if input_path && wildcard?
-      input_path
+    if glob
+      start_time.strftime(@rule.pattern.sub('*', glob))
     else
       start_time.strftime(@rule.pattern)
     end
@@ -47,18 +47,22 @@ class Masamune::DataPlanElem
     @options.fetch(:wildcard, false)
   end
 
-  def input_path
-    @options[:input_path]
+  def glob
+    @options[:glob]
   end
 
-  def next
-    self.class.new(@rule, stop_time)
+  def next(i = 1)
+    self.class.new(@rule, start_time.advance(@rule.time_step => +1*i), @options)
+  end
+
+  def prev(i = 1)
+    self.class.new(@rule, start_time.advance(@rule.time_step => -1*i), @options)
   end
 
   def ==(other)
     rule == other.rule &&
     options == other.options &&
-    (path == other.path || start_time == other.start_time)
+    start_time == other.start_time
   end
 
   def eql?(other)
@@ -66,7 +70,7 @@ class Masamune::DataPlanElem
   end
 
   def hash
-    [rule, options, path ? path : start_time].hash
+    [rule, options, start_time].hash
   end
 
   # FIXME should consider stop_time for correctness

@@ -39,7 +39,7 @@ class Masamune::DataPlanRule
     matched_pattern = matcher.match(input_path)
     raise "Cannot bind_path #{input_path} to #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
-    Masamune::DataPlanElem.new(self, output_date, @options.merge(:input_path => input_path))
+    Masamune::DataPlanElem.new(self, output_date, @options.merge(matched_extra(matched_pattern)))
   end
 
   def unify_path(input_path, rule)
@@ -88,6 +88,18 @@ class Masamune::DataPlanRule
     end
   end
 
+  def adjacent_matches(instance)
+    window = @options[:window] || 0
+    (-window .. -1).each do |i|
+      yield instance.prev(i.abs)
+    end
+    yield instance
+    (1 .. window).each do |i|
+      yield instance.next(i)
+    end
+  end
+  method_accumulate :adjacent_matches
+
   private
 
   def matcher
@@ -107,8 +119,16 @@ class Masamune::DataPlanRule
     end
   end
 
+  def matched_hash(matched_pattern, *matched_keys)
+    matched_attrs = matched_keys.select { |x| matched_pattern.names.map(&:to_sym).include?(x) }
+    Hash[matched_attrs.map { |x| [x,matched_pattern[x]] }]
+  end
+
   def matched_date(matched_pattern)
-    matched_attrs = [:year, :month, :day, :hour].select { |x| matched_pattern.names.map(&:to_sym).include?(x) }
-    DateTime.new(*matched_attrs.map { |x| matched_pattern[x].to_i })
+    DateTime.new(*matched_hash(matched_pattern, :year, :month, :day, :hour).values.map(&:to_i))
+  end
+
+  def matched_extra(matched_pattern)
+    matched_hash(matched_pattern, :glob)
   end
 end
