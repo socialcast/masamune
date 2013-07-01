@@ -38,7 +38,14 @@ module Masamune::Actions
         end
 
         def existing_sources
-          desired_sources
+          desired_sources.select do |source|
+            if fs.exists?(source.path)
+              true
+            else
+              Masamune::print("skipping missing source #{source.path}")
+              false
+            end
+          end
         end
 
         def missing_targets
