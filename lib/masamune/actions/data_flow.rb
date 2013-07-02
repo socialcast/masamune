@@ -46,7 +46,7 @@ module Masamune::Actions
               Masamune::print("skipping missing source #{source.path}")
               false
             end
-          end
+          end.uniq.flatten
         end
 
         def missing_targets
@@ -58,7 +58,7 @@ module Masamune::Actions
             else
               false
             end
-          end
+          end.uniq.flatten
         end
 
         def parse_datetime_type(key)
