@@ -95,7 +95,9 @@ module Masamune::Commands
       end
       after_execute
 
-      raise "fail_fast" if fail_fast unless exit_code.success?
+      unless exit_code.success?
+        handle_failure(exit_code)
+      end
       exit_code
     end
 
@@ -160,6 +162,13 @@ module Masamune::Commands
         Masamune::logger.debug(line)
       end
       @stderr_line_no += 1
+    end
+
+    def handle_failure(status)
+      if @delegate.respond_to?(:handle_failure)
+        @delegate.handle_failure(status)
+      end
+      raise "fail_fast" if fail_fast
     end
 
     def proxy_methods

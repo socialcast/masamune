@@ -1,10 +1,11 @@
 class MockDelegate
-  attr_accessor :command, :stdout, :stderr
+  attr_accessor :command, :stdout, :stderr, :status
 
   def initialize(command)
     self.command  = command
     self.stdout   = []
     self.stderr   = []
+    self.status   = 0
   end
 
   def command_args
@@ -12,11 +13,15 @@ class MockDelegate
   end
 
   def handle_stdout(line, line_no)
-    stdout[line_no] = line
+    self.stdout[line_no] = line
   end
 
   def handle_stderr(line, line_no)
-    stderr[line_no] = line
+    self.stderr[line_no] = line
+  end
+
+  def handle_failure(status)
+    self.status = status.to_i >> 8
   end
 end
 
