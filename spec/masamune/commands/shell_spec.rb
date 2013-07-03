@@ -39,5 +39,16 @@ describe Masamune::Commands::Shell do
       let(:options) { {fail_fast: true} }
       it { expect { subject }.to raise_error RuntimeError, 'fail_fast' }
     end
+
+    context 'when command is interrupted' do
+      let(:command) { %Q{echo 'test'} }
+
+      before do
+        delegate.should_receive(:after_execute) { raise Interrupt }
+        subject
+      end
+
+      it { delegate.status.should == 130 }
+    end
   end
 end

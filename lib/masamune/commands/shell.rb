@@ -87,18 +87,22 @@ module Masamune::Commands
     end
 
     def execute
-      exit_code = OpenStruct.new(:success? => false)
+      status = OpenStruct.new(:success? => false)
 
       before_execute
-      exit_code = around_execute do
+      status = around_execute do
         execute_block
       end
       after_execute
 
-      unless exit_code.success?
-        handle_failure(exit_code)
+      unless status.success?
+        handle_failure(exit_code(status))
       end
-      exit_code
+      status
+    rescue Interrupt
+      handle_failure(130)
+    rescue SystemExit
+      handle_failure(exit_code(status))
     end
 
     def execute_block
@@ -174,5 +178,13 @@ module Masamune::Commands
     def proxy_methods
       [:before_execute, :around_execute, :after_execute, :command_args, :handle_stdout, :handle_stderr]
     end
+
+    private
+
+    def exit_code(status, code = 1)
+      return code unless status
+      status.to_i >> 8
+    end
+
   end
 end

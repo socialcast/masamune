@@ -20,8 +20,8 @@ class MockDelegate
     self.stderr[line_no] = line
   end
 
-  def handle_failure(status)
-    self.status = status.to_i >> 8
+  def handle_failure(code)
+    self.status = code
   end
 end
 
