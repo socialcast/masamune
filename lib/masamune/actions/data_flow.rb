@@ -109,10 +109,10 @@ module Masamune::Actions
       Masamune.logger.debug("attempting to acquire lock #{lock_file.path}")
       lock_status = lock_file.flock(File::LOCK_EX | File::LOCK_NB)
       unless lock_status == 0
-        Masamune.logger.debug('acquire lock attempt failed')
+        Masamune.logger.error("acquire lock attempt failed for #{lock_file.path}")
         false
       else
-        Masamune.logger.debug('acquire lock attempt succeed')
+        Masamune.logger.debug("acquire lock attempt succeeded for #{lock_file.path}")
         true
       end
     end
