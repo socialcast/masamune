@@ -12,10 +12,11 @@ describe Masamune::DataPlan do
   let(:primary_command) { Proc.new { } }
   let(:derived_daily_command) { Proc.new {} }
   let(:derived_monthly_command) { Proc.new {} }
+  let(:primary_options) { {:wildcard => true} }
 
   before do
     plan.add_target('primary', 'table/y=%Y/m=%m/d=%d')
-    plan.add_source('primary', 'log/%Y%m%d.*.log', :wildcard => true)
+    plan.add_source('primary', 'log/%Y%m%d.*.log', primary_options)
     plan.add_command('primary', primary_command)
     plan.add_target('derived_daily', 'daily/%Y-%m-%d')
     plan.add_source('derived_daily', 'table/y=%Y/m=%m/d=%d')
@@ -23,6 +24,41 @@ describe Masamune::DataPlan do
     plan.add_target('derived_monthly', 'monthly/%Y-%m')
     plan.add_source('derived_monthly', 'table/y=%Y/m=%m/d=%d')
     plan.add_command('derived_monthly', derived_monthly_command)
+  end
+
+  describe '#sources_from_paths' do
+    let(:rule) { 'primary' }
+    let(:paths) { ['log/20130101.random.log', 'log/20130102.random.log'] }
+
+    subject { plan.sources_from_paths(rule, paths).map(&:path) }
+
+    it { should == [
+      'log/20130101.random.log',
+      'log/20130102.random.log' ] }
+
+    context 'with window of 1 time_step' do
+      let(:primary_options) { {:wildcard => true, :window => 1} }
+
+      it { should == [
+        'log/20121231.random.log',
+        'log/20130101.random.log',
+        'log/20130102.random.log',
+        'log/20130103.random.log' ] }
+    end
+
+    context 'with window of 3 time_steps' do
+      let(:primary_options) { {:wildcard => true, :window => 3} }
+
+      it { should == [
+        'log/20121229.random.log',
+        'log/20121230.random.log',
+        'log/20121231.random.log',
+        'log/20130101.random.log',
+        'log/20130102.random.log',
+        'log/20130103.random.log',
+        'log/20130104.random.log',
+        'log/20130105.random.log' ] }
+    end
   end
 
   describe '#targets_for_date_range' do
@@ -129,6 +165,20 @@ describe Masamune::DataPlan do
       let(:target) {  'table/y=2013/m=01/d=01' }
       it { expect { subject }.to raise_error }
     end
+
+    context 'with window of 1 time_step' do
+      let(:rule) { 'primary' }
+      let(:target) { 'table/y=2013/m=01/d=01' }
+      let(:primary_options) { {:wildcard => true, :window => 1} }
+
+      it { sources.map(&:path).should == [
+        'log/20121231.app1.log',
+        'log/20130101.app1.log',
+        'log/20130102.app1.log',
+        'log/20121231.app2.log',
+        'log/20130101.app2.log',
+        'log/20130102.app2.log'] }
+    end
   end
 
   describe '#rule_for_target' do
@@ -205,6 +255,21 @@ describe Masamune::DataPlan do
         end
 
         it { should be_false }
+        it 'should not call primary_command' do; end
+        it 'should not call derived_daily_command' do; end
+      end
+
+      context 'when source data outside of window does not exist' do
+        let(:primary_options) { {:wildcard => true, :window => 1} }
+
+        before do
+          fs.touch!('log/20130101.app1.log')
+          primary_command.should_receive(:call).with(['log/20130101.app1.log'], {})
+          derived_daily_command.should_not_receive(:call)
+          resolve
+        end
+
+        it { should be_true }
         it 'should not call primary_command' do; end
         it 'should not call derived_daily_command' do; end
       end

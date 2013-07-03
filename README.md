@@ -1,5 +1,7 @@
 Masamune
 ========
+> The first of the swords was by all accounts a fine sword, however it is a blood thirsty, evil blade, as it does not discriminate as to who or what it will cut. It may just as well be cutting down butterflies as severing heads. The second was by far the finer of the two, as it does not needlessly cut that which is innocent and undeserving.
+
 
 Description
 ------------

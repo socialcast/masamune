@@ -32,8 +32,13 @@ class Masamune::DataPlan
 
   def sources_from_paths(rule, *paths, &block)
     source_template = @sources[rule]
+    offered = Set.new
     paths.flatten.each do |path|
-      yield source_template.bind_path(path)
+      instance = source_template.bind_path(path)
+      source_template.adjacent_matches(instance) do |adjacent|
+        next unless offered.add?(adjacent)
+        yield adjacent
+      end
     end
   end
   method_accumulate :sources_from_paths
@@ -88,6 +93,7 @@ class Masamune::DataPlan
           if Masamune.filesystem.exists?(source.path)
             matches << source
           else
+            next if source.terminal?
             rule_dep = rule_for_target(source.path)
             missing[rule_dep] << source
           end

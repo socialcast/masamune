@@ -1,18 +1,10 @@
-class MockFilesystem
+require 'delegate'
+
+class MockFilesystem < Delegator
   def initialize
+    @filesystem = Masamune::Filesystem.new
+    @filesystem.add_path :root_dir, File.expand_path('../../../', __FILE__)
     @files = []
-  end
-
-  def has_path?(*a)
-    false
-  end
-
-  def add_path(*a)
-    false
-  end
-
-  def get_path(*a)
-    false
   end
 
   def touch!(*files)
@@ -23,13 +15,9 @@ class MockFilesystem
     @files.include?(file)
   end
 
-  def entries
-    @files
-  end
-
   def glob(pattern, &block)
     list = []
-    entries.select { |elem| elem =~ Regexp.compile(pattern) }.each do |elem|
+    @files.select { |elem| elem =~ Regexp.compile(pattern) }.each do |elem|
       if block_given?
         yield elem
       else
@@ -39,5 +27,13 @@ class MockFilesystem
     unless block_given?
       list
     end
+  end
+
+  def __getobj__
+    @filesystem
+  end
+
+  def __setobj__(obj)
+    @filesystem = obj
   end
 end

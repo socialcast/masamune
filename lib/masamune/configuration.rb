@@ -147,7 +147,7 @@ class Masamune::Configuration
     @filesystem ||= begin
       filesystem = Masamune::Filesystem.new
       filesystem.add_path :root_dir, File.expand_path('../../../', __FILE__)
-      filesystem = Masamune::MethodLogger.new(filesystem, :ignore => [:path, :paths, :get_path, :add_path, :has_path?, :exists?, :glob])
+      filesystem = Masamune::MethodLogger.new(filesystem, :ignore => [:path, :paths, :get_path, :add_path, :has_path?, :exists?, :glob, :resolve_file])
       Masamune::CachedFilesystem.new(filesystem)
     end
   end

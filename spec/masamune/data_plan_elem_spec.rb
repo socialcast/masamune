@@ -41,24 +41,5 @@ describe Masamune::DataPlanElem do
       let(:other) { described_class.new(rule, other_start_time) }
       it { should be_false }
     end
-
-    context 'with wildcard rule' do
-      let(:input_path) { 'log/20120420.random.log' }
-      let(:instance) { described_class.new(wildcard_rule, start_time, options.merge(wildcard: true, input_path: input_path)) }
-
-      context 'when input_paths match' do
-        let(:other) { described_class.new(wildcard_rule, other_start_time, options.merge(wildcard: true, input_path: input_path)) }
-        it { should be_true }
-        it 'should have same hash' do
-          instance.hash.should == other.hash
-        end
-      end
-
-      context 'when input_paths differ' do
-        let(:other_input_path) { 'log/20120421.random.log' }
-        let(:other) { described_class.new(wildcard_rule, other_start_time, options.merge(wildcard: true, input_path: other_input_path)) }
-        it { should be_false }
-      end
-    end
   end
 end

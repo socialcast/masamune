@@ -38,10 +38,19 @@ module Masamune::Actions
         end
 
         def existing_sources
-          desired_sources
+          @existing_sources ||=
+          desired_sources.select do |source|
+            if fs.exists?(source.path)
+              true
+            else
+              Masamune::print("skipping missing source #{source.path}")
+              false
+            end
+          end.uniq.flatten
         end
 
         def missing_targets
+          @missing_targets ||=
           desired_targets.reject do |target|
             if fs.exists?(target.path)
               Masamune::print("skipping existing #{target.path}")
@@ -49,7 +58,7 @@ module Masamune::Actions
             else
               false
             end
-          end
+          end.uniq.flatten
         end
 
         def parse_datetime_type(key)
