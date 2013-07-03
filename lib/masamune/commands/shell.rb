@@ -14,6 +14,8 @@ module Masamune::Commands
       self.safe       = opts.fetch(:safe, false)
       self.fail_fast  = opts.fetch(:fail_fast, false)
       self.input      = opts[:input]
+      @stdout_line_no = 0
+      @stderr_line_no = 0
     end
 
     def input=(input)
@@ -116,14 +118,14 @@ module Masamune::Commands
 
       t_err = Thread.new {
         while !stderr.eof?  do
-          handle_stderr_wrapper(stderr)
+          handle_stderr(stderr)
         end
         stderr.close
       }
 
       t_out = Thread.new {
         while !stdout.eof?  do
-          handle_stdout_wrapper(stdout)
+          handle_stdout(stdout)
         end
         stdout.close
       }
@@ -138,40 +140,30 @@ module Masamune::Commands
       t_out.join if t_out
     end
 
-    def handle_stdout(line, line_no)
+    def handle_stdout(io)
+      line = io.gets.chomp
+      return unless line
       if @delegate.respond_to?(:handle_stdout)
-        @delegate.handle_stdout(line, line_no)
+        @delegate.handle_stdout(line, @stdout_line_no)
       else
         Masamune::logger.debug(line)
       end
+      @stdout_line_no += 1
     end
 
-    def handle_stderr(line, line_no)
+    def handle_stderr(io)
+      line = io.gets.chomp
+      return unless line
       if @delegate.respond_to?(:handle_stderr)
-        @delegate.handle_stderr(line, line_no)
+        @delegate.handle_stderr(line, @stderr_line_no)
       else
         Masamune::logger.debug(line)
       end
+      @stderr_line_no += 1
     end
 
     def proxy_methods
       [:before_execute, :around_execute, :after_execute, :command_args, :handle_stdout, :handle_stderr]
-    end
-
-    private
-
-    def handle_stdout_wrapper(stdout)
-      @line_no ||= 0
-      line = stdout.gets
-      handle_stdout(line.chomp, @line_no)
-      @line_no += 1
-    end
-
-    def handle_stderr_wrapper(stderr)
-      @line_no ||= 0
-      line = stderr.gets
-      handle_stderr(line.chomp, @line_no)
-      @line_no += 1
     end
   end
 end
