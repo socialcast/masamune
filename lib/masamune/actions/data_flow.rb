@@ -82,15 +82,10 @@ module Masamune::Actions
 
             @desired_targets = self.class.data_plan.targets_for_date_range(current_command_name, start, stop)
 
-            begin
-              abort 'Another process is already running' unless acquire_lock
-              unless self.class.data_plan.resolve(current_command_name, desired_targets.map(&:path), options)
-                abort "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
-              end
-              exit # NOTE resolve has executed original thor task via anonymous proc - safe to exit
-            ensure
-              release_lock
+            unless self.class.data_plan.resolve(current_command_name, desired_targets.map(&:path), options)
+              abort "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
             end
+            exit # NOTE resolve has executed original thor task via anonymous proc - safe to exit
           end
           # NOTE flow continues to original thor task
         end
@@ -99,27 +94,6 @@ module Masamune::Actions
 
     def current_command_name
       @_initializer.last[:current_command].name.to_sym
-    end
-
-    def lock_file
-      @lock_file ||= File.open(fs.path(:var_dir, 'masamune.lock'), File::CREAT, 0644)
-    end
-
-    def acquire_lock
-      Masamune.logger.debug("attempting to acquire lock #{lock_file.path}")
-      lock_status = lock_file.flock(File::LOCK_EX | File::LOCK_NB)
-      unless lock_status == 0
-        Masamune.logger.debug('acquire lock attempt failed')
-        false
-      else
-        Masamune.logger.debug('acquire lock attempt succeed')
-        true
-      end
-    end
-
-    def release_lock
-      Masamune.logger.debug("releasing lock #{lock_file.path}")
-      lock_file.flock(File::LOCK_UN)
     end
 
     module ClassMethods

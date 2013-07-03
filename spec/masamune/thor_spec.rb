@@ -112,22 +112,6 @@ describe Masamune::Thor do
       end
     end
 
-    context 'when lock cannot be acquired' do
-      let(:command) { 'command' }
-      let(:options) { ['--start', '2013-01-01'] }
-      before do
-        klass.any_instance.should_receive(:acquire_lock).and_return(false)
-      end
-      it 'exits with status code 1 and prints error message' do
-        expect { subject }.to raise_error { |e|
-          e.should be_a(SystemExit)
-          e.status.should == 1
-        }
-        stdout.string.should =~ /\AUsing '.*' for --start/
-        stderr.string.should =~ /\AAnother process is already running/
-      end
-    end
-
     context 'when elastic_mapreduce is enabled' do
       before do
         Masamune.configure do |config|
