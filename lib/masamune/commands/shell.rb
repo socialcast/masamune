@@ -4,6 +4,8 @@ require 'ostruct'
 
 module Masamune::Commands
   class Shell
+    SIGINT_EXIT_STATUS = 130
+
     require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
 
@@ -100,7 +102,7 @@ module Masamune::Commands
       end
       status
     rescue Interrupt
-      handle_failure(130)
+      handle_failure(SIGINT_EXIT_STATUS)
     rescue SystemExit
       handle_failure(exit_code(status))
     end
@@ -183,8 +185,7 @@ module Masamune::Commands
 
     def exit_code(status, code = 1)
       return code unless status
-      status.to_i >> 8
+      status.exitstatus
     end
-
   end
 end
