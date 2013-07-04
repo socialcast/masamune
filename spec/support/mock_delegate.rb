@@ -24,4 +24,3 @@ class MockDelegate
     self.status = code
   end
 end
-
