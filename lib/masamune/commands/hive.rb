@@ -2,7 +2,7 @@ require 'masamune/commands/shell'
 
 module Masamune::Commands
   class Hive
-    attr_accessor :file, :exec, :output, :quote, :block
+    attr_accessor :file, :exec, :output, :quote, :block, :rollback
 
     def initialize(opts = {})
       self.file       = opts[:file]
@@ -10,6 +10,7 @@ module Masamune::Commands
       self.exec       = opts[:exec]
       self.output     = opts[:output]
       self.block      = opts[:block]
+      self.rollback   = opts[:rollback]
     end
 
     def exec=(sql)
@@ -30,8 +31,8 @@ module Masamune::Commands
       args = []
       args << Masamune.configuration.hive[:path]
       args << Masamune.configuration.hive[:options].map(&:to_a)
-      args << ['-e', @exec] if @exec
-      args << ['-f', @file] if @file
+      args << ['-e', exec] if exec
+      args << ['-f', file] if file
       args.flatten
     end
 
@@ -69,6 +70,13 @@ module Masamune::Commands
         @tmpfile.puts(line)
       else
         Masamune::logger.debug(line)
+      end
+    end
+
+    def handle_failure(status)
+      if rollback
+        Masamune::logger.error('rolling back')
+        rollback.call
       end
     end
 

@@ -4,6 +4,8 @@ require 'ostruct'
 
 module Masamune::Commands
   class Shell
+    SIGINT_EXIT_STATUS = 130
+
     require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
 
@@ -14,6 +16,8 @@ module Masamune::Commands
       self.safe       = opts.fetch(:safe, false)
       self.fail_fast  = opts.fetch(:fail_fast, false)
       self.input      = opts[:input]
+      @stdout_line_no = 0
+      @stderr_line_no = 0
     end
 
     def input=(input)
@@ -85,16 +89,22 @@ module Masamune::Commands
     end
 
     def execute
-      exit_code = OpenStruct.new(:success? => false)
+      status = OpenStruct.new(:success? => false)
 
       before_execute
-      exit_code = around_execute do
+      status = around_execute do
         execute_block
       end
       after_execute
 
-      raise "fail_fast" if fail_fast unless exit_code.success?
-      exit_code
+      unless status.success?
+        handle_failure(exit_code(status))
+      end
+      status
+    rescue Interrupt
+      handle_failure(SIGINT_EXIT_STATUS)
+    rescue SystemExit
+      handle_failure(exit_code(status))
     end
 
     def execute_block
@@ -116,14 +126,14 @@ module Masamune::Commands
 
       t_err = Thread.new {
         while !stderr.eof?  do
-          handle_stderr_wrapper(stderr)
+          handle_stderr(stderr)
         end
         stderr.close
       }
 
       t_out = Thread.new {
         while !stdout.eof?  do
-          handle_stdout_wrapper(stdout)
+          handle_stdout(stdout)
         end
         stdout.close
       }
@@ -138,20 +148,33 @@ module Masamune::Commands
       t_out.join if t_out
     end
 
-    def handle_stdout(line, line_no)
+    def handle_stdout(io)
+      line = io.gets.chomp
+      return unless line
       if @delegate.respond_to?(:handle_stdout)
-        @delegate.handle_stdout(line, line_no)
+        @delegate.handle_stdout(line, @stdout_line_no)
       else
         Masamune::logger.debug(line)
       end
+      @stdout_line_no += 1
     end
 
-    def handle_stderr(line, line_no)
+    def handle_stderr(io)
+      line = io.gets.chomp
+      return unless line
       if @delegate.respond_to?(:handle_stderr)
-        @delegate.handle_stderr(line, line_no)
+        @delegate.handle_stderr(line, @stderr_line_no)
       else
         Masamune::logger.debug(line)
       end
+      @stderr_line_no += 1
+    end
+
+    def handle_failure(status)
+      if @delegate.respond_to?(:handle_failure)
+        @delegate.handle_failure(status)
+      end
+      raise "fail_fast" if fail_fast
     end
 
     def proxy_methods
@@ -160,18 +183,9 @@ module Masamune::Commands
 
     private
 
-    def handle_stdout_wrapper(stdout)
-      @line_no ||= 0
-      line = stdout.gets
-      handle_stdout(line.chomp, @line_no)
-      @line_no += 1
-    end
-
-    def handle_stderr_wrapper(stderr)
-      @line_no ||= 0
-      line = stderr.gets
-      handle_stderr(line.chomp, @line_no)
-      @line_no += 1
+    def exit_code(status, code = 1)
+      return code unless status
+      status.exitstatus
     end
   end
 end
