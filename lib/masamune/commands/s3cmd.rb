@@ -1,15 +1,10 @@
 module Masamune::Commands
   class S3Cmd
-    MAX_RETRIES = 3
-    DEFAULT_BACKOFF = 5
-
-    attr_accessor :extra, :block, :backoff
+    attr_accessor :extra, :block
 
     def initialize(opts = {})
       self.extra    = opts[:extra]
       self.block    = opts[:block]
-      self.backoff  = opts.fetch(:backoff, DEFAULT_BACKOFF)
-      @retry_count = 0
     end
 
     def command_args
@@ -22,16 +17,6 @@ module Masamune::Commands
 
     def handle_stdout(line, line_no)
       block.call(line) if block
-    end
-
-    def around_execute(&block)
-      begin
-        yield
-      rescue
-        sleep backoff
-        @retry_count += 1
-        retry unless @retry_count > MAX_RETRIES
-      end
     end
 
     module ClassMethods
