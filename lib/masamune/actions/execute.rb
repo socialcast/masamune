@@ -17,7 +17,7 @@ module Masamune::Actions
         end
       end if block_given?
 
-      Masamune::Commands::Shell.new(klass.new, opts).execute
+      Masamune::Commands::Shell.new(klass.new, {fail_fast: false}.merge(opts)).execute
     end
   end
 end

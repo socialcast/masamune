@@ -14,7 +14,7 @@ module Masamune::Commands
     def initialize(delegate, opts = {})
       @delegate       = delegate
       self.safe       = opts.fetch(:safe, false)
-      self.fail_fast  = opts.fetch(:fail_fast, false)
+      self.fail_fast  = opts.fetch(:fail_fast, true)
       self.input      = opts[:input]
       @stdout_line_no = 0
       @stderr_line_no = 0

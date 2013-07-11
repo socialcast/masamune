@@ -1,7 +1,5 @@
 require 'spec_helper'
 
-require 'tempfile'
-require 'tmpdir'
 require 'securerandom'
 
 # TODO expect execute for hdfs
