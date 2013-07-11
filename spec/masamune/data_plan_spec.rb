@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Masamune::DataPlan do
-  let(:fs) { MockFilesystem.new }
+  let(:fs) { Masamune::MockFilesystem.new }
   before do
     Masamune.configure do |config|
       config.filesystem = fs

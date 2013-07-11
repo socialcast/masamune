@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Masamune::CachedFilesystem do
-  let(:filesystem) { MockFilesystem.new }
+  let(:filesystem) { Masamune::MockFilesystem.new }
   let(:cached_filesystem) { Masamune::CachedFilesystem.new(filesystem) }
 
   context 'when path is present' do

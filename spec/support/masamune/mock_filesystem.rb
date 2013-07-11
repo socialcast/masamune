@@ -1,6 +1,6 @@
 require 'delegate'
 
-class MockFilesystem < Delegator
+class Masamune::MockFilesystem < Delegator
   def initialize
     @filesystem = Masamune::Filesystem.new
     @filesystem.add_path :root_dir, File.expand_path('../../../', __FILE__)
