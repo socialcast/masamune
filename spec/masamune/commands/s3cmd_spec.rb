@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Masamune::Commands::S3Cmd do
-  let(:general_options) { {backoff: 0} }
+  let(:general_options) { {} }
   let(:command_options) { [] }
   let(:context_options) { {} }
 
@@ -22,21 +22,6 @@ describe Masamune::Commands::S3Cmd do
       let(:command_options) { [{'--config' => '/opt/etc/etl/s3cfg'}] }
 
       it { should == ['s3cmd', '--config', '/opt/etc/etl/s3cfg', 'ls', 's3://fake'] }
-    end
-  end
-
-  describe '#around_execute' do
-    let(:max) { described_class::MAX_RETRIES }
-    before do
-      @retry_count = 0
-      instance.around_execute do
-        @retry_count += 1
-        raise 'wtf' if @retry_count < max
-      end
-    end
-
-    it 'attempts to retry a maximum number of times' do
-      @retry_count.should == max
     end
   end
 end
