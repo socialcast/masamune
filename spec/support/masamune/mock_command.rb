@@ -1,4 +1,4 @@
-module MockCommand
+module Masamune::MockCommand
   class CommandMatcher
     require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
@@ -41,5 +41,5 @@ module MockCommand
 end
 
 RSpec.configure do |config|
-  config.include MockCommand
+  config.include Masamune::MockCommand
 end

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Commands::Shell do
   let(:options) { {fail_fast: false} }
-  let(:delegate) { MockDelegate.new(command) }
+  let(:delegate) { Masamune::MockDelegate.new(command) }
   let(:instance) { described_class.new(delegate, options) }
 
   describe '#execute' do
