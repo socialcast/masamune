@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Masamune::Commands::Streaming do
   # TODO use mock filesystem when checking for existance of files
   let(:extra_args) { ['-D', %q(map.output.key.field.separator='\t')] }
-  let(:filesystem) { MockFilesystem.new }
+  let(:filesystem) { Masamune::MockFilesystem.new }
   let(:input_option) { 'input.txt' }
 
   let(:general_options) do

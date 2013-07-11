@@ -1,4 +1,4 @@
-class MockDelegate
+class Masamune::MockDelegate
   attr_accessor :command, :stdout, :stderr, :status
 
   def initialize(command)
