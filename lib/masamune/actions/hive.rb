@@ -20,8 +20,8 @@ module Masamune::Actions
       end
 
       command = Masamune::Commands::LineFormatter.new(command, opts)
-      command = Masamune::Commands::RetryWithBackoff.new(command)
-      command = Masamune::Commands::Shell.new(command, fail_fast: opts.fetch(:fail_fast, false), safe: opts.fetch(:safe, false))
+      command = Masamune::Commands::RetryWithBackoff.new(command, opts)
+      command = Masamune::Commands::Shell.new(command, opts)
 
       if command.interactive?
         command.replace

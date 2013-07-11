@@ -8,8 +8,8 @@ module Masamune::Actions
       opts.merge!(extra: Array.wrap(args))
       opts.merge!(block: block.to_proc) if block_given?
       command = Masamune::Commands::S3Cmd.new(opts)
-      command = Masamune::Commands::RetryWithBackoff.new(command)
-      command = Masamune::Commands::Shell.new(command)
+      command = Masamune::Commands::RetryWithBackoff.new(command, opts)
+      command = Masamune::Commands::Shell.new(command, opts)
       command.execute
     end
 
