@@ -22,10 +22,16 @@ module Masamune::Commands
         else
           block.call
         end
-      rescue
+      rescue => e
+        Masamune.logger.error(e.to_s)
         sleep backoff
         @retry_count += 1
-        retry unless @retry_count > retries
+        unless @retry_count > retries
+          Masamune.logger.debug("retrying (#{@retry_count}/#{retries})")
+          retry
+        else
+          Masamune.logger.debug("max retries (#{retries}) attempted, bailing")
+        end
       end
     end
 
