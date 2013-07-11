@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.summary     = 'Hybrid Data & Work Flow'
   s.description = 'Hybrid Data & Work Flow'
 
-  s.files = Dir['{bin,lib,spec/support}/**/*'] + ['LICENSE', 'Rakefile', 'README.md']
+  s.files = Dir['{bin,lib,spec/support/masamune}/**/*'] + ['LICENSE', 'Rakefile', 'README.md']
   s.test_files = Dir['spec/**/*']
   s.require_path = 'lib'
   s.executables = ['masamune-hive', 'masamune-elastic-mapreduce']
