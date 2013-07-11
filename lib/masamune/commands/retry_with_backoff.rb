@@ -9,7 +9,7 @@ module Masamune::Commands
     attr_accessor :retries, :backoff
 
     def initialize(delegate, opts = {})
-      @delegate     = @delegate
+      @delegate     = delegate
       self.retries  = opts.fetch(:retries, DEFAULT_RETRIES)
       self.backoff  = opts.fetch(:backoff, DEFAULT_BACKOFF)
       @retry_count  = 0

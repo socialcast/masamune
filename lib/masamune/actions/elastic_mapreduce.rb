@@ -6,6 +6,7 @@ module Masamune::Actions
 
       command = Masamune::Commands::Interactive.new(:interactive => opts.fetch(:interactive, false))
       command = Masamune::Commands::ElasticMapReduce.new(command, opts)
+      command = Masamune::Commands::RetryWithBackoff.new(command)
       command = Masamune::Commands::Shell.new(command, fail_fast: opts.fetch(:fail_fast, false), input: opts[:input])
 
       if command.interactive?

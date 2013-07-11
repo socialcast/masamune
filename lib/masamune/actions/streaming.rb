@@ -11,12 +11,8 @@ module Masamune::Actions
         Masamune::Commands::Streaming.new(opts)
       end
 
-      command = if jobflow
-        Masamune::Commands::ElasticMapReduce.new(command, jobflow: jobflow)
-      else
-        command
-      end
-
+      command = Masamune::Commands::ElasticMapReduce.new(command, jobflow: jobflow) if jobflow
+      command = Masamune::Commands::RetryWithBackoff.new(command)
       command = Masamune::Commands::Shell.new(command, fail_fast: true)
       command.execute
     end
