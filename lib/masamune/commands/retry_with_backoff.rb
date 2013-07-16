@@ -31,6 +31,7 @@ module Masamune::Commands
           retry
         else
           Masamune.logger.debug("max retries (#{retries}) attempted, bailing")
+          OpenStruct.new(:success? => false)
         end
       end
     end
