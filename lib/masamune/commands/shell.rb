@@ -9,29 +9,14 @@ module Masamune::Commands
     require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
 
-    attr_accessor :safe, :fail_fast, :input
+    attr_accessor :safe, :fail_fast
 
     def initialize(delegate, opts = {})
       @delegate       = delegate
       self.safe       = opts.fetch(:safe, false)
       self.fail_fast  = opts.fetch(:fail_fast, true)
-      self.input      = opts[:input]
       @stdout_line_no = 0
       @stderr_line_no = 0
-    end
-
-    def input=(input)
-      @input =
-      case input
-      when nil
-        nil
-      when IO
-        input
-      when String
-        StringIO.new(input)
-      else
-        raise 'unknown input type'
-      end
     end
 
     def replace
@@ -109,40 +94,41 @@ module Masamune::Commands
 
     def execute_block
       STDOUT.sync = STDERR.sync = true
-      stdin, stdout, stderr, wait_th = Open3.popen3(*command_args)
+      p_stdin, p_stdout, p_stderr, t_in = Open3.popen3(*command_args)
       Thread.new {
-        if input
-          while line = input.gets
-            stdin.puts line
+        if @delegate.respond_to?(:stdin)
+          while line = @delegate.stdin.gets
+            Masamune::trace(line.chomp)
+            p_stdin.puts line
           end
-          stdin.close
+          p_stdin.close
         else
-          while !stdin.closed? do
+          while !p_stdin.closed? do
             input = Readline.readline('', true).strip
-            stdin.puts input
+            p_stdin.puts input
           end
         end
       }
 
       t_err = Thread.new {
-        while !stderr.eof?  do
-          handle_stderr(stderr)
+        while !p_stderr.eof?  do
+          handle_stderr(p_stderr)
         end
-        stderr.close
+        p_stderr.close
       }
 
       t_out = Thread.new {
-        while !stdout.eof?  do
-          handle_stdout(stdout)
+        while !p_stdout.eof?  do
+          handle_stdout(p_stdout)
         end
-        stdout.close
+        p_stdout.close
       }
 
       t_err.join if t_err
       t_out.join if t_out
-      wait_th.join
-      Masamune::logger.debug(wait_th.value)
-      wait_th.value
+      t_in.join
+      Masamune::logger.debug(t_in.value)
+      t_in.value
     ensure
       t_err.join if t_err
       t_out.join if t_out

@@ -22,6 +22,10 @@ module Masamune::Commands
       end
     end
 
+    def stdin
+      @stdin ||= StringIO.new(input)
+    end
+
     def command_args
       args = []
       args << Masamune.configuration.elastic_mapreduce[:path]

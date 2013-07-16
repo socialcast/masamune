@@ -2,25 +2,25 @@ require 'masamune/commands/shell'
 
 module Masamune::Commands
   class Hive
-    attr_accessor :file, :exec, :output, :quote, :block, :rollback
+    PROMPT = 'hive>'
+
+    attr_accessor :file, :exec, :input, :output, :block, :rollback
 
     def initialize(opts = {})
       self.file       = opts[:file]
-      self.quote      = opts.fetch(:quote, false)
       self.exec       = opts[:exec]
       self.output     = opts[:output]
       self.block      = opts[:block]
       self.rollback   = opts[:rollback]
     end
 
-    def exec=(sql)
-      if sql
-        if quote
-          @exec = quote_sql(strip_sql(sql))
-        else
-          @exec = strip_sql(sql)
-        end
-      end
+    def exec=(sql = nil)
+      return unless sql
+      self.input = @exec = strip_sql(sql)
+    end
+
+    def stdin
+      @stdin ||= StringIO.new(input)
     end
 
     def interactive?
@@ -31,7 +31,6 @@ module Masamune::Commands
       args = []
       args << Masamune.configuration.hive[:path]
       args << Masamune.configuration.hive[:options].map(&:to_a)
-      args << ['-e', exec] if exec
       args << ['-f', file] if file
       args.flatten
     end
@@ -65,11 +64,16 @@ module Masamune::Commands
     end
 
     def handle_stdout(line, line_no)
-      block.call(line) if block
-      if @tmpfile
-        @tmpfile.puts(line)
+      if line =~ /\A#{PROMPT}/
+        Masamune.logger.debug(line)
       else
-        Masamune::logger.debug(line)
+        block.call(line) if block
+
+        if @tmpfile
+          @tmpfile.puts(line)
+        else
+          Masamune::print(line)
+        end
       end
     end
 
@@ -84,18 +88,11 @@ module Masamune::Commands
 
     def strip_sql(sql)
       out = sql.dup
+      out.gsub!(/\A'|\A"|"\z|'\z/, '')
       out.gsub!(/\s\s+/, ' ')
-      out.strip!
-      out
-    end
-
-    # force SQL be enclosed in single quotes, terminated with semicolon
-    def quote_sql(sql)
-      out = sql.dup
-      out.gsub!(/\A'|'\z/,'') if out =~ /\A'/
       out.gsub!(/;\z/,'')
-      out.gsub!("'", %q("'"))
-      %q{'} + out + %q{;'}
+      out.strip!
+      "#{out};"
     end
   end
 end

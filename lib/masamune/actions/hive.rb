@@ -7,11 +7,7 @@ module Masamune::Actions
 
       opts.merge!(block: block.to_proc) if block_given?
 
-      command = if jobflow
-        Masamune::Commands::Hive.new(opts.merge(quote: true))
-      else
-        Masamune::Commands::Hive.new(opts)
-      end
+      command = Masamune::Commands::Hive.new(opts)
 
       command = if jobflow
         Masamune::Commands::ElasticMapReduce.new(command, jobflow: jobflow)
