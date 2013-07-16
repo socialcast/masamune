@@ -35,9 +35,5 @@ module Masamune::Commands
         end
       end
     end
-
-    def proxy_methods
-      [:around_execute]
-    end
   end
 end

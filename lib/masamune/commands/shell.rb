@@ -163,10 +163,6 @@ module Masamune::Commands
       raise "fail_fast" if fail_fast
     end
 
-    def proxy_methods
-      [:before_execute, :around_execute, :after_execute, :command_args, :handle_stdout, :handle_stderr]
-    end
-
     private
 
     def exit_code(status, code = 1)

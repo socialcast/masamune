@@ -45,10 +45,6 @@ module Masamune::Commands
       end
     end
 
-    def proxy_methods
-      [:command_args, :interactive?, :handle_stdout]
-    end
-
     private
 
     def ssh_command?
