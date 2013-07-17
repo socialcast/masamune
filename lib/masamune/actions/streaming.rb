@@ -13,7 +13,7 @@ module Masamune::Actions
 
       command = Masamune::Commands::ElasticMapReduce.new(command, jobflow: jobflow) if jobflow
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
-      command = Masamune::Commands::Shell.new(command, opts.reject { |k,_| k == :input })
+      command = Masamune::Commands::Shell.new(command, opts)
       command.execute
     end
   end

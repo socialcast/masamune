@@ -11,32 +11,20 @@ describe Masamune::Commands::Hive do
 
   let(:instance) { Masamune::Commands::Hive.new(general_options.merge(context_options)) }
 
-  describe '#command_args' do
+  describe '#stdin' do
     context 'with exec' do
-      subject { instance.command_args }
+      subject { instance.stdin }
 
       context 'with quoted sql' do
         let(:context_options) { {exec: %q('SELECT * FROM table;')} }
-        it { should == ['hive', '-e', %q('SELECT * FROM table;')] }
+        it { should be_a(StringIO) }
+        its(:string) { should == %q(SELECT * FROM table;) }
       end
 
       context 'with un-quoted sql' do
         let(:context_options) { {exec: %q(SELECT * FROM table)} }
-        it { should == ['hive', '-e', %q(SELECT * FROM table)] }
-      end
-    end
-
-    context 'with exec and quote' do
-      subject { instance.command_args }
-
-      context 'with quoted sql' do
-        let(:context_options) { {exec: %q('SELECT * FROM table;'), quote: true} }
-        it { should == ['hive', '-e', %q('SELECT * FROM table;')] }
-      end
-
-      context 'with un-quoted sql' do
-        let(:context_options) { {exec: %q(SELECT * FROM table), quote: true} }
-        it { should == ['hive', '-e', %q('SELECT * FROM table;')] }
+        it { should be_a(StringIO) }
+        its(:string) { should == %q(SELECT * FROM table;) }
       end
     end
   end

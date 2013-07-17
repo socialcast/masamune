@@ -1,6 +1,7 @@
 require 'thread'
 
 module Masamune
+  require 'masamune/io'
   require 'masamune/commands'
   require 'masamune/accumulate'
   require 'masamune/actions'
