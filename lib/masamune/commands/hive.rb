@@ -94,7 +94,7 @@ module Masamune::Commands
       out.gsub!(/\s\s+/, ' ')
       out.gsub!(/;\z/,'')
       out.strip!
-      "#{out};"
+      out + ';'
     end
   end
 end
