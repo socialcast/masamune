@@ -94,8 +94,9 @@ module Masamune::Commands
     end
 
     def execute_block
-      STDOUT.sync = STDERR.sync = true
       p_stdin, p_stdout, p_stderr, t_in = Open3.popen3(*command_args)
+
+      STDOUT.sync = STDERR.sync = p_stdin.sync = p_stdout.sync = p_stderr.sync = true
       p_stdin.wait_writable(PIPE_TIMEOUT) or raise "IO stdin not ready for write in #{PIPE_TIMEOUT}"
 
       Thread.new {
