@@ -20,7 +20,9 @@ module Masamune::Commands
     end
 
     def stdin
-      @stdin ||= StringIO.new(input)
+      if input
+        @stdin ||= StringIO.new(input)
+      end
     end
 
     def interactive?

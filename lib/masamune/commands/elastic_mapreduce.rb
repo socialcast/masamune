@@ -23,7 +23,11 @@ module Masamune::Commands
     end
 
     def stdin
-      @stdin ||= StringIO.new(input)
+      if @delegate.respond_to?(:input)
+        @delegate.stdin
+      elsif input
+        @stdin ||= StringIO.new(input)
+      end
     end
 
     def command_args
