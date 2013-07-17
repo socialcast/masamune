@@ -5,6 +5,7 @@ require 'ostruct'
 module Masamune::Commands
   class Shell
     SIGINT_EXIT_STATUS = 130
+    PIPE_TIMEOUT = 10
 
     require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
@@ -95,6 +96,8 @@ module Masamune::Commands
     def execute_block
       STDOUT.sync = STDERR.sync = true
       p_stdin, p_stdout, p_stderr, t_in = Open3.popen3(*command_args)
+      p_stdin.wait_writable(PIPE_TIMEOUT) or raise "IO stdin not ready for write in #{PIPE_TIMEOUT}"
+
       Thread.new {
         if @delegate.respond_to?(:stdin)
           while line = @delegate.stdin.gets
