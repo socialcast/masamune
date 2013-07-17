@@ -22,6 +22,14 @@ module Masamune::Commands
       end
     end
 
+    def stdin
+      if @delegate.respond_to?(:input)
+        @delegate.stdin
+      elsif input
+        @stdin ||= StringIO.new(input)
+      end
+    end
+
     def command_args
       args = []
       args << Masamune.configuration.elastic_mapreduce[:path]
@@ -39,10 +47,6 @@ module Masamune::Commands
       else
         @delegate.handle_stdout(line, line_no) if @delegate.respond_to?(:handle_stdout)
       end
-    end
-
-    def proxy_methods
-      [:command_args, :interactive?, :handle_stdout]
     end
 
     private

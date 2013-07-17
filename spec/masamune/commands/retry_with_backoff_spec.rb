@@ -15,16 +15,24 @@ describe Masamune::Commands::RetryWithBackoff do
       before do
         Masamune.logger.should_receive(:error).with('wtf').exactly(retries - 1)
         Masamune.logger.should_receive(:debug).with(/retrying.*/).exactly(retries - 1)
+        subject
+      end
+
+      subject do
         @retry_count = 0
         instance.around_execute do
           @retry_count += 1
           raise 'wtf' if @retry_count < retries
+          OpenStruct.new(:success? => true)
         end
       end
 
       it 'logs useful debug and error messages' do; end
       it 'attempts to retry the specified number of times' do
         @retry_count.should == retries
+      end
+      it 'returns result status' do
+        should be_success
       end
     end
 
@@ -33,6 +41,10 @@ describe Masamune::Commands::RetryWithBackoff do
         Masamune.logger.should_receive(:error).with('wtf').exactly(retries + 1)
         Masamune.logger.should_receive(:debug).with(/retrying.*/).exactly(retries)
         Masamune.logger.should_receive(:debug).with(/max retries.*bailing/)
+        subject
+      end
+
+      subject do
         @retry_count = 0
         instance.around_execute do
           @retry_count += 1
@@ -44,7 +56,9 @@ describe Masamune::Commands::RetryWithBackoff do
       it 'attempts to retry the specified number of times' do
         @retry_count.should == retries + 1
       end
-      it 'eventually bails' do; end
+      it 'returns failure status' do
+        should_not be_success
+      end
     end
   end
 end

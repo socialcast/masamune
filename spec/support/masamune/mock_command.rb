@@ -18,10 +18,6 @@ module Masamune::MockCommand
         @delegate.around_execute(&block)
       end
     end
-
-    def proxy_methods
-      [:around_execute]
-    end
   end
 
   def mock_success

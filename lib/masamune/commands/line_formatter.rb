@@ -19,9 +19,5 @@ module Masamune::Commands
         raise ArgumentError, "delegate #{@delegate.class} must respond_to handle_stdout"
       end
     end
-
-    def proxy_methods
-      [:handle_stdout]
-    end
   end
 end

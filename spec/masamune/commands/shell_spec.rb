@@ -2,7 +2,8 @@ require 'spec_helper'
 
 describe Masamune::Commands::Shell do
   let(:options) { {fail_fast: false} }
-  let(:delegate) { Masamune::MockDelegate.new(command) }
+  let(:input) { nil }
+  let(:delegate) { Masamune::MockDelegate.new(command, input) }
   let(:instance) { described_class.new(delegate, options) }
 
   describe '#execute' do
@@ -49,6 +50,30 @@ describe Masamune::Commands::Shell do
       end
 
       it { delegate.status.should == 130 }
+    end
+
+    context 'with simple command with input' do
+      let(:command) { 'cat' }
+      let(:input) { "ping\npong" }
+
+      before do
+        subject
+      end
+
+      it { delegate.status.should == 0 }
+      it { delegate.stdout.should == ['ping', 'pong'] }
+      it { delegate.stderr.should == [] }
+    end
+
+    context 'with simple command with not-ready input' do
+      let(:command) { 'cat' }
+      let(:input) { "ping\npong" }
+
+      before do
+        IO.any_instance.should_receive(:wait_writable).and_return(nil)
+      end
+
+      it { expect { subject }.to raise_error RuntimeError, /IO stdin not ready/ }
     end
   end
 end

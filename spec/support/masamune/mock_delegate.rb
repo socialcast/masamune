@@ -1,8 +1,9 @@
 class Masamune::MockDelegate
-  attr_accessor :command, :stdout, :stderr, :status
+  attr_accessor :command, :stdin, :stdout, :stderr, :status
 
-  def initialize(command)
+  def initialize(command, input = nil)
     self.command  = command
+    self.stdin    = StringIO.new(input) if input
     self.stdout   = []
     self.stderr   = []
     self.status   = 0

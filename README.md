@@ -11,7 +11,7 @@ Usage
 ----------
 
 Describe your dataflow as source, target data transformations: 
-```
+```ruby
 class ExampleThor  < Thor
   # Mix in Masamune specific Data Flow Behavior
   include Masamune::Thor
@@ -24,8 +24,8 @@ class ExampleThor  < Thor
   # Describe a Data Processing Job
   desc 'extract_logs', 'Organize log files by YYYY-MM-DD'
   
-  target "#{fs.path(:target_dir)}/%Y-%m-%d", :for => :extract_logs
-  source "#{fs.path(:source_dir)}/%Y%m%d*.log", :wildcard => true, :for => :extract_logs
+  target fs.path(:target_dir, '%Y-%m-%d'), :for => :extract_logs
+  source fs.path(:source_dir, '%Y%m%d*.log'), :wildcard => true, :for => :extract_logs
   def extract_logs
     existing_sources.each do |source|
       # Transform source into target

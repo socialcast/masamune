@@ -121,25 +121,29 @@ class Masamune::Configuration
         log_file = File.open(File.join(filesystem.path(:log_dir), log_file_template), 'a')
         log_file.sync = true
         FileUtils.ln_s(log_file, File.join(filesystem.path(:log_dir), 'latest'), force: true)
-        debug ? Masamune::MultiIO.new(STDERR, log_file) : log_file
+        debug ? Masamune::MultiIO.new($stderr, log_file) : log_file
       else
-        debug ? STDERR : nil
+        debug ? $stderr : nil
       end
       Logger.new(log_file_io)
     end
   end
 
   def print(*a)
+    line = a.join(' ').chomp
     client.mutex.synchronize do
-      logger.info(*a)
-      puts a.join(' ') if !quiet && !debug
+      logger.info(line)
+      $stdout.puts line if !quiet && !debug
+      $stdout.flush
     end
   end
 
   def trace(*a)
+    line = a.join(' ').chomp
     client.mutex.synchronize do
-      logger.info(*a)
-      puts a.join(' ') if verbose && !debug
+      logger.info(line)
+      $stdout.puts line if verbose && !debug
+      $stdout.flush
     end
   end
 
