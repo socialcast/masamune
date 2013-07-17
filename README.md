@@ -41,3 +41,10 @@ Execute your dataflow with the goal of processing all data from the start of the
 thor extract_logs --start '2013-01-01'
 ```
 
+Contributing
+---------------
+ 
+* Fork the project
+* Fix the issue
+* Add unit tests
+* Submit pull request on github
