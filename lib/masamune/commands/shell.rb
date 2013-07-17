@@ -26,7 +26,7 @@ module Masamune::Commands
         pid = fork {
           exec(*command_args)
         }
-        STDERR.reopen(STDOUT)
+        $stderr.reopen($stdout)
         Process.waitpid(pid) if pid
         exit
       end
@@ -96,7 +96,6 @@ module Masamune::Commands
     def execute_block
       p_stdin, p_stdout, p_stderr, t_in = Open3.popen3(*command_args)
 
-      STDOUT.sync = STDERR.sync = p_stdin.sync = p_stdout.sync = p_stderr.sync = true
       p_stdin.wait_writable(PIPE_TIMEOUT) or raise "IO stdin not ready for write in #{PIPE_TIMEOUT}"
 
       Thread.new {
@@ -104,12 +103,14 @@ module Masamune::Commands
           while line = @delegate.stdin.gets
             Masamune::trace(line.chomp)
             p_stdin.puts line
+            p_stdin.flush
           end
           p_stdin.close
         else
           while !p_stdin.closed? do
             input = Readline.readline('', true).strip
             p_stdin.puts input
+            p_stdin.flush
           end
         end
       }
