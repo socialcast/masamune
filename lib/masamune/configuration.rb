@@ -88,8 +88,12 @@ class Masamune::Configuration
     @logger = nil
   end
 
+  def elastic_mapreduce_enabled?
+    elastic_mapreduce.fetch(:enabled, false)
+  end
+
   def jobflow
-    return unless elastic_mapreduce[:enabled]
+    return unless elastic_mapreduce_enabled?
     @jobflow
   end
 

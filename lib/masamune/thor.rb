@@ -83,7 +83,7 @@ module Masamune
 
           before_initialize
 
-          if Masamune.configuration.elastic_mapreduce[:enabled]
+          if Masamune.configuration.elastic_mapreduce_enabled?
             jobflow = Masamune.configuration.jobflow
             raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless jobflow if self.extra.empty?
             raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{jobflow}' for '--jobflow' doesn't exist) unless elastic_mapreduce(extra: '--list', jobflow: jobflow, fail_fast: false).success?
