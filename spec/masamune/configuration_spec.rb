@@ -154,4 +154,60 @@ describe Masamune::Configuration do
       it { should == 'j-build' }
     end
   end
+
+  describe '#bind_template' do
+    let(:section) { nil }
+    let(:template) { nil }
+    let(:params) { nil }
+
+    subject do
+      instance.bind_template(section, template, params)
+    end
+
+    context 'with invalid template section' do
+      let(:section) { :missing_section }
+      it { expect { subject }.to raise_error(ArgumentError) }
+    end
+
+    context 'when template section is missing' do
+      let(:section) { :elastic_mapreduce }
+      it { should == [] }
+    end
+
+    context 'with valid template section' do
+      let(:section) { :elastic_mapreduce }
+      before do
+        instance.elastic_mapreduce[:templates] = {
+          list_with_state: {
+            command: '--list --start %state',
+            default: {
+              state: 'RUNNING'
+            }
+          },
+          broken_template: nil
+        }
+      end
+
+      context 'when template is missing' do
+        let(:template) { :missing_template }
+        it { should == [] }
+      end
+
+      context 'when template is broken' do
+        let(:template) { :broken_template }
+        it { should == [] }
+      end
+
+      context 'when params missing' do
+        let(:template) { :list_with_state }
+        it { should == ['--list', '--start', 'RUNNING'] }
+      end
+
+      context 'with params' do
+        let(:template) { :list_with_state }
+        let(:params) { {state: 'COMPLETED'} }
+        it { should == ['--list', '--start', 'COMPLETED'] }
+      end
+    end
+  end
 end

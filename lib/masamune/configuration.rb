@@ -102,6 +102,16 @@ class Masamune::Configuration
     @jobflow = defined_jobflows.fetch(jobflow.to_sym, jobflow.to_s)
   end
 
+  def bind_template(section, value, params = {})
+    raise ArgumentError, "no configuration section #{section}" unless COMMANDS.include?(section.to_s)
+    template = (send(section).fetch(:templates, {})[value] || {}).symbolize_keys
+    bound = template.fetch(:command, '')
+    template.fetch(:default, {}).merge(params || {}).each do |key, val|
+      bound.gsub!("%#{key.to_s}", val.to_s)
+    end
+    bound.split(/\s+/)
+  end
+
   def log_enabled?
     if self.client.context && client.context.respond_to?(:log_enabled?)
       self.client.context.log_enabled?

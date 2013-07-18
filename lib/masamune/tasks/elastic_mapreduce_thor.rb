@@ -11,7 +11,10 @@ module Masamune::Tasks
     namespace :elastic_mapreduce
 
     desc 'elastic_mapreduce', 'Launch an ElasticMapReduce ssh session'
+    method_option :template, :type => :string, :aliases => '-t', :desc => 'Execute named template command'
+    method_option :params, :type => :hash, :aliases => '-p', :desc => 'Bind params to named template command', :default => {}
     def elastic_mapreduce_exec
+      self.extra += Masamune.configuration.bind_template(:elastic_mapreduce, options[:template], options[:params]) if options[:template]
       elastic_mapreduce(options.merge(interactive: true, extra: extra_or_ssh))
     end
     default_task :elastic_mapreduce_exec
