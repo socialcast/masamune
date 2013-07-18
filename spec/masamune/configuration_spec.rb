@@ -153,18 +153,5 @@ describe Masamune::Configuration do
       end
       it { should == 'j-build' }
     end
-
-    context 'with default jobflow symbol defined' do
-      before do
-        instance.elastic_mapreduce[:jobflows] = {default: 'j-default'}
-      end
-      it { should == 'j-default' }
-      context 'with runtime override' do
-        before do
-          instance.jobflow = 'j-override'
-        end
-        it { should == 'j-override' }
-      end
-    end
   end
 end

@@ -90,7 +90,7 @@ class Masamune::Configuration
 
   def jobflow
     return unless elastic_mapreduce[:enabled]
-    @jobflow || defined_jobflows.fetch(:default, nil)
+    @jobflow
   end
 
   def jobflow=(jobflow)
@@ -215,5 +215,4 @@ class Masamune::Configuration
   def defined_jobflows
     @defined_jobflows ||= (elastic_mapreduce.fetch(:jobflows, {}) || {}).symbolize_keys
   end
-
 end
