@@ -92,7 +92,7 @@ module Masamune::Commands
       out = sql.dup
       out.gsub!(/\A'|\A"|"\z|'\z/, '')
       out.gsub!(/\s\s+/, ' ')
-      out.gsub!(/;\z/,'')
+      out.gsub!(/;+$/,'')
       out.strip!
       out + ';'
     end

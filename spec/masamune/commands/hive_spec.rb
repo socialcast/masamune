@@ -21,6 +21,28 @@ describe Masamune::Commands::Hive do
         its(:string) { should == %q(SELECT * FROM table;) }
       end
 
+      context 'with ; terminated sql' do
+        let(:context_options) { {exec: %q(SELECT * FROM table;;)} }
+        it { should be_a(StringIO) }
+        its(:string) { should == %q(SELECT * FROM table;) }
+      end
+
+      context 'with multi line sql' do
+        let(:context_options) do
+          {
+            exec: <<-EOS
+              SELECT
+                *
+              FROM
+                table
+              ;
+            EOS
+          }
+        end
+        it { should be_a(StringIO) }
+        its(:string) { should == %q(SELECT * FROM table;) }
+      end
+
       context 'with un-quoted sql' do
         let(:context_options) { {exec: %q(SELECT * FROM table)} }
         it { should be_a(StringIO) }
