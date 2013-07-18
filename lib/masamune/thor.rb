@@ -61,7 +61,7 @@ module Masamune
             config.client.context = self
 
             if options[:config]
-              config.load(options[:config])
+              config.load(options[:config]) rescue raise ::Thor::MalformattedArgumentError, "Could not load file provided for '--config'"
             elsif default_config_file = config.filesystem.resolve_file([Masamune.default_config_file] + SYSTEM_CONFIG_FILES)
               config.load(default_config_file)
             end

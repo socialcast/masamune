@@ -66,6 +66,12 @@ describe Masamune::Thor do
       it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--stop'; got/ }
     end
 
+    context 'with command and --start and bad --config file' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01', '--config', 'xxx'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Could not load file provided for '--config'/ }
+    end
+
     context 'with command and --dry_run' do
       let(:command) { 'command' }
       let(:options) { ['--dry_run'] }
