@@ -78,6 +78,15 @@ describe Masamune::Thor do
       it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Could not load file provided for '--config'/ }
     end
 
+    context 'with command and --start and missing system --config file' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01'] }
+      before do
+        Masamune::Filesystem.any_instance.should_receive(:resolve_file)
+      end
+      it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /Option --config or valid system configuration file required/ }
+    end
+
     context 'with command and --dry_run' do
       let(:command) { 'command' }
       let(:options) { ['--dry_run'] }
