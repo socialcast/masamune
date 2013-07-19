@@ -36,6 +36,7 @@ describe Masamune::Commands::Hive do
               FROM
                 table
               ;
+
             EOS
           }
         end
