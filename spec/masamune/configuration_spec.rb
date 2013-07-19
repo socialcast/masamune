@@ -190,12 +190,12 @@ describe Masamune::Configuration do
 
       context 'when template is missing' do
         let(:template) { :missing_template }
-        it { expect { subject }.to raise_error(ArgumentError) }
+        it { expect { subject }.to raise_error(ArgumentError, 'no template for missing_template') }
       end
 
       context 'when template is broken' do
         let(:template) { :broken_template }
-        it { expect { subject }.to raise_error(ArgumentError) }
+        it { expect { subject }.to raise_error(ArgumentError, 'no template for broken_template') }
       end
 
       context 'when params missing but default exists' do
@@ -207,7 +207,7 @@ describe Masamune::Configuration do
       context 'when params missing and default missing' do
         let(:template) { :list_with_state }
         let(:params) { {state: 'COMPLETED'} }
-        it { expect { subject }.to raise_error(ArgumentError) }
+        it { expect { subject }.to raise_error(ArgumentError, 'no param for %key_pair') }
       end
 
       context 'with params' do
