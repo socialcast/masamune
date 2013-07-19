@@ -241,8 +241,8 @@ class Masamune::Configuration
     @templates[section][template_name] ||= begin
       raise ArgumentError, "no configuration section #{section}" unless COMMANDS.include?(section.to_s)
       templates = send(section).fetch(:templates, {}).symbolize_keys!
-      template = templates[template_name] or raise ArgumentError, "no template for #{template_name}"
-      template.has_key?(:command) or raise ArgumentError, "no command for template #{template}"
+      template = templates[template_name.to_sym].symbolize_keys or raise ArgumentError, "no template for #{template_name}"
+      template.has_key?(:command) or raise ArgumentError, "no command for template #{template_name}"
       template[:default] ||= {}
       template[:default].symbolize_keys!
       template
