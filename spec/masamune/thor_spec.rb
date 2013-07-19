@@ -3,6 +3,12 @@ require 'thor'
 
 ENV['THOR_DEBUG'] = '1'
 describe Masamune::Thor do
+  let(:client) { Masamune::Client.new }
+
+  before do
+    Masamune.client = client
+  end
+
   def capture(stdout, stderr, &block)
     tmp_stdout, $stdout = $stdout, stdout
     tmp_stderr, $stderr = $stderr, stderr
@@ -64,6 +70,21 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--stop', 'xxx'] }
       it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--stop'; got/ }
+    end
+
+    context 'with command and --start and bad --config file' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01', '--config', 'xxx'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Could not load file provided for '--config'/ }
+    end
+
+    context 'with command and --start and missing system --config file' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01'] }
+      before do
+        Masamune::Filesystem.any_instance.should_receive(:resolve_file)
+      end
+      it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /Option --config or valid system configuration file required/ }
     end
 
     context 'with command and --dry_run' do
@@ -130,9 +151,7 @@ describe Masamune::Thor do
 
     context 'when elastic_mapreduce is enabled' do
       before do
-        Masamune.configure do |config|
-          config.elastic_mapreduce[:enabled] = true
-        end
+        Masamune::Configuration.any_instance.stub(:elastic_mapreduce_enabled?) { true }
       end
 
       context 'with command and --start and no --jobflow' do
