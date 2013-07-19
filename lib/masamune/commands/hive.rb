@@ -4,12 +4,13 @@ module Masamune::Commands
   class Hive
     PROMPT = 'hive>'
 
-    attr_accessor :file, :exec, :input, :output, :block, :rollback
+    attr_accessor :file, :exec, :input, :output, :print, :block, :rollback
 
     def initialize(opts = {})
       self.file       = opts[:file]
       self.exec       = opts[:exec]
       self.output     = opts[:output]
+      self.print      = opts.fetch(:print, false)
       self.block      = opts[:block]
       self.rollback   = opts[:rollback]
     end
@@ -27,6 +28,10 @@ module Masamune::Commands
 
     def interactive?
       !(exec || file)
+    end
+
+    def print?
+      self.print
     end
 
     def command_args
@@ -74,7 +79,7 @@ module Masamune::Commands
         if @tmpfile
           @tmpfile.puts(line)
         else
-          Masamune::print(line)
+          Masamune::print(line) if print?
         end
       end
     end
@@ -92,7 +97,7 @@ module Masamune::Commands
       out = sql.dup
       out.gsub!(/\A'|\A"|"\z|'\z/, '')
       out.gsub!(/\s\s+/, ' ')
-      out.gsub!(/;\z/,'')
+      out.gsub!(/\s*;+\s*$/,'')
       out.strip!
       out + ';'
     end

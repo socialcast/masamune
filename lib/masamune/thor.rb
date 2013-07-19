@@ -61,9 +61,11 @@ module Masamune
             config.client.context = self
 
             if options[:config]
-              config.load(options[:config])
+              config.load(options[:config]) rescue raise ::Thor::MalformattedArgumentError, "Could not load file provided for '--config'"
             elsif default_config_file = config.filesystem.resolve_file([Masamune.default_config_file] + SYSTEM_CONFIG_FILES)
               config.load(default_config_file)
+            else
+              raise ::Thor::RequiredArgumentMissingError, 'Option --config or valid system configuration file required'
             end
 
             config.quiet    = options[:quiet]
@@ -83,7 +85,7 @@ module Masamune
 
           before_initialize
 
-          if Masamune.configuration.elastic_mapreduce[:enabled]
+          if Masamune.configuration.elastic_mapreduce_enabled?
             jobflow = Masamune.configuration.jobflow
             raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless jobflow if self.extra.empty?
             raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{jobflow}' for '--jobflow' doesn't exist) unless elastic_mapreduce(extra: '--list', jobflow: jobflow, fail_fast: false).success?

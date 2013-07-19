@@ -14,7 +14,7 @@ module Masamune::Tasks
     method_option :file, :aliases => '-f', :desc => 'SQL from files'
     method_option :exec, :aliases => '-e', :desc => 'SQL from command line'
     def hive_exec
-      hive(options)
+      hive(options.merge(print: true))
     end
     default_task :hive_exec
 
