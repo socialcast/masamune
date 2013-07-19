@@ -21,6 +21,8 @@ module Masamune::Tasks
     no_tasks do
       def before_initialize
         self.extra += Masamune.configuration.bind_template(:elastic_mapreduce, options['template'], options['params']) if options['template']
+      rescue ArgumentError => e
+        raise ::Thor::MalformattedArgumentError, e.to_s
       end
 
       def log_enabled?

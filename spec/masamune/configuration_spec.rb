@@ -171,7 +171,7 @@ describe Masamune::Configuration do
 
     context 'when template section is missing' do
       let(:section) { :elastic_mapreduce }
-      it { should == [] }
+      it { expect { subject }.to raise_error(ArgumentError) }
     end
 
     context 'with valid template section' do
@@ -190,12 +190,12 @@ describe Masamune::Configuration do
 
       context 'when template is missing' do
         let(:template) { :missing_template }
-        it { should == [] }
+        it { expect { subject }.to raise_error(ArgumentError) }
       end
 
       context 'when template is broken' do
         let(:template) { :broken_template }
-        it { should == [] }
+        it { expect { subject }.to raise_error(ArgumentError) }
       end
 
       context 'when params missing' do

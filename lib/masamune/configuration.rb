@@ -104,8 +104,8 @@ class Masamune::Configuration
 
   def bind_template(section, value, params = {})
     raise ArgumentError, "no configuration section #{section}" unless COMMANDS.include?(section.to_s)
-    template = (send(section).fetch(:templates, {})[value] || {}).symbolize_keys
-    bound = template.fetch(:command, '')
+    template = send(section).fetch(:templates, {})[value].try(:symbolize_keys) or raise ArgumentError, "no template for #{value}"
+    bound = template[:command] or raise ArgumentError, "no command for template #{value}"
     template.fetch(:default, {}).merge(params || {}).each do |key, val|
       bound.gsub!("%#{key.to_s}", val.to_s)
     end
