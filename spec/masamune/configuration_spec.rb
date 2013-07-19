@@ -179,7 +179,7 @@ describe Masamune::Configuration do
       before do
         instance.elastic_mapreduce[:templates] = {
           list_with_state: {
-            command: '--list --start %state',
+            command: '--list --key-pair %key_pair --start %state',
             default: {
               state: 'RUNNING'
             }
@@ -198,15 +198,22 @@ describe Masamune::Configuration do
         it { expect { subject }.to raise_error(ArgumentError) }
       end
 
-      context 'when params missing' do
+      context 'when params missing but default exists' do
         let(:template) { :list_with_state }
-        it { should == ['--list', '--start', 'RUNNING'] }
+        let(:params) { {key_pair: 'emr-2013'} }
+        it { should == ['--list', '--key-pair', 'emr-2013', '--start', 'RUNNING'] }
+      end
+
+      context 'when params missing and default missing' do
+        let(:template) { :list_with_state }
+        let(:params) { {state: 'COMPLETED'} }
+        it { expect { subject }.to raise_error(ArgumentError) }
       end
 
       context 'with params' do
         let(:template) { :list_with_state }
-        let(:params) { {state: 'COMPLETED'} }
-        it { should == ['--list', '--start', 'COMPLETED'] }
+        let(:params) { {key_pair: 'emr-2013', state: 'COMPLETED'} }
+        it { should == ['--list', '--key-pair', 'emr-2013', '--start', 'COMPLETED'] }
       end
     end
   end

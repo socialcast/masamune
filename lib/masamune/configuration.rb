@@ -58,6 +58,7 @@ class Masamune::Configuration
     self.debug    = false
     self.no_op    = false
     self.dry_run  = false
+    @templates    = Hash.new { |h,k| h[k] = {} }
   end
 
   def load(file)
@@ -102,14 +103,18 @@ class Masamune::Configuration
     @jobflow = defined_jobflows.fetch(jobflow.to_sym, jobflow.to_s)
   end
 
-  def bind_template(section, value, params = {})
-    raise ArgumentError, "no configuration section #{section}" unless COMMANDS.include?(section.to_s)
-    template = send(section).fetch(:templates, {})[value].try(:symbolize_keys) or raise ArgumentError, "no template for #{value}"
-    bound = template[:command] or raise ArgumentError, "no command for template #{value}"
-    template.fetch(:default, {}).merge(params || {}).each do |key, val|
-      bound.gsub!("%#{key.to_s}", val.to_s)
+
+  def bind_template(section, template, input_params = {})
+    free_command = load_template(section, template)[:command].split(/\s+/)
+    [].tap do |bind_command|
+      free_command.each do |free_param|
+        if free_param =~ /\A%/
+          bind_command << free_param.gsub!(free_param, bind_param(section, template, free_param, input_params))
+        elsif param = free_param
+          bind_command << param
+        end
+      end
     end
-    bound.split(/\s+/)
   end
 
   def log_enabled?
@@ -227,6 +232,25 @@ class Masamune::Configuration
   end
 
   def defined_jobflows
-    @defined_jobflows ||= (elastic_mapreduce.fetch(:jobflows, {}) || {}).symbolize_keys
+    @defined_jobflows ||= (elastic_mapreduce.fetch(:jobflows, {}) || {})
+  end
+
+  private
+
+  def load_template(section, template)
+    @templates[section][template] ||= begin
+      raise ArgumentError, "no configuration section #{section}" unless COMMANDS.include?(section.to_s)
+      template = send(section).fetch(:templates, {})[template] or raise ArgumentError, "no template for #{template}"
+      template.symbolize_keys!
+      template.has_key?(:command) or raise ArgumentError, "no command for template #{template}"
+      template[:default] ||= {}
+      template[:default].symbolize_keys!
+      template
+    end
+  end
+
+  def bind_param(section, template, free_param, input_params = {})
+    default = load_template(section, template).fetch(:default, {})
+    default.merge(input_params.symbolize_keys || {})[free_param.sub(/\A%/, '').to_sym] or raise ArgumentError, "no param for #{free_param}"
   end
 end
