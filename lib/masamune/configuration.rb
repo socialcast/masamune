@@ -232,7 +232,7 @@ class Masamune::Configuration
   end
 
   def defined_jobflows
-    @defined_jobflows ||= (elastic_mapreduce.fetch(:jobflows, {}) || {})
+    @defined_jobflows ||= (elastic_mapreduce.fetch(:jobflows, {}) || {}).symbolize_keys
   end
 
   private
