@@ -104,12 +104,12 @@ class Masamune::Configuration
   end
 
 
-  def bind_template(section, template, input_params = {})
+  def bind_template(section, template, input_args = {})
     free_command = load_template(section, template)[:command].split(/\s+/)
     [].tap do |bind_command|
       free_command.each do |free_param|
         if free_param =~ /\A%/
-          bind_command << free_param.gsub!(free_param, bind_param(section, template, free_param, input_params))
+          bind_command << free_param.gsub!(free_param, bind_param(section, template, free_param, input_args))
         elsif param = free_param
           bind_command << param
         end
@@ -240,8 +240,10 @@ class Masamune::Configuration
   def load_template(section, template_name)
     @templates[section][template_name] ||= begin
       raise ArgumentError, "no configuration section #{section}" unless COMMANDS.include?(section.to_s)
+      raise ArgumentError, 'no template_name' unless template_name
       templates = send(section).fetch(:templates, {}).symbolize_keys!
-      template = templates[template_name.to_sym].symbolize_keys or raise ArgumentError, "no template for #{template_name}"
+      template = templates[template_name.to_sym] or raise ArgumentError, "no template for #{template_name}"
+      template.symbolize_keys!
       template.has_key?(:command) or raise ArgumentError, "no command for template #{template_name}"
       template[:default] ||= {}
       template[:default].symbolize_keys!
@@ -249,8 +251,8 @@ class Masamune::Configuration
     end
   end
 
-  def bind_param(section, template, free_param, input_params = {})
+  def bind_param(section, template, free_param, input_args = {})
     default = load_template(section, template).fetch(:default, {})
-    default.merge(input_params.symbolize_keys || {})[free_param.sub(/\A%/, '').to_sym] or raise ArgumentError, "no param for #{free_param}"
+    default.merge(input_args.symbolize_keys || {})[free_param.sub(/\A%/, '').to_sym] or raise ArgumentError, "no param for #{free_param}"
   end
 end
