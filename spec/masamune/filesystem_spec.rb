@@ -2,6 +2,8 @@ require 'spec_helper'
 
 require 'securerandom'
 
+# NOTE when operating between hdfs and s3, hadoop fs requires s3n URI
+# See: http://wiki.apache.org/hadoop/AmazonS3
 shared_examples_for 'Filesystem' do
   let(:filesystem) { Masamune::Filesystem.new }
 
