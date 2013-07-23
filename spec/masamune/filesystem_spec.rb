@@ -2,7 +2,6 @@ require 'spec_helper'
 
 require 'securerandom'
 
-# TODO expect execute for hdfs
 shared_examples_for 'Filesystem' do
   let(:filesystem) { Masamune::Filesystem.new }
 
@@ -207,6 +206,23 @@ shared_examples_for 'Filesystem' do
       it { should be_true }
     end
 
+    context 'local file to s3 dir' do
+      before do
+        filesystem.should_receive(:s3cmd).with('put', old_file, 's3://bucket/new_dir/')
+        instance.copy_file(old_file, 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 'local file to hdfs dir' do
+      before do
+        instance.copy_file(old_file, 'file://' + new_dir)
+      end
+
+      it { should be_true }
+    end
+
     context 'hdfs file to hdfs dir' do
       before do
         instance.copy_file('file://' + old_file, 'file://' + new_dir)
@@ -215,10 +231,46 @@ shared_examples_for 'Filesystem' do
       it { should be_true }
     end
 
+    context 'hdfs file to local dir' do
+      before do
+        instance.copy_file('file://' + old_file, new_dir)
+      end
+
+      it { should be_true }
+    end
+
+    context 'hdfs file to s3 dir' do
+      before do
+        filesystem.should_receive(:execute_hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir')
+        instance.copy_file('file://' + old_file, 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
     context 's3 file to s3 dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('cp', 's3://bucket/old_file', 's3://bucket/new_dir')
+        filesystem.should_receive(:s3cmd).with('cp', 's3://bucket/old_file', 's3://bucket/new_dir/')
         instance.copy_file('s3://bucket/old_file', 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 file to local dir' do
+      before do
+        filesystem.should_receive(:s3cmd).with('get', 's3://bucket/old_file', new_dir)
+        instance.copy_file('s3://bucket/old_file', new_dir)
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 file to hdfs dir' do
+      before do
+        filesystem.should_receive(:execute_hadoop_fs).with('-mkdir', 'file://' + new_dir)
+        filesystem.should_receive(:execute_hadoop_fs).with('-cp', 's3n://bucket/old_file', 'file://' + new_dir)
+        instance.copy_file('s3://bucket/old_file', 'file://' + new_dir)
       end
 
       it 'meets expectations' do; end
@@ -251,6 +303,100 @@ shared_examples_for 'Filesystem' do
         filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir/')
         filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir_$folder$')
         instance.remove_dir('s3://bucket/dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+  end
+
+  describe '#move_file' do
+    subject(:removes_old_file) do
+      !File.exists?(old_file)
+    end
+
+    subject(:creates_new_file) do
+      File.exists?(new_file)
+    end
+
+    context 'local file to local file' do
+      before do
+        instance.move_file(old_file, new_file)
+      end
+
+      it { removes_old_file.should be_true }
+      it { creates_new_file.should be_true }
+    end
+
+    context 'local file to s3 file' do
+      before do
+        filesystem.should_receive(:s3cmd).with('put', old_file, 's3://bucket/new_dir')
+        instance.move_file(old_file, 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+      it { removes_old_file.should be_true }
+    end
+
+    context 'local file to hdfs file' do
+      before do
+        instance.move_file(old_file, 'file://' + new_file)
+      end
+
+      it { removes_old_file.should be_true }
+      it { creates_new_file.should be_true }
+    end
+
+    context 'hdfs file to hdfs file' do
+      before do
+        instance.move_file('file://' + old_file, 'file://' + new_file)
+      end
+
+      it { removes_old_file.should be_true }
+      it { creates_new_file.should be_true }
+    end
+
+    context 'hdfs file to local file' do
+      before do
+        instance.move_file('file://' + old_file, new_file)
+      end
+
+      it { removes_old_file.should be_true }
+      it { creates_new_file.should be_true }
+    end
+
+    context 'hdfs file to s3 file' do
+      before do
+        filesystem.should_receive(:execute_hadoop_fs).with('-mv', 'file://' + old_file, 's3n://bucket/new_dir')
+        instance.move_file('file://' + old_file, 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 file to s3 file' do
+      before do
+        filesystem.should_receive(:s3cmd).with('mv', 's3://bucket/old_file', 's3://bucket/new_dir')
+        instance.move_file('s3://bucket/old_file', 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 file to local file' do
+      before do
+        filesystem.should_receive(:s3cmd).with('get', 's3://bucket/old_file', new_dir)
+        filesystem.should_receive(:s3cmd).with('del', 's3://bucket/old_file')
+        instance.move_file('s3://bucket/old_file', new_dir)
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 file to hdfs file' do
+      before do
+        filesystem.should_receive(:execute_hadoop_fs).with('-mkdir', 'file://' + File.dirname(new_file))
+        filesystem.should_receive(:execute_hadoop_fs).with('-mv', 's3n://bucket/old_file', 'file://' + new_file)
+        instance.move_file('s3://bucket/old_file', 'file://' + new_file)
       end
 
       it 'meets expectations' do; end
