@@ -107,16 +107,27 @@ module Masamune
     end
     method_accumulate :glob
 
-    # TODO local, hdfs permutations
     def copy_file(src, dst)
       mkdir!(dst)
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
         execute_hadoop_fs('-cp', src, dst)
+      when [:hdfs, :local]
+        execute_hadoop_fs('-copyToLocal', src, dst)
+      when [:hdfs, :s3]
+        execute_hadoop_fs('-cp', src, s3n(dst))
       when [:s3, :s3]
-        s3cmd('cp', src, dst)
+        s3cmd('cp', src, s3b(dst, dir: true))
+      when [:s3, :local]
+        s3cmd('get', src, dst)
+      when [:s3, :hdfs]
+        execute_hadoop_fs('-cp', s3n(src), dst)
       when [:local, :local]
         FileUtils.cp(src, dst, file_util_args)
+      when [:local, :hdfs]
+        execute_hadoop_fs('-copyFromLocal', src, dst)
+      when [:local, :s3]
+        s3cmd('put', src, s3b(dst, dir: true))
       end
     end
 
@@ -133,18 +144,31 @@ module Masamune
       end
     end
 
-    # TODO round out permutations
     def move_file(src, dst)
       mkdir!(File.dirname(dst))
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
         execute_hadoop_fs('-mv', src, dst)
+      when [:hdfs, :local]
+        # FIXME use execute_hadoop_fs('-moveToLocal', src, dst) if implemented
+        execute_hadoop_fs('-copyToLocal', src, dst)
+        execute_hadoop_fs('-rm', src)
+      when [:hdfs, :s3]
+        execute_hadoop_fs('-mv', src, s3n(dst))
       when [:s3, :s3]
         s3cmd('mv', src, dst)
-      when [:local, :s3]
-        s3cmd('put', src, dst)
+      when [:s3, :local]
+        s3cmd('get', src, dst)
+        s3cmd('del', src)
+      when [:s3, :hdfs]
+        execute_hadoop_fs('-mv', s3n(src), dst)
       when [:local, :local]
         FileUtils.mv(src, dst, file_util_args)
+      when [:local, :hdfs]
+        execute_hadoop_fs('-moveFromLocal', src, dst)
+      when [:local, :s3]
+        s3cmd('put', src, dst)
+        FileUtils.rm(src, file_util_args)
       end
     end
 
