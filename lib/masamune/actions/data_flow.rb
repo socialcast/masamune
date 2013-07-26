@@ -98,7 +98,7 @@ module Masamune::Actions
     end
 
     def current_command_name
-      @_initializer.last[:current_command].name.to_sym
+      "#{self.class.namespace}:#{@_initializer.last[:current_command].name}"
     end
 
     def lock_file
@@ -124,16 +124,26 @@ module Masamune::Actions
 
     module ClassMethods
       def source(source, loadtime_options = {})
-        data_plan.add_source(command_name(loadtime_options), source, loadtime_options)
-        data_plan.add_command(command_name(loadtime_options), command_wrapper(loadtime_options))
+        @@namespaces ||= []
+        @@namespaces << namespace
+        @@sources ||= []
+        @@sources << [source, loadtime_options]
       end
 
       def target(target, loadtime_options = {})
-        data_plan.add_target(command_name(loadtime_options), target, loadtime_options)
+        @@targets ||= []
+        @@targets << [target, loadtime_options]
+      end
+
+      def create_command(*a)
+        super.tap do
+          @@commands ||= []
+          @@commands << a
+        end
       end
 
       def data_plan
-        @data_plan ||= Masamune::DataPlan.new
+        @@data_plan ||= Masamune::DataPlanBuilder.build_via_thor(@@namespaces, @@commands, @@sources, @@targets)
       end
 
       def load_paths_from_file(file)
@@ -145,31 +155,6 @@ module Masamune::Actions
       # If internal call to Thor::Base.start fails, exit
       def exit_on_failure?
         true
-      end
-
-      # TODO infer command_name even when explicit :for is missing
-      def command_name(loadtime_options = {})
-        loadtime_options[:for]
-      end
-
-      def command_options(runtime_options)
-        runtime_options.reject { |_,v| v == false }.map { |k,v| ["--#{k}", v == true ? nil : v] }.flatten.compact
-      end
-
-      def command_wrapper(loadtime_options)
-        Proc.new do |sources, runtime_options|
-          command_options = command_options(runtime_options)
-          Masamune.logger.debug([command_name(loadtime_options), '--sources', save_paths_to_file(sources)] + command_options)
-          # TODO try using invoke
-          self.start([command_name(loadtime_options), '--sources', save_paths_to_file(sources)] + command_options)
-        end
-      end
-
-      def save_paths_to_file(*paths)
-        Tempfile.new('masamune').tap do |file|
-          file.write(paths.join("\n"))
-          file.close
-        end.path
       end
     end
   end
