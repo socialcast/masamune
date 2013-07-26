@@ -23,9 +23,9 @@ describe Masamune::Thor do
       include Masamune::Actions::DataFlow
 
       desc 'command', 'command'
-      target "target/%Y-%m-%d", :for => :command_task
-      source "source/%Y%m%d*.log", :wildcard => true, :for => :command_task
-      def command_task
+      target "target/%Y-%m-%d"
+      source "source/%Y%m%d*.log", :wildcard => true
+      def command
         # NOP
       end
     end
