@@ -51,4 +51,22 @@ describe Masamune::Commands::Hive do
       end
     end
   end
+
+  describe '#command_args' do
+    subject do
+      instance.command_args
+    end
+
+    it { should == ['hive'] }
+
+    context 'with command options' do
+      let(:command_options) { [{'-d' => 'DATABASE=development'}] }
+      it { should == ['hive', '-d', 'DATABASE=development'] }
+    end
+
+    context 'with variables' do
+      let(:context_options) { {variables: {R: 'R2DO', C: 'C3PO'}} }
+      it { should == ['hive', '-d', 'R=R2DO', '-d', 'C=C3PO'] }
+    end
+  end
 end
