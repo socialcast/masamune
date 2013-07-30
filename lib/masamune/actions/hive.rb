@@ -5,6 +5,7 @@ module Masamune::Actions
 
       opts.merge!(jobflow: Masamune.configuration.jobflow)
       opts.merge!(block: block.to_proc) if block_given?
+      opts.merge!(ifs: "\t", ofs: ',') if opts.delete(:csv)
 
       command = Masamune::Commands::Hive.new(opts)
       command = Masamune::Commands::ElasticMapReduce.new(command, opts) if opts[:jobflow]

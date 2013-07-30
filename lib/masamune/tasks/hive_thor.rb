@@ -14,6 +14,7 @@ module Masamune::Tasks
     method_option :file, :aliases => '-f', :desc => 'SQL from files'
     method_option :exec, :aliases => '-e', :desc => 'SQL from command line'
     method_option :output, :aliases => '-o', :desc => 'Save SQL output to file'
+    method_option :csv, :type => :boolean, :desc => 'Report SQL output in CSV format', :default => false
     def hive_exec
       hive(options.merge(print: true))
     end
