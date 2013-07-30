@@ -13,6 +13,7 @@ module Masamune::Tasks
     desc 'hive', 'Launch a Hive session'
     method_option :file, :aliases => '-f', :desc => 'SQL from files'
     method_option :exec, :aliases => '-e', :desc => 'SQL from command line'
+    method_option :output, :aliases => '-o', :desc => 'Save SQL output to file'
     def hive_exec
       hive(options.merge(print: true))
     end
