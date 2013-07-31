@@ -30,14 +30,34 @@ module Masamune::Commands
       end
     end
 
-    def command_args
+    def elastic_mapreduce_command
       args = []
       args << Masamune.configuration.elastic_mapreduce[:path]
       args << Masamune.configuration.elastic_mapreduce[:options].map(&:to_a)
       args << ['--jobflow', jobflow] if jobflow
+      args.flatten
+    end
+
+    def ssh_args
+      args = []
+      args << elastic_mapreduce_command
+      args << '--ssh'
+      args << 'exit'
+      args.flatten
+    end
+
+    def ssh_command
+      @ssh_command ||= begin
+        result = %x{#{ssh_args.join(' ')}}
+        result.sub(/ exit\Z/, '').split(' ')
+      end
+    end
+
+    def command_args
+      args = []
+      args << (ssh_command? ? ssh_command : elastic_mapreduce_command)
       args << extra
-      args << '--ssh' if ssh_command?
-      args << %Q{"#{@delegate.command_args.join(' ')}"} if @delegate.respond_to?(:command_args)
+      args << @delegate.command_args if @delegate.respond_to?(:command_args)
       args.flatten
     end
 
@@ -52,7 +72,7 @@ module Masamune::Commands
     private
 
     def ssh_command?
-      @delegate.respond_to?(:command_args) || input
+      @delegate.respond_to?(:command_args) || input.present?
     end
   end
 end
