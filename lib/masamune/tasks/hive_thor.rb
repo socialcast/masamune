@@ -23,10 +23,10 @@ module Masamune::Tasks
         hive_options.merge!(ifs: "\t", ofs: ',')
       end
 
-      # TODO do not upload file if s3 prefix OR fs(:var_dir) (?) is not remote
       if options[:file]
-        fs.copy_file(options[:file], fs.path(:tmp_dir))
-        hive_options.merge!(file: fs.path(:tmp_dir, File.basename(options[:file])))
+        remote_file = fs.path(:tmp_dir, File.basename(options[:file]))
+        fs.copy_file(options[:file], fs.path(:tmp_dir)) unless options[:file] == remote_file
+        hive_options.merge!(file: remote_file)
       end
 
       hive(hive_options)
