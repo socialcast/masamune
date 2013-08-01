@@ -4,7 +4,7 @@ module Masamune::Commands
   class Hive
     PROMPT = 'hive>'
 
-    attr_accessor :file, :exec, :input, :output, :print, :block, :rollback
+    attr_accessor :file, :exec, :input, :output, :print, :block, :variables, :rollback
 
     def initialize(opts = {})
       self.file       = opts[:file]
@@ -12,6 +12,7 @@ module Masamune::Commands
       self.output     = opts[:output]
       self.print      = opts.fetch(:print, false)
       self.block      = opts[:block]
+      self.variables  = opts.fetch(:variables, {})
       self.rollback   = opts[:rollback]
     end
 
@@ -39,6 +40,9 @@ module Masamune::Commands
       args << Masamune.configuration.hive[:path]
       args << Masamune.configuration.hive[:options].map(&:to_a)
       args << ['-f', file] if file
+      variables.each do |key, val|
+        args << ['-d', "#{key.to_s}=#{val.to_s}"]
+      end
       args.flatten
     end
 

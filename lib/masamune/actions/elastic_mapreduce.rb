@@ -2,6 +2,7 @@ module Masamune::Actions
   module ElasticMapreduce
     def elastic_mapreduce(opts = {})
       opts = opts.to_hash.symbolize_keys
+
       opts.merge!(jobflow: Masamune.configuration.jobflow)
 
       command = Masamune::Commands::Interactive.new(:interactive => opts.fetch(:interactive, false))

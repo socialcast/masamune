@@ -3,18 +3,11 @@ module Masamune::Actions
     def hive(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
 
-      jobflow = opts[:jobflow] || Masamune.configuration.jobflow
-
+      opts.merge!(jobflow: Masamune.configuration.jobflow)
       opts.merge!(block: block.to_proc) if block_given?
 
       command = Masamune::Commands::Hive.new(opts)
-
-      command = if jobflow
-        Masamune::Commands::ElasticMapReduce.new(command, jobflow: jobflow)
-      else
-        command
-      end
-
+      command = Masamune::Commands::ElasticMapReduce.new(command, opts) if opts[:jobflow]
       command = Masamune::Commands::LineFormatter.new(command, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
