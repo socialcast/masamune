@@ -64,6 +64,11 @@ describe Masamune::Commands::Hive do
       it { should == ['hive', '-d', 'DATABASE=development'] }
     end
 
+    context 'with file' do
+      let(:context_options) { {file: 'zomg.hql'} }
+      it { should == ['hive', '-f', 'zomg.hql'] }
+    end
+
     context 'with variables' do
       let(:context_options) { {variables: {R: 'R2DO', C: 'C3PO'}} }
       it { should == ['hive', '-d', 'R=R2DO', '-d', 'C=C3PO'] }
