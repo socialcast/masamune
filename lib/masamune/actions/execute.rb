@@ -12,6 +12,12 @@ module Masamune::Actions
       end
 
       klass.class_eval do
+        define_method(:stdin) do
+          @stdin ||= StringIO.new(opts[:input])
+        end
+      end if opts[:input]
+
+      klass.class_eval do
         define_method(:handle_stdout) do |line, line_no|
           block.call(line, line_no)
         end
