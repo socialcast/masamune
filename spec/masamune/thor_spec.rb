@@ -72,6 +72,24 @@ describe Masamune::Thor do
       it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--stop'; got/ }
     end
 
+    context 'with command and invalid --sources' do
+      let(:command) { 'command' }
+      let(:options) { ['--sources', 'foo'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--sources'; got/ }
+    end
+
+    context 'with command and invalid --targets' do
+      let(:command) { 'command' }
+      let(:options) { ['--targets', 'foo'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--targets'; got/ }
+    end
+
+    context 'with command and both --sources and --targets' do
+      let(:command) { 'command' }
+      let(:options) { ['--sources', 'sources', '--targets', 'targets'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Cannot specify both option '--sources' and option '--targets'/ }
+    end
+
     context 'with command and --start and bad --config file' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--config', 'xxx'] }

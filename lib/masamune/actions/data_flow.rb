@@ -61,20 +61,13 @@ module Masamune::Actions
           end.uniq.flatten
         end
 
-        def parse_datetime_type(key)
-          value = options[key]
-          Chronic.parse(value).tap do |datetime_value|
-            Masamune::print("Using '#{datetime_value}' for --#{key}") if value != datetime_value
-          end or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
-        end
-
         # TODO allow multiple after_initialize blocks
         def after_initialize
           raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
-          raise %q(Cannot specify both option '--sources' and option '--targets') if options[:sources] && options[:targets]
+          raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
 
-          self.desired_sources = self.class.load_paths_from_file(options[:sources]) if options[:sources]
-          self.desired_targets = self.class.load_paths_from_file(options[:targets]) if options[:targets]
+          self.desired_sources = parse_file_type(:sources, [])
+          self.desired_targets = parse_file_type(:targets, [])
 
           if desired_targets.empty? && options[:start] && options[:stop]
             start = parse_datetime_type(:start)
@@ -99,6 +92,20 @@ module Masamune::Actions
 
     def current_command_name
       "#{self.class.namespace}:#{@_initializer.last[:current_command].name}"
+    end
+
+    def parse_datetime_type(key)
+      value = options[key]
+      Chronic.parse(value).tap do |datetime_value|
+        Masamune::print("Using '#{datetime_value}' for --#{key}") if value != datetime_value
+      end or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
+    end
+
+    def parse_file_type(key, default)
+      return default unless key
+      value = options[key] or return default
+      File.exists?(value) or raise Thor::MalformattedArgumentError, "Expected file value for '--#{key}'; got #{value}"
+      File.read(value).split(/\s+/)
     end
 
     def lock_file
@@ -144,10 +151,6 @@ module Masamune::Actions
 
       def data_plan
         @@data_plan ||= Masamune::DataPlanBuilder.build_via_thor(@@namespaces, @@commands, @@sources, @@targets)
-      end
-
-      def load_paths_from_file(file)
-        File.read(file).split(/\s+/)
       end
 
       private
