@@ -205,6 +205,40 @@ describe Masamune::DataPlan do
     end
   end
 
+  describe '#prepare' do
+    before do
+      plan.prepare(rule, options)
+    end
+
+    subject(:desired_targets) do
+      plan.desired_targets(rule).map(&:path)
+    end
+
+    subject(:desired_sources) do
+      plan.desired_sources(rule).map(&:path)
+    end
+
+    context 'with :targets' do
+      let(:rule) { 'primary' }
+
+      let(:targets) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02'] }
+      let(:options) { {targets: targets} }
+
+      it { desired_targets.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+      it { desired_sources.should == ['log/20130101.*.log', 'log/20130102.*.log'] }
+    end
+
+    context 'with :sources' do
+      let(:rule) { 'derived_daily' }
+
+      let(:sources) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02'] }
+      let(:options) { {sources: sources} }
+
+      it { desired_targets.should == ["daily/2013-01-01", "daily/2013-01-02"] }
+      it { desired_sources.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+    end
+  end
+
   describe '#resolve' do
     subject(:resolve) { plan.resolve(rule, targets) }
 

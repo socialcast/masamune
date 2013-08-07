@@ -1,7 +1,6 @@
 require 'active_support'
 require 'active_support/core_ext/numeric/time'
 
-# TODO all operations should be on DataPlan::Elem, not String paths
 class Masamune::DataPlan
   include Masamune::Accumulate
 
@@ -9,6 +8,8 @@ class Masamune::DataPlan
     @targets = Hash.new
     @sources = Hash.new
     @commands = Hash.new
+    @desired_sources = Hash.new { |h,k| h[k] = Set.new }
+    @desired_targets = Hash.new { |h,k| h[k] = Set.new }
   end
 
   def add_target(rule, target, target_options = {})
@@ -85,6 +86,24 @@ class Masamune::DataPlan
   end
   method_accumulate :sources_for_target
 
+  def targets_for_source2(rule, source, &block)
+    source_template = @sources[rule]
+    target_template = @targets[rule]
+    source_template.generate_via_unify_path(source.path, target_template) do |target|
+      yield target
+    end
+  end
+  method_accumulate :targets_for_source2
+
+  def sources_for_target2(rule, target, &block)
+    source_template = @sources[rule]
+    target_template = @targets[rule]
+    target_template.generate_via_unify_path(target.path, source_template) do |source|
+      yield source
+    end
+  end
+  method_accumulate :sources_for_target2
+
   def analyze(rule, targets)
     matches, missing = Set.new, Hash.new { |h,k| h[k] = Set.new }
     targets.each do |target|
@@ -119,5 +138,18 @@ class Masamune::DataPlan
     else
       false
     end
+  end
+
+  def prepare(rule, options = {})
+    @desired_targets[rule].merge(targets_from_paths(rule, *options.fetch(:targets, [])))
+    @desired_sources[rule].merge(sources_from_paths(rule, *options.fetch(:sources, [])))
+  end
+
+  def desired_targets(rule)
+    @desired_targets[rule].union(@desired_sources[rule].map { |source| targets_for_source2(rule, source) }.flatten)
+  end
+
+  def desired_sources(rule)
+    @desired_sources[rule].union(@desired_targets[rule].map { |target| sources_for_target2(rule, target) }.flatten)
   end
 end
