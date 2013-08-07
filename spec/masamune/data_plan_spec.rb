@@ -239,6 +239,81 @@ describe Masamune::DataPlan do
     end
   end
 
+  describe '#missing_targets' do
+    let(:rule) { 'primary' }
+
+    let(:targets) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+    let(:options) { {targets: targets} }
+
+    before do
+      plan.prepare(rule, options)
+    end
+
+    subject(:missing_targets) do
+      plan.missing_targets(rule).map(&:path)
+    end
+
+    subject(:existing_targets) do
+      plan.existing_targets(rule).map(&:path)
+    end
+
+    context 'when targets are missing' do
+      it { missing_targets.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+      it { existing_targets.should be_empty }
+    end
+
+    context 'when targets exist' do
+      before do
+        fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02')
+      end
+
+      it { missing_targets.should be_empty }
+      it { existing_targets.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+    end
+  end
+
+  describe '#missing_sources' do
+    let(:rule) { 'primary' }
+
+    let(:sources) { ['log/20130101.*.log', 'log/20130102.*.log'] }
+    let(:options) { {sources: sources} }
+
+    before do
+      plan.prepare(rule, options)
+    end
+
+    subject(:missing_sources) do
+      plan.missing_sources(rule).map(&:path)
+    end
+
+    subject(:existing_sources) do
+      plan.existing_sources(rule).map(&:path)
+    end
+
+    context 'when sources are missing' do
+      it { missing_sources.should == ['log/20130101.*.log', 'log/20130102.*.log'] }
+      it { existing_sources.should be_empty }
+    end
+
+    context 'when sources exist' do
+      before do
+        fs.touch!('log/20130101.app1.log', 'log/20130101.app2.log', 'log/20130102.app1.log', 'log/20130102.app2.log')
+      end
+
+      it { missing_sources.should be_empty }
+      it { existing_sources.should == ['log/20130101.app1.log', 'log/20130101.app2.log', 'log/20130102.app1.log', 'log/20130102.app2.log'] }
+    end
+
+    context 'when sources partially exist' do
+      before do
+        fs.touch!('log/20130101.app1.log', 'log/20130101.app2.log')
+      end
+
+      it { missing_sources.should == ['log/20130102.*.log'] }
+      it { existing_sources.should == ['log/20130101.app1.log', 'log/20130101.app2.log'] }
+    end
+  end
+
   describe '#resolve' do
     subject(:resolve) { plan.resolve(rule, targets) }
 

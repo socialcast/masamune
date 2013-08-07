@@ -149,7 +149,39 @@ class Masamune::DataPlan
     @desired_targets[rule].union(@desired_sources[rule].map { |source| targets_for_source2(rule, source) }.flatten)
   end
 
+  def missing_targets(rule, &block)
+    desired_targets(rule).each do |target|
+      yield target unless Masamune.filesystem.exists?(target.path)
+    end
+  end
+  method_accumulate :missing_targets
+
+  def existing_targets(rule, &block)
+    desired_targets(rule).each do |target|
+      yield target if Masamune.filesystem.exists?(target.path)
+    end
+  end
+  method_accumulate :existing_targets
+
   def desired_sources(rule)
     @desired_sources[rule].union(@desired_targets[rule].map { |target| sources_for_target2(rule, target) }.flatten)
   end
+
+  def missing_sources(rule, &block)
+    desired_sources(rule).each do |source|
+      yield source if Masamune.filesystem.glob(source.path).empty?
+    end
+  end
+  method_accumulate :missing_sources
+
+  def existing_sources(rule, &block)
+    desired_sources(rule).each do |source|
+      Masamune.filesystem.glob(source.path) do |path|
+        sources_from_paths(rule, path).each do |source|
+          yield source
+        end
+      end
+    end
+  end
+  method_accumulate :existing_sources
 end
