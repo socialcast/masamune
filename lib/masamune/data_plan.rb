@@ -1,7 +1,6 @@
 require 'active_support'
 require 'active_support/core_ext/numeric/time'
 
-# TODO all operations should be on DataPlan::Elem, not String paths
 class Masamune::DataPlan
   include Masamune::Accumulate
 
@@ -9,6 +8,8 @@ class Masamune::DataPlan
     @targets = Hash.new
     @sources = Hash.new
     @commands = Hash.new
+    @desired_sources = Hash.new { |h,k| h[k] = Set.new }
+    @desired_targets = Hash.new { |h,k| h[k] = Set.new }
   end
 
   def add_target(rule, target, target_options = {})
@@ -85,39 +86,43 @@ class Masamune::DataPlan
   end
   method_accumulate :sources_for_target
 
-  def analyze(rule, targets)
-    matches, missing = Set.new, Hash.new { |h,k| h[k] = Set.new }
-    targets.each do |target|
-      unless Masamune.filesystem.exists?(target)
-        sources_for_target(rule, target) do |source|
-          if Masamune.filesystem.exists?(source.path)
-            matches << source
-          else
-            next if source.terminal?
-            rule_dep = rule_for_target(source.path)
-            missing[rule_dep] << source
-          end
-        end
-      end
-    end
-    [matches, missing]
+  # TODO declare partition for awareness
+  # target requests/y/m/d/f, :table => requests, :partition => 'f'
+
+  def prepare(rule, options = {})
+    # TODO block size flag
+    @desired_sources[rule] = options[:sources]
+    @desired_targets[rule] = options[:targets] || targets_for_sources(rule, options[:sources]) || targets_for_date_range(rule, options[:start], options[:stop])
   end
 
-  def resolve(rule, targets, runtime_options = {})
-    matches, missing = analyze(rule, targets)
-
-    missing.each do |rule_dep, missing_sources|
-      resolve(rule_dep, missing_sources.map(&:path), runtime_options)
+  def execute(rule, options = {})
+    existing_targets(rule).each do |source|
+      # TODO force flag
+      # if target for source is older delete
     end
 
-    matches, missing = analyze(rule, targets) if missing.any?
-
-    command, command_options = @commands[rule]
-    if matches.any?
-      command.call(matches.map(&:path), runtime_options)
-      true
-    else
-      false
+    missing_sources(rule).group_by { |source| rule_for_target(source.path) }.each do |derived_rule, sources|
+      execute(derived_rule, {sources: sources}.reverse_merge(options))
     end
+
+    # TODO return if rule is terminal
+    # TODO wait to acquire lock from lock manager
+    @commands[rule].call(options)
+
+    # TODO assert existing_targets == desired_targets
+  end
+
+  def missing_targets(rule)
+
+  end
+
+  def existing_targets(rule)
+  end
+
+  def missing_sources(rule)
+
+  end
+
+  def existing_sources(rule)
   end
 end

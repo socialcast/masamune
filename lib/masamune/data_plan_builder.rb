@@ -33,26 +33,12 @@ class Masamune::DataPlanBuilder
       [decl, anon]
     end
 
-    def command_options(runtime_options)
-      runtime_options.reject { |_,v| v == false }.map { |k,v| ["--#{k}", v == true ? nil : v] }.flatten.compact
-    end
-
-    # TODO try using Thor::invoke
     def command_wrapper(command_name)
       Proc.new do |sources, runtime_options|
-        command_options = command_options(runtime_options)
-        Masamune.logger.debug([command_name, '--sources', save_paths_to_file(sources)] + command_options)
         namespace, task = command_name.split(':')
         thor = Thor::Util.find_by_namespace(namespace)
-        thor.start([task, '--sources', save_paths_to_file(sources)] + command_options)
+        thor.invoke(task)
       end
-    end
-
-    def save_paths_to_file(*paths)
-      Tempfile.new('masamune').tap do |file|
-        file.write(paths.join("\n"))
-        file.close
-      end.path
     end
   end
 end
