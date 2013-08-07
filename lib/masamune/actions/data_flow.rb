@@ -75,15 +75,10 @@ module Masamune::Actions
 
             @desired_targets = self.class.data_plan.targets_for_date_range(current_command_name, start, stop)
 
-            begin
-              abort 'Another process is already running' unless acquire_lock
-              unless self.class.data_plan.resolve(current_command_name, desired_targets.map(&:path), options)
-                abort "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
-              end
-              exit # NOTE resolve has executed original thor task via anonymous proc - safe to exit
-            ensure
-              release_lock
+            unless self.class.data_plan.resolve(current_command_name, desired_targets.map(&:path), options)
+              abort "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
             end
+            exit # NOTE resolve has executed original thor task via anonymous proc - safe to exit
           end
           # NOTE flow continues to original thor task
         end
@@ -106,27 +101,6 @@ module Masamune::Actions
       value = options[key] or return default
       File.exists?(value) or raise Thor::MalformattedArgumentError, "Expected file value for '--#{key}'; got #{value}"
       File.read(value).split(/\s+/)
-    end
-
-    def lock_file
-      @lock_file ||= File.open(fs.path(:var_dir, 'masamune.lock'), File::CREAT, 0644)
-    end
-
-    def acquire_lock
-      Masamune.logger.debug("attempting to acquire lock #{lock_file.path}")
-      lock_status = lock_file.flock(File::LOCK_EX | File::LOCK_NB)
-      unless lock_status == 0
-        Masamune.logger.error("acquire lock attempt failed for #{lock_file.path}")
-        false
-      else
-        Masamune.logger.debug("acquire lock attempt succeeded for #{lock_file.path}")
-        true
-      end
-    end
-
-    def release_lock
-      Masamune.logger.debug("releasing lock #{lock_file.path}")
-      lock_file.flock(File::LOCK_UN)
     end
 
     module ClassMethods
