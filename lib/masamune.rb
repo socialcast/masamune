@@ -9,6 +9,7 @@ module Masamune
   require 'masamune/data_plan'
   require 'masamune/data_plan_rule'
   require 'masamune/data_plan_elem'
+  require 'masamune/data_plan_set'
   require 'masamune/data_plan_builder'
   require 'masamune/thor'
   require 'masamune/thor_loader'

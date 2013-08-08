@@ -17,6 +17,20 @@ class Masamune::DataPlanElem
     end
   end
 
+  def exists?
+    Masamune.filesystem.exists?(path)
+  end
+
+  def targets
+    return [] if rule.type == :target
+    rule.plan.targets_for_source2(path)
+  end
+
+  def sources
+    return [] if rule.type == :source
+    rule.plan.sources_for_target2(path)
+  end
+
   def start_time
     @start_time.to_time.utc
   end

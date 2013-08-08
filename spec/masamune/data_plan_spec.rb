@@ -210,12 +210,12 @@ describe Masamune::DataPlan do
       plan.prepare(rule, options)
     end
 
-    subject(:desired_targets) do
-      plan.desired_targets(rule).map(&:path)
+    subject(:target_paths) do
+      plan.targets(rule).map(&:path)
     end
 
-    subject(:desired_sources) do
-      plan.desired_sources(rule).map(&:path)
+    subject(:source_paths) do
+      plan.sources(rule).map(&:path)
     end
 
     context 'with :targets' do
@@ -224,8 +224,8 @@ describe Masamune::DataPlan do
       let(:targets) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02'] }
       let(:options) { {targets: targets} }
 
-      it { desired_targets.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
-      it { desired_sources.should == ['log/20130101.*.log', 'log/20130102.*.log'] }
+      it { target_paths.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+      it { source_paths.should == ['log/20130101.*.log', 'log/20130102.*.log'] }
     end
 
     context 'with :sources' do
@@ -234,12 +234,12 @@ describe Masamune::DataPlan do
       let(:sources) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02'] }
       let(:options) { {sources: sources} }
 
-      it { desired_targets.should == ["daily/2013-01-01", "daily/2013-01-02"] }
-      it { desired_sources.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+      it { target_paths.should == ["daily/2013-01-01", "daily/2013-01-02"] }
+      it { source_paths.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
     end
   end
 
-  describe '#missing_targets' do
+  describe '#targets' do
     let(:rule) { 'primary' }
 
     let(:targets) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
@@ -249,17 +249,17 @@ describe Masamune::DataPlan do
       plan.prepare(rule, options)
     end
 
-    subject(:missing_targets) do
-      plan.missing_targets(rule).map(&:path)
+    subject(:missing) do
+      plan.targets(rule).missing.map(&:path)
     end
 
-    subject(:existing_targets) do
-      plan.existing_targets(rule).map(&:path)
+    subject(:existing) do
+      plan.targets(rule).existing.map(&:path)
     end
 
     context 'when targets are missing' do
-      it { missing_targets.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
-      it { existing_targets.should be_empty }
+      it { missing.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+      it { existing.should be_empty }
     end
 
     context 'when targets exist' do
@@ -267,12 +267,12 @@ describe Masamune::DataPlan do
         fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02')
       end
 
-      it { missing_targets.should be_empty }
-      it { existing_targets.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+      it { missing.should be_empty }
+      it { existing.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
     end
   end
 
-  describe '#missing_sources' do
+  describe '#sources' do
     let(:rule) { 'primary' }
 
     let(:sources) { ['log/20130101.*.log', 'log/20130102.*.log'] }
@@ -282,17 +282,17 @@ describe Masamune::DataPlan do
       plan.prepare(rule, options)
     end
 
-    subject(:missing_sources) do
-      plan.missing_sources(rule).map(&:path)
+    subject(:missing) do
+      plan.sources(rule).missing.map(&:path)
     end
 
-    subject(:existing_sources) do
-      plan.existing_sources(rule).map(&:path)
+    subject(:existing) do
+      plan.sources(rule).existing.map(&:path)
     end
 
     context 'when sources are missing' do
-      it { missing_sources.should == ['log/20130101.*.log', 'log/20130102.*.log'] }
-      it { existing_sources.should be_empty }
+      it { missing.should == ['log/20130101.*.log', 'log/20130102.*.log'] }
+      it { existing.should be_empty }
     end
 
     context 'when sources exist' do
@@ -300,8 +300,8 @@ describe Masamune::DataPlan do
         fs.touch!('log/20130101.app1.log', 'log/20130101.app2.log', 'log/20130102.app1.log', 'log/20130102.app2.log')
       end
 
-      it { missing_sources.should be_empty }
-      it { existing_sources.should == ['log/20130101.app1.log', 'log/20130101.app2.log', 'log/20130102.app1.log', 'log/20130102.app2.log'] }
+      it { missing.should be_empty }
+      it { existing.should == ['log/20130101.app1.log', 'log/20130101.app2.log', 'log/20130102.app1.log', 'log/20130102.app2.log'] }
     end
 
     context 'when sources partially exist' do
@@ -309,8 +309,8 @@ describe Masamune::DataPlan do
         fs.touch!('log/20130101.app1.log', 'log/20130101.app2.log')
       end
 
-      it { missing_sources.should == ['log/20130102.*.log'] }
-      it { existing_sources.should == ['log/20130101.app1.log', 'log/20130101.app2.log'] }
+      it { missing.should == ['log/20130102.*.log'] }
+      it { existing.should == ['log/20130101.app1.log', 'log/20130101.app2.log'] }
     end
   end
 

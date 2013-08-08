@@ -8,8 +8,8 @@ class Masamune::DataPlan
     @target_rules = Hash.new
     @source_rules = Hash.new
     @command_rules = Hash.new
-    @desired_sources = Hash.new { |h,k| h[k] = Set.new }
-    @desired_targets = Hash.new { |h,k| h[k] = Set.new }
+    @targets = Hash.new { |h,k| h[k] = Masamune::DataPlanSet.new }
+    @sources = Hash.new { |h,k| h[k] = Masamune::DataPlanSet.new }
   end
 
   def add_target_rule(rule, target, target_options = {})
@@ -44,6 +44,10 @@ class Masamune::DataPlan
   end
   method_accumulate :sources_from_paths
 
+  def sources_from_paths2(rule, *paths)
+    Masamune::DataPlanSet.new(sources_from_paths(rule, paths))
+  end
+
   def targets_from_paths(rule, *paths, &block)
     target_template = @target_rules[rule]
     paths.flatten.each do |path|
@@ -51,6 +55,10 @@ class Masamune::DataPlan
     end
   end
   method_accumulate :targets_from_paths
+
+  def targets_from_paths2(rule, *paths)
+    Masamune::DataPlanSet.new(targets_from_paths(rule, paths))
+  end
 
   def targets_for_date_range(rule, start, stop, &block)
     target_template = @target_rules[rule]
@@ -86,23 +94,25 @@ class Masamune::DataPlan
   end
   method_accumulate :sources_for_target
 
-  def targets_for_source2(rule, source, &block)
+  def targets_for_source2(rule, source)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
-    source_template.generate_via_unify_path(source.path, target_template) do |target|
-      yield target
+    Masamune::DataPlanSet.new.tap do |set|
+      source_template.generate_via_unify_path(source.path, target_template) do |target|
+        set.add(target)
+      end
     end
   end
-  method_accumulate :targets_for_source2
 
-  def sources_for_target2(rule, target, &block)
+  def sources_for_target2(rule, target)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
-    target_template.generate_via_unify_path(target.path, source_template) do |source|
-      yield source
+    Masamune::DataPlanSet.new.tap do |set|
+      target_template.generate_via_unify_path(target.path, source_template) do |source|
+        set.add(source)
+      end
     end
   end
-  method_accumulate :sources_for_target2
 
   def analyze(rule, targets)
     matches, missing = Set.new, Hash.new { |h,k| h[k] = Set.new }
@@ -141,47 +151,17 @@ class Masamune::DataPlan
   end
 
   def prepare(rule, options = {})
-    @desired_targets[rule].merge(targets_from_paths(rule, *options.fetch(:targets, [])))
-    @desired_sources[rule].merge(sources_from_paths(rule, *options.fetch(:sources, [])))
+    @targets[rule].merge targets_from_paths2(rule, *options.fetch(:targets, []))
+    @sources[rule].merge sources_from_paths2(rule, *options.fetch(:sources, []))
   end
 
-  def desired_targets(rule)
-    @desired_targets[rule].union(@desired_sources[rule].map { |source| targets_for_source2(rule, source) }.flatten)
+  def targets(rule)
+    result = @sources[rule].map { |source| targets_for_source2(rule, source) }.reduce(&:union)
+    @targets[rule].union(result)
   end
 
-  def missing_targets(rule, &block)
-    desired_targets(rule).each do |target|
-      yield target unless Masamune.filesystem.exists?(target.path)
-    end
+  def sources(rule)
+    result = @targets[rule].map { |target| sources_for_target2(rule, target) }.reduce(&:union)
+    @sources[rule].union(result)
   end
-  method_accumulate :missing_targets
-
-  def existing_targets(rule, &block)
-    desired_targets(rule).each do |target|
-      yield target if Masamune.filesystem.exists?(target.path)
-    end
-  end
-  method_accumulate :existing_targets
-
-  def desired_sources(rule)
-    @desired_sources[rule].union(@desired_targets[rule].map { |target| sources_for_target2(rule, target) }.flatten)
-  end
-
-  def missing_sources(rule, &block)
-    desired_sources(rule).each do |source|
-      yield source if Masamune.filesystem.glob(source.path).empty?
-    end
-  end
-  method_accumulate :missing_sources
-
-  def existing_sources(rule, &block)
-    desired_sources(rule).each do |source|
-      Masamune.filesystem.glob(source.path) do |path|
-        sources_from_paths(rule, path).each do |source|
-          yield source
-        end
-      end
-    end
-  end
-  method_accumulate :existing_sources
 end
