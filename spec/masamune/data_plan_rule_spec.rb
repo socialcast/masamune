@@ -1,10 +1,12 @@
 require 'spec_helper'
 
 describe Masamune::DataPlanRule do
+  let(:plan) { Masamune::DataPlan.new }
+  let(:type) { :target }
   let(:pattern) { 'report/%Y-%m-%d/%H' }
   let(:options) { {} }
 
-  let(:instance) { described_class.new(pattern, options) }
+  let(:instance) { described_class.new(plan, type, pattern, options) }
 
   describe '#pattern' do
     subject do
@@ -52,7 +54,7 @@ describe Masamune::DataPlanRule do
   end
 
   describe '#unify_path' do
-    let(:induced) { described_class.new('table/y=%Y/m=%m/d=%d/h=%H') }
+    let(:induced) { described_class.new(plan, type, 'table/y=%Y/m=%m/d=%d/h=%H') }
 
     subject do
       instance.unify_path(input_path, induced)
@@ -65,7 +67,7 @@ describe Masamune::DataPlanRule do
     end
 
     context 'when input_path partially matches basis pattern' do
-      let(:induced) { described_class.new('table/%Y-%m') }
+      let(:induced) { described_class.new(plan, type, 'table/%Y-%m') }
 
       let(:input_path) { 'report/2013-01-02/00' }
       its(:path) { should == 'table/2013-01' }

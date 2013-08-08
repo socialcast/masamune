@@ -13,11 +13,11 @@ class Masamune::DataPlan
   end
 
   def add_target(rule, target, target_options = {})
-    @targets[rule] = Masamune::DataPlanRule.new(target, target_options)
+    @targets[rule] = Masamune::DataPlanRule.new(self, :target, target, target_options)
   end
 
   def add_source(rule, source, source_options = {})
-    @sources[rule] = Masamune::DataPlanRule.new(source, source_options)
+    @sources[rule] = Masamune::DataPlanRule.new(self, :source, source, source_options)
   end
 
   def add_command(rule, command, command_options = {})

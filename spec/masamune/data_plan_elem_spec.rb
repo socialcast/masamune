@@ -2,9 +2,11 @@ require 'spec_helper'
 
 describe Masamune::DataPlanElem do
 
-  let(:rule) { Masamune::DataPlanRule.new('report/%Y-%m-%d/%H') }
-  let(:other_rule) { Masamune::DataPlanRule.new('table/%Y-%m-%d') }
-  let(:wildcard_rule) { Masamune::DataPlanRule.new('log/%Y%m%d*.log', wildcard: true) }
+  let(:plan) { Masamune::DataPlan.new }
+  let(:type) { :target }
+  let(:rule) { Masamune::DataPlanRule.new(plan, type, 'report/%Y-%m-%d/%H') }
+  let(:other_rule) { Masamune::DataPlanRule.new(plan, type, 'table/%Y-%m-%d') }
+  let(:wildcard_rule) { Masamune::DataPlanRule.new(plan, type, 'log/%Y%m%d*.log', wildcard: true) }
 
   let(:start_time) { Time.now }
   let(:other_start_time) { Time.now + 1.day }

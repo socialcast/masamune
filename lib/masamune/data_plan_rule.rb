@@ -11,7 +11,9 @@ class Masamune::DataPlanRule
 
   attr_reader :pattern, :options
 
-  def initialize(pattern, options = {})
+  def initialize(plan, type, pattern, options = {})
+    @plan    = plan
+    @type    = type
     @pattern = pattern
     @options = options
   end
