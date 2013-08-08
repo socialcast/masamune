@@ -15,15 +15,15 @@ describe Masamune::DataPlan do
   let(:primary_options) { {:wildcard => true} }
 
   before do
-    plan.add_target('primary', 'table/y=%Y/m=%m/d=%d')
-    plan.add_source('primary', 'log/%Y%m%d.*.log', primary_options)
-    plan.add_command('primary', primary_command)
-    plan.add_target('derived_daily', 'daily/%Y-%m-%d')
-    plan.add_source('derived_daily', 'table/y=%Y/m=%m/d=%d')
-    plan.add_command('derived_daily', derived_daily_command)
-    plan.add_target('derived_monthly', 'monthly/%Y-%m')
-    plan.add_source('derived_monthly', 'table/y=%Y/m=%m/d=%d')
-    plan.add_command('derived_monthly', derived_monthly_command)
+    plan.add_target_rule('primary', 'table/y=%Y/m=%m/d=%d')
+    plan.add_source_rule('primary', 'log/%Y%m%d.*.log', primary_options)
+    plan.add_command_rule('primary', primary_command)
+    plan.add_target_rule('derived_daily', 'daily/%Y-%m-%d')
+    plan.add_source_rule('derived_daily', 'table/y=%Y/m=%m/d=%d')
+    plan.add_command_rule('derived_daily', derived_daily_command)
+    plan.add_target_rule('derived_monthly', 'monthly/%Y-%m')
+    plan.add_source_rule('derived_monthly', 'table/y=%Y/m=%m/d=%d')
+    plan.add_command_rule('derived_monthly', derived_monthly_command)
   end
 
   describe '#sources_from_paths' do

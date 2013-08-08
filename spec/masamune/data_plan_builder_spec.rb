@@ -13,12 +13,12 @@ describe Masamune::DataPlanBuilder do
       let(:targets) { [['table/y=%Y/m=%m/d=%d', {}], ['daily/%Y-%m-%d', {}]] }
 
       before do
-        Masamune::DataPlan.any_instance.should_receive(:add_target).with('a:load', 'table/y=%Y/m=%m/d=%d', {})
-        Masamune::DataPlan.any_instance.should_receive(:add_source).with('a:load', 'log/%Y%m%d.*.log', {})
-        Masamune::DataPlan.any_instance.should_receive(:add_command).with('a:load', an_instance_of(Proc))
-        Masamune::DataPlan.any_instance.should_receive(:add_target).with('b:store', 'daily/%Y-%m-%d', {})
-        Masamune::DataPlan.any_instance.should_receive(:add_source).with('b:store', 'table/y=%Y/m=%m/d=%d', {})
-        Masamune::DataPlan.any_instance.should_receive(:add_command).with('b:store', an_instance_of(Proc))
+        Masamune::DataPlan.any_instance.should_receive(:add_target_rule).with('a:load', 'table/y=%Y/m=%m/d=%d', {})
+        Masamune::DataPlan.any_instance.should_receive(:add_source_rule).with('a:load', 'log/%Y%m%d.*.log', {})
+        Masamune::DataPlan.any_instance.should_receive(:add_command_rule).with('a:load', an_instance_of(Proc))
+        Masamune::DataPlan.any_instance.should_receive(:add_target_rule).with('b:store', 'daily/%Y-%m-%d', {})
+        Masamune::DataPlan.any_instance.should_receive(:add_source_rule).with('b:store', 'table/y=%Y/m=%m/d=%d', {})
+        Masamune::DataPlan.any_instance.should_receive(:add_command_rule).with('b:store', an_instance_of(Proc))
         subject
       end
 
@@ -32,9 +32,9 @@ describe Masamune::DataPlanBuilder do
       let(:targets) { [['table/y=%Y/m=%m/d=%d', {for: 'override'}]] }
 
       before do
-        Masamune::DataPlan.any_instance.should_receive(:add_target).with('a:override', 'table/y=%Y/m=%m/d=%d', {})
-        Masamune::DataPlan.any_instance.should_receive(:add_source).with('a:override', 'log/%Y%m%d.*.log', {})
-        Masamune::DataPlan.any_instance.should_receive(:add_command).with('a:override', an_instance_of(Proc))
+        Masamune::DataPlan.any_instance.should_receive(:add_target_rule).with('a:override', 'table/y=%Y/m=%m/d=%d', {})
+        Masamune::DataPlan.any_instance.should_receive(:add_source_rule).with('a:override', 'log/%Y%m%d.*.log', {})
+        Masamune::DataPlan.any_instance.should_receive(:add_command_rule).with('a:override', an_instance_of(Proc))
         subject
       end
 

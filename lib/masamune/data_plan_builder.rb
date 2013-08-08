@@ -14,10 +14,10 @@ class Masamune::DataPlanBuilder
           source_name, source_options = source
           target_name, target_options = target
 
-          data_plan.add_source(command_name, source_name, source_options)
-          data_plan.add_target(command_name, target_name, target_options)
+          data_plan.add_source_rule(command_name, source_name, source_options)
+          data_plan.add_target_rule(command_name, target_name, target_options)
 
-          data_plan.add_command(command_name, command_wrapper(command_name))
+          data_plan.add_command_rule(command_name, command_wrapper(command_name))
         end
       end
     end
