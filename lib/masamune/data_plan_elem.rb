@@ -101,4 +101,8 @@ class Masamune::DataPlanElem
       0
     end
   end
+
+  def inspect
+    { rule: rule, path: path, start_date: start_time.to_s, stop_date: stop_time.to_s }
+  end
 end

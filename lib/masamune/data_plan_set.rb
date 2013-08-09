@@ -37,8 +37,4 @@ class Masamune::DataPlanSet < Set
     end
   end
   method_accumulate :existing
-
-  def inspect
-    self.map(&:path)
-  end
 end

@@ -132,6 +132,10 @@ class Masamune::DataPlanRule
   end
   method_accumulate :adjacent_matches
 
+  def inspect
+    { type: type, pattern: pattern}
+  end
+
   private
 
   def matcher
