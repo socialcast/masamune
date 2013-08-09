@@ -35,7 +35,14 @@ class Masamune::DataPlan
     source_template = @source_rules[rule]
     Masamune::DataPlanSet.new.tap do |set|
       paths.flatten.each do |path|
-        instance = source_template.bind_path(path)
+        instance =
+        case path
+        when Masamune::DataPlanElem
+          path
+        else
+          source_template.bind_path(path)
+        end
+
         source_template.adjacent_matches(instance) do |adjacent|
           set.add adjacent
         end
@@ -47,7 +54,12 @@ class Masamune::DataPlan
     target_template = @target_rules[rule]
     Masamune::DataPlanSet.new.tap do |set|
       paths.flatten.each do |path|
-        set.add target_template.bind_path(path)
+        case path
+        when Masamune::DataPlanElem
+          set.add path
+        else
+          set.add target_template.bind_path(path)
+        end
       end
     end
   end
@@ -91,9 +103,10 @@ class Masamune::DataPlan
   def execute(rule, options = {})
     return if targets(rule).missing.empty?
     sources(rule).missing.group_by { |source| rule_for_target(source.path) }.each do |derived_rule, sources|
-      next if derived_rule == Masamune::DataPlanRule::TERMINAL
-      prepare(derived_rule, {targets: sources.map(&:path)})
-      execute(derived_rule, options)
+      if derived_rule != Masamune::DataPlanRule::TERMINAL
+        prepare(derived_rule, {targets: sources.map(&:path)})
+        execute(derived_rule, options)
+      end
     end
 
     command, command_options = @command_rules[rule]

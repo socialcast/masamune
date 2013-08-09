@@ -14,7 +14,7 @@ class Masamune::DataPlanSet < Set
       super
       merge(enum)
     else
-      super Array.wrap(enum)
+      super
     end
   end
 

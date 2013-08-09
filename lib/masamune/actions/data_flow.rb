@@ -17,76 +17,45 @@ module Masamune::Actions
 
         private
 
-        def desired_sources=(source_paths)
-          @desired_sources = self.class.data_plan.sources_from_paths(current_command_name, source_paths)
+        def targets
+          data_plan.targets(current_command_name)
         end
 
-        def desired_targets=(target_paths)
-          @desired_targets = self.class.data_plan.targets_from_paths(current_command_name, target_paths)
+        def sources
+          data_plan.sources(current_command_name)
         end
 
-        def desired_sources
-          @desired_sources || []
-        end
-
-        # FIXME ensure uniqueness in spec
-        def desired_targets
-          @desired_targets ||
-          desired_sources.map do |source|
-            self.class.data_plan.targets_for_source(current_command_name, source.path)
-          end.uniq.flatten
-        end
-
-        def existing_sources
-          @existing_sources ||=
-          desired_sources.select do |source|
-            if fs.exists?(source.path)
-              true
-            else
-              Masamune::print("skipping missing source #{source.path}")
-              false
-            end
-          end.uniq.flatten
-        end
-
-        def missing_targets
-          @missing_targets ||=
-          desired_targets.reject do |target|
-            if fs.exists?(target.path)
-              Masamune::print("skipping existing #{target.path}")
-              true
-            else
-              false
-            end
-          end.uniq.flatten
-        end
+        # TODO messaging
+        # Masamune::print("skipping missing source #{source.path}")
+        # Masamune::print("skipping existing #{target.path}")
 
         # TODO allow multiple after_initialize blocks
         def after_initialize
           raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
           raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
 
-          self.desired_sources = parse_file_type(:sources, [])
-          self.desired_targets = parse_file_type(:targets, [])
+          desired_sources = parse_file_type(:sources, Set.new)
+          desired_targets = parse_file_type(:targets, Set.new)
 
-          if desired_targets.empty? && options[:start] && options[:stop]
-            start = parse_datetime_type(:start)
-            stop = parse_datetime_type(:stop)
-
-            @desired_targets = self.class.data_plan.targets_for_date_range(current_command_name, start, stop)
-
-            unless self.class.data_plan.resolve(current_command_name, desired_targets.map(&:path), options)
-              abort "No matching missing targets #{current_command_name} between #{options[:start]} and #{options[:stop]}"
-            end
-            exit # NOTE resolve has executed original thor task via anonymous proc - safe to exit
+          if options[:start] && options[:stop]
+            desired_targets.merge data_plan.targets_for_date_range(current_command_name, parse_datetime_type(:start), parse_datetime_type(:stop))
           end
-          # NOTE flow continues to original thor task
+
+          # TODO store reference in singleton, possibley DataPlanBuilder
+          $THOR_MASTER ||= self
+          if $THOR_MASTER.current_command_name == current_command_name
+            data_plan.prepare(current_command_name, sources: desired_sources, targets: desired_targets)
+            abort "No matching missing targets #{current_command_name}" unless targets.missing.any?
+            data_plan.execute(current_command_name, options)
+          end
+
+          # NOTE Execution continues to original thor task
         end
       end
     end
 
-    def current_command_name
-      "#{self.class.namespace}:#{@_initializer.last[:current_command].name}"
+    def data_plan
+      self.class.data_plan
     end
 
     def parse_datetime_type(key)
@@ -100,7 +69,7 @@ module Masamune::Actions
       return default unless key
       value = options[key] or return default
       File.exists?(value) or raise Thor::MalformattedArgumentError, "Expected file value for '--#{key}'; got #{value}"
-      File.read(value).split(/\s+/)
+      Set.new File.read(value).split(/\s+/)
     end
 
     module ClassMethods

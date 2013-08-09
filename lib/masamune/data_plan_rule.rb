@@ -7,7 +7,7 @@ require 'active_support/core_ext/date_time/calculations'
 require 'date'
 
 class Masamune::DataPlanRule
-  TERMINAL = true
+  TERMINAL = nil
 
   include Masamune::Accumulate
 
