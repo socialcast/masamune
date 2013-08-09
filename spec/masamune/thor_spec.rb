@@ -24,7 +24,7 @@ describe Masamune::Thor do
 
       desc 'command', 'command'
       target "target/%Y-%m-%d"
-      source "source/%Y%m%d*.log", :wildcard => true
+      source "source/%Y%m%d*.log"
       def command
         # NOP
       end

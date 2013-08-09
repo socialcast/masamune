@@ -7,7 +7,6 @@ describe Masamune::DataPlanElem do
   let(:type) { :target }
   let(:rule) { Masamune::DataPlanRule.new(plan, name, type, 'report/%Y-%m-%d/%H') }
   let(:other_rule) { Masamune::DataPlanRule.new(plan, name, type, 'table/%Y-%m-%d') }
-  let(:wildcard_rule) { Masamune::DataPlanRule.new(plan, name, type, 'log/%Y%m%d*.log', wildcard: true) }
 
   let(:start_time) { Time.now }
   let(:other_start_time) { Time.now + 1.day }

@@ -20,7 +20,7 @@ describe Masamune::DataPlan do
     end
   end
 
-  let(:primary_options) { {:wildcard => true} }
+  let(:primary_options) { {} }
 
   before do
     plan.add_target_rule('primary', 'table/y=%Y/m=%m/d=%d')
@@ -45,7 +45,7 @@ describe Masamune::DataPlan do
       'log/20130102.random.log' ] }
 
     context 'with window of 1 time_step' do
-      let(:primary_options) { {:wildcard => true, :window => 1} }
+      let(:primary_options) { {:window => 1} }
 
       it { should == [
         'log/20121231.random.log',
@@ -55,7 +55,7 @@ describe Masamune::DataPlan do
     end
 
     context 'with window of 3 time_steps' do
-      let(:primary_options) { {:wildcard => true, :window => 3} }
+      let(:primary_options) { {:window => 3} }
 
       it { should == [
         'log/20121229.random.log',
@@ -177,7 +177,7 @@ describe Masamune::DataPlan do
     context 'with window of 1 time_step' do
       let(:rule) { 'primary' }
       let(:target) { 'table/y=2013/m=01/d=01' }
-      let(:primary_options) { {:wildcard => true, :window => 1} }
+      let(:primary_options) { {:window => 1} }
 
       it { sources.map(&:path).should == [
         'log/20121231.app1.log',

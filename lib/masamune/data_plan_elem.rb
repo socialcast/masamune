@@ -57,14 +57,6 @@ class Masamune::DataPlanElem
     stop_time.to_date
   end
 
-  def wildcard?
-    @options.fetch(:wildcard, false)
-  end
-
-  def terminal?
-    @rule.terminal?
-  end
-
   def glob
     @options[:glob]
   end
