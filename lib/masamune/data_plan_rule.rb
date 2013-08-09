@@ -105,6 +105,21 @@ class Masamune::DataPlanRule
     end
   end
 
+  def time_round(time)
+    case time_step
+    when :hours
+      DateTime.civil(time.year, time.month, time.day, time.hour)
+    when :days
+      DateTime.civil(time.year, time.month, time.day)
+    when :months
+      DateTime.civil(time.year, time.month)
+    when :years
+      DateTime.civil(time.year)
+    else
+      time
+    end
+  end
+
   def adjacent_matches(instance)
     window = @options[:window] || 0
     (-window .. -1).each do |i|

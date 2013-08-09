@@ -34,8 +34,8 @@ describe Masamune::DataPlanRule do
       let(:input_date) { DateTime.civil(2013,04,05,23,13) }
 
       its(:path) { should == 'report/2013-04-05/23' }
-      its(:start_time) { should == input_date }
-      its(:stop_time) { should == input_date.to_time + 1.hour }
+      let(:start_time) { DateTime.civil(2013,04,05,23) }
+      let(:stop_time) { DateTime.civil(2013,04,05,0) }
     end
   end
 
@@ -175,6 +175,28 @@ describe Masamune::DataPlanRule do
     context 'yearly' do
       let(:pattern) { '%Y' }
       it { should == :years }
+    end
+  end
+
+  describe '#time_round' do
+    let(:input_time) { DateTime.civil(2013,9,13,23,13) }
+    subject { instance.time_round(input_time) }
+
+    context 'hourly' do
+      let(:pattern) { '%Y-%m-%d/%k' }
+      it { should == DateTime.civil(2013,9,13,23) }
+    end
+    context 'daily' do
+      let(:pattern) { '%Y-%m-%d' }
+      it { should == DateTime.civil(2013,9,13) }
+    end
+    context 'monthly' do
+      let(:pattern) { '%Y-%m' }
+      it { should == DateTime.civil(2013,9) }
+    end
+    context 'yearly' do
+      let(:pattern) { '%Y' }
+      it { should == DateTime.civil(2013) }
     end
   end
 end

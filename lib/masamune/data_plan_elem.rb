@@ -39,9 +39,9 @@ class Masamune::DataPlanElem
     @start_time =
     case start_time
     when Time
-      start_time.utc
+      rule.time_round(start_time.utc)
     when Date, DateTime
-      start_time.to_time.utc
+      rule.time_round(start_time.to_time.utc)
     end
   end
 
