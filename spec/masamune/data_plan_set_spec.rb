@@ -19,7 +19,7 @@ describe Masamune::DataPlanSet do
   describe '#missing' do
     let(:paths) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03'] }
 
-    let(:set) { plan.targets_from_paths2('primary', paths) }
+    let(:set) { plan.targets_from_paths('primary', paths) }
 
     subject(:missing) do
       instance.missing

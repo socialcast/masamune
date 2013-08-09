@@ -9,9 +9,17 @@ describe Masamune::DataPlan do
   end
 
   let(:plan) { Masamune::DataPlan.new }
-  let(:primary_command) { Proc.new { } }
-  let(:derived_daily_command) { Proc.new {} }
-  let(:derived_monthly_command) { Proc.new {} }
+
+  let(:primary_command) do
+    Proc.new do |plan, rule|
+      missing_targets = []
+      plan.targets(rule).missing do |target|
+        missing_targets << target.path if target.sources.existing.any?
+      end
+      fs.touch!(*missing_targets) if missing_targets.any?
+    end
+  end
+
   let(:primary_options) { {:wildcard => true} }
 
   before do
@@ -20,10 +28,10 @@ describe Masamune::DataPlan do
     plan.add_command_rule('primary', primary_command)
     plan.add_target_rule('derived_daily', 'daily/%Y-%m-%d')
     plan.add_source_rule('derived_daily', 'table/y=%Y/m=%m/d=%d')
-    plan.add_command_rule('derived_daily', derived_daily_command)
+    plan.add_command_rule('derived_daily', primary_command)
     plan.add_target_rule('derived_monthly', 'monthly/%Y-%m')
     plan.add_source_rule('derived_monthly', 'table/y=%Y/m=%m/d=%d')
-    plan.add_command_rule('derived_monthly', derived_monthly_command)
+    plan.add_command_rule('derived_monthly', primary_command)
   end
 
   describe '#sources_from_paths' do
@@ -125,7 +133,7 @@ describe Masamune::DataPlan do
 
   describe '#sources_for_target' do
     subject(:sources) do
-      plan.sources_for_target(rule, target)
+      plan.sources_for_target(rule, target).to_a
     end
 
     before do
@@ -314,8 +322,14 @@ describe Masamune::DataPlan do
     end
   end
 
-  describe '#resolve' do
-    subject(:resolve) { plan.resolve(rule, targets) }
+  describe '#execute' do
+    before do
+      plan.prepare(rule, targets: targets)
+    end
+
+    subject(:execute) do
+      plan.execute(rule)
+    end
 
     context 'primary rule' do
       let(:rule) { 'primary' }
@@ -326,95 +340,53 @@ describe Masamune::DataPlan do
 
       context 'when target data exists' do
         before do
-          fs.touch!('table/y=2013/m=01/d=01')
-          fs.touch!('table/y=2013/m=01/d=02')
-          fs.touch!('table/y=2013/m=01/d=03')
-          primary_command.should_not_receive(:call)
-          derived_daily_command.should_not_receive(:call)
-          resolve
+          fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03')
+          fs.should_receive(:touch!).never
+          execute
         end
 
-        it { should be_false }
-        it 'should not call primary_command' do; end
-        it 'should not call derived_daily_command' do; end
+        it 'should not call touch!' do; end
       end
 
       context 'when partial target data exists' do
         before do
-          fs.touch!('log/20130101.app1.log')
-          fs.touch!('log/20130102.app1.log')
-          fs.touch!('log/20130103.app1.log')
-          fs.touch!('table/y=2013/m=01/d=01')
-          fs.touch!('table/y=2013/m=01/d=03')
-          primary_command.should_receive(:call).with(['log/20130102.app1.log'], {})
-          derived_daily_command.should_not_receive(:call)
-          resolve
+          fs.touch!('log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log')
+          fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=03')
+          fs.should_receive(:touch!).with('table/y=2013/m=01/d=02').and_call_original
+          execute
         end
 
-        it { should be_true }
-        it 'should call primary_command' do; end
-        it 'should not call derived_daily_command' do; end
+        it 'should call touch!' do; end
       end
 
       context 'when source data does not exist' do
         before do
-          primary_command.should_not_receive(:call)
-          derived_daily_command.should_not_receive(:call)
-          resolve
+          fs.should_receive(:touch!).never
+          execute
         end
 
-        it { should be_false }
-        it 'should not call primary_command' do; end
-        it 'should not call derived_daily_command' do; end
-      end
-
-      context 'when source data outside of window does not exist' do
-        let(:primary_options) { {:wildcard => true, :window => 1} }
-
-        before do
-          fs.touch!('log/20130101.app1.log')
-          primary_command.should_receive(:call).with(['log/20130101.app1.log'], {})
-          derived_daily_command.should_not_receive(:call)
-          resolve
-        end
-
-        it { should be_true }
-        it 'should not call primary_command' do; end
-        it 'should not call derived_daily_command' do; end
+        it 'should not call touch!' do; end
       end
     end
 
     shared_examples_for 'derived daily data' do
-      let(:primary_command) {
-        Proc.new do
-          fs.touch!('table/y=2013/m=01/d=01')
-          fs.touch!('table/y=2013/m=01/d=02')
-          fs.touch!('table/y=2013/m=01/d=03')
-        end
-      }
-
       context 'when primary target data exists' do
+        let(:derived_targets) {  ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03'] }
+
         before do
-          fs.touch!('log/20130101.app1.log')
-          fs.touch!('log/20130102.app1.log')
-          fs.touch!('log/20130103.app1.log')
-          primary_command.should_receive(:call).with(['log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log'], {}).and_call_original
-          derived_command.should_receive(:call).with(["table/y=2013/m=01/d=01", "table/y=2013/m=01/d=02", "table/y=2013/m=01/d=03"], {})
-          resolve
+          fs.touch!('log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log')
+          fs.should_receive(:touch!).with(*derived_targets).and_call_original
+          fs.should_receive(:touch!).with(*targets).and_call_original
+          execute
         end
 
-        it { should be_true }
-        it 'should call primary_command' do; end
-        it 'should not call derived_command' do; end
+        it 'should call touch!' do; end
       end
     end
 
     context 'derived_daily rule' do
       let(:rule) { 'derived_daily' }
-      let(:targets) {  [
-        'daily/2013-01-01',
-        'daily/2013-01-02',
-        'daily/2013-01-03' ] }
+      let(:targets) { ['daily/2013-01-01', 'daily/2013-01-02', 'daily/2013-01-03'] }
 
       it_behaves_like 'derived daily data' do
         let(:derived_command) { derived_daily_command }

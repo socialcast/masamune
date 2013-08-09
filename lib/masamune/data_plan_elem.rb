@@ -22,13 +22,13 @@ class Masamune::DataPlanElem
   end
 
   def targets
-    return [] if rule.type == :target
-    rule.plan.targets_for_source2(path)
+    return Masamune::DataPlanSet::EMPTY if rule.type == :target
+    rule.plan.targets_for_source(rule.name, self)
   end
 
   def sources
-    return [] if rule.type == :source
-    rule.plan.sources_for_target2(path)
+    return Masamune::DataPlanSet::EMPTY if rule.type == :source
+    rule.plan.sources_for_target(rule.name, self)
   end
 
   def start_time

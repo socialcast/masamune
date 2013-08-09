@@ -7,12 +7,15 @@ require 'active_support/core_ext/date_time/calculations'
 require 'date'
 
 class Masamune::DataPlanRule
+  TERMINAL = true
+
   include Masamune::Accumulate
 
-  attr_reader :pattern, :options
+  attr_reader :type, :pattern, :options
 
-  def initialize(plan, type, pattern, options = {})
+  def initialize(plan, name, type, pattern, options = {})
     @plan    = plan
+    @name    = name
     @type    = type
     @pattern = pattern
     @options = options
@@ -21,6 +24,18 @@ class Masamune::DataPlanRule
   def ==(other)
     pattern == other.pattern &&
     options == other.options
+  end
+
+  def plan
+    @plan
+  end
+
+  def name
+    @name
+  end
+
+  def type
+    @type
   end
 
   def pattern
@@ -101,11 +116,6 @@ class Masamune::DataPlanRule
     end
   end
   method_accumulate :adjacent_matches
-
-  # FIXME terminal nodes need to be derived from graph
-  def terminal?
-    @options.fetch(:wildcard, false)
-  end
 
   private
 
