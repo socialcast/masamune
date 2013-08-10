@@ -34,41 +34,6 @@ describe Masamune::DataPlan do
     plan.add_command_rule('derived_monthly', primary_command)
   end
 
-  describe '#sources_from_paths' do
-    let(:rule) { 'primary' }
-    let(:paths) { ['log/20130101.random.log', 'log/20130102.random.log'] }
-
-    subject { plan.sources_from_paths(rule, paths).map(&:path) }
-
-    it { should == [
-      'log/20130101.random.log',
-      'log/20130102.random.log' ] }
-
-    context 'with window of 1 time_step' do
-      let(:primary_options) { {:window => 1} }
-
-      it { should == [
-        'log/20121231.random.log',
-        'log/20130101.random.log',
-        'log/20130102.random.log',
-        'log/20130103.random.log' ] }
-    end
-
-    context 'with window of 3 time_steps' do
-      let(:primary_options) { {:window => 3} }
-
-      it { should == [
-        'log/20121229.random.log',
-        'log/20121230.random.log',
-        'log/20121231.random.log',
-        'log/20130101.random.log',
-        'log/20130102.random.log',
-        'log/20130103.random.log',
-        'log/20130104.random.log',
-        'log/20130105.random.log' ] }
-    end
-  end
-
   describe '#targets_for_date_range' do
     let(:start) { Date.civil(2013,01,01) }
     let(:stop) { Date.civil(2013,01,03) }
@@ -133,7 +98,7 @@ describe Masamune::DataPlan do
 
   describe '#sources_for_target' do
     subject(:sources) do
-      plan.sources_for_target(rule, target).to_a
+      plan.sources_for_target(rule, target)
     end
 
     before do
@@ -147,15 +112,15 @@ describe Masamune::DataPlan do
       let(:rule) { 'primary' }
       let(:target) { 'table/y=2013/m=01/d=01' }
 
-      it { sources.first.path.should == 'log/20130101.app1.log' }
-      it { sources.last.path.should == 'log/20130101.app2.log' }
+      it { sources.should have(1).items }
+      it { sources.should include 'log/20130101.*.log' }
     end
 
     context 'valid target associated with a single source file' do
       let(:rule) { 'derived_daily' }
       let(:target) { 'daily/2013-01-03' }
 
-      it { sources.first.path.should == 'table/y=2013/m=01/d=03' }
+      it { sources.should include 'table/y=2013/m=01/d=03' }
     end
 
     context 'valid target associated with a group of source files' do
@@ -163,7 +128,7 @@ describe Masamune::DataPlan do
       let(:target) { 'monthly/2013-01' }
 
       (1..31).each do |day|
-        it { sources.map(&:path).should include 'table/y=2013/m=01/d=%02d' % day }
+        it { sources.should include 'table/y=2013/m=01/d=%02d' % day }
       end
       it { sources.should have(31).items }
     end
@@ -206,11 +171,6 @@ describe Masamune::DataPlan do
       let(:target) { 'monthly/2013-01' }
       it { should == 'derived_monthly' }
     end
-
-    context 'invalid target' do
-      let(:target) { 'daily' }
-      it { expect { subject }.to raise_error }
-    end
   end
 
   describe '#prepare' do
@@ -218,32 +178,34 @@ describe Masamune::DataPlan do
       plan.prepare(rule, options)
     end
 
-    subject(:target_paths) do
-      plan.targets(rule).map(&:path)
+    subject(:targets) do
+      plan.targets(rule)
     end
 
-    subject(:source_paths) do
-      plan.sources(rule).map(&:path)
+    subject(:sources) do
+      plan.sources(rule)
     end
 
     context 'with :targets' do
       let(:rule) { 'primary' }
 
-      let(:targets) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02'] }
-      let(:options) { {targets: targets} }
+      let(:options) { {targets: ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02']} }
 
-      it { target_paths.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
-      it { source_paths.should == ['log/20130101.*.log', 'log/20130102.*.log'] }
+      it { targets.should include 'table/y=2013/m=01/d=01' }
+      it { targets.should include 'table/y=2013/m=01/d=02' }
+      it { sources.should include 'log/20130101.*.log' }
+      it { sources.should include 'log/20130102.*.log' }
     end
 
     context 'with :sources' do
       let(:rule) { 'derived_daily' }
 
-      let(:sources) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02'] }
-      let(:options) { {sources: sources} }
+      let(:options) { {sources: ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02']} }
 
-      it { target_paths.should == ["daily/2013-01-01", "daily/2013-01-02"] }
-      it { source_paths.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+      it { targets.should include "daily/2013-01-01" }
+      it { targets.should include "daily/2013-01-02" }
+      it { sources.should include 'table/y=2013/m=01/d=01' }
+      it { sources.should include 'table/y=2013/m=01/d=02' }
     end
   end
 
@@ -258,15 +220,17 @@ describe Masamune::DataPlan do
     end
 
     subject(:missing) do
-      plan.targets(rule).missing.map(&:path)
+      plan.targets(rule).missing
     end
 
     subject(:existing) do
-      plan.targets(rule).existing.map(&:path)
+      plan.targets(rule).existing
     end
 
     context 'when targets are missing' do
-      it { missing.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+      it { missing.should have(2).items }
+      it { missing.should include 'table/y=2013/m=01/d=01' }
+      it { missing.should include 'table/y=2013/m=01/d=02' }
       it { existing.should be_empty }
     end
 
@@ -276,7 +240,9 @@ describe Masamune::DataPlan do
       end
 
       it { missing.should be_empty }
-      it { existing.should == ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02'] }
+      it { existing.should have(2).items }
+      it { existing.should include 'table/y=2013/m=01/d=01' }
+      it { existing.should include 'table/y=2013/m=01/d=02' }
     end
   end
 
@@ -291,15 +257,17 @@ describe Masamune::DataPlan do
     end
 
     subject(:missing) do
-      plan.sources(rule).missing.map(&:path)
+      plan.sources(rule).missing
     end
 
     subject(:existing) do
-      plan.sources(rule).existing.map(&:path)
+      plan.sources(rule).existing
     end
 
     context 'when sources are missing' do
-      it { missing.should == ['log/20130101.*.log', 'log/20130102.*.log'] }
+      it { missing.should have(2).items }
+      it { missing.should include 'log/20130101.*.log' }
+      it { missing.should include 'log/20130102.*.log' }
       it { existing.should be_empty }
     end
 
@@ -309,7 +277,11 @@ describe Masamune::DataPlan do
       end
 
       it { missing.should be_empty }
-      it { existing.should == ['log/20130101.app1.log', 'log/20130101.app2.log', 'log/20130102.app1.log', 'log/20130102.app2.log'] }
+      it { existing.should include 'log/20130101.app1.log' }
+      it { existing.should include 'log/20130101.app2.log' }
+      it { existing.should include 'log/20130102.app1.log' }
+      it { existing.should include 'log/20130102.app2.log' }
+      it { existing.should have(4).items }
     end
 
     context 'when sources partially exist' do
@@ -317,8 +289,11 @@ describe Masamune::DataPlan do
         fs.touch!('log/20130101.app1.log', 'log/20130101.app2.log')
       end
 
-      it { missing.should == ['log/20130102.*.log'] }
-      it { existing.should == ['log/20130101.app1.log', 'log/20130101.app2.log'] }
+      it { missing.should have(1).items }
+      it { missing.should include 'log/20130102.*.log' }
+      it { existing.should have(2).items }
+      it { existing.should include 'log/20130101.app1.log' }
+      it { existing.should include 'log/20130101.app2.log' }
     end
   end
 

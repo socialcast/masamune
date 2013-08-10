@@ -71,7 +71,7 @@ class Masamune::DataPlanElem
 
   def ==(other)
     rule == other.rule &&
-    options == other.options &&
+    options_without_glob == other.options_without_glob &&
     start_time == other.start_time
   end
 
@@ -80,7 +80,12 @@ class Masamune::DataPlanElem
   end
 
   def hash
-    [rule, options, start_time].hash
+    [rule, options_without_glob, start_time].hash
+  end
+
+  # TODO revist
+  def options_without_glob
+    options.reject { |k,v| k == :glob && v == '*' }
   end
 
   # FIXME should consider stop_time for correctness
@@ -95,6 +100,6 @@ class Masamune::DataPlanElem
   end
 
   def inspect
-    { rule: rule, path: path, start_date: start_time.to_s, stop_date: stop_time.to_s }
+    {rule: rule, path: path, start_date: start_time.to_s, stop_date: stop_time.to_s, :options => options}.to_s
   end
 end

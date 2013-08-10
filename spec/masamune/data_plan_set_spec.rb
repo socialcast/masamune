@@ -106,4 +106,39 @@ describe Masamune::DataPlanSet do
       end
     end
   end
+
+  describe '#include?' do
+    let(:instance) { Masamune::DataPlanSet.new(source_rule, enum) }
+    subject do
+      instance.include?(elem)
+    end
+
+    context 'with basic enum and basic elem' do
+      let(:enum) { ['log/20130101.random_1.log', 'log/20130102.random_2.log'] }
+      let(:elem) { 'log/20130101.random_1.log' }
+
+      it { should be_true }
+    end
+
+    context 'with basic enum and wildcard elem' do
+      let(:enum) { ['log/20130101.random_1.log', 'log/20130102.random_2.log'] }
+      let(:elem) { 'log/20130101.*.log' }
+
+      it { should be_false }
+    end
+
+    context 'with wildcard enum and wildcard elem' do
+      let(:enum) { ['log/20130101.*.log', 'log/20130102.*.log'] }
+      let(:elem) { 'log/20130101.*.log' }
+
+      it { should be_true }
+    end
+
+    context 'with wildcard enum and basic elem' do
+      let(:enum) { ['log/20130101.*.log', 'log/20130102.*.log'] }
+      let(:elem) { 'log/20130101.random_1.log' }
+
+      it { should be_false  }
+    end
+  end
 end

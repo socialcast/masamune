@@ -8,8 +8,8 @@ class Masamune::DataPlan
     @target_rules = Hash.new
     @source_rules = Hash.new
     @command_rules = Hash.new
-    @targets = Hash.new { |h,k| h[k] = Masamune::DataPlanSet.new }
-    @sources = Hash.new { |h,k| h[k] = Masamune::DataPlanSet.new }
+    @targets = Hash.new { |set,rule| set[rule] = Masamune::DataPlanSet.new(@target_rules[rule]) }
+    @sources = Hash.new { |set,rule| set[rule] = Masamune::DataPlanSet.new(@source_rules[rule]) }
   end
 
   def add_target_rule(rule, target, target_options = {})
@@ -31,39 +31,6 @@ class Masamune::DataPlan
     matches.map(&:first).first
   end
 
-  def sources_from_paths(rule, *paths)
-    source_template = @source_rules[rule]
-    Masamune::DataPlanSet.new.tap do |set|
-      paths.flatten.each do |path|
-        instance =
-        case path
-        when Masamune::DataPlanElem
-          path
-        else
-          source_template.bind_path(path)
-        end
-
-        source_template.adjacent_matches(instance) do |adjacent|
-          set.add adjacent
-        end
-      end
-    end
-  end
-
-  def targets_from_paths(rule, *paths)
-    target_template = @target_rules[rule]
-    Masamune::DataPlanSet.new.tap do |set|
-      paths.flatten.each do |path|
-        case path
-        when Masamune::DataPlanElem
-          set.add path
-        else
-          set.add target_template.bind_path(path)
-        end
-      end
-    end
-  end
-
   # TODO covert to DataPlanSet
   def targets_for_date_range(rule, start, stop, &block)
     target_template = @target_rules[rule]
@@ -77,7 +44,7 @@ class Masamune::DataPlan
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     source_instance = source.is_a?(Masamune::DataPlanElem) ? source : source_template.bind_path(source)
-    Masamune::DataPlanSet.new.tap do |set|
+    Masamune::DataPlanSet.new(target_template).tap do |set|
       source_template.generate_via_unify_path(source_instance.path, target_template) do |target|
         set.add target
       end
@@ -88,7 +55,7 @@ class Masamune::DataPlan
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     target_instance = target.is_a?(Masamune::DataPlanElem) ? target : target_template.bind_path(target)
-    Masamune::DataPlanSet.new.tap do |set|
+    Masamune::DataPlanSet.new(source_template).tap do |set|
       target_template.generate_via_unify_path(target_instance.path, source_template) do |source|
         set.add source
       end
@@ -96,12 +63,13 @@ class Masamune::DataPlan
   end
 
   def prepare(rule, options = {})
-    @targets[rule].merge targets_from_paths(rule, *options.fetch(:targets, []))
-    @sources[rule].merge sources_from_paths(rule, *options.fetch(:sources, []))
+    @targets[rule].merge options.fetch(:targets, [])
+    @sources[rule].merge options.fetch(:sources, [])
   end
 
   def execute(rule, options = {})
     return if targets(rule).missing.empty?
+    # TODO replace with source.rule.name
     sources(rule).missing.group_by { |source| rule_for_target(source.path) }.each do |derived_rule, sources|
       if derived_rule != Masamune::DataPlanRule::TERMINAL
         prepare(derived_rule, {targets: sources.map(&:path)})

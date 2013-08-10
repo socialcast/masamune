@@ -22,8 +22,19 @@ class Masamune::DataPlanRule
   end
 
   def ==(other)
+    plan    == other.plan &&
+    name    == other.name &&
+    type    == other.type &&
     pattern == other.pattern &&
     options == other.options
+  end
+
+  def eql?(other)
+    self == other
+  end
+
+  def hash
+    [plan, name, type, pattern, options].hash
   end
 
   def plan
@@ -133,7 +144,7 @@ class Masamune::DataPlanRule
   method_accumulate :adjacent_matches
 
   def inspect
-    { type: type, pattern: pattern}
+    {type: type, pattern: pattern, options: options}.to_s
   end
 
   private

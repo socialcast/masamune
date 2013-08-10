@@ -1,13 +1,15 @@
 class Masamune::DataPlanSet < Set
   EMPTY = self.new
 
+  attr_reader :rule
+
   def initialize(rule, enum = nil)
     @rule = rule
     super convert_enum(enum)
   end
 
   def union(enum = nil)
-    super(enum || EMPTY)
+    super(convert_enum(enum) || EMPTY)
   end
 
   def add(elem = nil)
@@ -17,6 +19,8 @@ class Masamune::DataPlanSet < Set
   def include?(elem = nil)
     super convert_elem(elem)
   end
+
+  # TODO try to delegate to Set, and overload each with adjacent matches
 
   def missing
     self.class.new(@rule).tap do |set|
