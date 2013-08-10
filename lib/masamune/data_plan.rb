@@ -40,6 +40,7 @@ class Masamune::DataPlan
   end
   method_accumulate :targets_for_date_range
 
+  # TODO micro cache - clear on prepare phase
   def targets_for_source(rule, source)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
@@ -51,6 +52,7 @@ class Masamune::DataPlan
     end
   end
 
+  # TODO micro cache - clear on prepare phase
   def sources_for_target(rule, target)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
@@ -81,13 +83,15 @@ class Masamune::DataPlan
     command.call(self, rule, options)
   end
 
+  # TODO micro cache - clear on prepare phase
   def targets(rule)
     result = @sources[rule].map { |source| targets_for_source(rule, source) }.reduce(&:union)
     @targets[rule].union(result)
   end
 
+  # TODO micro cache - clear on prepare phase
   def sources(rule)
     result = @targets[rule].map { |target| sources_for_target(rule, target) }.reduce(&:union)
-    @sources[rule].union(result)
+    @sources[rule].union(result).adjacent
   end
 end

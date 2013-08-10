@@ -107,6 +107,60 @@ describe Masamune::DataPlanSet do
     end
   end
 
+  describe '#adjacent' do
+    let(:instance) { Masamune::DataPlanSet.new(source_rule, paths) }
+
+    subject(:sources) do
+      instance.adjacent
+    end
+
+    subject(:existing) do
+      instance.adjacent.existing
+    end
+
+    context 'with window of 1 time_step' do
+      let(:paths) { ['log/20130101.*.log'] }
+
+      before do
+        instance.rule.stub(:window) { 1}
+      end
+
+      it { sources.should have(3).items }
+      it { sources.should include 'log/20121231.*.log' }
+      it { sources.should include 'log/20130101.*.log' }
+      it { sources.should include 'log/20130102.*.log' }
+
+      context 'when none existing' do
+        it { existing.should be_empty }
+      end
+
+      context 'when some existing' do
+        before do
+          fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
+        end
+        it { existing.should have(2).items }
+        it { existing.should include 'log/20130101.random_1.log' }
+        it { existing.should include 'log/20130101.random_2.log' }
+      end
+
+      context 'when all existing' do
+        before do
+          fs.touch!('log/20121231.random_1.log', 'log/20121231.random_2.log')
+          fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
+          fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log')
+          fs.touch!('log/20130103.random_1.log', 'log/20130103.random_2.log')
+        end
+        it { existing.should have(6).items }
+        it { existing.should include 'log/20121231.random_1.log' }
+        it { existing.should include 'log/20121231.random_2.log' }
+        it { existing.should include 'log/20130101.random_1.log' }
+        it { existing.should include 'log/20130101.random_2.log' }
+        it { existing.should include 'log/20130102.random_1.log' }
+        it { existing.should include 'log/20130102.random_2.log' }
+      end
+    end
+  end
+
   describe '#include?' do
     let(:instance) { Masamune::DataPlanSet.new(source_rule, enum) }
     subject do

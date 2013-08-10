@@ -20,8 +20,6 @@ class Masamune::DataPlanSet < Set
     super convert_elem(elem)
   end
 
-  # TODO try to delegate to Set, and overload each with adjacent matches
-
   def missing
     self.class.new(@rule).tap do |set|
       self.each do |elem|
@@ -35,6 +33,16 @@ class Masamune::DataPlanSet < Set
       self.each do |elem|
         Masamune.filesystem.glob(elem.path) do |path|
           set.add elem.rule.bind_path(path)
+        end
+      end
+    end
+  end
+
+  def adjacent
+    self.class.new(@rule).tap do |set|
+      self.each do |elem|
+        @rule.adjacent_matches(elem) do |adj_elem|
+          set.add adj_elem
         end
       end
     end

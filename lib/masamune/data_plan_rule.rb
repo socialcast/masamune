@@ -131,8 +131,11 @@ class Masamune::DataPlanRule
     end
   end
 
+  def window
+    @options[:window] || 0
+  end
+
   def adjacent_matches(instance)
-    window = @options[:window] || 0
     (-window .. -1).each do |i|
       yield instance.prev(i.abs)
     end

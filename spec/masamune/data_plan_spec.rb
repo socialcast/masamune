@@ -101,6 +101,10 @@ describe Masamune::DataPlan do
       plan.sources_for_target(rule, target)
     end
 
+    subject(:existing) do
+      sources.existing
+    end
+
     before do
       fs.touch!('log/20130101.app1.log')
       fs.touch!('log/20130101.app2.log')
@@ -114,6 +118,9 @@ describe Masamune::DataPlan do
 
       it { sources.should have(1).items }
       it { sources.should include 'log/20130101.*.log' }
+      it { existing.should have(2).items }
+      it { existing.should include 'log/20130101.app1.log' }
+      it { existing.should include 'log/20130101.app2.log' }
     end
 
     context 'valid target associated with a single source file' do
@@ -137,20 +144,6 @@ describe Masamune::DataPlan do
       let(:rule) { 'derived_daily' }
       let(:target) {  'table/y=2013/m=01/d=01' }
       it { expect { subject }.to raise_error }
-    end
-
-    context 'with window of 1 time_step' do
-      let(:rule) { 'primary' }
-      let(:target) { 'table/y=2013/m=01/d=01' }
-      let(:primary_options) { {:window => 1} }
-
-      it { sources.map(&:path).should == [
-        'log/20121231.app1.log',
-        'log/20130101.app1.log',
-        'log/20130102.app1.log',
-        'log/20121231.app2.log',
-        'log/20130101.app2.log',
-        'log/20130102.app2.log'] }
     end
   end
 
