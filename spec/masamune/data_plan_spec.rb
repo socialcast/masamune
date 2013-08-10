@@ -13,7 +13,7 @@ describe Masamune::DataPlan do
   let(:primary_command) do
     Proc.new do |plan, rule|
       missing_targets = []
-      plan.targets(rule).missing do |target|
+      plan.targets(rule).missing.each do |target|
         missing_targets << target.path if target.sources.existing.any?
       end
       fs.touch!(*missing_targets) if missing_targets.any?
