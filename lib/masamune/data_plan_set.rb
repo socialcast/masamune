@@ -31,7 +31,8 @@ class Masamune::DataPlanSet < Set
   def existing
     self.class.new(@rule).tap do |set|
       self.each do |elem|
-        Masamune.filesystem.glob(elem.path) do |path|
+        # FIXME why does glob need to be array here
+        Masamune.filesystem.glob(elem.path).each do |path|
           set.add elem.rule.bind_path(path)
         end
       end
