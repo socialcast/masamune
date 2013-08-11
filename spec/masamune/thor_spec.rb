@@ -41,6 +41,7 @@ describe Masamune::Thor do
     subject do
       capture(stdout, stderr) do
         klass.start([command, *options].compact)
+        exit 0
       end
     end
 
@@ -125,29 +126,29 @@ describe Masamune::Thor do
       end
     end
 
-    context 'with command and --start and no matching targets' do
+    context 'with command and --start' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
-      it 'exits with status code 1 and prints error message' do
+      it 'exits with status code 0 without error message' do
         expect { subject }.to raise_error { |e|
           e.should be_a(SystemExit)
-          e.status.should == 1
+          e.status.should == 0
         }
         stdout.string.should =~ /\AUsing '.*' for --start/
-        stderr.string.should =~ /\ANo matching missing targets/
+        stderr.string.should == ''
       end
     end
 
-    context 'with command and natural language --start and no matching targets' do
+    context 'with command and natural language --start' do
       let(:command) { 'command' }
       let(:options) { ['--start', 'yesterday'] }
-      it 'exits with status code 1 and prints error message' do
+      it 'exits with status code  0 without error message' do
         expect { subject }.to raise_error { |e|
           e.should be_a(SystemExit)
-          e.status.should == 1
+          e.status.should == 0
         }
         stdout.string.should =~ /\AUsing '.*' for --start/
-        stderr.string.should =~ /\ANo matching missing targets/
+        stderr.string.should == ''
       end
     end
 

@@ -45,7 +45,6 @@ module Masamune::Actions
           $THOR_MASTER ||= self
           if $THOR_MASTER.current_command_name == current_command_name
             data_plan.prepare(current_command_name, sources: desired_sources, targets: desired_targets)
-            abort "No matching missing targets #{current_command_name}" unless targets.missing.any?
             data_plan.execute(current_command_name, options)
           end
 
