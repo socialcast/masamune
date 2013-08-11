@@ -8,6 +8,10 @@ class Masamune::DataPlanSet < Set
     super convert_enum(enum)
   end
 
+  def type
+    @rule.type
+  end
+
   def union(enum = nil)
     super(convert_enum(enum) || EMPTY)
   end
@@ -52,11 +56,29 @@ class Masamune::DataPlanSet < Set
   def actionable
     self.class.new(@rule).tap do |set|
       self.each do |elem|
-        if @rule.type == :source
+        if type == :source
           set.add elem if elem.targets.existing.any?
-        elsif @rule.type == :target
+        elsif type == :target
           set.add elem if elem.sources.existing.any?
         end
+      end
+    end
+  end
+
+  def targets
+    return Masamune::DataPlanSet::EMPTY if empty? || type == :target
+    self.class.new(self.first.targets.rule).tap do |set|
+      self.each do |elem|
+        set.merge elem.targets
+      end
+    end
+  end
+
+  def sources
+    return Masamune::DataPlanSet::EMPTY if empty? || type == :source
+    self.class.new(self.first.sources.rule).tap do |set|
+      self.each do |elem|
+        set.merge elem.sources
       end
     end
   end

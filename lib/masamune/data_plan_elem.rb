@@ -9,6 +9,10 @@ class Masamune::DataPlanElem
     @options = options
   end
 
+  def type
+    @rule.type
+  end
+
   def path
     if glob
       start_time.strftime(@rule.pattern.sub('*', glob))
@@ -22,12 +26,12 @@ class Masamune::DataPlanElem
   end
 
   def targets
-    return Masamune::DataPlanSet::EMPTY if rule.type == :target
+    return Masamune::DataPlanSet::EMPTY if type == :target
     rule.plan.targets_for_source(rule.name, self)
   end
 
   def sources
-    return Masamune::DataPlanSet::EMPTY if rule.type == :source
+    return Masamune::DataPlanSet::EMPTY if type == :source
     rule.plan.sources_for_target(rule.name, self)
   end
 

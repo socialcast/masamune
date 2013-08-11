@@ -166,20 +166,27 @@ describe Masamune::DataPlanSet do
 
     let(:instance) { Masamune::DataPlanSet.new(target_rule, paths) }
 
-    subject(:actionable) do
+    subject(:actionable_targets) do
       instance.actionable
     end
 
+    subject(:actionable_sources) do
+      instance.actionable.sources
+    end
+
     context 'when all sources missing' do
-      it { actionable.should be_empty }
+      it { actionable_targets.should be_empty }
+      it { actionable_sources.should be_empty }
     end
 
     context 'when some sources missing' do
       before do
         fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
       end
-      it { actionable.should have(1).items }
-      it { actionable.should include 'table/y=2013/m=01/d=01' }
+      it { actionable_targets.should have(1).items }
+      it { actionable_targets.should include 'table/y=2013/m=01/d=01' }
+      it { actionable_sources.should have(1).items }
+      it { actionable_sources.should include 'log/20130101.*.log' }
     end
 
     context 'when all sources existing' do
@@ -188,10 +195,14 @@ describe Masamune::DataPlanSet do
         fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log')
         fs.touch!('log/20130103.random_1.log', 'log/20130103.random_2.log')
       end
-      it { actionable.should have(3).items }
-      it { actionable.should include 'table/y=2013/m=01/d=01' }
-      it { actionable.should include 'table/y=2013/m=01/d=02' }
-      it { actionable.should include 'table/y=2013/m=01/d=03' }
+      it { actionable_targets.should have(3).items }
+      it { actionable_targets.should include 'table/y=2013/m=01/d=01' }
+      it { actionable_targets.should include 'table/y=2013/m=01/d=02' }
+      it { actionable_targets.should include 'table/y=2013/m=01/d=03' }
+      it { actionable_sources.should have(3).items }
+      it { actionable_sources.should include 'log/20130101.*.log' }
+      it { actionable_sources.should include 'log/20130102.*.log' }
+      it { actionable_sources.should include 'log/20130103.*.log' }
     end
   end
 
