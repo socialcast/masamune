@@ -8,9 +8,9 @@ describe Masamune::DataPlanSet do
     end
   end
 
-  let(:plan) { Masamune::DataPlan.new }
-  let(:source_rule) { Masamune::DataPlanRule.new(plan, 'primary', :source, 'log/%Y%m%d.*.log') }
-  let(:target_rule) { Masamune::DataPlanRule.new(plan, 'primary', :target, 'table/y=%Y/m=%m/d=%d') }
+  let!(:plan) { Masamune::DataPlan.new }
+  let!(:source_rule) { plan.add_source_rule('primary', 'log/%Y%m%d.*.log') }
+  let!(:target_rule) { plan.add_target_rule('primary', 'table/y=%Y/m=%m/d=%d') }
 
   describe '#missing' do
     let(:paths) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03'] }
@@ -160,6 +160,41 @@ describe Masamune::DataPlanSet do
       end
     end
   end
+
+  describe '#actionable' do
+    let(:paths) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03'] }
+
+    let(:instance) { Masamune::DataPlanSet.new(target_rule, paths) }
+
+    subject(:actionable) do
+      instance.actionable
+    end
+
+    context 'when all sources missing' do
+      it { actionable.should be_empty }
+    end
+
+    context 'when some sources missing' do
+      before do
+        fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
+      end
+      it { actionable.should have(1).items }
+      it { actionable.should include 'table/y=2013/m=01/d=01' }
+    end
+
+    context 'when all sources existing' do
+      before do
+        fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
+        fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log')
+        fs.touch!('log/20130103.random_1.log', 'log/20130103.random_2.log')
+      end
+      it { actionable.should have(3).items }
+      it { actionable.should include 'table/y=2013/m=01/d=01' }
+      it { actionable.should include 'table/y=2013/m=01/d=02' }
+      it { actionable.should include 'table/y=2013/m=01/d=03' }
+    end
+  end
+
 
   describe '#include?' do
     let(:instance) { Masamune::DataPlanSet.new(source_rule, enum) }

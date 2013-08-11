@@ -49,6 +49,18 @@ class Masamune::DataPlanSet < Set
     end
   end
 
+  def actionable
+    self.class.new(@rule).tap do |set|
+      self.each do |elem|
+        if @rule.type == :source
+          set.add elem if elem.targets.existing.any?
+        elsif @rule.type == :target
+          set.add elem if elem.sources.existing.any?
+        end
+      end
+    end
+  end
+
   private
 
   def convert_elem(elem)
