@@ -111,7 +111,7 @@ module Masamune
         def after_initialize(*a); end
 
         def display_help?
-          options[:help] || current_command_name == 'help'
+          options[:help] || current_task_name == 'help'
         end
 
         def display_help
