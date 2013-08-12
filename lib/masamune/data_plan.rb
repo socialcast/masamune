@@ -80,17 +80,11 @@ class Masamune::DataPlan
   end
 
   def targets(rule)
-    @set_cache[:targets_for_rule][rule] ||= begin
-      result = @sources[rule].map { |source| targets_for_source(rule, source) }.reduce(&:union)
-      @targets[rule].union(result)
-   end
+    @set_cache[:targets_for_rule][rule] ||= @targets[rule].union(@sources[rule].targets)
   end
 
   def sources(rule)
-    @set_cache[:sources_for_rule][rule] ||= begin
-      result = @targets[rule].map { |target| sources_for_target(rule, target) }.reduce(&:union)
-      @sources[rule].union(result).adjacent
-    end
+    @set_cache[:sources_for_rule][rule] ||= @sources[rule].union(@targets[rule].sources).adjacent
   end
 
   def prepare(rule, options = {})
