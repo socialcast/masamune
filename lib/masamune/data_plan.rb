@@ -98,7 +98,10 @@ class Masamune::DataPlan
       end
     end
 
-    @command_rules[rule].call(self, rule, options)
+    Masamune.with_exclusive_lock(rule) do
+      @command_rules[rule].call(self, rule, options)
+    end
+
     @set_cache.clear
   end
 end
