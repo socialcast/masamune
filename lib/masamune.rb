@@ -21,6 +21,7 @@ module Masamune
 
   class Client
     attr_accessor :context
+    attr_accessor :thor_instance
 
     def configure
       yield configuration
@@ -54,7 +55,7 @@ module Masamune
     @client = client
   end
 
-  def_delegators :client, :configure, :configuration
+  def_delegators :client, :configure, :configuration, :thor_instance, :thor_instance=
   def_delegators :configuration, :logger, :filesystem
   # TODO encapsulate in CLI
   def_delegators :configuration, :trace, :print

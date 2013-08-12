@@ -10,7 +10,7 @@ describe Masamune::DataPlan do
 
   let(:plan) { Masamune::DataPlan.new }
 
-  let(:primary_command) do
+  let(:command) do
     Proc.new do |plan, rule|
       missing_targets = []
       plan.targets(rule).missing.each do |target|
@@ -20,18 +20,16 @@ describe Masamune::DataPlan do
     end
   end
 
-  let(:primary_options) { {} }
-
   before do
     plan.add_target_rule('primary', 'table/y=%Y/m=%m/d=%d')
-    plan.add_source_rule('primary', 'log/%Y%m%d.*.log', primary_options)
-    plan.add_command_rule('primary', primary_command)
+    plan.add_source_rule('primary', 'log/%Y%m%d.*.log')
+    plan.add_command_rule('primary', command)
     plan.add_target_rule('derived_daily', 'daily/%Y-%m-%d')
     plan.add_source_rule('derived_daily', 'table/y=%Y/m=%m/d=%d')
-    plan.add_command_rule('derived_daily', primary_command)
+    plan.add_command_rule('derived_daily', command)
     plan.add_target_rule('derived_monthly', 'monthly/%Y-%m')
     plan.add_source_rule('derived_monthly', 'table/y=%Y/m=%m/d=%d')
-    plan.add_command_rule('derived_monthly', primary_command)
+    plan.add_command_rule('derived_monthly', command)
   end
 
   describe '#targets_for_date_range' do

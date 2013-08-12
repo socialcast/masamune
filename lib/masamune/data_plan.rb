@@ -21,8 +21,8 @@ class Masamune::DataPlan
     @source_rules[rule] = Masamune::DataPlanRule.new(self, rule, :source, source, source_options)
   end
 
-  def add_command_rule(rule, command, command_options = {})
-    @command_rules[rule] = [command, command_options]
+  def add_command_rule(rule, command)
+    @command_rules[rule] = command
   end
 
   # TODO use constructed reference instead
@@ -98,8 +98,7 @@ class Masamune::DataPlan
       end
     end
 
-    command, command_options = @command_rules[rule]
-    command.call(self, rule, options)
+    @command_rules[rule].call(self, rule, options)
     @set_cache.clear
   end
 end

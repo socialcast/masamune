@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 describe Masamune::DataPlanBuilder do
-  describe '.build_via_thor' do
+  describe '#build' do
     subject(:data_plan) do
-      described_class.build_via_thor(namespaces, commands, sources, targets)
+      described_class.instance.build(namespaces, commands, sources, targets)
     end
 
     context 'with multiple namespaces' do

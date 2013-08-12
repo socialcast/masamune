@@ -7,9 +7,6 @@ module Masamune::Actions
     def self.included(base)
       base.extend ClassMethods
       base.class_eval do
-        attr_accessor :existing_sources, :missing_targets
-        attr_accessor :desired_sources, :desired_targets
-
         class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
         class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
         class_option :sources, :desc => 'File of data sources to process'
@@ -41,9 +38,9 @@ module Masamune::Actions
             desired_targets.merge data_plan.targets_for_date_range(current_command_name, parse_datetime_type(:start), parse_datetime_type(:stop))
           end
 
-          # TODO store reference in singleton, possibley DataPlanBuilder
-          $THOR_MASTER ||= self
-          if $THOR_MASTER.current_command_name == current_command_name
+          Masamune.thor_instance ||= self
+
+          if Masamune.thor_instance.current_command_name == current_command_name
             data_plan.prepare(current_command_name, sources: desired_sources, targets: desired_targets)
             data_plan.execute(current_command_name, options)
           end
@@ -64,6 +61,7 @@ module Masamune::Actions
       end or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
     end
 
+    # TODO sources from file or input array
     def parse_file_type(key, default)
       return default unless key
       value = options[key] or return default
@@ -92,7 +90,7 @@ module Masamune::Actions
       end
 
       def data_plan
-        @@data_plan ||= Masamune::DataPlanBuilder.build_via_thor(@@namespaces, @@commands, @@sources, @@targets)
+        @@data_plan ||= Masamune::DataPlanBuilder.instance.build(@@namespaces, @@commands, @@sources, @@targets)
       end
 
       private
