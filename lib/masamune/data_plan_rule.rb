@@ -11,7 +11,7 @@ class Masamune::DataPlanRule
 
   include Masamune::Accumulate
 
-  attr_reader :type, :pattern, :options
+  attr_reader :plan, :name, :type, :pattern, :options
 
   def initialize(plan, name, type, pattern, options = {})
     @plan    = plan
@@ -35,18 +35,6 @@ class Masamune::DataPlanRule
 
   def hash
     [plan, name, type, pattern, options].hash
-  end
-
-  def plan
-    @plan
-  end
-
-  def name
-    @name
-  end
-
-  def type
-    @type
   end
 
   def pattern
