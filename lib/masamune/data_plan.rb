@@ -27,10 +27,19 @@ class Masamune::DataPlan
 
   # TODO use constructed reference instead
   def rule_for_target(target)
-    matches = @target_rules.select { |rule, matcher| matcher.matches?(target) }
-    Masamune.logger.debug("No rule matches target #{target}") and return Masamune::DataPlanRule::TERMINAL if matches.empty?
-    Masamune.logger.error("Multiple rules match target #{target}") if matches.length > 1
-    matches.map(&:first).first
+    target_matches = @target_rules.select { |rule, matcher| matcher.matches?(target) }
+    source_matches = @source_rules.select { |rule, matcher| matcher.matches?(target) }
+
+    if target_matches.empty?
+      if source_matches.empty?
+        raise "No rule matches target #{target}"
+      else
+        Masamune::DataPlanRule::TERMINAL
+      end
+    else
+      Masamune.logger.error("Multiple rules match target #{target}") if target_matches.length > 1
+      target_matches.map(&:first).first
+    end
   end
 
   # TODO convert to DataPlanSet

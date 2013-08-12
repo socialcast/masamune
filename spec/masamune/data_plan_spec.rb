@@ -148,6 +148,11 @@ describe Masamune::DataPlan do
   describe '#rule_for_target' do
     subject { plan.rule_for_target(target) }
 
+    context 'primary source' do
+      let(:target) { 'log/20130101.random_1.log' }
+      it { should == Masamune::DataPlanRule::TERMINAL }
+    end
+
     context 'primary target' do
       let(:target) { 'table/y=2013/m=01/d=01' }
       it { should == 'primary' }
@@ -161,6 +166,11 @@ describe Masamune::DataPlan do
     context 'derived_monthly target' do
       let(:target) { 'monthly/2013-01' }
       it { should == 'derived_monthly' }
+    end
+
+    context 'invalid target' do
+      let(:target) { 'daily' }
+      it { expect { subject }.to raise_error }
     end
   end
 
