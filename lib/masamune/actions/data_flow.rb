@@ -28,6 +28,9 @@ module Masamune::Actions
 
         # TODO allow multiple after_initialize blocks
         def after_initialize
+          Masamune.thor_instance ||= self
+          return unless Masamune.thor_instance.current_command_name == current_command_name
+
           raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
           raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
 
@@ -38,12 +41,8 @@ module Masamune::Actions
             desired_targets.merge data_plan.targets_for_date_range(current_command_name, parse_datetime_type(:start), parse_datetime_type(:stop))
           end
 
-          Masamune.thor_instance ||= self
-
-          if Masamune.thor_instance.current_command_name == current_command_name
-            data_plan.prepare(current_command_name, sources: desired_sources, targets: desired_targets)
-            data_plan.execute(current_command_name, options)
-          end
+          data_plan.prepare(current_command_name, sources: desired_sources, targets: desired_targets)
+          data_plan.execute(current_command_name, options)
 
           # NOTE Execution continues to original thor task
         end
