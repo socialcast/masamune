@@ -179,6 +179,6 @@ class Masamune::DataPlanRule
   end
 
   def matched_extra(matched_pattern)
-    matched_hash(matched_pattern, :glob)
+    matched_hash(matched_pattern, :glob).reject { |k,v| k == :glob && v == '*' }
   end
 end
