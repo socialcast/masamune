@@ -1,7 +1,7 @@
 module Masamune
   module Accumulate
-    def accumulate(method, *args)
-      [].tap do |elems|
+    def accumulate(method, accumulator, *args)
+      accumulator.call(self, *args).tap do |elems|
         send(method, *args) do |elem|
           elems << elem
         end
@@ -9,7 +9,7 @@ module Masamune
     end
 
     module ClassMethods
-      def method_accumulate(method)
+      def method_accumulate(method, accumulator = lambda { |_, *args| Array.new })
         self.class_eval do
           new_method = "#{method}_with_accumulate".to_sym
           old_method = "#{method}_without_accumulate".to_sym
@@ -18,7 +18,7 @@ module Masamune
             if block
               send(old_method, *args, &block)
             else
-              accumulate(old_method, *args)
+              accumulate(old_method, accumulator, *args)
             end
           end
           alias_method method, new_method

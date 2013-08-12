@@ -1,4 +1,5 @@
 class Masamune::DataPlanElem
+  include Masamune::Accumulate
   include Comparable
 
   attr_reader :rule, :options
@@ -25,15 +26,21 @@ class Masamune::DataPlanElem
     Masamune.filesystem.exists?(path)
   end
 
-  def targets
+  def targets(&block)
     return Masamune::DataPlanSet::EMPTY if type == :target
-    rule.plan.targets_for_source(rule.name, self)
+    rule.plan.targets_for_source(rule.name, self) do |target|
+      yield target
+    end
   end
+  method_accumulate :targets, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_target_rule(elem.rule.name)) }
 
-  def sources
+  def sources(&block)
     return Masamune::DataPlanSet::EMPTY if type == :source
-    rule.plan.sources_for_target(rule.name, self)
+    rule.plan.sources_for_target(rule.name, self) do |source|
+      yield source
+    end
   end
+  method_accumulate :sources, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_source_rule(elem.rule.name)) }
 
   def start_time
     @start_time.to_time.utc

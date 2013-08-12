@@ -1,6 +1,8 @@
 require 'active_support'
 require 'active_support/core_ext/numeric/time'
 
+require 'masamune/data_plan_set'
+
 class Masamune::DataPlan
   include Masamune::Accumulate
 
@@ -17,8 +19,16 @@ class Masamune::DataPlan
     @target_rules[rule] = Masamune::DataPlanRule.new(self, rule, :target, target, target_options)
   end
 
+  def get_target_rule(rule)
+    @target_rules[rule]
+  end
+
   def add_source_rule(rule, source, source_options = {})
     @source_rules[rule] = Masamune::DataPlanRule.new(self, rule, :source, source, source_options)
+  end
+
+  def get_source_rule(rule)
+    @source_rules[rule]
   end
 
   def add_command_rule(rule, command)
@@ -51,33 +61,25 @@ class Masamune::DataPlan
   end
   method_accumulate :targets_for_date_range
 
-  def targets_for_source(rule, source)
+  def targets_for_source(rule, source, &block)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     source_instance = source.is_a?(Masamune::DataPlanElem) ? source : source_template.bind_path(source)
-
-    @set_cache[:targets_for_source][rule + ':' + source_instance.path] ||= begin
-      Masamune::DataPlanSet.new(target_template).tap do |set|
-        source_template.generate_via_unify_path(source_instance.path, target_template) do |target|
-          set.add target
-        end
-      end
+    source_template.generate_via_unify_path(source_instance.path, target_template) do |target|
+      yield target
     end
   end
+  method_accumulate :targets_for_source, lambda { |plan, rule, source| Masamune::DataPlanSet.new(plan.get_target_rule(rule)) }
 
-  def sources_for_target(rule, target)
+  def sources_for_target(rule, target, &block)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     target_instance = target.is_a?(Masamune::DataPlanElem) ? target : target_template.bind_path(target)
-
-    @set_cache[:sources_for_target][rule + ':' + target_instance.path] ||= begin
-      Masamune::DataPlanSet.new(source_template).tap do |set|
-        target_template.generate_via_unify_path(target_instance.path, source_template) do |source|
-          set.add source
-        end
-      end
+    target_template.generate_via_unify_path(target_instance.path, source_template) do |source|
+      yield source
     end
   end
+  method_accumulate :sources_for_target, lambda { |plan, rule, target| Masamune::DataPlanSet.new(plan.get_source_rule(rule)) }
 
   def targets(rule)
     @set_cache[:targets_for_rule][rule] ||= @targets[rule].union(@sources[rule].targets)

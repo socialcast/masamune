@@ -1,6 +1,8 @@
 class Masamune::DataPlanSet < Set
   EMPTY = self.new
 
+  include Masamune::Accumulate
+
   attr_reader :rule
 
   def initialize(rule, enum = nil)
@@ -24,46 +26,42 @@ class Masamune::DataPlanSet < Set
     super convert_elem(elem)
   end
 
-  def missing
-    self.class.new(@rule).tap do |set|
-      self.each do |elem|
-        set.add elem if Masamune.filesystem.glob(elem.path).empty?
-      end
+  def missing(&block)
+    self.each do |elem|
+      yield elem if Masamune.filesystem.glob(elem.path).empty?
     end
   end
+  method_accumulate :missing, lambda { |set| set.class.new(set.rule) }
 
-  def existing
-    self.class.new(@rule).tap do |set|
-      self.each do |elem|
-        # FIXME why does glob need to be array here
-        Masamune.filesystem.glob(elem.path).each do |path|
-          set.add elem.rule.bind_path(path)
-        end
+  def existing(&block)
+    self.each do |elem|
+      # FIXME why does glob need to be array here
+      Masamune.filesystem.glob(elem.path).each do |path|
+        yield elem.rule.bind_path(path)
       end
     end
   end
+  method_accumulate :existing, lambda { |set| set.class.new(set.rule) }
 
-  def adjacent
-    self.class.new(@rule).tap do |set|
-      self.each do |elem|
-        @rule.adjacent_matches(elem) do |adj_elem|
-          set.add adj_elem
-        end
+  def adjacent(&block)
+    self.each do |elem|
+      @rule.adjacent_matches(elem) do |adj_elem|
+        yield adj_elem
       end
     end
   end
+  method_accumulate :adjacent, lambda { |set| set.class.new(set.rule) }
 
-  def actionable
-    self.class.new(@rule).tap do |set|
-      self.each do |elem|
-        if type == :source
-          set.add elem if elem.targets.existing.any?
-        elsif type == :target
-          set.add elem if elem.sources.existing.any?
-        end
+  def actionable(&block)
+    self.each do |elem|
+      if type == :source
+        yield elem if elem.targets.existing.any?
+      elsif type == :target
+        yield elem if elem.sources.existing.any?
       end
     end
   end
+  method_accumulate :actionable, lambda { |set| set.class.new(set.rule) }
 
   def targets
     return Masamune::DataPlanSet::EMPTY if empty? || type == :target
