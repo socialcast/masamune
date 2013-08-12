@@ -27,8 +27,18 @@ module Masamune
       end
     end
 
+    module RescueLogger
+      def start(*a)
+        super
+      rescue => e
+        Masamune.logger.error(e.to_s)
+        raise e
+      end
+    end
+
     def self.included(thor)
       thor.extend ExtraArguments
+      thor.extend RescueLogger
       thor.class_eval do
         include Masamune::Actions::Filesystem
         include Masamune::Actions::ElasticMapreduce

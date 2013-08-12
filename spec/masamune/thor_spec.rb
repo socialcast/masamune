@@ -152,6 +152,16 @@ describe Masamune::Thor do
       end
     end
 
+    context 'with command that raises exception' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01'] }
+      before do
+        Masamune.logger.should_receive(:error).with('random exception')
+        klass.stub(:dispatch).and_raise('random exception')
+      end
+      it { expect { subject }.to raise_error /random exception/ }
+    end
+
     context 'when elastic_mapreduce is enabled' do
       before do
         Masamune::Configuration.any_instance.stub(:elastic_mapreduce_enabled?) { true }
