@@ -1,4 +1,5 @@
 class Masamune::DataPlanElem
+  include Masamune::Accumulate
   include Comparable
 
   attr_reader :rule, :options
@@ -9,6 +10,10 @@ class Masamune::DataPlanElem
     @options = options
   end
 
+  def type
+    @rule.type
+  end
+
   def path
     if glob
       start_time.strftime(@rule.pattern.sub('*', glob))
@@ -16,6 +21,26 @@ class Masamune::DataPlanElem
       start_time.strftime(@rule.pattern)
     end
   end
+
+  def exists?
+    Masamune.filesystem.exists?(path)
+  end
+
+  def targets(&block)
+    return Masamune::DataPlanSet::EMPTY if type == :target
+    rule.plan.targets_for_source(rule.name, self) do |target|
+      yield target
+    end
+  end
+  method_accumulate :targets, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_target_rule(elem.rule.name)) }
+
+  def sources(&block)
+    return Masamune::DataPlanSet::EMPTY if type == :source
+    rule.plan.sources_for_target(rule.name, self) do |source|
+      yield source
+    end
+  end
+  method_accumulate :sources, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_source_rule(elem.rule.name)) }
 
   def start_time
     @start_time.to_time.utc
@@ -25,9 +50,9 @@ class Masamune::DataPlanElem
     @start_time =
     case start_time
     when Time
-      start_time.utc
+      rule.time_round(start_time.utc)
     when Date, DateTime
-      start_time.to_time.utc
+      rule.time_round(start_time.to_time.utc)
     end
   end
 
@@ -41,14 +66,6 @@ class Masamune::DataPlanElem
 
   def stop_date
     stop_time.to_date
-  end
-
-  def wildcard?
-    @options.fetch(:wildcard, false)
-  end
-
-  def terminal?
-    @rule.terminal?
   end
 
   def glob
@@ -86,5 +103,9 @@ class Masamune::DataPlanElem
     elsif start_time == other.start_time
       0
     end
+  end
+
+  def inspect
+    {rule: rule, path: path, start_date: start_time.to_s, stop_date: stop_time.to_s, :options => options}.to_s
   end
 end

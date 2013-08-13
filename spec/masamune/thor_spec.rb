@@ -24,7 +24,7 @@ describe Masamune::Thor do
 
       desc 'command', 'command'
       target "target/%Y-%m-%d"
-      source "source/%Y%m%d*.log", :wildcard => true
+      source "source/%Y%m%d*.log"
       def command
         # NOP
       end
@@ -41,6 +41,7 @@ describe Masamune::Thor do
     subject do
       capture(stdout, stderr) do
         klass.start([command, *options].compact)
+        exit 0
       end
     end
 
@@ -70,6 +71,24 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--stop', 'xxx'] }
       it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--stop'; got/ }
+    end
+
+    context 'with command and invalid --sources' do
+      let(:command) { 'command' }
+      let(:options) { ['--sources', 'foo'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--sources'; got/ }
+    end
+
+    context 'with command and invalid --targets' do
+      let(:command) { 'command' }
+      let(:options) { ['--targets', 'foo'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--targets'; got/ }
+    end
+
+    context 'with command and both --sources and --targets' do
+      let(:command) { 'command' }
+      let(:options) { ['--sources', 'sources', '--targets', 'targets'] }
+      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Cannot specify both option '--sources' and option '--targets'/ }
     end
 
     context 'with command and --start and bad --config file' do
@@ -107,46 +126,40 @@ describe Masamune::Thor do
       end
     end
 
-    context 'with command and --start and no matching targets' do
+    context 'with command and --start' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
-      it 'exits with status code 1 and prints error message' do
+      it 'exits with status code 0 without error message' do
         expect { subject }.to raise_error { |e|
           e.should be_a(SystemExit)
-          e.status.should == 1
+          e.status.should == 0
         }
         stdout.string.should =~ /\AUsing '.*' for --start/
-        stderr.string.should =~ /\ANo matching missing targets/
+        stderr.string.should == ''
       end
     end
 
-    context 'with command and natural language --start and no matching targets' do
+    context 'with command and natural language --start' do
       let(:command) { 'command' }
       let(:options) { ['--start', 'yesterday'] }
-      it 'exits with status code 1 and prints error message' do
+      it 'exits with status code  0 without error message' do
         expect { subject }.to raise_error { |e|
           e.should be_a(SystemExit)
-          e.status.should == 1
+          e.status.should == 0
         }
         stdout.string.should =~ /\AUsing '.*' for --start/
-        stderr.string.should =~ /\ANo matching missing targets/
+        stderr.string.should == ''
       end
     end
 
-    context 'when lock cannot be acquired' do
+    context 'with command that raises exception' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
       before do
-        klass.any_instance.should_receive(:acquire_lock).and_return(false)
+        Masamune.logger.should_receive(:error).with('random exception')
+        klass.stub(:dispatch).and_raise('random exception')
       end
-      it 'exits with status code 1 and prints error message' do
-        expect { subject }.to raise_error { |e|
-          e.should be_a(SystemExit)
-          e.status.should == 1
-        }
-        stdout.string.should =~ /\AUsing '.*' for --start/
-        stderr.string.should =~ /\AAnother process is already running/
-      end
+      it { expect { subject }.to raise_error /random exception/ }
     end
 
     context 'when elastic_mapreduce is enabled' do

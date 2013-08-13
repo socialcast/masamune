@@ -27,11 +27,24 @@ module Masamune
       end
     end
 
+    module RescueLogger
+      def start(*a)
+        super
+      rescue => e
+        Masamune.logger.error(e.to_s)
+        raise e
+      end
+    end
+
     def self.included(thor)
       thor.extend ExtraArguments
+      thor.extend RescueLogger
       thor.class_eval do
         include Masamune::Actions::Filesystem
         include Masamune::Actions::ElasticMapreduce
+        attr_accessor :current_namespace
+        attr_accessor :current_task_name
+        attr_accessor :current_command_name
         attr_accessor :extra
 
         namespace :masamune
@@ -46,6 +59,10 @@ module Masamune
         class_option :version, :desc => 'Print version and exit'
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
+          self.current_namespace = self.class.namespace
+          self.current_task_name = _config[:current_command].name
+          self.current_command_name = self.current_namespace + ':' + self.current_task_name
+
           if _options.is_a?(Array)
             _options, self.extra = self.class.parse_extra(_options)
           end
@@ -104,16 +121,12 @@ module Masamune
         def after_initialize(*a); end
 
         def display_help?
-          options[:help] || current_command.name == 'help'
+          options[:help] || current_task_name == 'help'
         end
 
         def display_help
           help
         end
-      end
-
-      def current_command
-        @_initializer.last[:current_command]
       end
     end
   end
