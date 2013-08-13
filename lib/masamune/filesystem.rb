@@ -6,12 +6,14 @@ module Masamune
 
     def initialize
       @paths = {}
+      @immutable_paths = {}
     end
 
     def add_path(symbol, path, options = {})
       eager_path = eager_load_path path
       @paths[symbol] = [eager_path, options]
       mkdir!(eager_path) if options[:mkdir]
+      add_immutable_path(eager_path) if options[:immutable]
       self
     end
 
@@ -133,6 +135,7 @@ module Masamune
 
     def remove_dir(dir)
       # FIXME never rm blank or slash
+      check_immutable_path!(dir)
       case type(dir)
       when :hdfs
         execute_hadoop_fs('-rmr', dir)
@@ -145,6 +148,7 @@ module Masamune
     end
 
     def move_file(src, dst)
+      check_immutable_path!(src)
       mkdir!(File.dirname(dst))
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
@@ -260,6 +264,16 @@ module Masamune
       dir[%r{s3n?://.*?/}] ||
       dir[%r{file:///}] ||
       dir[%r{hdfs:///}]
+    end
+
+    def add_immutable_path(path)
+      @immutable_paths[path] = /\A#{Regexp.escape(path)}/
+    end
+
+    def check_immutable_path!(file)
+      @immutable_paths.each do |path, regex|
+        raise "#{path} is marked as immutable, cannot modify #{file}" if file[regex].present?
+      end
     end
   end
 end

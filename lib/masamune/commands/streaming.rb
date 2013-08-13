@@ -1,3 +1,5 @@
+require 'active_support/core_ext/array'
+
 module Masamune::Commands
   class Streaming
     attr_accessor :input, :output, :mapper, :reducer, :extra_args, :file_args, :quote

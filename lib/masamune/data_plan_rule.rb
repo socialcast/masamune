@@ -7,18 +7,34 @@ require 'active_support/core_ext/date_time/calculations'
 require 'date'
 
 class Masamune::DataPlanRule
+  TERMINAL = nil
+
   include Masamune::Accumulate
 
-  attr_reader :pattern, :options
+  attr_reader :plan, :name, :type, :pattern, :options
 
-  def initialize(pattern, options = {})
+  def initialize(plan, name, type, pattern, options = {})
+    @plan    = plan
+    @name    = name
+    @type    = type
     @pattern = pattern
     @options = options
   end
 
   def ==(other)
+    plan    == other.plan &&
+    name    == other.name &&
+    type    == other.type &&
     pattern == other.pattern &&
     options == other.options
+  end
+
+  def eql?(other)
+    self == other
+  end
+
+  def hash
+    [plan, name, type, pattern, options].hash
   end
 
   def pattern
@@ -88,8 +104,26 @@ class Masamune::DataPlanRule
     end
   end
 
+  def time_round(time)
+    case time_step
+    when :hours
+      DateTime.civil(time.year, time.month, time.day, time.hour)
+    when :days
+      DateTime.civil(time.year, time.month, time.day)
+    when :months
+      DateTime.civil(time.year, time.month)
+    when :years
+      DateTime.civil(time.year)
+    else
+      time
+    end
+  end
+
+  def window
+    @options[:window] || 0
+  end
+
   def adjacent_matches(instance)
-    window = @options[:window] || 0
     (-window .. -1).each do |i|
       yield instance.prev(i.abs)
     end
@@ -100,9 +134,8 @@ class Masamune::DataPlanRule
   end
   method_accumulate :adjacent_matches
 
-  # FIXME terminal nodes need to be derived from graph
-  def terminal?
-    @options.fetch(:wildcard, false)
+  def inspect
+    {type: type, pattern: pattern, options: options}.to_s
   end
 
   private
@@ -134,6 +167,6 @@ class Masamune::DataPlanRule
   end
 
   def matched_extra(matched_pattern)
-    matched_hash(matched_pattern, :glob)
+    matched_hash(matched_pattern, :glob).reject { |k,v| k == :glob && v == '*' }
   end
 end

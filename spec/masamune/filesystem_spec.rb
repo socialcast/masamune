@@ -405,6 +405,48 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  context 'directory marked as immutable' do
+    let(:dir) { 's3://bucket/incoming' }
+    let(:file) { File.join(dir, '20130420.log') }
+
+    before do
+      instance.add_path(:incoming, dir, immutable: true)
+    end
+
+    describe '#remove_dir' do
+      subject do
+        instance.remove_dir(dir)
+      end
+
+      it { expect { subject }.to raise_error RuntimeError, /#{dir} is marked as immutable, cannot modify #{dir}/ }
+
+      context 'nested directory' do
+        let(:nested_dir) { File.join(dir, '2013') }
+
+        subject do
+          instance.remove_dir(nested_dir)
+        end
+
+        it { expect { subject }.to raise_error RuntimeError, /#{dir} is marked as immutable, cannot modify #{nested_dir}/ }
+      end
+    end
+
+    describe '#move_file' do
+      subject do
+        instance.move_file(dir, 's3://bucket/processed/')
+      end
+
+      it { expect { subject }.to raise_error RuntimeError, /#{dir} is marked as immutable, cannot modify #{dir}/ }
+
+      context 'nested file' do
+        subject do
+          instance.move_file(file, 's3://bucket/processed/')
+        end
+        it { expect { subject }.to raise_error RuntimeError, /#{dir} is marked as immutable, cannot modify #{file}/ }
+      end
+    end
+  end
+
   describe '#cat' do
     context 'simple file' do
       before do
