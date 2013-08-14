@@ -28,8 +28,8 @@ module Masamune::Actions
 
         # TODO allow multiple after_initialize blocks
         def after_initialize
+          return if Masamune.thor_instance
           Masamune.thor_instance ||= self
-          return unless Masamune.thor_instance.current_command_name == current_command_name
 
           raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
           raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
@@ -43,8 +43,7 @@ module Masamune::Actions
 
           data_plan.prepare(current_command_name, sources: desired_sources, targets: desired_targets)
           data_plan.execute(current_command_name, options)
-
-          # NOTE Execution continues to original thor task
+          exit 0
         end
       end
     end

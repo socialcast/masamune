@@ -38,7 +38,10 @@ class Masamune::DataPlanBuilder
 
   def thor_command_wrapper
     Proc.new do |_, rule, _|
-      Masamune.thor_instance.invoke(rule) unless Masamune.thor_instance.current_command_name == rule
+      Masamune.with_exclusive_lock(rule) do
+        Masamune.thor_instance.invoke(rule)
+      end
+      Masamune.filesystem.clear!
     end
   end
 end
