@@ -41,7 +41,6 @@ describe Masamune::Thor do
     subject do
       capture(stdout, stderr) do
         klass.start([command, *options].compact)
-        exit 0
       end
     end
 
