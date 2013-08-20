@@ -1,3 +1,5 @@
+require 'set'
+
 class Masamune::DataPlanSet < Set
   EMPTY = self.new
 
