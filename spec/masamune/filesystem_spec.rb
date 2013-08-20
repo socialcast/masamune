@@ -196,6 +196,10 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#copy_file' do
+    before do
+      filesystem.should_receive(:chown!).at_least(:once)
+    end
+
     subject do
       File.exists?(File.join(new_dir, File.basename(old_file)))
     end
@@ -312,6 +316,10 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#move_file' do
+    before do
+      filesystem.should_receive(:chown!).at_least(:once)
+    end
+
     subject(:removes_old_file) do
       !File.exists?(old_file)
     end
@@ -471,6 +479,22 @@ shared_examples_for 'Filesystem' do
       end
 
       it { should == 'dog' }
+    end
+  end
+
+  describe '#chown!' do
+    context 'local' do
+      subject(:operation) do
+        instance.chown!(old_file)
+      end
+      it { expect { operation }.to_not raise_error }
+    end
+
+    context 'hdfs' do
+      subject(:operation) do
+        instance.chown!('file://' + old_file)
+      end
+      it { expect { operation }.to_not raise_error }
     end
   end
 end

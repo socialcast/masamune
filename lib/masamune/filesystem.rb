@@ -56,9 +56,10 @@ module Masamune
           execute_hadoop_fs('-touchz', *file_set)
         when :s3
           # NOTE intentionally skip
-        else
+        when :local
           FileUtils.touch(*file_set, file_util_args)
         end
+        chown!(*file_set)
       end
     end
 
@@ -68,7 +69,7 @@ module Masamune
         execute_hadoop_fs('-test', '-e', file, safe: true).success?
       when :s3
         glob(file).present?
-      else
+      when :local
         File.exists?(file)
       end
     end
@@ -80,9 +81,10 @@ module Masamune
           execute_hadoop_fs('-mkdir', *dir_set)
         when :s3
           # NOTE intentionally skip
-        else
+        when :local
           FileUtils.mkdir_p(*dir_set, file_util_args)
         end
+        chown!(*dir_set)
       end
     end
 
@@ -101,7 +103,7 @@ module Masamune
           next unless line =~ tail_regexp
           yield q(pattern, line.split(/\s+/).last)
         end
-      else
+      when :local
         Dir.glob(pattern) do |file|
           yield file
         end
@@ -131,6 +133,7 @@ module Masamune
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: true))
       end
+      chown!(dst)
     end
 
     def remove_dir(dir)
@@ -142,7 +145,7 @@ module Masamune
       when :s3
         s3cmd('del', '--recursive', s3b(dir, dir:true))
         s3cmd('del', '--recursive', s3b("#{dir}_$folder$"))
-      else
+      when :local
         FileUtils.rmtree(dir, file_util_args)
       end
     end
@@ -174,6 +177,7 @@ module Masamune
         s3cmd('put', src, dst)
         FileUtils.rm(src, file_util_args)
       end
+      chown!(dst)
     end
 
     def cat(*files)
@@ -197,6 +201,23 @@ module Masamune
         mkdir!(File.dirname(dst))
         File.open(dst, 'w') do |file|
           file.write buf
+        end
+      end
+      chown!(dst)
+    end
+
+    def chown!(*files)
+      opts = files.last.is_a?(Hash) ? files.pop : {}
+      user, group = opts.fetch(:user, current_user), opts.fetch(:group, current_group)
+
+      files.group_by { |path| type(path) }.each do |type, file_set|
+        case type
+        when :hdfs
+          execute_hadoop_fs('-chown', '-R', [user, group].compact.join(':'), *file_set)
+        when :s3
+          # NOTE intentionally skip
+        when :local
+          FileUtils.chown_R(user, group, file_set, file_util_args)
         end
       end
     end
@@ -274,6 +295,15 @@ module Masamune
       @immutable_paths.each do |path, regex|
         raise "#{path} is marked as immutable, cannot modify #{file}" if file[regex].present?
       end
+    end
+
+    def current_user
+      Etc.getlogin
+    end
+
+    def current_group
+      Etc.getgrgid(Etc.getpwnam(current_user).gid).name
+    rescue
     end
   end
 end
