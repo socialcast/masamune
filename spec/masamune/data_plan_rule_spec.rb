@@ -19,7 +19,7 @@ describe Masamune::DataPlanRule do
       it { should == 'report/%Y-%m-%d/%H' }
     end
 
-    context 'with lamda' do
+    context 'with lambda' do
       let(:pattern) { lambda { 'report/%Y-%m-%d/%H' } }
       it { should == 'report/%Y-%m-%d/%H' }
     end
@@ -37,6 +37,15 @@ describe Masamune::DataPlanRule do
       let(:start_time) { DateTime.civil(2013,04,05,23) }
       let(:stop_time) { DateTime.civil(2013,04,05,0) }
     end
+
+    context 'with unix timestamp pattern' do
+      let(:pattern) { 'logs/%H-s.log' }
+      let(:input_date) { DateTime.civil(2013,04,05,23,13) }
+
+      its(:path) { should == 'logs/1365202800.log' }
+      let(:start_time) { DateTime.civil(2013,04,05,23) }
+      let(:stop_time) { DateTime.civil(2013,04,05,0) }
+    end
   end
 
   describe '#bind_path' do
@@ -46,11 +55,21 @@ describe Masamune::DataPlanRule do
 
     context 'with default' do
       let(:input_path) { 'report/2013-04-05/23' }
-      let(:input_date) { DateTime.civil(2013,04,05,23) }
+      let(:output_date) { DateTime.civil(2013,04,05,23) }
 
       its(:path) { should == input_path }
-      its(:start_time) { should == input_date }
-      its(:stop_time) { should == input_date.to_time + 1.hour }
+      its(:start_time) { should == output_date }
+      its(:stop_time) { should == output_date.to_time + 1.hour }
+    end
+
+    context 'with unix timestamp pattern' do
+      let(:pattern) { 'logs/%H-s.log' }
+      let(:input_path) { 'logs/1365202800.log' }
+      let(:output_date) { DateTime.civil(2013,04,05,23) }
+
+      its(:path) { should == input_path }
+      its(:start_time) { should == output_date }
+      its(:stop_time) { should == output_date.to_time + 1.hour }
     end
   end
 
@@ -124,6 +143,12 @@ describe Masamune::DataPlanRule do
       let(:input) { 'request_logs/20130524.random.request.log' }
       it { should be_true }
     end
+
+    context 'with unix timestamp pattern' do
+      let(:pattern) { 'request_logs/%H-s.log' }
+      let(:input) { 'request_logs/1374192000.log' }
+      it { should be_true }
+    end
   end
 
   describe '#generate' do
@@ -176,26 +201,46 @@ describe Masamune::DataPlanRule do
       let(:pattern) { '%Y' }
       it { should == :years }
     end
+    context 'hourly unix' do
+      let(:pattern) { '%H-s' }
+      it { should == :hours }
+    end
+    context 'daily unix' do
+      let(:pattern) { '%d-s' }
+      it { should == :days }
+    end
+    context 'monthly unix' do
+      let(:pattern) { '%m-s' }
+      it { should == :months }
+    end
+    context 'yearly unix' do
+      let(:pattern) { '%Y-s' }
+      it { should == :years }
+    end
   end
 
   describe '#time_round' do
     let(:input_time) { DateTime.civil(2013,9,13,23,13) }
     subject { instance.time_round(input_time) }
 
+    before do
+      instance.stub(:time_step) { time_step }
+    end
+
     context 'hourly' do
-      let(:pattern) { '%Y-%m-%d/%k' }
+      let(:time_step) { :hours }
       it { should == DateTime.civil(2013,9,13,23) }
     end
     context 'daily' do
-      let(:pattern) { '%Y-%m-%d' }
+      let(:time_step) { :days }
       it { should == DateTime.civil(2013,9,13) }
     end
     context 'monthly' do
-      let(:pattern) { '%Y-%m' }
+      let(:time_step) { :months }
       it { should == DateTime.civil(2013,9) }
     end
     context 'yearly' do
-      let(:pattern) { '%Y' }
+      let(:time_step) { :years }
       it { should == DateTime.civil(2013) }
     end
   end
