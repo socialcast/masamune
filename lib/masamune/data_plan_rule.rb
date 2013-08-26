@@ -42,7 +42,7 @@ class Masamune::DataPlanRule
   end
 
   def matches?(input_path)
-    matched_pattern = matcher.match(input_path)
+    matched_pattern = match_data_hash(matcher.match(input_path))
     matched_pattern.present? && matched_pattern[:rest].blank?
   end
 
@@ -52,14 +52,14 @@ class Masamune::DataPlanRule
   end
 
   def bind_path(input_path)
-    matched_pattern = matcher.match(input_path)
+    matched_pattern = match_data_hash(matcher.match(input_path))
     raise "Cannot bind_path #{input_path} to #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
     Masamune::DataPlanElem.new(self, output_date, @options.merge(matched_extra(matched_pattern)))
   end
 
   def unify_path(input_path, rule)
-    matched_pattern = matcher.match(input_path)
+    matched_pattern = match_data_hash(matcher.match(input_path))
     raise "Cannot unify_path #{input_path} with #{rule.pattern}, does not match #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
     rule.bind_date(output_date)
@@ -90,7 +90,18 @@ class Masamune::DataPlanRule
   end
 
   def time_step
+    @time_step ||=
     case pattern
+    when /%s/
+      :hours
+    when /%H-s/
+      :hours
+    when /%d-s/
+      :days
+    when /%m-s/
+      :months
+    when /%Y-s/
+      :years
     when /%-?k/, /%-?H/
       :hours
     when /%-?d/
@@ -138,11 +149,22 @@ class Masamune::DataPlanRule
     {type: type, pattern: pattern, options: options}.to_s
   end
 
+  def strftime_format
+    @strftime_format ||=
+    pattern.dup.tap do |format|
+      format.gsub!('%H-s', '%s')
+      format.gsub!('%d-s', '%s')
+      format.gsub!('%m-s', '%s')
+      format.gsub!('%Y-s', '%s')
+    end
+  end
+
   private
 
   def matcher
     @matcher ||= begin
       regexp = pattern.dup
+      regexp.gsub!(/%([YmdH]-)?s/, '(?<timestamp>\d{10})')
       regexp.gsub!('%Y', '(?<year>\d{4})')
       regexp.gsub!('%m', '(?<month>\d{2})')
       regexp.gsub!('%-m', '(?<month>\d{1,2})')
@@ -157,16 +179,25 @@ class Masamune::DataPlanRule
     end
   end
 
-  def matched_hash(matched_pattern, *matched_keys)
-    matched_attrs = matched_keys.select { |x| matched_pattern.names.map(&:to_sym).include?(x) }
-    Hash[matched_attrs.map { |x| [x,matched_pattern[x]] }]
+  def match_data_hash(match_data = nil)
+    return unless match_data.present?
+    Hash.new.tap do |hash|
+      match_data.names.map(&:to_sym).each do |key|
+        hash[key] = match_data[key.to_sym]
+      end
+    end
   end
 
-  def matched_date(matched_pattern)
-    DateTime.new(*matched_hash(matched_pattern, :year, :month, :day, :hour).values.map(&:to_i))
+  def matched_date(matched_data)
+    if timestamp = matched_data[:timestamp]
+      Time.at(timestamp.to_i).to_datetime
+    else
+      DateTime.new(*matched_data.values_at(:year, :month, :day, :hour).compact.map(&:to_i))
+    end
   end
 
-  def matched_extra(matched_pattern)
-    matched_hash(matched_pattern, :glob).reject { |k,v| k == :glob && v == '*' }
+  def matched_extra(matched_data)
+    return {} unless matched_data.has_key?(:glob)
+    {glob: matched_data[:glob]}.reject { |_,v| v == '*' }
   end
 end

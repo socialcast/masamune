@@ -16,9 +16,9 @@ class Masamune::DataPlanElem
 
   def path
     if glob
-      start_time.strftime(@rule.pattern.sub('*', glob))
+      start_time.strftime(@rule.strftime_format.sub('*', glob))
     else
-      start_time.strftime(@rule.pattern)
+      start_time.strftime(@rule.strftime_format)
     end
   end
 
