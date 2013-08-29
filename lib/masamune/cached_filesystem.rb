@@ -20,7 +20,7 @@ module Masamune
 
     def glob(wildcard, &block)
       pattern = /\A#{wildcard.gsub('*', '.*?')}\Z/
-      dirname = File.dirname(wildcard)
+      dirname = @filesystem.dirname(wildcard)
 
       unless @path_cache.include?(dirname)
         @path_cache.merge(glob_with_parent_paths(wildcard))
@@ -51,7 +51,7 @@ module Masamune
     private
 
     def glob_with_parent_paths(wildcard)
-      dirname = File.dirname(wildcard)
+      dirname = @filesystem.dirname(wildcard)
       Set.new.tap do |paths|
         @filesystem.glob(File.join(dirname, '*')) do |file|
           @filesystem.parent_paths(file) { |path| paths.add path }

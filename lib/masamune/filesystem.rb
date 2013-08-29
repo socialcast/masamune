@@ -54,7 +54,7 @@ module Masamune
       end
 
       return if prefix.blank? && node.blank?
-      parent_paths = node ? node.split('/') : []
+      parent_paths = node ? File.expand_path(node, '/').split('/') : []
       parent_paths.reject! { |x| x.blank? }
       parent_paths.prepend('/') if node =~ %r{\A/}
       tmp = []
@@ -69,6 +69,10 @@ module Masamune
 
     def resolve_file(paths = [])
       Array.wrap(paths).select { |path| File.exists?(path) && File.file?(path) }.first
+    end
+
+    def dirname(path)
+      parent_paths(path).last || path
     end
 
     def touch!(*files)

@@ -43,9 +43,7 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#parent_paths' do
-    subject do
-      instance.parent_paths(path)
-    end
+    subject { instance.parent_paths(path) }
 
     context 'with local blank' do
       let(:path) { '' }
@@ -104,6 +102,65 @@ shared_examples_for 'Filesystem' do
     context 'with directories and file' do
       let(:paths) { [old_dir, new_dir, new_file, old_file] }
       it { should == old_file }
+    end
+  end
+
+  describe '#dirname' do
+    subject { instance.dirname(path) }
+
+    context 'with local blank' do
+      let(:path) { '' }
+      it { should be_blank }
+    end
+
+    context 'with local path with slash' do
+      let(:path) { '/a/b/c' }
+      it { should == '/a/b' }
+    end
+
+    context 'with local path without slash' do
+      let(:path) { 'a/b/c' }
+      it { should == 'a/b' }
+    end
+
+    context 'with local relative path' do
+      let(:path) { '/a/b/../c' }
+      it { should == '/a/c' }
+    end
+
+    context 'with s3 bucket with blank' do
+      let(:path) { 's3://bucket' }
+      it { should == 's3://bucket' }
+    end
+
+    context 'with s3 bucket with slash' do
+      let(:path) { 's3://bucket/' }
+      it { should == 's3://bucket/' }
+    end
+
+    context 'with s3 bucket with path' do
+      let(:path) { 's3://bucket/a/b/c' }
+      it { should == 's3://bucket/a/b' }
+    end
+
+    context 'with s3 bucket with relative path' do
+      let(:path) { 's3://bucket/a/b/../c' }
+      it { should == 's3://bucket/a/c' }
+    end
+
+    context 'with hdfs directory with path' do
+      let(:path) { 'hdfs:///a/b/c' }
+      it { should == 'hdfs:///a/b' }
+    end
+
+    context 'with hdfs directory with path' do
+      let(:path) { 'hdfs:///a/b/c' }
+      it { should == 'hdfs:///a/b' }
+    end
+
+    context 'with hdfs directory with path' do
+      let(:path) { 'hdfs:///a/b/../c' }
+      it { should == 'hdfs:///a/c' }
     end
   end
 
