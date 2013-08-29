@@ -68,7 +68,7 @@ module Masamune
       when :hdfs
         execute_hadoop_fs('-test', '-e', file, safe: true).success?
       when :s3
-        glob(file).present?
+        s3cmd('ls', s3b(file), safe: true).present?
       when :local
         File.exists?(file)
       end

@@ -161,6 +161,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
+        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir", safe: true).at_most(:once)
         filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true)
       end
 

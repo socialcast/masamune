@@ -21,6 +21,27 @@ describe Masamune::CachedFilesystem do
     end
   end
 
+  context 'when path is present with file glob' do
+    before do
+      filesystem.touch!('/logs/box1_123.txt', '/logs/box2_123.txt', '/logs/box3_123.txt')
+      filesystem.should_receive(:glob).with('/logs/*').once.and_call_original
+    end
+
+    it 'calls Filesystem#glob once for multiple calls' do
+      cached_filesystem.glob('/logs/box1_*.txt').should_not be_empty
+      cached_filesystem.glob('/logs/box2_*.txt').should_not be_empty
+      cached_filesystem.glob('/logs/box3_*.txt').should_not be_empty
+      cached_filesystem.exists?('/logs/box1_123.txt').should be_true
+      cached_filesystem.exists?('/logs/box1_456.txt').should be_false
+      cached_filesystem.exists?('/logs/box2_123.txt').should be_true
+      cached_filesystem.exists?('/logs/box2_456.txt').should be_false
+      cached_filesystem.exists?('/logs/box3_123.txt').should be_true
+      cached_filesystem.exists?('/logs/box3_456.txt').should be_false
+      cached_filesystem.exists?('/logs/box4_123.txt').should be_false
+      cached_filesystem.exists?('/logs/box4_456.txt').should be_false
+    end
+  end
+
   context 'when path is missing' do
     before do
       filesystem.touch!('/a/b/c')

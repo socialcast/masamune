@@ -2,6 +2,8 @@ require 'delegate'
 
 module Masamune
   class CachedFilesystem < Delegator
+    include Masamune::Accumulate
+
     def initialize(filesystem)
       super
       @filesystem = filesystem
@@ -10,39 +12,29 @@ module Masamune
 
     def clear!
       @path_cache = Set.new
-      @glob_cache = Hash.new
     end
 
     def exists?(file)
-      dirname = dirname(file)
-      if @path_cache.include?(dirname)
-        if @path_cache.include?(file)
-          true
-        else
-          false
-        end
-      else
-        glob(File.join(dirname, '*')) do |path|
-          @path_cache = @path_cache.union(sub_paths(path))
-        end
-        @path_cache.include?(file)
-      end
+      glob(file).any?
     end
 
-    def glob(path, &block)
-      @glob_cache[path] ||= begin
-        if block_given?
-          paths = Set.new
-          @filesystem.glob(path) do |path|
-            block.call(path)
-            paths.add(path)
-          end
-          paths.to_a
-        else
-          @filesystem.glob(path)
+    def glob(pattern, &block)
+      matcher = Regexp.compile(pattern.gsub('*', '.*?'))
+      dirname = File.dirname(pattern)
+
+      if @path_cache.include?(dirname)
+        @path_cache.each do |file|
+          yield file if matcher.match(file)
+        end
+      else
+        @path_cache.merge(glob_with_sub_paths(pattern))
+
+        @path_cache.each do |file|
+          yield file if matcher.match(file)
         end
       end
     end
+    method_accumulate :glob
 
     # FIXME cache eviction policy can be more precise
     [:touch!, :mkdir!, :copy_file, :remove_dir, :move_file, :write].each do |meth|
@@ -52,18 +44,24 @@ module Masamune
       end
     end
 
-    def dirname(file)
-      path = file.split('/')
-      dirname, basename = path[0 .. -2].join('/'), path[-1]
-      dirname
+    def sub_paths(file, &block)
+      path = []
+      file.split('/').each do |part|
+        path << part
+        full = path.join('/')
+        yield full.blank? ? '/' : full
+      end
     end
 
-    def sub_paths(file)
-      [].tap do |result|
-        tmp = []
-        file.split('/').each do |part|
-          tmp << part
-          result << tmp.join('/')
+    def glob_with_sub_paths(pattern)
+      dirname = File.dirname(pattern)
+      Set.new.tap do |paths|
+        @filesystem.glob(File.join(dirname, '*')) do |file|
+          sub_paths(file) { |path| paths.add path }
+        end
+
+        if paths.empty? && @filesystem.exists?(dirname)
+          sub_paths(dirname) { |path| paths.add path }
         end
       end
     end
