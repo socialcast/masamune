@@ -18,19 +18,19 @@ module Masamune
       glob(file).any?
     end
 
-    def glob(pattern, &block)
-      matcher = Regexp.compile('\A' + pattern.gsub('*', '.*?') + '\Z')
-      dirname = File.dirname(pattern)
+    def glob(wildcard, &block)
+      pattern = /\A#{wildcard.gsub('*', '.*?')}\Z/
+      dirname = File.dirname(wildcard)
 
       if @path_cache.include?(dirname)
         @path_cache.each do |file|
-          yield file if matcher.match(file)
+          yield file if file =~ pattern
         end
       else
-        @path_cache.merge(glob_with_sub_paths(pattern))
+        @path_cache.merge(glob_with_sub_paths(wildcard))
 
         @path_cache.each do |file|
-          yield file if matcher.match(file)
+          yield file if file =~ pattern
         end
       end
     end
@@ -53,8 +53,8 @@ module Masamune
       end
     end
 
-    def glob_with_sub_paths(pattern)
-      dirname = File.dirname(pattern)
+    def glob_with_sub_paths(wildcard)
+      dirname = File.dirname(wildcard)
       Set.new.tap do |paths|
         @filesystem.glob(File.join(dirname, '*')) do |file|
           sub_paths(file) { |path| paths.add path }
