@@ -42,6 +42,45 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  describe '#parent_paths' do
+    subject { instance.parent_paths(path) }
+
+    context 'with local blank' do
+      let(:path) { '' }
+      it { should == [] }
+    end
+
+    context 'with local path with slash' do
+      let(:path) { '/a/b/c' }
+      it { should == ['/', '/a', '/a/b'] }
+    end
+
+    context 'with local path without slash' do
+      let(:path) { 'a/b/c' }
+      it { should == ['a', 'a/b'] }
+    end
+
+    context 'with s3 bucket with blank' do
+      let(:path) { 's3://bucket' }
+      it { should == [] }
+    end
+
+    context 'with s3 bucket with slash' do
+      let(:path) { 's3://bucket/' }
+      it { should == [] }
+    end
+
+    context 'with s3 bucket with path' do
+      let(:path) { 's3://bucket/a/b/c' }
+      it { should == ['s3://bucket/', 's3://bucket/a', 's3://bucket/a/b'] }
+    end
+
+    context 'with hdfs directory with path' do
+      let(:path) { 'hdfs:///a/b/c' }
+      it { should == ['hdfs:///', 'hdfs:///a', 'hdfs:///a/b'] }
+    end
+  end
+
   describe '#resolve_file' do
     subject { instance.resolve_file(paths) }
 
@@ -63,6 +102,65 @@ shared_examples_for 'Filesystem' do
     context 'with directories and file' do
       let(:paths) { [old_dir, new_dir, new_file, old_file] }
       it { should == old_file }
+    end
+  end
+
+  describe '#dirname' do
+    subject { instance.dirname(path) }
+
+    context 'with local blank' do
+      let(:path) { '' }
+      it { should be_blank }
+    end
+
+    context 'with local path with slash' do
+      let(:path) { '/a/b/c' }
+      it { should == '/a/b' }
+    end
+
+    context 'with local path without slash' do
+      let(:path) { 'a/b/c' }
+      it { should == 'a/b' }
+    end
+
+    context 'with local relative path' do
+      let(:path) { '/a/b/../c' }
+      it { should == '/a/c' }
+    end
+
+    context 'with s3 bucket with blank' do
+      let(:path) { 's3://bucket' }
+      it { should == 's3://bucket' }
+    end
+
+    context 'with s3 bucket with slash' do
+      let(:path) { 's3://bucket/' }
+      it { should == 's3://bucket/' }
+    end
+
+    context 'with s3 bucket with path' do
+      let(:path) { 's3://bucket/a/b/c' }
+      it { should == 's3://bucket/a/b' }
+    end
+
+    context 'with s3 bucket with relative path' do
+      let(:path) { 's3://bucket/a/b/../c' }
+      it { should == 's3://bucket/a/c' }
+    end
+
+    context 'with hdfs directory with path' do
+      let(:path) { 'hdfs:///a/b/c' }
+      it { should == 'hdfs:///a/b' }
+    end
+
+    context 'with hdfs directory with path' do
+      let(:path) { 'hdfs:///a/b/c' }
+      it { should == 'hdfs:///a/b' }
+    end
+
+    context 'with hdfs directory with path' do
+      let(:path) { 'hdfs:///a/b/../c' }
+      it { should == 'hdfs:///a/c' }
     end
   end
 
@@ -161,6 +259,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
+        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir", safe: true).at_most(:once)
         filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true)
       end
 
