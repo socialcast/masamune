@@ -1,9 +1,9 @@
 module Masamune
   class MethodLogger < Delegator
-    def initialize(target, options = {})
+    def initialize(target, *methods)
       super(target)
       @target = target
-      @ignore = options[:ignore]
+      @methods = methods
     end
 
     def __getobj__
@@ -15,7 +15,7 @@ module Masamune
     end
 
     def method_missing(method_name, *args, &block)
-      Masamune::print("#{method_name} with #{args.join(' ')}") unless @ignore.include?(method_name)
+      Masamune::print("#{method_name} with #{args.join(' ')}") if @methods.include?(method_name)
       if @target.respond_to?(method_name)
         @target.__send__(method_name, *args, &block)
       else
