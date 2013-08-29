@@ -21,21 +21,17 @@ module Masamune::Commands
 
     module ClassMethods
       def s3n(file, options = {})
-        norm(file.dup).tap do |out|
+        file.dup.tap do |out|
           out.sub!(%r{\As3://}, 's3n://')
           out.sub!(%r{/?\z}, '/') if options[:dir]
         end
       end
 
       def s3b(file, options = {})
-        norm(file.dup).tap do |out|
+        file.dup.tap do |out|
           out.sub!(%r{\As3n://}, 's3://')
           out.sub!(%r{/?\z}, '/') if options[:dir]
         end
-      end
-
-      def norm(file)
-        File.join(File.split(file))
       end
     end
   end
