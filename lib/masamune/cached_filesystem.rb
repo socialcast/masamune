@@ -19,7 +19,7 @@ module Masamune
     end
 
     def glob(pattern, &block)
-      matcher = Regexp.compile(pattern.gsub('*', '.*?'))
+      matcher = Regexp.compile('\A' + pattern.gsub('*', '.*?') + '\Z')
       dirname = File.dirname(pattern)
 
       if @path_cache.include?(dirname)
