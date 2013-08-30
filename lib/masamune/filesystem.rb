@@ -45,8 +45,34 @@ module Masamune
       @paths
     end
 
+    def parent_paths(path, &block)
+      if prefix = remote_prefix(path)
+        node = path.split(prefix).last
+      else
+        prefix = ''
+        node = path
+      end
+
+      return if prefix.blank? && node.blank?
+      parent_paths = node ? File.expand_path(node, '/').split('/') : []
+      parent_paths.reject! { |x| x.blank? }
+      parent_paths.prepend('/') if node =~ %r{\A/}
+      tmp = []
+      parent_paths.each do |part|
+        tmp << part
+        current_path = prefix + File.join(tmp)
+        break if current_path == path
+        yield current_path
+      end
+    end
+    method_accumulate :parent_paths
+
     def resolve_file(paths = [])
       Array.wrap(paths).select { |path| File.exists?(path) && File.file?(path) }.first
+    end
+
+    def dirname(path)
+      parent_paths(path).last || path
     end
 
     def touch!(*files)
@@ -68,7 +94,7 @@ module Masamune
       when :hdfs
         execute_hadoop_fs('-test', '-e', file, safe: true).success?
       when :s3
-        glob(file).present?
+        s3cmd('ls', s3b(file), safe: true).present?
       when :local
         File.exists?(file)
       end
@@ -274,7 +300,7 @@ module Masamune
 
     def qualify_file(dir, file)
       if prefix = remote_prefix(dir) and file !~ /\A#{Regexp.escape(prefix)}/
-        prefix + file.sub(%r{\A/+}, '')
+        "#{prefix}/#{file.sub(%r{\A/+}, '')}"
       else
         file
       end
@@ -282,9 +308,10 @@ module Masamune
     alias :q :qualify_file
 
     def remote_prefix(dir)
-      dir[%r{s3n?://.*?/}] ||
-      dir[%r{file:///}] ||
-      dir[%r{hdfs:///}]
+      dir[%r{\As3n?://.*?(?=/)}] ||
+      dir[%r{\As3n?://.*?\Z}] ||
+      dir[%r{\Afile://}] ||
+      dir[%r{\Ahdfs://}]
     end
 
     def add_immutable_path(path)

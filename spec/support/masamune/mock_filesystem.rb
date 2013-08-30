@@ -1,6 +1,8 @@
 require 'delegate'
 
 class Masamune::MockFilesystem < Delegator
+  include Masamune::Accumulate
+
   def initialize
     @filesystem = Masamune::Filesystem.new
     @filesystem.add_path :root_dir, File.expand_path('../../../', __FILE__)
@@ -16,18 +18,12 @@ class Masamune::MockFilesystem < Delegator
   end
 
   def glob(pattern, &block)
-    list = []
-    @files.select { |elem| elem =~ Regexp.compile(pattern) }.each do |elem|
-      if block_given?
-        yield elem
-      else
-        list << elem
-      end
-    end
-    unless block_given?
-      list
+    matcher = Regexp.compile(pattern.gsub('*', '.*?'))
+    @files.each do |elem|
+      yield elem if matcher.match(elem)
     end
   end
+  method_accumulate :glob
 
   def __getobj__
     @filesystem
