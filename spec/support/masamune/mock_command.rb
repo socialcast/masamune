@@ -30,7 +30,7 @@ module Masamune::MockCommand
 
   def mock_command(pattern, value)
     new_method = Masamune::Commands::Shell.method(:new)
-    Masamune::Commands::Shell.stub!(:new).and_return do |command, options|
+    Masamune::Commands::Shell.stub(:new).and_return do |command, options|
       new_method.call(CommandMatcher.new(command, pattern: pattern, value: value), options || {})
     end
   end
