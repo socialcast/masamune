@@ -21,6 +21,7 @@ describe Masamune::Thor do
     Class.new(Thor) do
       include Masamune::Thor
       include Masamune::Actions::DataFlow
+      include Masamune::ThorMute
 
       desc 'command', 'command'
       target "target/%Y-%m-%d"
