@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Masamune::Commands::LineFormatter do
   let(:options) { {} }
 
-  let(:delegate) { mock }
+  let(:delegate) { double }
   let(:instance) { described_class.new(delegate, options) }
 
   describe '#handle_stdout' do

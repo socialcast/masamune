@@ -5,7 +5,7 @@ describe Masamune::Commands::RetryWithBackoff do
   let(:command_options) { [] }
   let(:context_options) { {} }
 
-  let(:delegate) { mock }
+  let(:delegate) { double }
   let(:instance) { Masamune::Commands::RetryWithBackoff.new(delegate, general_options.merge(context_options)) }
 
   describe '#around_execute' do
