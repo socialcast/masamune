@@ -110,7 +110,6 @@ module Masamune
         when :local
           FileUtils.mkdir_p(*dir_set, file_util_args)
         end
-        chown!(*dir_set)
       end
     end
 
