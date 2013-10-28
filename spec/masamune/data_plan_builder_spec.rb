@@ -8,7 +8,7 @@ describe Masamune::DataPlanBuilder do
 
     context 'with multiple namespaces' do
       let(:namespaces) { ['a', 'b'] }
-      let(:commands) { {'load' => mock, 'store' => mock} }
+      let(:commands) { {'load' => double, 'store' => double} }
       let(:sources) { [['log/%Y%m%d.*.log', {}], ['table/y=%Y/m=%m/d=%d', {}]] }
       let(:targets) { [['table/y=%Y/m=%m/d=%d', {}], ['daily/%Y-%m-%d', {}]] }
 
@@ -27,7 +27,7 @@ describe Masamune::DataPlanBuilder do
 
     context 'with :for option' do
       let(:namespaces) { ['a', 'a', 'a'] }
-      let(:commands) { {'missing_before' => mock, 'override' => mock, 'missing_after' => mock} }
+      let(:commands) { {'missing_before' => double, 'override' => double, 'missing_after' => double} }
       let(:sources) { [['log/%Y%m%d.*.log', {for: 'override'}]] }
       let(:targets) { [['table/y=%Y/m=%m/d=%d', {for: 'override'}]] }
 

@@ -21,6 +21,7 @@ describe Masamune::Thor do
     Class.new(Thor) do
       include Masamune::Thor
       include Masamune::Actions::DataFlow
+      include Masamune::ThorMute
 
       desc 'command', 'command'
       target "target/%Y-%m-%d"
@@ -109,7 +110,7 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--dry_run'] }
       before do
-        klass.any_instance.should_receive(:hive).with(exec: 'show tables;', safe: true, fail_fast: false).and_return(mock(success?: false))
+        klass.any_instance.should_receive(:hive).with(exec: 'show tables;', safe: true, fail_fast: false).and_return(double(success?: false))
       end
       it { expect { subject }.to raise_error Thor::InvocationError, /Dry run of hive failed/ }
     end
@@ -176,7 +177,7 @@ describe Masamune::Thor do
         let(:command) { 'command' }
         let(:options) { ['--start', '2013-01-01', '--jobflow', 'xxx'] }
         before do
-          klass.any_instance.should_receive(:elastic_mapreduce).with(extra: '--list', jobflow: 'xxx', fail_fast: false).and_return(mock(success?: false))
+          klass.any_instance.should_receive(:elastic_mapreduce).with(extra: '--list', jobflow: 'xxx', fail_fast: false).and_return(double(success?: false))
         end
         it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /'--jobflow' doesn't exist/ }
       end
