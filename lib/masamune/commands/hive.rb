@@ -68,8 +68,7 @@ module Masamune::Commands
 
     def after_execute
       if output
-        @tmpfile.fsync
-        @tmpfile.close(false)
+        @tmpfile.close
         Masamune.filesystem.move_file(@tmpfile.path, output)
         @tmpfile.unlink
       end
