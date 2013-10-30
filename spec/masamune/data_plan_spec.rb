@@ -299,12 +299,14 @@ describe Masamune::DataPlan do
   end
 
   describe '#execute' do
+    let(:options) { {} }
+
     before do
       plan.prepare(rule, targets: targets)
     end
 
     subject(:execute) do
-      plan.execute(rule)
+      plan.execute(rule, options)
     end
 
     context 'primary rule' do
@@ -357,6 +359,18 @@ describe Masamune::DataPlan do
         end
 
         it 'should call touch!' do; end
+      end
+
+      context 'when primary target data exists and :no_resolve is specified' do
+        let(:options) { {no_resolve: true} }
+
+        before do
+          fs.touch!('log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log')
+          fs.should_not_receive(:touch!)
+          execute
+        end
+
+        it 'should not call touch!' do; end
       end
     end
 

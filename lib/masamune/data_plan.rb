@@ -101,7 +101,7 @@ class Masamune::DataPlan
         prepare(derived_rule, targets: sources.map(&:path))
         execute(derived_rule, options)
       end
-    end
+    end unless options[:no_resolve]
 
     @command_rules[rule].call(self, rule, options)
     @set_cache.clear
