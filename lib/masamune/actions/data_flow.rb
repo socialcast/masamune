@@ -11,6 +11,7 @@ module Masamune::Actions
         class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
         class_option :sources, :desc => 'File of data sources to process'
         class_option :targets, :desc => 'File of data targets to process'
+        class_option :no_resolve, :type => :boolean, :desc => 'Do not attempt to recursively resolve data dependencies', :default => false
 
         private
 
