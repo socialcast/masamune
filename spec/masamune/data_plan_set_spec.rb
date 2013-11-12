@@ -122,7 +122,7 @@ describe Masamune::DataPlanSet do
       let(:paths) { ['log/20130101.*.log'] }
 
       before do
-        instance.rule.stub(:window) { 1}
+        instance.rule.stub(:window) { 1 }
       end
 
       it { sources.should have(3).items }
@@ -206,6 +206,42 @@ describe Masamune::DataPlanSet do
     end
   end
 
+  describe '#with_grain' do
+    let(:paths) { ['table/y=2012/m=12/d=29', 'table/y=2012/m=12/d=30', 'table/y=2012/m=12/d=31',
+                   'table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=02/d=01', ] }
+
+    let(:instance) { Masamune::DataPlanSet.new(target_rule, paths) }
+
+    subject(:granular_targets) do
+      instance.with_grain(grain)
+    end
+
+    context 'when :day' do
+      let(:grain) { :day }
+      it { should have(6).items }
+      it { should include 'table/y=2012/m=12/d=29' }
+      it { should include 'table/y=2012/m=12/d=30' }
+      it { should include 'table/y=2012/m=12/d=31' }
+      it { should include 'table/y=2013/m=01/d=01' }
+      it { should include 'table/y=2013/m=01/d=02' }
+      it { should include 'table/y=2013/m=02/d=01' }
+    end
+
+    context 'when :month' do
+      let(:grain) { :month }
+      it { should have(3).items }
+      it { should include 'table/y=2012/m=12' }
+      it { should include 'table/y=2013/m=01' }
+      it { should include 'table/y=2013/m=02' }
+    end
+
+    context 'when :year' do
+      let(:grain) { :year }
+      it { should have(2).items }
+      it { should include 'table/y=2012' }
+      it { should include 'table/y=2013' }
+    end
+  end
 
   describe '#include?' do
     let(:instance) { Masamune::DataPlanSet.new(source_rule, enum) }

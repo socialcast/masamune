@@ -159,7 +159,28 @@ class Masamune::DataPlanRule
     end
   end
 
+  def round(grain)
+    pattern_parts = pattern.split('/')
+    part_index = pattern_parts.find_index { |part| part =~ time_step_to_format(grain) }
+    raise "cannot round to :#{grain} for #{pattern}" unless part_index
+    new_pattern = pattern_parts[0..part_index].join('/')
+    self.class.new(plan, name, type, new_pattern, options)
+  end
+
   private
+
+  def time_step_to_format(time_step)
+    case time_step
+    when :hour, :hours
+      /%-?[H|k]/
+    when :day, :days
+      /%-?d/
+    when :month, :months
+      /%-?m/
+    when :year, :years
+      /%Y/
+    end
+  end
 
   def matcher
     @matcher ||= begin
