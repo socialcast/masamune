@@ -64,6 +64,16 @@ class Masamune::DataPlanSet < Set
   end
   method_accumulate :actionable, lambda { |set| set.class.new(set.rule) }
 
+  # TODO detect & warn or correct if coarser grain set is incomplete
+  def with_grain(grain, &block)
+    seen = Set.new
+    self.each do |elem|
+      granular_elem = elem.round(grain)
+      yield granular_elem if seen.add?(granular_elem)
+    end
+  end
+  method_accumulate :with_grain, lambda { |set, grain| set.class.new(set.rule.round(grain)) }
+
   def targets
     return Masamune::DataPlanSet::EMPTY if empty? || type == :target
     self.class.new(self.first.targets.rule).tap do |set|

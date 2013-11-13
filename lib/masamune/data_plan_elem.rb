@@ -80,6 +80,10 @@ class Masamune::DataPlanElem
     self.class.new(@rule, start_time.advance(@rule.time_step => -1*i), @options)
   end
 
+  def round(grain)
+    self.class.new(@rule.round(grain), start_time, @options)
+  end
+
   def ==(other)
     rule == other.rule &&
     options == other.options &&

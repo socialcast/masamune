@@ -244,4 +244,79 @@ describe Masamune::DataPlanRule do
       it { should == DateTime.civil(2013) }
     end
   end
+
+  describe '#round' do
+    subject(:new_instance) { instance.round(grain) }
+
+    context 'with totally partitioned pattern' do
+      let(:pattern) { 'table/y=%Y/m=%m/d=%d/h=%H' }
+      context 'with :hour' do
+        let(:grain) { :hour }
+        its(:pattern) { should == 'table/y=%Y/m=%m/d=%d/h=%H' }
+      end
+
+      context 'with :day' do
+        let(:grain) { :day }
+        its(:pattern) { should == 'table/y=%Y/m=%m/d=%d' }
+      end
+
+      context 'with :month' do
+        let(:grain) { :month }
+        its(:pattern) { should == 'table/y=%Y/m=%m' }
+      end
+
+      context 'with :year' do
+        let(:grain) { :year }
+        its(:pattern) { should == 'table/y=%Y' }
+      end
+    end
+
+    context 'with partially partitioned pattern' do
+      let(:pattern) { 'table/%Y-%m-%d/%H' }
+
+      context 'with :hour' do
+        let(:grain) { :hour }
+        its(:pattern) { should == 'table/%Y-%m-%d/%H' }
+      end
+
+      context 'with :day' do
+        let(:grain) { :day }
+        its(:pattern) { should == 'table/%Y-%m-%d' }
+      end
+
+      context 'with :month' do
+        let(:grain) { :month }
+        its(:pattern) { should == 'table/%Y-%m-%d' }
+      end
+
+      context 'with :year' do
+        let(:grain) { :year }
+        its(:pattern) { should == 'table/%Y-%m-%d' }
+      end
+    end
+
+    context 'when cannot round due to granularity' do
+      shared_context 'cannot round' do
+        it { expect { subject }.to raise_error RuntimeError, /cannot round to :#{grain} for #{pattern}/ }
+      end
+
+      context 'with :hour' do
+        let(:grain) { :hour }
+        let(:pattern) { 'table/y=%Y/m=%m/d=%d' }
+        include_context 'cannot round'
+      end
+
+      context 'with :day' do
+        let(:grain) { :day }
+        let(:pattern) { 'table/y=%Y/m=%m' }
+        include_context 'cannot round'
+      end
+
+      context 'with :month' do
+        let(:grain) { :month }
+        let(:pattern) { 'table/y=%Y' }
+        include_context 'cannot round'
+      end
+    end
+  end
 end
