@@ -33,7 +33,7 @@ class Masamune::DataPlanSet < Set
       yield elem if Masamune.filesystem.glob(elem.path).empty?
     end
   end
-  method_accumulate :missing, lambda { |set, *_| set.class.new(set.rule) }
+  method_accumulate :missing, lambda { |set| set.class.new(set.rule) }
 
   def existing(&block)
     self.each do |elem|
@@ -42,7 +42,7 @@ class Masamune::DataPlanSet < Set
       end
     end
   end
-  method_accumulate :existing, lambda { |set, *_| set.class.new(set.rule) }
+  method_accumulate :existing, lambda { |set| set.class.new(set.rule) }
 
   def adjacent(&block)
     self.each do |elem|
@@ -51,7 +51,7 @@ class Masamune::DataPlanSet < Set
       end
     end
   end
-  method_accumulate :adjacent, lambda { |set, *_| set.class.new(set.rule) }
+  method_accumulate :adjacent, lambda { |set| set.class.new(set.rule) }
 
   def actionable(&block)
     self.each do |elem|
@@ -62,7 +62,7 @@ class Masamune::DataPlanSet < Set
       end
     end
   end
-  method_accumulate :actionable, lambda { |set, *_| set.class.new(set.rule) }
+  method_accumulate :actionable, lambda { |set| set.class.new(set.rule) }
 
   # TODO detect & warn or correct if coarser grain set is incomplete
   def with_grain(grain, &block)
@@ -72,7 +72,7 @@ class Masamune::DataPlanSet < Set
       yield granular_elem if seen.add?(granular_elem)
     end
   end
-  method_accumulate :with_grain, lambda { |set, grain, *_| set.class.new(set.rule.round(grain)) }
+  method_accumulate :with_grain, lambda { |set, grain| set.class.new(set.rule.round(grain)) }
 
   def targets
     return Masamune::DataPlanSet::EMPTY if empty? || type == :target
