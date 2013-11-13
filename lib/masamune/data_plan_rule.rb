@@ -169,8 +169,8 @@ class Masamune::DataPlanRule
 
   private
 
-  def time_step_to_format(time_step)
-    case time_step
+  def time_step_to_format(step)
+    case step
     when :hour, :hours
       /%-?[H|k]/
     when :day, :days
