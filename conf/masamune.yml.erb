@@ -7,6 +7,8 @@
     database: masamune
     options:
       - --hiveconf: 'hive.metastore.warehouse.dir=<%= get_path(:warehouse_dir) %>'
+  postgres:
+    database: postgres
   s3cmd:
     options:
       - --config: <%= ENV['HOME'] %>/.s3cfg

@@ -39,14 +39,15 @@ module Masamune::Commands
 
     def command_args
       args = []
-      args << Masamune.configuration.postgres[:path]
-      args << Masamune.configuration.postgres[:options].map(&:to_a)
+      args << configuration[:path]
+      args << ['--dbname', configuration[:database]]
+      args << configuration[:options].map(&:to_a)
       args << ['-f', file] if file
       args << ['-o', output] if output
       variables.each do |key, val|
         args << ['-P', "#{key.to_s}=#{val.to_s}"]
       end
-      args.flatten
+      args.flatten.compact
     end
 
     def before_execute
@@ -60,6 +61,12 @@ module Masamune::Commands
         block.call(line) if block
         Masamune::print(line) if print?
       end
+    end
+
+    private
+
+    def configuration
+      Masamune.configuration.postgres
     end
   end
 end

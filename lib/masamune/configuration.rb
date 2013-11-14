@@ -103,7 +103,6 @@ class Masamune::Configuration
     @jobflow = defined_jobflows.fetch(jobflow.to_sym, jobflow.to_s)
   end
 
-
   def bind_template(section, template, input_args = {})
     free_command = load_template(section, template)[:command].split(/\s+/)
     [].tap do |bind_command|
@@ -229,7 +228,7 @@ class Masamune::Configuration
   end
 
   def default_postgres_attributes
-    {:path => 'psql', :database => 'default', :options => []}
+    {:path => 'psql', :database => 'postgres', :options => []}
   end
 
   def resolve_path(command, path)
