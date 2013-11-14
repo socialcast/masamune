@@ -24,7 +24,7 @@ class Masamune::Configuration
 
   attr_accessor :log_file_template
 
-  COMMANDS = %w(hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd)
+  COMMANDS = %w(hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd postgres)
   COMMANDS.each do |command|
     define_method(command) do
       unless instance_variable_get("@#{command}")
@@ -226,6 +226,10 @@ class Masamune::Configuration
 
   def default_s3cmd_attributes
     {:path => 's3cmd', :options => []}
+  end
+
+  def default_postgres_attributes
+    {:path => 'psql', :database => 'default', :options => []}
   end
 
   def resolve_path(command, path)
