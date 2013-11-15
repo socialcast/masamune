@@ -217,6 +217,7 @@ module Masamune
             end
           end
         end
+        buf.rewind
       end
     end
 
