@@ -1,5 +1,9 @@
+require 'active_support/concern'
+
 module Masamune::Actions
   module Hive
+    extend ActiveSupport::Concern
+
     def hive(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
 
@@ -17,6 +21,14 @@ module Masamune::Actions
       else
         command.execute
       end
+    end
+
+    included do |base|
+      base.before_initialize do |thor, options|
+        if options[:dry_run]
+          raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'show tables;', safe: true, fail_fast: false).success?
+        end
+      end if defined?(base.before_initialize)
     end
   end
 end

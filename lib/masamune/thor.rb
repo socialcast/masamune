@@ -1,8 +1,11 @@
 require 'date'
 require 'thor'
+require 'active_support/concern'
 
 module Masamune
   module Thor
+    extend ActiveSupport::Concern
+
     SYSTEM_CONFIG_FILES = [
       '/etc/masamune/config.yml',
       '/etc/masamune/config.yml.erb',
@@ -36,9 +39,23 @@ module Masamune
       end
     end
 
-    def self.included(thor)
+    module BeforeInitializeCallbacks
+      # Callbacks registered with the highest priority are executed first, ties are broken by callback registration order
+      def before_initialize(priority = 0, &block)
+        @before_initialize ||= Hash.new { |h,k| h[k] = [] }
+        @before_initialize[priority] << block
+      end
+
+      def before_initialize_invoke(*a)
+        @before_initialize ||= Hash.new { |h,k| h[k] = [] }
+        @before_initialize.sort.reverse.each { |p, x| x.each { |y| y.call(*a) } }
+      end
+    end
+
+    included do |thor|
       thor.extend ExtraArguments
       thor.extend RescueLogger
+      thor.extend BeforeInitializeCallbacks
       thor.class_eval do
         include Masamune::Actions::Filesystem
         include Masamune::Actions::ElasticMapreduce
@@ -100,29 +117,10 @@ module Masamune
             end
           end
 
-          Masamune::Actions.after_register.each do |callback|
-            callback.call(self)
-          end
-
-          before_initialize
-
-          if Masamune.configuration.elastic_mapreduce_enabled?
-            jobflow = Masamune.configuration.jobflow
-            raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless jobflow if self.extra.empty?
-            raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{jobflow}' for '--jobflow' doesn't exist) unless elastic_mapreduce(extra: '--list', jobflow: jobflow, fail_fast: false).success?
-          end
-
-          if options[:dry_run]
-            raise ::Thor::InvocationError, 'Dry run of hive failed' unless hive(exec: 'show tables;', safe: true, fail_fast: false).success?
-          end
-
-          after_initialize
+          self.class.before_initialize_invoke(self, options)
         end
 
         private
-
-        def before_initialize(*a); end
-        def after_initialize(*a); end
 
         def display_help?
           options[:help] || current_task_name == 'help'

@@ -8,7 +8,7 @@
     options:
       - --hiveconf: 'hive.metastore.warehouse.dir=<%= get_path(:warehouse_dir) %>'
   postgres:
-    database: default
+    database: masamune
     username: <%= %x{whoami} %>
   s3cmd:
     options:

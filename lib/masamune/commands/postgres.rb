@@ -1,5 +1,4 @@
 require 'masamune/string_format'
-require 'masamune/commands/shell'
 
 module Masamune::Commands
   class Postgres

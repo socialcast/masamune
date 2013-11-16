@@ -1,5 +1,11 @@
+require 'active_support/concern'
+require 'masamune/actions/postgres_admin'
+
 module Masamune::Actions
   module Postgres
+    extend ActiveSupport::Concern
+    include Masamune::Actions::PostgresAdmin
+
     def postgres(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
 
@@ -15,17 +21,17 @@ module Masamune::Actions
         command.execute
       end
     end
-  end
 
-  # TODO load setup_files
-  # TODO load schema_files
-  after_register do |base|
-    # FIXME
-    next unless (class << base; self; end).included_modules.include?(Masamune::Actions::Postgres)
-    base.extend(Masamune::Actions::PostgresAdmin)
-    configuration = Masamune.configuration.postgres
-    unless base.postgres(exec: 'SELECT version();', fail_fast: false).success?
-      base.postgres_admin(action: :create, database: configuration[:database])
+    # TODO load setup_files
+    # TODO load schema_files
+    # TODO dry run
+    included do
+      base.before_initialize do |thor, options|
+        configuration = Masamune.configuration.postgres
+        unless thor.postgres(exec: 'SELECT version();', fail_fast: false).success?
+          thor.postgres_admin(action: :create, database: configuration[:database])
+        end
+      end if defined?(base.before_initialize)
     end
   end
 end

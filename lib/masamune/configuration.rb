@@ -205,6 +205,7 @@ class Masamune::Configuration
     {:path => 'hadoop', :jar => default_hadoop_streaming_jar, :options => []}
   end
 
+  # FIXME make a better guess with Find
   def default_hadoop_streaming_jar
     case RUBY_PLATFORM
     when /darwin/
