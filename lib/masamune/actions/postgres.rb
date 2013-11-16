@@ -22,13 +22,18 @@ module Masamune::Actions
       end
     end
 
-    # TODO reference thor.configuration
     # TODO dry run
     included do |base|
       base.before_initialize do |thor, options|
-        configuration = Masamune.configuration.postgres
+        configuration = thor.configuration.postgres
         unless thor.postgres(exec: 'SELECT version();', fail_fast: false).success?
           thor.postgres_admin(action: :create, database: configuration[:database])
+        end
+        configuration[:setup_files].each do |file|
+          thor.postgres(file: file)
+        end
+        configuration[:schema_files].each do |file|
+          thor.postgres(file: file)
         end
       end if defined?(base.before_initialize)
     end
