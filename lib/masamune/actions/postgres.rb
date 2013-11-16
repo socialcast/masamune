@@ -22,10 +22,9 @@ module Masamune::Actions
       end
     end
 
-    # TODO load setup_files
-    # TODO load schema_files
+    # TODO reference thor.configuration
     # TODO dry run
-    included do
+    included do |base|
       base.before_initialize do |thor, options|
         configuration = Masamune.configuration.postgres
         unless thor.postgres(exec: 'SELECT version();', fail_fast: false).success?
