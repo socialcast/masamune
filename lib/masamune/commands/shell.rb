@@ -22,6 +22,7 @@ module Masamune::Commands
 
     def replace
       Masamune::logger.debug('replace: ' + command_args.join(' '))
+      before_execute
       around_execute do
         pid = fork {
           exec(*command_args)

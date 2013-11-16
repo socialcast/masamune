@@ -39,8 +39,12 @@ module Masamune::Commands
 
     def command_args
       args = []
+      args << "PGPASSFILE=#{configuration[:pgpass_file]}" if configuration[:pgpass_file]
       args << configuration[:path]
+      args << ['--host', configuration[:hostname]] if configuration[:hostname]
       args << ['--dbname', configuration[:database]]
+      args << ['--username', configuration[:username]] if configuration[:username]
+      args << '--no-password'
       args << configuration[:options].map(&:to_a)
       args << ['-f', file] if file
       args << ['-o', output] if output

@@ -100,6 +100,10 @@ module Masamune
             end
           end
 
+          Masamune::Actions.after_register.each do |callback|
+            callback.call(self)
+          end
+
           before_initialize
 
           if Masamune.configuration.elastic_mapreduce_enabled?

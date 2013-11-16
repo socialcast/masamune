@@ -33,8 +33,7 @@ module Masamune::Commands
     end
 
     def configuration
-      Masamune.configuration.postgres_admin.merge
-      Masamune.configuration.postgres
+      Masamune.configuration.postgres_admin.merge(Masamune.configuration.postgres)
     end
   end
 end

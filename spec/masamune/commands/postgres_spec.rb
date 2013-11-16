@@ -22,7 +22,7 @@ describe Masamune::Commands::Postgres do
   end
 
   describe '#command_args' do
-    let(:default_command) { ['psql', '--dbname', 'postgres'] }
+    let(:default_command) { ['psql', '--dbname', 'postgres', '--no-password'] }
 
     subject do
       instance.command_args
