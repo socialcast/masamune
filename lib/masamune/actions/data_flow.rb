@@ -50,7 +50,7 @@ module Masamune::Actions
       # Masamune::print("skipping existing #{target.path}")
 
       # Execute this block last
-      base.before_initialize(-1) do |thor, options|
+      base.after_initialize(-1) do |thor, options|
         # Only execute this block once, prevents expected reentrancy caused by Thor.invoke
         next if Masamune.thor_instance
         Masamune.thor_instance ||= thor
@@ -68,7 +68,7 @@ module Masamune::Actions
         thor.data_plan.prepare(thor.current_command_name, sources: desired_sources, targets: desired_targets)
         thor.data_plan.execute(thor.current_command_name, options)
         exit 0
-      end if defined?(base.before_initialize)
+      end if defined?(base.after_initialize)
     end
 
     module ClassMethods

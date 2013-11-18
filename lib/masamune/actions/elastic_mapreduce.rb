@@ -22,13 +22,13 @@ module Masamune::Actions
     end
 
     included do |base|
-      base.before_initialize do |thor, options|
+      base.after_initialize do |thor, options|
         next unless Masamune.configuration.elastic_mapreduce_enabled?
         # FIXME attribute of elastic_mapreduce configuration
         jobflow = Masamune.configuration.jobflow
         raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless jobflow if thor.extra.empty?
         raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{jobflow}' for '--jobflow' doesn't exist) unless thor.elastic_mapreduce(extra: '--list', jobflow: jobflow, fail_fast: false).success?
-      end if defined?(base.before_initialize)
+      end if defined?(base.after_initialize)
     end
   end
 end

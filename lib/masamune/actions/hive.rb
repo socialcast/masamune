@@ -24,11 +24,11 @@ module Masamune::Actions
     end
 
     included do |base|
-      base.before_initialize do |thor, options|
+      base.after_initialize do |thor, options|
         if options[:dry_run]
           raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'show tables;', safe: true, fail_fast: false).success?
         end
-      end if defined?(base.before_initialize)
+      end if defined?(base.after_initialize)
     end
   end
 end

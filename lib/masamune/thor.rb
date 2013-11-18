@@ -42,14 +42,14 @@ module Masamune
 
     module BeforeInitializeCallbacks
       # Callbacks registered with the highest priority are executed first, ties are broken by callback registration order
-      def before_initialize(priority = 0, &block)
-        @before_initialize ||= Hash.new { |h,k| h[k] = [] }
-        @before_initialize[priority] << block
+      def after_initialize(priority = 0, &block)
+        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
+        @after_initialize[priority] << block
       end
 
-      def before_initialize_invoke(*a)
-        @before_initialize ||= Hash.new { |h,k| h[k] = [] }
-        @before_initialize.sort.reverse.each { |p, x| x.each { |y| y.call(*a) } }
+      def after_initialize_invoke(*a)
+        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
+        @after_initialize.sort.reverse.each { |p, x| x.each { |y| y.call(*a) } }
       end
     end
 
@@ -122,7 +122,7 @@ module Masamune
             end
           end
 
-          before_initialize_invoke(options)
+          after_initialize_invoke(options)
         end
 
         no_tasks do
@@ -131,8 +131,8 @@ module Masamune
 
         private
 
-        def before_initialize_invoke(*a)
-          self.class.before_initialize_invoke(self, *a)
+        def after_initialize_invoke(*a)
+          self.class.after_initialize_invoke(self, *a)
         end
 
         def display_help?

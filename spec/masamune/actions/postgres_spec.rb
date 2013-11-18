@@ -24,7 +24,7 @@ describe Masamune::Actions::Postgres do
     it { should be_success }
   end
 
-  describe '.before_initialize' do
+  describe '.after_initialize' do
     let(:base) { double }
     let(:configuration) { {} }
 
@@ -32,15 +32,15 @@ describe Masamune::Actions::Postgres do
       base.stub_chain(:configuration, :postgres).and_return(default_configuration.postgres.merge(configuration))
     end
 
-    subject(:before_initialize_invoke) do
-      klass.before_initialize_invoke(base)
+    subject(:after_initialize_invoke) do
+      klass.after_initialize_invoke(base)
     end
 
     context 'when database does not exist' do
       before do
         base.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_failure)
         base.should_receive(:postgres_admin).with(action: :create, database: an_instance_of(String)).once
-        before_initialize_invoke
+        after_initialize_invoke
       end
       it 'should call posgres_admin once' do; end
     end
@@ -49,7 +49,7 @@ describe Masamune::Actions::Postgres do
       before do
         base.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
         base.should_receive(:postgres_admin).never
-        before_initialize_invoke
+        after_initialize_invoke
       end
       it 'should not call postgres_admin' do; end
     end
@@ -60,7 +60,7 @@ describe Masamune::Actions::Postgres do
       before do
         base.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
         base.should_receive(:postgres).with(file: setup_file).once
-        before_initialize_invoke
+        after_initialize_invoke
       end
       it 'should not call postgres_admin' do; end
     end
@@ -71,7 +71,7 @@ describe Masamune::Actions::Postgres do
       before do
         base.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
         base.should_receive(:postgres).with(file: schema_file).once
-        before_initialize_invoke
+        after_initialize_invoke
       end
       it 'should not call postgres_admin' do; end
     end
