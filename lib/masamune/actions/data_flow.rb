@@ -17,7 +17,6 @@ module Masamune::Actions
       data_plan.sources(current_command_name)
     end
 
-    # TODO encapsulate in separate module
     def parse_datetime_type(key)
       value = options[key]
       Chronic.parse(value).tap do |datetime_value|

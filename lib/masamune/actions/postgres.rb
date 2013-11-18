@@ -22,7 +22,6 @@ module Masamune::Actions
       end
     end
 
-    # TODO dry run
     included do |base|
       base.after_initialize do |thor, options|
         configuration = thor.configuration.postgres
