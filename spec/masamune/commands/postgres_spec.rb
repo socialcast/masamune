@@ -22,7 +22,7 @@ describe Masamune::Commands::Postgres do
   end
 
   describe '#command_args' do
-    let(:default_command) { ['psql', '--dbname', 'postgres', '--no-password'] }
+    let(:default_command) { ['psql', '--dbname=postgres', '--no-password'] }
 
     subject do
       instance.command_args
@@ -37,12 +37,12 @@ describe Masamune::Commands::Postgres do
 
     context 'with file' do
       let(:context_options) { {file: 'zomg.hql'} }
-      it { should == [*default_command, '-f', 'zomg.hql'] }
+      it { should == [*default_command, '--file=zomg.hql'] }
     end
 
     context 'with variables' do
       let(:context_options) { {variables: {R: 'R2DO', C: 'C3PO'}} }
-      it { should == [*default_command, '-P', 'R=R2DO', '-P', 'C=C3PO'] }
+      it { should == [*default_command, %q(--set=R='R2DO'), %q(--set=C='C3PO')] }
     end
   end
 end

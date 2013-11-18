@@ -40,15 +40,15 @@ module Masamune::Commands
       args = []
       args << "PGPASSFILE=#{configuration[:pgpass_file]}" if configuration[:pgpass_file]
       args << configuration[:path]
-      args << ['--host', configuration[:hostname]] if configuration[:hostname]
-      args << ['--dbname', configuration[:database]]
-      args << ['--username', configuration[:username]] if configuration[:username]
+      args << ['--host=%s' % configuration[:hostname]] if configuration[:hostname]
+      args << ['--dbname=%s' % configuration[:database]]
+      args << ['--username=%s' % configuration[:username]] if configuration[:username]
       args << '--no-password'
       args << configuration[:options].map(&:to_a)
-      args << ['-f', file] if file
-      args << ['-o', output] if output
+      args << ['--file=%s' % file] if file
+      args << ['--output=%s' % output] if output
       variables.each do |key, val|
-        args << ['-P', "#{key.to_s}=#{val.to_s}"]
+        args << ['--set=%s' % "#{key.to_s}='#{val.to_s}'"]
       end
       args.flatten.compact
     end
