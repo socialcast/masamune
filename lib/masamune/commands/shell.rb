@@ -24,12 +24,14 @@ module Masamune::Commands
       Masamune::logger.debug('replace: ' + command_args.join(' '))
       before_execute
       around_execute do
-        pid = fork {
+        pid = Process.fork
+        if pid
+          STDIN.close; STDOUT.close; STDERR.close
+          Process.waitpid(pid)
+          exit
+        else
           exec(command_env, *command_args)
-        }
-        $stderr.reopen($stdout)
-        Process.waitpid(pid) if pid
-        exit
+        end
       end
     end
 
