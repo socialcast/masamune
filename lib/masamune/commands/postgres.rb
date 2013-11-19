@@ -2,8 +2,6 @@ require 'masamune/string_format'
 
 module Masamune::Commands
   class Postgres
-    PROMPT = 'postgres=#'
-
     include Masamune::StringFormat
 
     attr_accessor :file, :exec, :input, :output, :print, :block, :variables
@@ -58,12 +56,16 @@ module Masamune::Commands
     end
 
     def handle_stdout(line, line_no)
-      if line =~ /\A#{PROMPT}/
+      if line =~ /\A#{prompt}/
         Masamune.logger.debug(line)
       else
         block.call(line) if block
         Masamune::print(line) if print?
       end
+    end
+
+    def prompt
+      configuration[:database] + '=>'
     end
 
     private
