@@ -7,10 +7,13 @@ module Masamune::Commands
       self.database   = opts[:database]
     end
 
+    def command_env
+      configuration[:pgpass_file] ? {'PGPASSFILE' => configuration[:pgpass_file]} : {}
+    end
+
     def command_args
       raise ArgumentError, ':database must be given' unless database
       args = []
-      args << 'PGPASSFILE=%s' % configuration[:pgpass_file] if configuration[:pgpass_file]
       args << command_path
       args << '--host=%s' % configuration[:hostname] if configuration[:hostname]
       args << '--username=%s' % configuration[:username] if configuration[:username]

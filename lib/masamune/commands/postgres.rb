@@ -34,9 +34,12 @@ module Masamune::Commands
       self.print
     end
 
+    def command_env
+      configuration[:pgpass_file] ? {'PGPASSFILE' => configuration[:pgpass_file]} : {}
+    end
+
     def command_args
       args = []
-      args << 'PGPASSFILE=%s' % configuration[:pgpass_file] if configuration[:pgpass_file]
       args << configuration[:path]
       args << '--host=%s' % configuration[:hostname] if configuration[:hostname]
       args << '--dbname=%s' % configuration[:database]
