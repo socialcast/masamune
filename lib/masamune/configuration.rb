@@ -47,7 +47,6 @@ class Masamune::Configuration
           instance[:options] += options
         end
         instance.merge!(attributes)
-        send(:"validate_#{command}_attributes") if respond_to?(:"validate_#{command}_attributes")
       end
     end
   end
@@ -240,12 +239,6 @@ class Masamune::Configuration
       :schema_files => [],
       :options      => []
     }
-  end
-
-  def validate_postgres_attributes
-    if @postgres[:pgpass_file] && !File.exists?(@postgres[:pgpass_file])
-      raise ArgumentError, "Missing postgres password file #{@postgres[:pgpass_file]}"
-    end
   end
 
   def default_postgres_admin_attributes
