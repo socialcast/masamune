@@ -15,25 +15,32 @@ module Masamune::Actions
       command = Masamune::Commands::LineFormatter.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
 
-      if command.interactive?
-        command.replace
-      else
-        command.execute
+      command.interactive? ? command.replace : command.execute
+    end
+
+    def create_database_if_not_exists
+      unless postgres(exec: 'SELECT version();', fail_fast: false).success?
+        postgres_admin(action: :create, database: configuration.postgres[:database])
+      end
+    end
+
+    def load_setup_files
+      configuration.postgres[:setup_files].each do |file|
+        postgres(file: file)
+      end
+    end
+
+    def load_schema_files
+      configuration.postgres[:schema_files].each do |file|
+        postgres(file: file)
       end
     end
 
     included do |base|
       base.after_initialize do |thor, options|
-        configuration = thor.configuration.postgres
-        unless thor.postgres(exec: 'SELECT version();', fail_fast: false).success?
-          thor.postgres_admin(action: :create, database: configuration[:database])
-        end
-        configuration[:setup_files].each do |file|
-          thor.postgres(file: file)
-        end
-        configuration[:schema_files].each do |file|
-          thor.postgres(file: file)
-        end
+        thor.create_database_if_not_exists
+        thor.load_setup_files
+        thor.load_schema_files
       end if defined?(base.after_initialize)
     end
   end

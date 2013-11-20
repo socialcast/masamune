@@ -13,6 +13,11 @@ describe Masamune::Actions::Postgres do
   end
 
   let(:instance) { klass.new }
+  let(:configuration) { {} }
+
+  before do
+    instance.stub_chain(:configuration, :postgres).and_return(default_configuration.postgres.merge(configuration))
+  end
 
   describe '.postgres' do
     before do
@@ -25,21 +30,15 @@ describe Masamune::Actions::Postgres do
   end
 
   describe '.after_initialize' do
-    let(:base) { double }
-    let(:configuration) { {} }
-
-    before do
-      base.stub_chain(:configuration, :postgres).and_return(default_configuration.postgres.merge(configuration))
-    end
 
     subject(:after_initialize_invoke) do
-      klass.after_initialize_invoke(base)
+      klass.after_initialize_invoke(instance)
     end
 
     context 'when database does not exist' do
       before do
-        base.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_failure)
-        base.should_receive(:postgres_admin).with(action: :create, database: an_instance_of(String)).once
+        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_failure)
+        instance.should_receive(:postgres_admin).with(action: :create, database: an_instance_of(String)).once
         after_initialize_invoke
       end
       it 'should call posgres_admin once' do; end
@@ -47,8 +46,8 @@ describe Masamune::Actions::Postgres do
 
     context 'when database exists' do
       before do
-        base.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
-        base.should_receive(:postgres_admin).never
+        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
+        instance.should_receive(:postgres_admin).never
         after_initialize_invoke
       end
       it 'should not call postgres_admin' do; end
@@ -58,8 +57,8 @@ describe Masamune::Actions::Postgres do
       let(:setup_file) { 'setup.psql' }
       let(:configuration) { {setup_files: [setup_file]} }
       before do
-        base.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
-        base.should_receive(:postgres).with(file: setup_file).once
+        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
+        instance.should_receive(:postgres).with(file: setup_file).once
         after_initialize_invoke
       end
       it 'should not call postgres_admin' do; end
@@ -69,8 +68,8 @@ describe Masamune::Actions::Postgres do
       let(:schema_file) { 'schema.psql' }
       let(:configuration) { {schema_files: [schema_file]} }
       before do
-        base.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
-        base.should_receive(:postgres).with(file: schema_file).once
+        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
+        instance.should_receive(:postgres).with(file: schema_file).once
         after_initialize_invoke
       end
       it 'should not call postgres_admin' do; end
