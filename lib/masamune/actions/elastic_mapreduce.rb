@@ -14,11 +14,7 @@ module Masamune::Actions
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
 
-      if command.interactive?
-        command.replace
-      else
-        command.execute
-      end
+      command.interactive? ? command.replace : command.execute
     end
 
     included do |base|
