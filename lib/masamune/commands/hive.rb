@@ -1,8 +1,11 @@
+require 'masamune/string_format'
 require 'masamune/commands/shell'
 
 module Masamune::Commands
   class Hive
     PROMPT = 'hive>'
+
+    include Masamune::StringFormat
 
     attr_accessor :file, :exec, :input, :output, :print, :block, :variables, :rollback
 
@@ -93,17 +96,6 @@ module Masamune::Commands
         Masamune::logger.error('rolling back')
         rollback.call
       end
-    end
-
-    private
-
-    def strip_sql(sql)
-      out = sql.dup
-      out.gsub!(/\A'|\A"|"\z|'\z/, '')
-      out.gsub!(/\s\s+/, ' ')
-      out.gsub!(/\s*;+\s*$/,'')
-      out.strip!
-      out + ';'
     end
   end
 end

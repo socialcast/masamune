@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+$: << File.expand_path('../../lib/', __FILE__)
+require 'masamune/tasks/postgres_thor'
+Masamune::Tasks::PostgresThor.start(ARGV)

@@ -1,56 +1,20 @@
 require 'chronic'
+require 'active_support/concern'
 
 module Masamune::Actions
   module DataFlow
-    private
-
-    def self.included(base)
-      base.extend ClassMethods
-      base.class_eval do
-        class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
-        class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
-        class_option :sources, :desc => 'File of data sources to process'
-        class_option :targets, :desc => 'File of data targets to process'
-        class_option :no_resolve, :type => :boolean, :desc => 'Do not attempt to recursively resolve data dependencies', :default => false
-
-        private
-
-        def targets
-          data_plan.targets(current_command_name)
-        end
-
-        def sources
-          data_plan.sources(current_command_name)
-        end
-
-        # TODO messaging
-        # Masamune::print("skipping missing source #{source.path}")
-        # Masamune::print("skipping existing #{target.path}")
-
-        # TODO allow multiple after_initialize blocks
-        def after_initialize
-          return if Masamune.thor_instance
-          Masamune.thor_instance ||= self
-
-          raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
-          raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
-
-          desired_sources = parse_file_type(:sources, Set.new)
-          desired_targets = parse_file_type(:targets, Set.new)
-
-          if options[:start] && options[:stop]
-            desired_targets.merge data_plan.targets_for_date_range(current_command_name, parse_datetime_type(:start), parse_datetime_type(:stop))
-          end
-
-          data_plan.prepare(current_command_name, sources: desired_sources, targets: desired_targets)
-          data_plan.execute(current_command_name, options)
-          exit 0
-        end
-      end
-    end
+    extend ActiveSupport::Concern
 
     def data_plan
       self.class.data_plan
+    end
+
+    def targets
+      data_plan.targets(current_command_name)
+    end
+
+    def sources
+      data_plan.sources(current_command_name)
     end
 
     def parse_datetime_type(key)
@@ -66,6 +30,40 @@ module Masamune::Actions
       value = options[key] or return default
       File.exists?(value) or raise Thor::MalformattedArgumentError, "Expected file value for '--#{key}'; got #{value}"
       Set.new File.read(value).split(/\s+/)
+    end
+
+    private
+
+    included do |base|
+      base.extend ClassMethods
+      base.class_eval do
+        class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
+        class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
+        class_option :sources, :desc => 'File of data sources to process'
+        class_option :targets, :desc => 'File of data targets to process'
+        class_option :no_resolve, :type => :boolean, :desc => 'Do not attempt to recursively resolve data dependencies', :default => false
+      end
+
+      # Execute this block last
+      base.after_initialize(-1) do |thor, options|
+        # Only execute this block once, prevents expected reentrancy caused by Thor.invoke
+        next if Masamune.thor_instance
+        Masamune.thor_instance ||= thor
+
+        raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
+        raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
+
+        desired_sources = thor.parse_file_type(:sources, Set.new)
+        desired_targets = thor.parse_file_type(:targets, Set.new)
+
+        if options[:start] && options[:stop]
+          desired_targets.merge data_plan.targets_for_date_range(thor.current_command_name, thor.parse_datetime_type(:start), thor.parse_datetime_type(:stop))
+        end
+
+        thor.data_plan.prepare(thor.current_command_name, sources: desired_sources, targets: desired_targets)
+        thor.data_plan.execute(thor.current_command_name, options)
+        exit 0
+      end if defined?(base.after_initialize)
     end
 
     module ClassMethods

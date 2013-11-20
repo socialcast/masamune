@@ -24,7 +24,7 @@ class Masamune::Configuration
 
   attr_accessor :log_file_template
 
-  COMMANDS = %w(hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd)
+  COMMANDS = %w(hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd postgres postgres_admin)
   COMMANDS.each do |command|
     define_method(command) do
       unless instance_variable_get("@#{command}")
@@ -102,7 +102,6 @@ class Masamune::Configuration
     return unless jobflow
     @jobflow = defined_jobflows.fetch(jobflow.to_sym, jobflow.to_s)
   end
-
 
   def bind_template(section, template, input_args = {})
     free_command = load_template(section, template)[:command].split(/\s+/)
@@ -205,6 +204,7 @@ class Masamune::Configuration
     {:path => 'hadoop', :jar => default_hadoop_streaming_jar, :options => []}
   end
 
+  # FIXME make a better guess with Find
   def default_hadoop_streaming_jar
     case RUBY_PLATFORM
     when /darwin/
@@ -226,6 +226,27 @@ class Masamune::Configuration
 
   def default_s3cmd_attributes
     {:path => 's3cmd', :options => []}
+  end
+
+  def default_postgres_attributes
+    {
+      :path         => 'psql',
+      :hostname     => 'localhost',
+      :database     => 'postgres',
+      :username     => 'postgres',
+      :pgpass_file  => nil,
+      :setup_files  => [],
+      :schema_files => [],
+      :options      => []
+    }
+  end
+
+  def default_postgres_admin_attributes
+    {
+      :create_db_path => 'createdb',
+      :drop_db_path   => 'dropdb',
+      :options        => []
+    }.reverse_merge(default_postgres_attributes.keep_if { |k,_| [:hostname, :username, :pgpass_file].include?(k) })
   end
 
   def resolve_path(command, path)

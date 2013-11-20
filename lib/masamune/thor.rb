@@ -1,8 +1,12 @@
 require 'date'
 require 'thor'
+require 'forwardable'
+require 'active_support/concern'
 
 module Masamune
   module Thor
+    extend ActiveSupport::Concern
+
     SYSTEM_CONFIG_FILES = [
       '/etc/masamune/config.yml',
       '/etc/masamune/config.yml.erb',
@@ -36,12 +40,28 @@ module Masamune
       end
     end
 
-    def self.included(thor)
+    module BeforeInitializeCallbacks
+      # Callbacks registered with the highest priority are executed first, ties are broken by callback registration order
+      def after_initialize(priority = 0, &block)
+        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
+        @after_initialize[priority] << block
+      end
+
+      def after_initialize_invoke(*a)
+        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
+        @after_initialize.sort.reverse.each { |p, x| x.each { |y| y.call(*a) } }
+      end
+    end
+
+    included do |thor|
+      thor.extend Forwardable
       thor.extend ExtraArguments
       thor.extend RescueLogger
+      thor.extend BeforeInitializeCallbacks
       thor.class_eval do
         include Masamune::Actions::Filesystem
         include Masamune::Actions::ElasticMapreduce
+        attr_accessor :current_client
         attr_accessor :current_namespace
         attr_accessor :current_task_name
         attr_accessor :current_command_name
@@ -59,6 +79,7 @@ module Masamune
         class_option :version, :desc => 'Print version and exit'
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
+          self.current_client = Masamune.client
           self.current_namespace = self.class.namespace
           self.current_task_name = _config[:current_command].name
           self.current_command_name = self.current_namespace + ':' + self.current_task_name
@@ -74,6 +95,7 @@ module Masamune
             exit
           end
 
+          # TODO remove ability to reference to global configuration outside of current_client
           Masamune.configure do |config|
             config.client.context = self
 
@@ -100,25 +122,18 @@ module Masamune
             end
           end
 
-          before_initialize
+          after_initialize_invoke(options)
+        end
 
-          if Masamune.configuration.elastic_mapreduce_enabled?
-            jobflow = Masamune.configuration.jobflow
-            raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless jobflow if self.extra.empty?
-            raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{jobflow}' for '--jobflow' doesn't exist) unless elastic_mapreduce(extra: '--list', jobflow: jobflow, fail_fast: false).success?
-          end
-
-          if options[:dry_run]
-            raise ::Thor::InvocationError, 'Dry run of hive failed' unless hive(exec: 'show tables;', safe: true, fail_fast: false).success?
-          end
-
-          after_initialize
+        no_tasks do
+          def_delegators :current_client, :configuration
         end
 
         private
 
-        def before_initialize(*a); end
-        def after_initialize(*a); end
+        def after_initialize_invoke(*a)
+          self.class.after_initialize_invoke(self, *a)
+        end
 
         def display_help?
           options[:help] || current_task_name == 'help'

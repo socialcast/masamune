@@ -22,13 +22,16 @@ module Masamune::Commands
 
     def replace
       Masamune::logger.debug('replace: ' + command_args.join(' '))
+      before_execute
       around_execute do
-        pid = fork {
-          exec(*command_args)
-        }
-        $stderr.reopen($stdout)
-        Process.waitpid(pid) if pid
-        exit
+        pid = Process.fork
+        if pid
+          STDIN.close; STDOUT.close; STDERR.close
+          Process.waitpid(pid)
+          exit
+        else
+          exec(command_env, *command_args)
+        end
       end
     end
 
@@ -60,6 +63,10 @@ module Masamune::Commands
       else
         block.call
       end
+    end
+
+    def command_env
+      @delegate.respond_to?(:command_env) ? @delegate.command_env : {}
     end
 
     def command_args
@@ -94,7 +101,7 @@ module Masamune::Commands
     end
 
     def execute_block
-      p_stdin, p_stdout, p_stderr, t_in = Open3.popen3(*command_args)
+      p_stdin, p_stdout, p_stderr, t_in = Open3.popen3(command_env, *command_args)
 
       p_stdin.wait_writable(PIPE_TIMEOUT) or raise "IO stdin not ready for write in #{PIPE_TIMEOUT}"
 
