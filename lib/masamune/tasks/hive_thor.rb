@@ -18,10 +18,7 @@ module Masamune::Tasks
     def hive_exec
       hive_options = options.dup
       hive_options.merge!(print: true)
-
-      if options[:csv]
-        hive_options.merge!(ifs: "\t", ofs: ',')
-      end
+      hive_options.merge!(ifs: "\t", ofs: ',') if options[:csv]
 
       if options[:file]
         remote_file = fs.path(:tmp_dir, File.basename(options[:file]))
