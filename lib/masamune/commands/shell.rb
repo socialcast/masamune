@@ -66,11 +66,7 @@ module Masamune::Commands
     end
 
     def command_env
-      if @delegate.respond_to?(:command_env)
-        @delegate.command_env
-      else
-        {}
-      end
+      @delegate.respond_to?(:command_env) ? @delegate.command_env : {}
     end
 
     def command_args
