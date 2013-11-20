@@ -44,10 +44,6 @@ module Masamune::Actions
         class_option :no_resolve, :type => :boolean, :desc => 'Do not attempt to recursively resolve data dependencies', :default => false
       end
 
-      # TODO messaging
-      # Masamune::print("skipping missing source #{source.path}")
-      # Masamune::print("skipping existing #{target.path}")
-
       # Execute this block last
       base.after_initialize(-1) do |thor, options|
         # Only execute this block once, prevents expected reentrancy caused by Thor.invoke
