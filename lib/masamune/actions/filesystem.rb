@@ -1,7 +1,7 @@
 module Masamune::Actions
   module Filesystem
     def filesystem
-      Masamune::configuration.filesystem
+      client.filesystem
     end
     alias :fs :filesystem
 

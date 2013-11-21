@@ -23,7 +23,9 @@ module Masamune::Actions
         end
       end if block_given?
 
-      Masamune::Commands::Shell.new(klass.new, {fail_fast: false}.merge(opts)).execute
+      command = Masamune::Commands::Shell.new(klass.new, {fail_fast: false}.merge(opts))
+      command.client = client
+      command.execute
     end
   end
 end

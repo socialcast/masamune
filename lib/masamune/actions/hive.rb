@@ -6,8 +6,7 @@ module Masamune::Actions
 
     def hive(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
-
-      opts.merge!(jobflow: Masamune.configuration.jobflow)
+      opts.reverse_merge!(configuration[:hive]) if configuration[:hive]
       opts.merge!(block: block.to_proc) if block_given?
 
       command = Masamune::Commands::Hive.new(opts)
@@ -15,6 +14,7 @@ module Masamune::Actions
       command = Masamune::Commands::LineFormatter.new(command, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
+      command.client = client
 
       command.interactive? ? command.replace : command.execute
     end

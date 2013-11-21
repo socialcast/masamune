@@ -15,7 +15,8 @@ module Masamune::Commands
       :input      => nil,
     }
 
-    def initialize(attrs = {})
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
       DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end

@@ -5,11 +5,15 @@ module Masamune::Actions
     def s3cmd(*args, &block)
       opts = args.last.is_a?(Hash) ? args.pop : {}
       opts = opts.to_hash.symbolize_keys
+      opts.reverse_merge!(configuration[:s3cmd]) if configuration[:s3cmd]
       opts.merge!(extra: Array.wrap(args))
       opts.merge!(block: block.to_proc) if block_given?
+
       command = Masamune::Commands::S3Cmd.new(opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
+      command.client = client
+
       command.execute
     end
 

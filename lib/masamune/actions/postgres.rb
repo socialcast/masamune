@@ -8,7 +8,6 @@ module Masamune::Actions
 
     def postgres(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
-
       opts.reverse_merge!(configuration[:postgres]) if configuration[:postgres]
       opts.merge!(block: block.to_proc) if block_given?
 
