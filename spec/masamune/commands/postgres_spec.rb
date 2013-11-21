@@ -1,20 +1,15 @@
 require 'spec_helper'
 
 describe Masamune::Commands::Postgres do
-  let(:configuration) { {:path => 'psql', :database => 'postgres', :options => command_options} }
-  let(:general_options) { {} }
-  let(:command_options) { [] }
-  let(:context_options) { {} }
+  let(:configuration) { {:path => 'psql', :database => 'postgres', :extra => extra} }
+  let(:extra) { [] }
+  let(:options) { {} }
 
-  let(:instance) { Masamune::Commands::Postgres.new(general_options.merge(context_options)) }
-
-  before do
-    instance.stub(:configuration) { configuration }
-  end
+  let(:instance) { Masamune::Commands::Postgres.new(configuration.merge(options)) }
 
   describe '#stdin' do
-    context 'with exec' do
-      let(:context_options) { {exec: %q(SELECT * FROM table;)} }
+    context 'with input' do
+      let(:options) { {input: %q(SELECT * FROM table;)} }
       subject { instance.stdin }
       it { should be_a(StringIO) }
       its(:string) { should == %q(SELECT * FROM table;) }
@@ -22,7 +17,7 @@ describe Masamune::Commands::Postgres do
   end
 
   describe '#command_args' do
-    let(:default_command) { ['psql', '--dbname=postgres', '--no-password'] }
+    let(:default_command) { ['psql', '--host=localhost', '--dbname=postgres', '--username=postgres', '--no-password'] }
 
     subject do
       instance.command_args
@@ -31,17 +26,17 @@ describe Masamune::Commands::Postgres do
     it { should == default_command }
 
     context 'with command options' do
-      let(:command_options) { [{'-A' => nil}] }
+      let(:extra) { [{'-A' => nil}] }
       it { should == [*default_command, '-A'] }
     end
 
     context 'with file' do
-      let(:context_options) { {file: 'zomg.hql'} }
+      let(:options) { {file: 'zomg.hql'} }
       it { should == [*default_command, '--file=zomg.hql'] }
     end
 
     context 'with variables' do
-      let(:context_options) { {variables: {R: 'R2DO', C: 'C3PO'}} }
+      let(:options) { {variables: {R: 'R2DO', C: 'C3PO'}} }
       it { should == [*default_command, %q(--set=R='R2DO'), %q(--set=C='C3PO')] }
     end
   end

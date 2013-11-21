@@ -3,7 +3,6 @@ require 'spec_helper'
 describe Masamune::Actions::Postgres do
   # TODO move to universal example group
   let(:client) { Masamune::Client.new }
-  let(:default_configuration) { client.configuration }
 
   let(:klass) do
     Class.new do
@@ -13,10 +12,10 @@ describe Masamune::Actions::Postgres do
   end
 
   let(:instance) { klass.new }
-  let(:configuration) { {} }
+  let(:configuration) { {database: 'test'} }
 
   before do
-    instance.stub_chain(:configuration, :postgres).and_return(default_configuration.postgres.merge(configuration))
+    instance.stub(:configuration).and_return({postgres: configuration})
   end
 
   describe '.postgres' do
@@ -38,7 +37,7 @@ describe Masamune::Actions::Postgres do
     context 'when database does not exist' do
       before do
         instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_failure)
-        instance.should_receive(:postgres_admin).with(action: :create, database: an_instance_of(String)).once
+        instance.should_receive(:postgres_admin).with(action: :create, database: 'test').once
         after_initialize_invoke
       end
       it 'should call posgres_admin once' do; end
@@ -55,7 +54,7 @@ describe Masamune::Actions::Postgres do
 
     context 'when setup_files are configured' do
       let(:setup_file) { 'setup.psql' }
-      let(:configuration) { {setup_files: [setup_file]} }
+      let(:configuration) { {database: 'test', setup_files: [setup_file]} }
       before do
         instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
         instance.should_receive(:postgres).with(file: setup_file).once
@@ -66,7 +65,7 @@ describe Masamune::Actions::Postgres do
 
     context 'when schema_files are configured' do
       let(:schema_file) { 'schema.psql' }
-      let(:configuration) { {schema_files: [schema_file]} }
+      let(:configuration) { {database: 'test', schema_files: [schema_file]} }
       before do
         instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
         instance.should_receive(:postgres).with(file: schema_file).once
