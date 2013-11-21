@@ -1,19 +1,15 @@
 require 'spec_helper'
 
 describe Masamune::Commands::Hive do
-  let(:general_options) { {} }
-  let(:command_options) { [] }
-  let(:context_options) { {} }
+  let(:configuration) { {:options => options} }
+  let(:options) { [] }
+  let(:attrs) { {} }
 
-  before do
-    Masamune.configuration.hive[:options] = command_options
-  end
-
-  let(:instance) { Masamune::Commands::Hive.new(general_options.merge(context_options)) }
+  let(:instance) { described_class.new(configuration.merge(attrs)) }
 
   describe '#stdin' do
     context 'with exec' do
-      let(:context_options) { {exec: %q(SELECT * FROM table;)} }
+      let(:attrs) { {exec: %q(SELECT * FROM table;)} }
       subject { instance.stdin }
       it { should be_a(StringIO) }
       its(:string) { should == %q(SELECT * FROM table;) }
@@ -27,18 +23,18 @@ describe Masamune::Commands::Hive do
 
     it { should == ['hive'] }
 
-    context 'with command options' do
-      let(:command_options) { [{'-d' => 'DATABASE=development'}] }
+    context 'with command attrs' do
+      let(:options) { [{'-d' => 'DATABASE=development'}] }
       it { should == ['hive', '-d', 'DATABASE=development'] }
     end
 
     context 'with file' do
-      let(:context_options) { {file: 'zomg.hql'} }
+      let(:attrs) { {file: 'zomg.hql'} }
       it { should == ['hive', '-f', 'zomg.hql'] }
     end
 
     context 'with variables' do
-      let(:context_options) { {variables: {R: 'R2DO', C: 'C3PO'}} }
+      let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
       it { should == ['hive', '-d', 'R=R2DO', '-d', 'C=C3PO'] }
     end
   end

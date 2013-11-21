@@ -1,25 +1,21 @@
 require 'spec_helper'
 
 describe Masamune::Commands::S3Cmd do
-  let(:general_options) { {} }
-  let(:command_options) { [] }
-  let(:context_options) { {} }
+  let(:configuration) { {:options => options} }
+  let(:options) { [] }
+  let(:attrs) { {} }
 
-  before do
-    Masamune.configuration.s3cmd[:options] = command_options
-  end
-
-  let(:instance) { Masamune::Commands::S3Cmd.new(general_options.merge(context_options)) }
+  let(:instance) { described_class.new(configuration.merge(attrs)) }
 
   describe '#command_args' do
-    let(:context_options) { {extra: ['ls', 's3://fake']} }
+    let(:attrs) { {extra: ['ls', 's3://fake']} }
 
     subject { instance.command_args }
 
     it { should == ['s3cmd', 'ls', 's3://fake'] }
 
-    context 'with command_options' do
-      let(:command_options) { [{'--config' => '/opt/etc/etl/s3cfg'}] }
+    context 'with options' do
+      let(:options) { [{'--config' => '/opt/etc/etl/s3cfg'}] }
 
       it { should == ['s3cmd', '--config', '/opt/etc/etl/s3cfg', 'ls', 's3://fake'] }
     end

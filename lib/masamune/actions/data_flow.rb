@@ -5,6 +5,8 @@ module Masamune::Actions
   module DataFlow
     extend ActiveSupport::Concern
 
+    include Masamune::ClientBehavior
+
     def data_plan
       self.class.data_plan
     end
@@ -20,7 +22,7 @@ module Masamune::Actions
     def parse_datetime_type(key)
       value = options[key]
       Chronic.parse(value).tap do |datetime_value|
-        Masamune::print("Using '#{datetime_value}' for --#{key}") if value != datetime_value
+        print("Using '#{datetime_value}' for --#{key}") if value != datetime_value
       end or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
     end
 
@@ -48,7 +50,7 @@ module Masamune::Actions
       base.after_initialize(-1) do |thor, options|
         # Only execute this block DataPlan is not currently executing
         next if thor.data_plan.current_rule.present?
-        thor.data_plan.client = thor.client
+        client = thor.data_plan.client = thor.client
 
         raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
         raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]

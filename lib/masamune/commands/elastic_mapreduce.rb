@@ -1,40 +1,49 @@
+require 'masamune/client'
+require 'masamune/proxy_delegate'
+
 module Masamune::Commands
   class ElasticMapReduce
-    require 'masamune/proxy_delegate'
+    include Masamune::ClientBehavior
     include Masamune::ProxyDelegate
 
-    attr_accessor :jobflow, :input, :extra
+    DEFAULT_ATTRIBUTES =
+    {
+      :path       => 'elastic-mapreduce',
+      :options    => [],
+      :extra      => [],
+      :jobflow    => nil,
+      :input      => nil,
+    }
 
-    def initialize(delegate, opts = {})
-      @delegate    = delegate
-      self.jobflow = opts[:jobflow]
-      self.input   = opts[:input]
-      self.extra   = opts.fetch(:extra, [])
+    def initialize(attrs = {})
+      DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
+        instance_variable_set("@#{name}", value)
+      end
     end
 
     def interactive?
       if @delegate.respond_to?(:interactive?)
         @delegate.interactive?
-      elsif extra.any?
+      elsif @extra.any?
         true
       else
-        input == nil
+        @input == nil
       end
     end
 
     def stdin
       if @delegate.respond_to?(:input)
         @delegate.stdin
-      elsif input
-        @stdin ||= StringIO.new(input)
+      elsif @input
+        @stdin ||= StringIO.new(@input)
       end
     end
 
     def elastic_mapreduce_command
       args = []
-      args << Masamune.configuration.elastic_mapreduce[:path]
-      args << Masamune.configuration.elastic_mapreduce[:options].map(&:to_a)
-      args << ['--jobflow', jobflow] if jobflow
+      args << @path
+      args << @options.map(&:to_a)
+      args << ['--jobflow', @jobflow] if @jobflow
       args.flatten
     end
 
@@ -56,7 +65,7 @@ module Masamune::Commands
     def command_args
       args = []
       args << (ssh_command? ? ssh_command : elastic_mapreduce_command)
-      args << extra
+      args << @extra.map(&:to_a)
       args << @delegate.command_args if @delegate.respond_to?(:command_args)
       args.flatten
     end
@@ -72,7 +81,7 @@ module Masamune::Commands
     private
 
     def ssh_command?
-      @delegate.respond_to?(:command_args) || input.present?
+      @delegate.respond_to?(:command_args) || @input.present?
     end
   end
 end

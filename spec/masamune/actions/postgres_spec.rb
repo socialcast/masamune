@@ -4,6 +4,7 @@ describe Masamune::Actions::Postgres do
   let(:klass) do
     Class.new do
       extend Masamune::Thor::BeforeInitializeCallbacks
+      include Masamune::ClientBehavior
       include Masamune::Actions::Postgres
     end
   end

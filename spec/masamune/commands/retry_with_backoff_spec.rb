@@ -1,20 +1,17 @@
 require 'spec_helper'
 
 describe Masamune::Commands::RetryWithBackoff do
-  let(:general_options) { {retries: retries, backoff: 0} }
-  let(:command_options) { [] }
-  let(:context_options) { {} }
-
+  let(:options) { {retries: retries, backoff: 0} }
   let(:delegate) { double }
-  let(:instance) { Masamune::Commands::RetryWithBackoff.new(delegate, general_options.merge(context_options)) }
+  let(:instance) { described_class.new(delegate, options) }
 
   describe '#around_execute' do
     let(:retries) { 3 }
 
     context 'when retry command eventually succeeds' do
       before do
-        Masamune.logger.should_receive(:error).with('wtf').exactly(retries - 1)
-        Masamune.logger.should_receive(:debug).with(/retrying.*/).exactly(retries - 1)
+        instance.client.logger.should_receive(:error).with('wtf').exactly(retries - 1)
+        instance.client.logger.should_receive(:debug).with(/retrying.*/).exactly(retries - 1)
         subject
       end
 
@@ -38,9 +35,9 @@ describe Masamune::Commands::RetryWithBackoff do
 
     context 'when retry command eventually fails' do
       before do
-        Masamune.logger.should_receive(:error).with('wtf').exactly(retries + 1)
-        Masamune.logger.should_receive(:debug).with(/retrying.*/).exactly(retries)
-        Masamune.logger.should_receive(:debug).with(/max retries.*bailing/)
+        instance.client.logger.should_receive(:error).with('wtf').exactly(retries + 1)
+        instance.client.logger.should_receive(:debug).with(/retrying.*/).exactly(retries)
+        instance.client.logger.should_receive(:debug).with(/max retries.*bailing/)
         subject
       end
 

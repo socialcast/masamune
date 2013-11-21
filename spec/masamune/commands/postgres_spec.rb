@@ -1,15 +1,15 @@
 require 'spec_helper'
 
 describe Masamune::Commands::Postgres do
-  let(:configuration) { {:path => 'psql', :database => 'postgres', :extra => extra} }
-  let(:extra) { [] }
-  let(:options) { {} }
+  let(:configuration) { {:path => 'psql', :database => 'postgres', :options => options} }
+  let(:options) { [] }
+  let(:attrs) { {} }
 
-  let(:instance) { Masamune::Commands::Postgres.new(configuration.merge(options)) }
+  let(:instance) { described_class.new(configuration.merge(attrs)) }
 
   describe '#stdin' do
     context 'with input' do
-      let(:options) { {input: %q(SELECT * FROM table;)} }
+      let(:attrs) { {input: %q(SELECT * FROM table;)} }
       subject { instance.stdin }
       it { should be_a(StringIO) }
       its(:string) { should == %q(SELECT * FROM table;) }
@@ -25,18 +25,18 @@ describe Masamune::Commands::Postgres do
 
     it { should == default_command }
 
-    context 'with command options' do
-      let(:extra) { [{'-A' => nil}] }
+    context 'with options' do
+      let(:options) { [{'-A' => nil}] }
       it { should == [*default_command, '-A'] }
     end
 
     context 'with file' do
-      let(:options) { {file: 'zomg.hql'} }
+      let(:attrs) { {file: 'zomg.hql'} }
       it { should == [*default_command, '--file=zomg.hql'] }
     end
 
     context 'with variables' do
-      let(:options) { {variables: {R: 'R2DO', C: 'C3PO'}} }
+      let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
       it { should == [*default_command, %q(--set=R='R2DO'), %q(--set=C='C3PO')] }
     end
   end

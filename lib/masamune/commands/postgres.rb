@@ -1,22 +1,21 @@
+require 'masamune/client'
 require 'masamune/string_format'
 
 module Masamune::Commands
   class Postgres
+    include Masamune::ClientBehavior
     include Masamune::StringFormat
 
-    # TODO
-    DEFAULT_OPTIONS =
+    DEFAULT_ATTRIBUTES =
     {
-      # :client       => Masamune.default_client,
-      :client       => nil,
       :path         => 'psql',
+      :options      => [],
       :hostname     => 'localhost',
       :database     => 'postgres',
       :username     => 'postgres',
       :pgpass_file  => nil,
       :setup_files  => [],
       :schema_files => [],
-      :extra        => [],
       :file         => nil,
       :exec         => nil,
       :input        => nil,
@@ -26,8 +25,8 @@ module Masamune::Commands
       :variables    => {}
     }
 
-    def initialize(opts = {})
-      DEFAULT_OPTIONS.merge(opts).each do |name, value|
+    def initialize(attrs = {})
+      DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
     end
@@ -64,7 +63,7 @@ module Masamune::Commands
       args << '--dbname=%s' % @database
       args << '--username=%s' % @username if @username
       args << '--no-password'
-      args << @extra.map(&:to_a)
+      args << @options.map(&:to_a)
       args << '--file=%s' % @file if @file
       args << '--output=%s' % @output if @output
       @variables.each do |key, val|
@@ -75,15 +74,15 @@ module Masamune::Commands
     end
 
     def before_execute
-      @client.print("psql with file #{@file}") if @file
+      print("psql with file #{@file}") if @file
     end
 
     def handle_stdout(line, line_no)
       if line =~ /\A#{prompt}/
-        @client.logger.debug(line)
+        logger.debug(line)
       else
         @block.call(line) if @block
-        @client.print(line) if print?
+        print(line) if print?
       end
     end
 

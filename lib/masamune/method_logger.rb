@@ -15,7 +15,7 @@ module Masamune
     end
 
     def method_missing(method_name, *args, &block)
-      Masamune::print("#{method_name} with #{args.join(' ')}") if @methods.include?(method_name)
+      print("#{method_name} with #{args.join(' ')}") if @methods.include?(method_name)
       if @target.respond_to?(method_name)
         @target.__send__(method_name, *args, &block)
       else

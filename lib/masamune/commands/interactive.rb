@@ -1,13 +1,11 @@
 module Masamune::Commands
   class Interactive
-    attr_accessor :interactive
-
-    def initialize(opts = {})
-      self.interactive = opts[:interactive]
+    def initialize(attrs = {})
+      @interactive = attrs.fetch(:interactive, false)
     end
 
     def interactive?
-      interactive
+      @interactive
     end
   end
 end

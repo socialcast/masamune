@@ -1,17 +1,18 @@
+require 'masamune/client'
+require 'masamune/proxy_delegate'
+
 module Masamune::Commands
   class RetryWithBackoff
-    require 'masamune/proxy_delegate'
+    include Masamune::ClientBehavior
     include Masamune::ProxyDelegate
 
     DEFAULT_RETRIES = 3
     DEFAULT_BACKOFF = 5
 
-    attr_accessor :retries, :backoff
-
-    def initialize(delegate, opts = {})
+    def initialize(delegate, attrs = {})
       @delegate     = delegate
-      self.retries  = opts.fetch(:retries, DEFAULT_RETRIES)
-      self.backoff  = opts.fetch(:backoff, DEFAULT_BACKOFF)
+      @retries      = attrs.fetch(:retries, DEFAULT_RETRIES)
+      @backoff      = attrs.fetch(:backoff, DEFAULT_BACKOFF)
       @retry_count  = 0
     end
 
@@ -23,14 +24,14 @@ module Masamune::Commands
           block.call
         end
       rescue => e
-        Masamune.logger.error(e.to_s)
-        sleep backoff
+        logger.error(e.to_s)
+        sleep @backoff
         @retry_count += 1
-        unless @retry_count > retries
-          Masamune.logger.debug("retrying (#{@retry_count}/#{retries})")
+        unless @retry_count > @retries
+          logger.debug("retrying (#{@retry_count}/#{@retries})")
           retry
         else
-          Masamune.logger.debug("max retries (#{retries}) attempted, bailing")
+          logger.debug("max retries (#{@retries}) attempted, bailing")
           OpenStruct.new(:success? => false)
         end
       end

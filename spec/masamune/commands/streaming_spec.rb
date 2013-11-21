@@ -1,31 +1,19 @@
 require 'spec_helper'
 
 describe Masamune::Commands::Streaming do
-  # TODO use mock filesystem when checking for existance of files
-  let(:extra_args) { ['-D', %q(map.output.key.field.separator='\t')] }
   let(:filesystem) { Masamune::MockFilesystem.new }
-  let(:input_option) { 'input.txt' }
 
-  let(:general_options) do
-    {
-      input: input_option,
-      output: 'output_dir',
-      mapper: 'mapper.rb',
-      reducer: 'reducer.rb',
-      extra_args: extra_args
-    }
-  end
-  let(:command_options) { [] }
-  let(:context_options) { {} }
+  let(:configuration) { {options: options, input: input_option, output: 'output_dir', mapper: 'mapper.rb', reducer: 'reducer.rb', extra_args: extra_args} }
+  let(:options) { [] }
+  let(:input_option) { 'input.txt' }
+  let(:extra_args) { ['-D', %q(map.output.key.field.separator='\t')] }
+  let(:attrs) { {} }
+
+  subject(:instance) { described_class.new(configuration.merge(attrs)) }
 
   before do
-    Masamune.configure do |config|
-      config.filesystem = filesystem
-      config.hadoop_streaming[:options] = command_options
-    end
+    instance.stub(:filesystem) { filesystem }
   end
-
-  subject(:instance) { described_class.new(general_options.merge(context_options)) }
 
   describe '#before_execute' do
     context 'input path with suffix exists' do
@@ -72,14 +60,14 @@ describe Masamune::Commands::Streaming do
 
     it { should == pre_command_args + extra_args + post_command_args }
 
-    context 'with command_options' do
-      let(:command_options) { [{'-cacheFile' => 'cache.rb'}] }
+    context 'with options' do
+      let(:options) { [{'-cacheFile' => 'cache.rb'}] }
 
-      it { should == pre_command_args + extra_args + command_options.map(&:to_a).flatten + post_command_args }
+      it { should == pre_command_args + extra_args + options.map(&:to_a).flatten + post_command_args }
     end
 
     context 'with quote' do
-      let(:context_options) { {quote: true} }
+      let(:attrs) { {quote: true} }
       let(:quoted_extra_args) { ['-D', %q(map.output.key.field.separator='"'\\\\t'"')] }
 
       subject { instance.command_args }
