@@ -46,9 +46,9 @@ module Masamune::Actions
 
       # Execute this block last
       base.after_initialize(-1) do |thor, options|
-        # Only execute this block once, prevents expected reentrancy caused by Thor.invoke
-        next if Masamune.thor_instance
-        Masamune.thor_instance ||= thor
+        # Only execute this block DataPlan is not currently executing
+        next if thor.data_plan.current_rule.present?
+        thor.data_plan.client = thor.client
 
         raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
         raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]

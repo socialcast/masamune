@@ -4,8 +4,11 @@ module Masamune::Commands
   class Postgres
     include Masamune::StringFormat
 
+    # TODO
     DEFAULT_OPTIONS =
     {
+      # :client       => Masamune.default_client,
+      :client       => nil,
       :path         => 'psql',
       :hostname     => 'localhost',
       :database     => 'postgres',
@@ -72,15 +75,15 @@ module Masamune::Commands
     end
 
     def before_execute
-      Masamune.print("psql with file #{@file}") if @file
+      @client.print("psql with file #{@file}") if @file
     end
 
     def handle_stdout(line, line_no)
       if line =~ /\A#{prompt}/
-        Masamune.logger.debug(line)
+        @client.logger.debug(line)
       else
         @block.call(line) if @block
-        Masamune::print(line) if print?
+        @client.print(line) if print?
       end
     end
 

@@ -4,6 +4,7 @@ require 'active_support/core_ext/numeric/time'
 require 'masamune/data_plan_set'
 
 class Masamune::DataPlan
+  include Masamune::ClientBehavior
   include Masamune::Accumulate
 
   def initialize
@@ -13,6 +14,7 @@ class Masamune::DataPlan
     @targets = Hash.new { |set,rule| set[rule] = Masamune::DataPlanSet.new(@target_rules[rule]) }
     @sources = Hash.new { |set,rule| set[rule] = Masamune::DataPlanSet.new(@source_rules[rule]) }
     @set_cache = Hash.new { |cache,level| cache[level] = Hash.new }
+    @current_rule = nil
   end
 
   def add_target_rule(rule, target, target_options = {})
@@ -47,7 +49,7 @@ class Masamune::DataPlan
         Masamune::DataPlanRule::TERMINAL
       end
     else
-      Masamune.logger.error("Multiple rules match target #{target}") if target_matches.length > 1
+      client.logger.error("Multiple rules match target #{target}") if target_matches.length > 1
       target_matches.map(&:first).first
     end
   end
@@ -103,7 +105,14 @@ class Masamune::DataPlan
       end
     end unless options[:no_resolve]
 
+    @current_rule = rule
     @command_rules[rule].call(self, rule, options)
     @set_cache.clear
+  ensure
+    @current_rule = nil
+  end
+
+  def current_rule
+    @current_rule
   end
 end

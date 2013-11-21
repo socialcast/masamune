@@ -1,9 +1,6 @@
 require 'spec_helper'
 
 describe Masamune::Actions::Postgres do
-  # TODO move to universal example group
-  let(:client) { Masamune::Client.new }
-
   let(:klass) do
     Class.new do
       extend Masamune::Thor::BeforeInitializeCallbacks

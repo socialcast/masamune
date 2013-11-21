@@ -1,6 +1,5 @@
 require 'date'
 require 'thor'
-require 'forwardable'
 require 'active_support/concern'
 
 module Masamune
@@ -54,14 +53,14 @@ module Masamune
     end
 
     included do |thor|
-      thor.extend Forwardable
       thor.extend ExtraArguments
       thor.extend RescueLogger
       thor.extend BeforeInitializeCallbacks
       thor.class_eval do
+        include Masamune::ClientBehavior
         include Masamune::Actions::Filesystem
         include Masamune::Actions::ElasticMapreduce
-        attr_accessor :current_client
+
         attr_accessor :current_namespace
         attr_accessor :current_task_name
         attr_accessor :current_command_name
@@ -79,7 +78,7 @@ module Masamune
         class_option :version, :desc => 'Print version and exit'
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
-          self.current_client = Masamune.client
+          self.client = Masamune::Client.new(self)
           self.current_namespace = self.class.namespace
           self.current_task_name = _config[:current_command].name
           self.current_command_name = self.current_namespace + ':' + self.current_task_name
@@ -95,10 +94,7 @@ module Masamune
             exit
           end
 
-          # TODO remove ability to reference to global configuration outside of current_client
-          Masamune.configure do |config|
-            config.client.context = self
-
+          client.configure do |config|
             if options[:config]
               config.load(options[:config]) rescue raise ::Thor::MalformattedArgumentError, "Could not load file provided for '--config'"
             elsif default_config_file = config.filesystem.resolve_file([Masamune.default_config_file] + SYSTEM_CONFIG_FILES)
@@ -123,10 +119,6 @@ module Masamune
           end
 
           after_initialize_invoke(options)
-        end
-
-        no_tasks do
-          def_delegators :current_client, :configuration
         end
 
         private
