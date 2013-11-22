@@ -1,22 +1,53 @@
+require 'active_support/concern'
+
 module Masamune::MockCommand
+  extend ActiveSupport::Concern
+
   class CommandMatcher
     require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
 
-    attr_accessor :pattern, :value
+    def initialize(delegate)
+      @delegate = delegate
+    end
 
-    def initialize(delegate, options = {})
-      @delegate    = delegate
-      self.pattern = options[:pattern]
-      self.value   = options[:value]
+    class << self
+      attr_accessor :patterns
+      def add_pattern(pattern, value)
+        self.patterns ||= {}
+        self.patterns[pattern] = value
+      end
+
+      def reset!
+        self.patterns = {}
+      end
     end
 
     def around_execute(&block)
-      if @delegate.command_args.join(' ') =~ pattern
-        value
-      else
-        @delegate.around_execute(&block)
+      self.class.patterns.each do |pattern, value|
+        if @delegate.command_args.join(' ') =~ pattern
+          return value
+        end
       end
+
+      if @delegate.respond_to?(:around_execute)
+        @delegate.around_execute(&block)
+      else
+        block.call
+      end
+    end
+  end
+
+  included do |base|
+    base.before do
+      new_method = Masamune::Commands::Shell.method(:new)
+      Masamune::Commands::Shell.stub(:new).and_return do |command, options|
+        new_method.call(CommandMatcher.new(command), options || {})
+      end
+    end
+
+    base.after do
+      CommandMatcher.reset!
     end
   end
 
@@ -29,10 +60,7 @@ module Masamune::MockCommand
   end
 
   def mock_command(pattern, value)
-    new_method = Masamune::Commands::Shell.method(:new)
-    Masamune::Commands::Shell.stub(:new).and_return do |command, options|
-      new_method.call(CommandMatcher.new(command, pattern: pattern, value: value), options || {})
-    end
+    CommandMatcher.add_pattern(pattern, value)
   end
 end
 

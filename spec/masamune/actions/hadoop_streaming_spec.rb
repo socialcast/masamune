@@ -13,6 +13,7 @@ describe Masamune::Actions::HadoopStreaming do
 
   before do
     instance.stub_chain(:configuration, :hadoop_streaming).and_return(configuration)
+    instance.stub_chain(:configuration, :elastic_mapreduce).and_return({})
   end
 
   describe '.hadoop_streaming' do

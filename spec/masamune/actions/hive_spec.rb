@@ -14,6 +14,7 @@ describe Masamune::Actions::Hive do
 
   before do
     instance.stub_chain(:configuration, :hive).and_return(configuration)
+    instance.stub_chain(:configuration, :elastic_mapreduce).and_return({})
   end
 
   describe '.hive' do
@@ -24,5 +25,17 @@ describe Masamune::Actions::Hive do
     subject { instance.hive }
 
     it { should be_success }
+=begin
+    context 'with jobflow' do
+      before do
+        instance.stub_chain(:configuration, :elastic_mapreduce).and_return({jobflow: 'j-XYZ'})
+        # mock_command(/\Aelastic_mapreduce/, mock_success)
+      end
+
+      subject { instance.hive }
+
+      it { should be_success }
+    end
+=end
   end
 end
