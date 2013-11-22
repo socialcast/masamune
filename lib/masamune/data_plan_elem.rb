@@ -23,7 +23,7 @@ class Masamune::DataPlanElem
   end
 
   def exists?
-    Masamune.filesystem.exists?(path)
+    rule.plan.filesystem.exists?(path)
   end
 
   def targets(&block)

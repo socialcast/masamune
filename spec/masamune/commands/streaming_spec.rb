@@ -45,7 +45,7 @@ describe Masamune::Commands::Streaming do
 
     context 'input path does not exist' do
       before do
-        Masamune.logger.should_receive(:debug).with(/\ARemoving missing input/)
+        instance.logger.should_receive(:debug).with(/\ARemoving missing input/)
         instance.before_execute
       end
       its(:input) { should be_empty }

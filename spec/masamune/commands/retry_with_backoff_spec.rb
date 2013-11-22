@@ -10,8 +10,8 @@ describe Masamune::Commands::RetryWithBackoff do
 
     context 'when retry command eventually succeeds' do
       before do
-        instance.context.logger.should_receive(:error).with('wtf').exactly(retries - 1)
-        instance.context.logger.should_receive(:debug).with(/retrying.*/).exactly(retries - 1)
+        instance.logger.should_receive(:error).with('wtf').exactly(retries - 1)
+        instance.logger.should_receive(:debug).with(/retrying.*/).exactly(retries - 1)
         subject
       end
 
@@ -35,9 +35,9 @@ describe Masamune::Commands::RetryWithBackoff do
 
     context 'when retry command eventually fails' do
       before do
-        instance.context.logger.should_receive(:error).with('wtf').exactly(retries + 1)
-        instance.context.logger.should_receive(:debug).with(/retrying.*/).exactly(retries)
-        instance.context.logger.should_receive(:debug).with(/max retries.*bailing/)
+        instance.logger.should_receive(:error).with('wtf').exactly(retries + 1)
+        instance.logger.should_receive(:debug).with(/retrying.*/).exactly(retries)
+        instance.logger.should_receive(:debug).with(/max retries.*bailing/)
         subject
       end
 

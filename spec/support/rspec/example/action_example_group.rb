@@ -2,7 +2,7 @@ module ActionExampleGroup
   def self.included(base)
     base.let(:var_dir) { Dir.mktmpdir('masamune') }
     base.before do
-      Masamune.configuration.filesystem.add_path(:var_dir, var_dir)
+      Masamune.filesystem.add_path(:var_dir, var_dir)
     end
   end
 end

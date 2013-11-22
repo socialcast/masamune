@@ -2,15 +2,14 @@ require 'spec_helper'
 
 describe Masamune::DataPlanSet do
   let(:fs) { Masamune::MockFilesystem.new }
-  before do
-    Masamune.configure do |config|
-      config.filesystem = fs
-    end
-  end
-
   let!(:plan) { Masamune::DataPlan.new }
+
   let!(:source_rule) { plan.add_source_rule('primary', 'log/%Y%m%d.*.log') }
   let!(:target_rule) { plan.add_target_rule('primary', 'table/y=%Y/m=%m/d=%d') }
+
+  before do
+    plan.filesystem = fs
+  end
 
   describe '#missing' do
     let(:paths) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03'] }
