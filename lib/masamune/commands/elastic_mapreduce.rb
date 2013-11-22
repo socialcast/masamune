@@ -1,8 +1,10 @@
 require 'masamune/proxy_delegate'
+require 'masamune/actions/execute'
 
 module Masamune::Commands
   class ElasticMapReduce
     include Masamune::ProxyDelegate
+    include Masamune::Actions::Execute
 
     DEFAULT_ATTRIBUTES =
     {
@@ -54,10 +56,14 @@ module Masamune::Commands
       args.flatten
     end
 
+    # Use elastic-mapreduce to translate jobflow into raw ssh command
     def ssh_command
       @ssh_command ||= begin
-        result = %x{#{ssh_args.join(' ')}}
-        result.sub(/ exit\Z/, '').split(' ')
+        result = nil
+        execute(ssh_args, fail_fast: true, safe: true) do |line|
+          result = line.sub(/ exit\Z/, '').split(' ')
+        end
+        result
       end
     end
 

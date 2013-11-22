@@ -13,9 +13,9 @@ module Masamune::MockCommand
 
     class << self
       attr_accessor :patterns
-      def add_pattern(pattern, value)
+      def add_pattern(pattern, value, io)
         self.patterns ||= {}
-        self.patterns[pattern] = value
+        self.patterns[pattern] = [value, io]
       end
 
       def reset!
@@ -24,8 +24,13 @@ module Masamune::MockCommand
     end
 
     def around_execute(&block)
-      self.class.patterns.each do |pattern, value|
+      self.class.patterns.each do |pattern, (value, io)|
         if @delegate.command_args.join(' ') =~ pattern
+          while line = io.gets
+            line_no ||= 0
+            @delegate.handle_stdout(line.chomp, line_no) if @delegate.respond_to?(:handle_stdout)
+            line_no += 1
+          end
           return value
         end
       end
@@ -59,8 +64,8 @@ module Masamune::MockCommand
     OpenStruct.new(:success? => false)
   end
 
-  def mock_command(pattern, value)
-    CommandMatcher.add_pattern(pattern, value)
+  def mock_command(pattern, value, io = StringIO.new)
+    CommandMatcher.add_pattern(pattern, value, io)
   end
 end
 

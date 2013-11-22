@@ -10,7 +10,7 @@ describe Masamune::Actions::Hive do
   end
 
   let(:instance) { klass.new }
-  let(:configuration) { {database: 'test'} }
+  let(:configuration) { {path: 'hive', database: 'test'} }
 
   before do
     instance.stub_chain(:configuration, :hive).and_return(configuration)
@@ -25,17 +25,18 @@ describe Masamune::Actions::Hive do
     subject { instance.hive }
 
     it { should be_success }
-=begin
+
     context 'with jobflow' do
       before do
-        instance.stub_chain(:configuration, :elastic_mapreduce).and_return({jobflow: 'j-XYZ'})
-        # mock_command(/\Aelastic_mapreduce/, mock_success)
+        instance.stub_chain(:configuration, :elastic_mapreduce).and_return({path: 'elastic-mapreduce', jobflow: 'j-XYZ'})
+        mock_command(/\Ahive/, mock_failure)
+        mock_command(/\Aelastic-mapreduce/, mock_success, StringIO.new('ssh fakehost exit'))
+        mock_command(/\Assh fakehost hive/, mock_success)
       end
 
       subject { instance.hive }
 
       it { should be_success }
     end
-=end
   end
 end
