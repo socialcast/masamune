@@ -69,7 +69,7 @@ module Masamune::Commands
       @variables.each do |key, val|
         args << '--set=%s' % "#{key.to_s}='#{val.to_s}'"
       end
-      args << 'command=%s' % @exec if @exec
+      args << '--command=%s' % @exec if @exec
       args.flatten.compact
     end
 
