@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Masamune::Commands::Streaming do
+describe Masamune::Commands::HadoopStreaming do
   let(:filesystem) { Masamune::MockFilesystem.new }
 
   let(:configuration) { {options: options, input: input_option, output: 'output_dir', mapper: 'mapper.rb', reducer: 'reducer.rb', extra_args: extra_args} }

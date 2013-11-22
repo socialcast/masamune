@@ -1,14 +1,13 @@
-# TODO rename to HadoopStreaming
 module Masamune::Actions
-  module Streaming
-    def streaming(opts = {})
+  module HadoopStreaming
+    def hadoop_streaming(opts = {})
       opts = opts.to_hash.symbolize_keys
       opts.reverse_merge!(configuration.hadoop_streaming) if configuration
 
       command = if opts[:jobflow]
-        Masamune::Commands::Streaming.new(opts.merge(quote: true, file_args: false))
+        Masamune::Commands::HadoopStreaming.new(opts.merge(quote: true, file_args: false))
       else
-        Masamune::Commands::Streaming.new(opts)
+        Masamune::Commands::HadoopStreaming.new(opts)
       end
 
       command = Masamune::Commands::ElasticMapReduce.new(command, opts) if opts[:jobflow]

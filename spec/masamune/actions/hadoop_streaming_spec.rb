@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-describe Masamune::Actions::Streaming do
+describe Masamune::Actions::HadoopStreaming do
   let(:klass) do
     Class.new do
       include Masamune::HasContext
-      include Masamune::Actions::Streaming
+      include Masamune::Actions::HadoopStreaming
     end
   end
 
@@ -15,12 +15,12 @@ describe Masamune::Actions::Streaming do
     instance.stub_chain(:configuration, :hadoop_streaming).and_return(configuration)
   end
 
-  describe '.streaming' do
+  describe '.hadoop_streaming' do
     before do
       mock_command(/\Ahadoop/, mock_success)
     end
 
-    subject { instance.streaming }
+    subject { instance.hadoop_streaming }
 
     it { should be_success }
   end

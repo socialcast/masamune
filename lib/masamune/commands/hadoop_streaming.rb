@@ -3,7 +3,7 @@ require 'active_support/core_ext/array'
 require 'masamune/has_context'
 
 module Masamune::Commands
-  class Streaming
+  class HadoopStreaming
     include Masamune::HasContext
 
     # FIXME make a better guess with Find
@@ -63,7 +63,7 @@ module Masamune::Commands
         if filesystem.exists?(path)
           false
         else
-          logger.debug("Removing missing input #{path} from streaming command")
+          logger.debug("Removing missing input #{path} from hadoop_streaming command")
           true
         end
       end
@@ -76,7 +76,7 @@ module Masamune::Commands
           path + '/*'
         end
       end
-      print("streaming %s -> %s (%s/%s)" % [@input.join(' '), @output, @mapper, @reducer])
+      print("hadoop_streaming %s -> %s (%s/%s)" % [@input.join(' '), @output, @mapper, @reducer])
     end
 
     def around_execute(&block)
