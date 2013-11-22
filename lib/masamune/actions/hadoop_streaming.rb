@@ -5,7 +5,7 @@ module Masamune::Actions
       opts.reverse_merge!(configuration.hadoop_streaming) if configuration
 
       command = if opts[:jobflow]
-        Masamune::Commands::HadoopStreaming.new(opts.merge(quote: true, file_args: false))
+        Masamune::Commands::HadoopStreaming.new(opts.merge(quote: true, upload: false))
       else
         Masamune::Commands::HadoopStreaming.new(opts)
       end

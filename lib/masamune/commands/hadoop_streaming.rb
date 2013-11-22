@@ -6,20 +6,18 @@ module Masamune::Commands
   class HadoopStreaming
     include Masamune::HasContext
 
-    # FIXME make a better guess with Find
     def self.default_hadoop_streaming_jar
       @default_hadoop_streaming_jar ||=
       case RUBY_PLATFORM
       when /darwin/
-        '/usr/local/Cellar/hadoop/1.1.2/libexec/contrib/streaming/hadoop-streaming-1.1.2.jar'
+        Dir.glob('/usr/local/Cellar/hadoop/*/libexec/contrib/streaming/hadoop-streaming-*.jar').first
       when /linux/
         '/usr/lib/hadoop-mapreduce/hadoop-streaming.jar'
       else
-        raise 'hadoop_streaming_jar not found'
+        raise "unknown RUBY_PLATFORM=#{RUBY_PLATFORM}"
       end
     end
 
-    # TODO rename extra_args to extra
     DEFAULT_ATTRIBUTES =
     {
       :path         => 'hadoop',
@@ -29,8 +27,8 @@ module Masamune::Commands
       :output       => nil,
       :mapper       => nil,
       :reducer      => nil,
-      :extra_args   => [],
-      :file_args    => true,
+      :extra        => [],
+      :upload       => true,
       :quote        => false
     }
 
@@ -43,17 +41,18 @@ module Masamune::Commands
       @input = Array.wrap(@input)
     end
 
+    # TODO ensure jar/ mapper/reduce exists, warn or remove if output exists
     def command_args
       args = []
       args << @path
       args << ['jar', @jar]
-      args << (@quote ? @extra_args.map { |arg| quote_arg(arg) } : @extra_args)
+      args << (@quote ? @extra.map { |arg| quote_arg(arg) } : @extra)
       args << @options.map(&:to_a)
       args << ['-input', *@input] if @input
       args << ['-mapper', @mapper]
-      args << ['-file', @mapper] if @file_args
+      args << ['-file', @mapper] if @upload
       args << ['-reducer', @reducer]
-      args << ['-file', @reducer] if @file_args
+      args << ['-file', @reducer] if @upload
       args << ['-output', @output]
       args.flatten
     end
