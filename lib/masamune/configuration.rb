@@ -82,7 +82,6 @@ class Masamune::Configuration
     opts << '--debug'   if debug
     opts << '--no_op'   if no_op
     opts << '--dry_run' if dry_run
-    opts << "--jobflow=#{jobflow}" if jobflow
     opts
   end
 
