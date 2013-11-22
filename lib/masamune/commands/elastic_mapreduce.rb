@@ -66,7 +66,7 @@ module Masamune::Commands
     def command_args
       args = []
       args << (ssh_command? ? ssh_command : elastic_mapreduce_command)
-      args << @extra.map(&:to_a)
+      args << @extra
       args << @delegate.command_args if @delegate.respond_to?(:command_args)
       args.flatten
     end
