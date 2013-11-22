@@ -1,8 +1,8 @@
-require 'masamune/client'
+require 'masamune/context'
 
 module Masamune
   class Filesystem
-    include Masamune::ClientBehavior
+    include Masamune::ContextBehavior
     include Masamune::Accumulate
     include Masamune::Actions::S3Cmd
     include Masamune::Actions::Execute

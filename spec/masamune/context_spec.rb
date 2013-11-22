@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Masamune::Client do
+describe Masamune::Context do
   let(:instance) { described_class.new }
 
   describe '#with_exclusive_lock' do

@@ -57,7 +57,7 @@ module Masamune
       thor.extend RescueLogger
       thor.extend BeforeInitializeCallbacks
       thor.class_eval do
-        include Masamune::ClientBehavior
+        include Masamune::ContextBehavior
         include Masamune::Actions::Filesystem
         include Masamune::Actions::ElasticMapreduce
 
@@ -78,7 +78,7 @@ module Masamune
         class_option :version, :desc => 'Print version and exit'
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
-          self.client = Masamune::Client.new(self)
+          self.context = Masamune::Context.new(self)
           self.current_namespace = self.class.namespace
           self.current_task_name = _config[:current_command].name
           self.current_command_name = self.current_namespace + ':' + self.current_task_name
@@ -94,7 +94,7 @@ module Masamune
             exit
           end
 
-          client.configure do |config|
+          context.configure do |config|
             if options[:config]
               config.load(options[:config]) rescue raise ::Thor::MalformattedArgumentError, "Could not load file provided for '--config'"
             elsif default_config_file = config.filesystem.resolve_file([Masamune.default_config_file] + SYSTEM_CONFIG_FILES)

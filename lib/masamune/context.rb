@@ -7,26 +7,26 @@ require 'masamune/version'
 require 'masamune/multi_io'
 
 module Masamune
-  module ClientBehavior
+  module ContextBehavior
     extend Forwardable
 
-    def client
-      @client || Masamune.default_client
+    def context
+      @context || Masamune.default_context
     end
 
-    def client=(client)
-      @client = client
+    def context=(context)
+      @context = context
     end
 
-    def_delegators :client, :configure, :configuration, :with_exclusive_lock, :logger, :filesystem, :filesystem=, :trace, :print
+    def_delegators :context, :configure, :configuration, :with_exclusive_lock, :logger, :filesystem, :filesystem=, :trace, :print
   end
 
-  class Client
-    attr_accessor :context
+  class Context
+    attr_accessor :parent
     attr_accessor :filesystem
 
-    def initialize(context = nil)
-      self.context = context
+    def initialize(parent = nil)
+      self.parent = parent
     end
 
     def version
@@ -73,8 +73,8 @@ module Masamune
     end
 
     def log_enabled?
-      if context && context.respond_to?(:log_enabled?)
-        context.log_enabled?
+      if parent && parent.respond_to?(:log_enabled?)
+        parent.log_enabled?
       else
         true
       end

@@ -4,7 +4,7 @@ require 'active_support/core_ext/numeric/time'
 require 'masamune/data_plan_set'
 
 class Masamune::DataPlan
-  include Masamune::ClientBehavior
+  include Masamune::ContextBehavior
   include Masamune::Accumulate
 
   def initialize
@@ -49,7 +49,7 @@ class Masamune::DataPlan
         Masamune::DataPlanRule::TERMINAL
       end
     else
-      client.logger.error("Multiple rules match target #{target}") if target_matches.length > 1
+      context.logger.error("Multiple rules match target #{target}") if target_matches.length > 1
       target_matches.map(&:first).first
     end
   end

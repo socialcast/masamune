@@ -7,7 +7,7 @@ module Masamune::Actions
 
       command = Masamune::Commands::PostgresAdmin.new(opts)
       command = Masamune::Commands::Shell.new(command, opts)
-      command.client = client
+      command.context = context
 
       command.execute
     end

@@ -7,7 +7,7 @@ require 'active_support/core_ext/hash'
 
 class Masamune::Configuration
   extend Forwardable
-  include Masamune::ClientBehavior
+  include Masamune::ContextBehavior
 
   attr_accessor :quiet
   attr_accessor :verbose
@@ -23,8 +23,8 @@ class Masamune::Configuration
     end
   end
 
-  def initialize(client)
-    self.client   = client
+  def initialize(context)
+    self.context   = context
     self.quiet    = false
     self.verbose  = false
     self.debug    = false
@@ -58,7 +58,7 @@ class Masamune::Configuration
 
   def debug=(debug)
     @debug = debug
-    client.reload_logger!
+    context.reload_logger!
   end
 
   def bind_template(section, template, input_args = {})

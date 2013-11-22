@@ -4,7 +4,7 @@ describe Masamune::Actions::ElasticMapreduce do
   let(:klass) do
     Class.new do
       extend Masamune::Thor::BeforeInitializeCallbacks
-      include Masamune::ClientBehavior
+      include Masamune::ContextBehavior
       include Masamune::Actions::ElasticMapreduce
     end
   end

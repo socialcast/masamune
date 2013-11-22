@@ -14,7 +14,7 @@ module Masamune::Actions
       command = Masamune::Commands::Postgres.new(opts)
       command = Masamune::Commands::LineFormatter.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
-      command.client = client
+      command.context = context
 
       command.interactive? ? command.replace : command.execute
     end

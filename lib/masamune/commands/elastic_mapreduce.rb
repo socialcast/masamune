@@ -1,9 +1,9 @@
-require 'masamune/client'
+require 'masamune/context'
 require 'masamune/proxy_delegate'
 
 module Masamune::Commands
   class ElasticMapReduce
-    include Masamune::ClientBehavior
+    include Masamune::ContextBehavior
     include Masamune::ProxyDelegate
 
     DEFAULT_ATTRIBUTES =

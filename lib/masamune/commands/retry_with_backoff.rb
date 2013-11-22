@@ -1,9 +1,9 @@
-require 'masamune/client'
+require 'masamune/context'
 require 'masamune/proxy_delegate'
 
 module Masamune::Commands
   class RetryWithBackoff
-    include Masamune::ClientBehavior
+    include Masamune::ContextBehavior
     include Masamune::ProxyDelegate
 
     DEFAULT_RETRIES = 3

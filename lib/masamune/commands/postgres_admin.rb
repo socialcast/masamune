@@ -1,8 +1,8 @@
-require 'masamune/client'
+require 'masamune/context'
 
 module Masamune::Commands
   class PostgresAdmin
-    include Masamune::ClientBehavior
+    include Masamune::ContextBehavior
 
     DEFAULT_ATTRIBUTES =
     {

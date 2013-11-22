@@ -1,9 +1,9 @@
-require 'masamune/client'
+require 'masamune/context'
 require 'masamune/string_format'
 
 module Masamune::Commands
   class Postgres
-    include Masamune::ClientBehavior
+    include Masamune::ContextBehavior
     include Masamune::StringFormat
 
     DEFAULT_ATTRIBUTES =

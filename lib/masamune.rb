@@ -1,7 +1,7 @@
 require 'delegate'
 
 module Masamune
-  require 'masamune/client'
+  require 'masamune/context'
   require 'masamune/io'
   require 'masamune/commands'
   require 'masamune/accumulate'
@@ -21,10 +21,10 @@ module Masamune
   require 'masamune/proxy_delegate'
 
   extend self
-  extend Masamune::ClientBehavior
+  extend Masamune::ContextBehavior
 
-  def default_client
-    @default_client ||= Masamune::Client.new
+  def default_context
+    @default_context ||= Masamune::Context.new
   end
 
   def default_config_file

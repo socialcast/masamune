@@ -24,7 +24,7 @@ module Masamune::Actions
       end if block_given?
 
       command = Masamune::Commands::Shell.new(klass.new, {fail_fast: false}.merge(opts))
-      command.client = client
+      command.context = context
       command.execute
     end
   end

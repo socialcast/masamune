@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Masamune::Actions::Execute do
   let(:klass) do
     Class.new do
-      include Masamune::ClientBehavior
+      include Masamune::ContextBehavior
       include Masamune::Actions::Execute
     end
   end

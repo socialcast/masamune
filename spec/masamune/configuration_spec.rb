@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Masamune::Configuration do
-  let(:client) { Masamune::Client.new }
-  let(:instance) { described_class.new(client) }
+  let(:context) { Masamune::Context.new }
+  let(:instance) { described_class.new(context) }
 
   describe '#bind_template' do
     let(:section) { nil }
