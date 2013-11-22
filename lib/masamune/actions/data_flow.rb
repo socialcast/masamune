@@ -5,7 +5,7 @@ module Masamune::Actions
   module DataFlow
     extend ActiveSupport::Concern
 
-    include Masamune::ContextBehavior
+    include Masamune::HasContext
 
     def data_plan
       self.class.data_plan

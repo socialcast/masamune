@@ -7,7 +7,7 @@ require 'active_support/core_ext/hash'
 
 class Masamune::Configuration
   extend Forwardable
-  include Masamune::ContextBehavior
+  include Masamune::HasContext
 
   attr_accessor :quiet
   attr_accessor :verbose

@@ -57,7 +57,7 @@ module Masamune
       thor.extend RescueLogger
       thor.extend BeforeInitializeCallbacks
       thor.class_eval do
-        include Masamune::ContextBehavior
+        include Masamune::HasContext
         include Masamune::Actions::Filesystem
         include Masamune::Actions::ElasticMapreduce
 

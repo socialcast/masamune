@@ -1,7 +1,6 @@
-require 'delegate'
-
 module Masamune
   require 'masamune/context'
+  require 'masamune/has_context'
   require 'masamune/io'
   require 'masamune/commands'
   require 'masamune/accumulate'
@@ -21,7 +20,7 @@ module Masamune
   require 'masamune/proxy_delegate'
 
   extend self
-  extend Masamune::ContextBehavior
+  extend Masamune::HasContext
 
   def default_context
     @default_context ||= Masamune::Context.new

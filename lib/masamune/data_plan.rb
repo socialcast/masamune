@@ -4,7 +4,7 @@ require 'active_support/core_ext/numeric/time'
 require 'masamune/data_plan_set'
 
 class Masamune::DataPlan
-  include Masamune::ContextBehavior
+  include Masamune::HasContext
   include Masamune::Accumulate
 
   def initialize

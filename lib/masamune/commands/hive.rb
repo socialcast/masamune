@@ -1,10 +1,10 @@
-require 'masamune/context'
+require 'masamune/has_context'
 require 'masamune/string_format'
 require 'masamune/commands/shell'
 
 module Masamune::Commands
   class Hive
-    include Masamune::ContextBehavior
+    include Masamune::HasContext
     include Masamune::StringFormat
 
     PROMPT = 'hive>'

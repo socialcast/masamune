@@ -1,8 +1,8 @@
-require 'masamune/context'
+require 'masamune/has_context'
 
 module Masamune
   class Filesystem
-    include Masamune::ContextBehavior
+    include Masamune::HasContext
     include Masamune::Accumulate
     include Masamune::Actions::S3Cmd
     include Masamune::Actions::Execute

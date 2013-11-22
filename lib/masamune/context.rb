@@ -1,4 +1,3 @@
-require 'delegate'
 require 'thread'
 require 'tmpdir'
 require 'logger'
@@ -7,20 +6,6 @@ require 'masamune/version'
 require 'masamune/multi_io'
 
 module Masamune
-  module ContextBehavior
-    extend Forwardable
-
-    def context
-      @context || Masamune.default_context
-    end
-
-    def context=(context)
-      @context = context
-    end
-
-    def_delegators :context, :configure, :configuration, :with_exclusive_lock, :logger, :filesystem, :filesystem=, :trace, :print
-  end
-
   class Context
     attr_accessor :parent
     attr_accessor :filesystem

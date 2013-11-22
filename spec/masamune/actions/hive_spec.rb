@@ -4,7 +4,7 @@ describe Masamune::Actions::Hive do
   let(:klass) do
     Class.new do
       extend Masamune::Thor::BeforeInitializeCallbacks
-      include Masamune::ContextBehavior
+      include Masamune::HasContext
       include Masamune::Actions::Hive
     end
   end

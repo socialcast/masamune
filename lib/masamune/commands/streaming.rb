@@ -1,10 +1,10 @@
 require 'active_support/core_ext/array'
 
-require 'masamune/context'
+require 'masamune/has_context'
 
 module Masamune::Commands
   class Streaming
-    include Masamune::ContextBehavior
+    include Masamune::HasContext
 
     # FIXME make a better guess with Find
     def self.default_hadoop_streaming_jar

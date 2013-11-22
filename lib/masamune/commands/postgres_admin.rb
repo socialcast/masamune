@@ -1,8 +1,8 @@
-require 'masamune/context'
+require 'masamune/has_context'
 
 module Masamune::Commands
   class PostgresAdmin
-    include Masamune::ContextBehavior
+    include Masamune::HasContext
 
     DEFAULT_ATTRIBUTES =
     {
