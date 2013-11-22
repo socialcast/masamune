@@ -3,6 +3,7 @@ module Masamune
     require 'masamune/commands/hive'
     require 'masamune/commands/s3cmd'
     require 'masamune/commands/hadoop_streaming'
+    require 'masamune/commands/hadoop_filesystem'
     require 'masamune/commands/elastic_mapreduce'
     require 'masamune/commands/postgres'
     require 'masamune/commands/postgres_admin'
