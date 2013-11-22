@@ -1,11 +1,11 @@
-require 'masamune/has_context'
+require 'masamune/proxy_delegate'
 require 'masamune/string_format'
 require 'masamune/commands/shell'
 
 module Masamune::Commands
   class Hive
-    include Masamune::HasContext
     include Masamune::StringFormat
+    include Masamune::ProxyDelegate
 
     PROMPT = 'hive>'
 
@@ -24,7 +24,8 @@ module Masamune::Commands
       :rollback   => nil
     }
 
-    def initialize(attrs  = {})
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
       DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
@@ -57,11 +58,11 @@ module Masamune::Commands
 
     def before_execute
       if @file
-        print("hive with file #{@file}")
+        console("hive with file #{@file}")
       end
 
       if @exec
-        print("hive exec '#{strip_sql(@exec)}' #{'into ' + @output if @output}")
+        console("hive exec '#{strip_sql(@exec)}' #{'into ' + @output if @output}")
       end
 
       if @output
@@ -92,7 +93,7 @@ module Masamune::Commands
         if @tmpfile
           @tmpfile.puts(line)
         else
-          print(line) if print?
+          console(line) if print?
         end
       end
     end

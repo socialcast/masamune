@@ -11,10 +11,9 @@ module Masamune::Actions
       opts.reverse_merge!(configuration.postgres) if configuration
       opts.merge!(block: block.to_proc) if block_given?
 
-      command = Masamune::Commands::Postgres.new(opts)
+      command = Masamune::Commands::Postgres.new(context, opts)
       command = Masamune::Commands::LineFormatter.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
-      command.context = context
 
       command.interactive? ? command.replace : command.execute
     end

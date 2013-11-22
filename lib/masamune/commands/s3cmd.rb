@@ -1,5 +1,9 @@
+require 'masamune/proxy_delegate'
+
 module Masamune::Commands
   class S3Cmd
+    include Masamune::ProxyDelegate
+
     DEFAULT_ATTRIBUTES =
     {
       :path     => 's3cmd',
@@ -8,7 +12,8 @@ module Masamune::Commands
       :block    => nil
     }
 
-    def initialize(attrs = {})
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
       DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end

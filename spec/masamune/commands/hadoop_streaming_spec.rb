@@ -9,20 +9,23 @@ describe Masamune::Commands::HadoopStreaming do
   let(:extra) { ['-D', %q(map.output.key.field.separator='\t')] }
   let(:attrs) { {} }
 
-  subject(:instance) { described_class.new(configuration.merge(attrs)) }
+  let(:delegate) { double }
+  let(:instance) { described_class.new(delegate, configuration.merge(attrs)) }
 
   before do
     instance.stub(:filesystem) { filesystem }
   end
 
   describe '#before_execute' do
+    subject(:input) { instance.input }
+
     context 'input path with suffix exists' do
       let(:input_option) { 'dir/input.txt' }
       before do
         filesystem.touch!('dir/input.txt')
         instance.before_execute
       end
-      its(:input) { should == ['dir/input.txt'] }
+      it { should == ['dir/input.txt'] }
     end
 
     context 'input path hadoop part' do
@@ -31,7 +34,7 @@ describe Masamune::Commands::HadoopStreaming do
         filesystem.touch!('dir/part_0000')
         instance.before_execute
       end
-      its(:input) { should == ['dir/part_0000'] }
+      it { should == ['dir/part_0000'] }
     end
 
     context 'input path directory' do
@@ -40,7 +43,7 @@ describe Masamune::Commands::HadoopStreaming do
         filesystem.touch!('dir')
         instance.before_execute
       end
-      its(:input) { should == ['dir/*'] }
+      it { should == ['dir/*'] }
     end
 
     context 'input path does not exist' do
@@ -48,7 +51,7 @@ describe Masamune::Commands::HadoopStreaming do
         instance.logger.should_receive(:debug).with(/\ARemoving missing input/)
         instance.before_execute
       end
-      its(:input) { should be_empty }
+      it { should be_empty }
     end
   end
 

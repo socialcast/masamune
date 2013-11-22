@@ -5,7 +5,8 @@ describe Masamune::Commands::S3Cmd do
   let(:options) { [] }
   let(:attrs) { {} }
 
-  let(:instance) { described_class.new(configuration.merge(attrs)) }
+  let(:delegate) { double }
+  let(:instance) { described_class.new(delegate, configuration.merge(attrs)) }
 
   describe '#command_args' do
     let(:attrs) { {extra: ['ls', 's3://fake']} }

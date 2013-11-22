@@ -6,6 +6,7 @@ module Masamune::Actions
 
       klass = Class.new
       klass.class_eval do
+        include Masamune::HasContext
         define_method(:command_args) do
           args
         end

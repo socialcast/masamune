@@ -9,12 +9,11 @@ module Masamune::Actions
       opts.reverse_merge!(configuration.hive) if configuration
       opts.merge!(block: block.to_proc) if block_given?
 
-      command = Masamune::Commands::Hive.new(opts)
+      command = Masamune::Commands::Hive.new(context, opts)
       command = Masamune::Commands::ElasticMapReduce.new(command, opts) if opts[:jobflow]
       command = Masamune::Commands::LineFormatter.new(command, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
-      command.context = context
 
       command.interactive? ? command.replace : command.execute
     end

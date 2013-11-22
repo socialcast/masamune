@@ -79,7 +79,7 @@ module Masamune
       end
     end
 
-    def print(*a)
+    def console(*a)
       line = a.join(' ').chomp
       mutex.synchronize do
         logger.info(line)

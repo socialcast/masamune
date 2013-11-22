@@ -5,9 +5,8 @@ module Masamune::Actions
       opts.reverse_merge!(configuration.postgres) if configuration
       opts.reverse_merge!(configuration.postgres_admin) if configuration
 
-      command = Masamune::Commands::PostgresAdmin.new(opts)
+      command = Masamune::Commands::PostgresAdmin.new(context, opts)
       command = Masamune::Commands::Shell.new(command, opts)
-      command.context = context
 
       command.execute
     end

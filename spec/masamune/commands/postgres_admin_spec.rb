@@ -4,7 +4,8 @@ describe Masamune::Commands::PostgresAdmin do
   let(:configuration) { {:create_db_path => 'createdb', :drop_db_path => 'dropdb', :hostname => 'localhost', :username => 'postgres'} }
   let(:attrs) { {} }
 
-  let(:instance) { described_class.new(configuration.merge(attrs)) }
+  let(:delegate) { double }
+  let(:instance) { described_class.new(delegate, configuration.merge(attrs)) }
 
   describe '#command_args' do
     subject do

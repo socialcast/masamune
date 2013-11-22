@@ -2,7 +2,6 @@ require 'open3'
 require 'readline'
 require 'ostruct'
 
-require 'masamune/has_context'
 require 'masamune/proxy_delegate'
 
 module Masamune::Commands
@@ -10,7 +9,6 @@ module Masamune::Commands
     SIGINT_EXIT_STATUS = 130
     PIPE_TIMEOUT = 10
 
-    include Masamune::HasContext
     include Masamune::ProxyDelegate
 
     attr_accessor :safe, :fail_fast

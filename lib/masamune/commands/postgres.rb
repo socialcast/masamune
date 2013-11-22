@@ -1,9 +1,9 @@
-require 'masamune/has_context'
+require 'masamune/proxy_delegate'
 require 'masamune/string_format'
 
 module Masamune::Commands
   class Postgres
-    include Masamune::HasContext
+    include Masamune::ProxyDelegate
     include Masamune::StringFormat
 
     DEFAULT_ATTRIBUTES =
@@ -25,7 +25,8 @@ module Masamune::Commands
       :variables    => {}
     }
 
-    def initialize(attrs = {})
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
       DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
@@ -74,7 +75,7 @@ module Masamune::Commands
     end
 
     def before_execute
-      print("psql with file #{@file}") if @file
+      console("psql with file #{@file}") if @file
     end
 
     def handle_stdout(line, line_no)
@@ -82,7 +83,7 @@ module Masamune::Commands
         logger.debug(line)
       else
         @block.call(line) if @block
-        print(line) if print?
+        console(line) if print?
       end
     end
 

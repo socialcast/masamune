@@ -8,11 +8,10 @@ module Masamune::Actions
       opts = opts.to_hash.symbolize_keys
       opts.reverse_merge!(configuration.elastic_mapreduce) if configuration
 
-      command = Masamune::Commands::Interactive.new(:interactive => opts.fetch(:interactive, false))
+      command = Masamune::Commands::Interactive.new(context, :interactive => opts.fetch(:interactive, false))
       command = Masamune::Commands::ElasticMapReduce.new(command, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
-      command.context = context
 
       command.interactive? ? command.replace : command.execute
     end

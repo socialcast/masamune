@@ -1,4 +1,6 @@
 class Masamune::MockDelegate
+  include Masamune::HasContext
+
   attr_accessor :command, :stdin, :stdout, :stderr, :status
 
   def initialize(command, input = nil)

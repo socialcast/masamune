@@ -1,10 +1,10 @@
 require 'active_support/core_ext/array'
 
-require 'masamune/has_context'
+require 'masamune/proxy_delegate'
 
 module Masamune::Commands
   class HadoopStreaming
-    include Masamune::HasContext
+    include Masamune::ProxyDelegate
 
     def self.default_hadoop_streaming_jar
       @default_hadoop_streaming_jar ||=
@@ -34,7 +34,8 @@ module Masamune::Commands
 
     attr_reader :input
 
-    def initialize(attrs = {})
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
       DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
@@ -75,7 +76,7 @@ module Masamune::Commands
           path + '/*'
         end
       end
-      print("hadoop_streaming %s -> %s (%s/%s)" % [@input.join(' '), @output, @mapper, @reducer])
+      console("hadoop_streaming %s -> %s (%s/%s)" % [@input.join(' '), @output, @mapper, @reducer])
     end
 
     def around_execute(&block)

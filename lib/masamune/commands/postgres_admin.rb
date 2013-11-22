@@ -1,8 +1,8 @@
-require 'masamune/has_context'
+require 'masamune/proxy_delegate'
 
 module Masamune::Commands
   class PostgresAdmin
-    include Masamune::HasContext
+    include Masamune::ProxyDelegate
 
     DEFAULT_ATTRIBUTES =
     {
@@ -16,7 +16,8 @@ module Masamune::Commands
       :database       => nil
     }
 
-    def initialize(attrs = {})
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
       DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end

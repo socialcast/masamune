@@ -8,10 +8,9 @@ module Masamune::Actions
       opts.merge!(extra: Array.wrap(args))
       opts.merge!(block: block.to_proc) if block_given?
 
-      command = Masamune::Commands::HadoopFilesystem.new(opts)
+      command = Masamune::Commands::HadoopFilesystem.new(context, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
-      command.context = context
 
       command.execute
     end

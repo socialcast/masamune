@@ -5,7 +5,8 @@ describe Masamune::Commands::Postgres do
   let(:options) { [] }
   let(:attrs) { {} }
 
-  let(:instance) { described_class.new(configuration.merge(attrs)) }
+  let(:delegate) { double }
+  let(:instance) { described_class.new(delegate, configuration.merge(attrs)) }
 
   describe '#stdin' do
     context 'with input' do

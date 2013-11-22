@@ -1,8 +1,8 @@
-require 'masamune/has_context'
+require 'masamune/proxy_delegate'
 
 module Masamune::Commands
   class HadoopFilesystem
-    include Masamune::HasContext
+    include Masamune::ProxyDelegate
 
     DEFAULT_ATTRIBUTES =
     {
@@ -13,7 +13,8 @@ module Masamune::Commands
       :print        => false
     }
 
-    def initialize(attrs = {})
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
       DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
@@ -30,7 +31,7 @@ module Masamune::Commands
 
     def handle_stdout(line, line_no)
       @block.call(line) if @block
-      print(line) if @print
+      console(line) if @print
     end
   end
 end
