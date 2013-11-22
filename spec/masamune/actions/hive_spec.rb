@@ -13,7 +13,7 @@ describe Masamune::Actions::Hive do
   let(:configuration) { {database: 'test'} }
 
   before do
-    instance.stub(:configuration).and_return({hive: configuration})
+    instance.stub_chain(:configuration, :hive).and_return(configuration)
   end
 
   describe '.hive' do

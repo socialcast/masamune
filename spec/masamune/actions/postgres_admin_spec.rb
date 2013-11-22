@@ -12,7 +12,8 @@ describe Masamune::Actions::PostgresAdmin do
   let(:configuration) { {} }
 
   before do
-    instance.stub(:configuration).and_return({postgres: {}, postgres_admin: configuration})
+    instance.stub_chain(:configuration, :postgres).and_return({})
+    instance.stub_chain(:configuration, :postgres_admin).and_return(configuration)
   end
 
   describe '.postgres_admin' do

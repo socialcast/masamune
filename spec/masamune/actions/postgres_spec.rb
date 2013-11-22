@@ -13,7 +13,7 @@ describe Masamune::Actions::Postgres do
   let(:configuration) { {database: 'test'} }
 
   before do
-    instance.stub(:configuration).and_return({postgres: configuration})
+    instance.stub_chain(:configuration, :postgres).and_return(configuration)
   end
 
   describe '.postgres' do

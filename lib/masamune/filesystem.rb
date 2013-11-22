@@ -1,5 +1,8 @@
+require 'masamune/client'
+
 module Masamune
   class Filesystem
+    include Masamune::ClientBehavior
     include Masamune::Accumulate
     include Masamune::Actions::S3Cmd
     include Masamune::Actions::Execute
@@ -276,16 +279,18 @@ module Masamune
       end
     end
 
+    # FIXME should be it's own top level command
     def hadoop_fs_command(options = {})
       args = []
-      args << Masamune.configuration.hadoop_filesystem[:path]
+      args << 'hadoop'
+      # FIXME configuration.hadoop_filesystem[:path]
       args << 'fs'
-      args << Masamune.configuration.hadoop_filesystem[:options].map(&:to_a)
+      # args << configuration.hadoop_filesystem[:options].map(&:to_a)
       args.flatten
     end
 
     def file_util_args
-      {noop: Masamune.configuration.no_op, verbose: Masamune.configuration.verbose}
+      {noop: configuration.no_op, verbose: configuration.verbose}
     end
 
     def execute_hadoop_fs(*args, &block)

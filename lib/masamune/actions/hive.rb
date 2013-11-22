@@ -6,7 +6,7 @@ module Masamune::Actions
 
     def hive(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
-      opts.reverse_merge!(configuration[:hive]) if configuration[:hive]
+      opts.reverse_merge!(configuration.hive) if configuration
       opts.merge!(block: block.to_proc) if block_given?
 
       command = Masamune::Commands::Hive.new(opts)

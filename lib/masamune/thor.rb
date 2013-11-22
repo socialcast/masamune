@@ -108,7 +108,6 @@ module Masamune
             config.debug    = options[:debug]
             config.no_op    = options[:no_op] || options[:dry_run]
             config.dry_run  = options[:dry_run]
-            config.jobflow  = options[:jobflow]
 
             if options[:version]
               puts config.version

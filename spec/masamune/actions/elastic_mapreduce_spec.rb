@@ -13,7 +13,7 @@ describe Masamune::Actions::ElasticMapreduce do
   let(:configuration) { {} }
 
   before do
-    instance.stub(:configuration).and_return({elastic_mapreduce: configuration})
+    instance.stub_chain(:configuration, :elastic_mapreduce).and_return(configuration)
   end
 
   describe '.elasitc_mapreduce' do

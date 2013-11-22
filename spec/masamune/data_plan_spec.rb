@@ -2,13 +2,11 @@ require 'spec_helper'
 
 describe Masamune::DataPlan do
   let(:fs) { Masamune::MockFilesystem.new }
-  before do
-    Masamune.configure do |config|
-      config.filesystem = fs
-    end
-  end
-
   let(:plan) { Masamune::DataPlan.new }
+
+  before do
+    plan.filesystem = fs
+  end
 
   let(:command) do
     Proc.new do |plan, rule|

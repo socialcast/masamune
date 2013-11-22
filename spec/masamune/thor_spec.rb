@@ -3,12 +3,6 @@ require 'thor'
 
 ENV['THOR_DEBUG'] = '1'
 describe Masamune::Thor do
-  let(:client) { Masamune::Client.new }
-
-  before do
-    Masamune.client = client
-  end
-
   def capture(stdout, stderr, &block)
     tmp_stdout, $stdout = $stdout, stdout
     tmp_stderr, $stderr = $stderr, stderr
@@ -165,7 +159,7 @@ describe Masamune::Thor do
 
     context 'when elastic_mapreduce is enabled' do
       before do
-        Masamune::Configuration.any_instance.stub(:elastic_mapreduce_enabled?) { true }
+        Masamune::Configuration.any_instance.stub(:elastic_mapreduce).and_return({enabled: true})
       end
 
       context 'with command and --start and no --jobflow' do

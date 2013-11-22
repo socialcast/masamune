@@ -3,7 +3,7 @@ module Masamune::Actions
   module Streaming
     def streaming(opts = {})
       opts = opts.to_hash.symbolize_keys
-      opts.reverse_merge!(configuration[:hadoop_streaming]) if configuration[:hadoop_streaming]
+      opts.reverse_merge!(configuration.hadoop_streaming) if configuration
 
       command = if opts[:jobflow]
         Masamune::Commands::Streaming.new(opts.merge(quote: true, file_args: false))

@@ -12,7 +12,7 @@ describe Masamune::Actions::Streaming do
   let(:configuration) { {} }
 
   before do
-    instance.stub(:configuration).and_return({hadoop_streaming: configuration})
+    instance.stub_chain(:configuration, :hadoop_streaming).and_return(configuration)
   end
 
   describe '.streaming' do

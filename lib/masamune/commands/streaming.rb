@@ -6,21 +6,18 @@ module Masamune::Commands
   class Streaming
     include Masamune::ClientBehavior
 
-    module ClassMethods
-      private
-      # FIXME make a better guess with Find
-      def default_hadoop_streaming_jar
-        case RUBY_PLATFORM
-        when /darwin/
-          '/usr/local/Cellar/hadoop/1.1.2/libexec/contrib/streaming/hadoop-streaming-1.1.2.jar'
-        when /linux/
-          '/usr/lib/hadoop-mapreduce/hadoop-streaming.jar'
-        else
-          raise 'hadoop_streaming_jar not found'
-        end
+    # FIXME make a better guess with Find
+    def self.default_hadoop_streaming_jar
+      @default_hadoop_streaming_jar ||=
+      case RUBY_PLATFORM
+      when /darwin/
+        '/usr/local/Cellar/hadoop/1.1.2/libexec/contrib/streaming/hadoop-streaming-1.1.2.jar'
+      when /linux/
+        '/usr/lib/hadoop-mapreduce/hadoop-streaming.jar'
+      else
+        raise 'hadoop_streaming_jar not found'
       end
     end
-    extend ClassMethods
 
     # TODO rename extra_args to extra
     DEFAULT_ATTRIBUTES =
