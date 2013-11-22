@@ -27,6 +27,6 @@ module Masamune
   end
 
   def default_config_file
-    @default_config_file ||= File.join(File.expand_path('../../', __FILE__), 'conf', 'masamune.yml.erb')
+    @default_config_file ||= File.join(File.expand_path('../../', __FILE__), 'config', 'masamune.yml.erb')
   end
 end
