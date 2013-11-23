@@ -22,25 +22,27 @@ describe Masamune::Commands::Hive do
   end
 
   describe '#command_args' do
+    let(:default_command) { ['hive', '--database', 'default'] }
+
     subject do
       instance.command_args
     end
 
-    it { should == ['hive'] }
+    it { should == default_command }
 
     context 'with command attrs' do
       let(:options) { [{'-d' => 'DATABASE=development'}] }
-      it { should == ['hive', '-d', 'DATABASE=development'] }
+      it { should == [*default_command, '-d', 'DATABASE=development'] }
     end
 
     context 'with file' do
       let(:attrs) { {file: 'zomg.hql'} }
-      it { should == ['hive', '-f', 'zomg.hql'] }
+      it { should == [*default_command, '-f', 'zomg.hql'] }
     end
 
     context 'with variables' do
       let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
-      it { should == ['hive', '-d', 'R=R2DO', '-d', 'C=C3PO'] }
+      it { should == [*default_command, '-d', 'R=R2DO', '-d', 'C=C3PO'] }
     end
   end
 end

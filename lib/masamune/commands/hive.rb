@@ -48,6 +48,7 @@ module Masamune::Commands
     def command_args
       args = []
       args << @path
+      args << ['--database', @database] if @database
       args << @options.map(&:to_a)
       args << ['-f', @file] if @file
       @variables.each do |key, val|
