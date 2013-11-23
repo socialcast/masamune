@@ -12,14 +12,18 @@ module Masamune::MockCommand
     end
 
     class << self
-      attr_accessor :patterns
       def add_pattern(pattern, value, io)
-        self.patterns ||= {}
-        self.patterns[pattern] = [value, io]
+        @patterns ||= {}
+        @patterns[pattern] = [value, io]
+      end
+
+      def patterns
+        @patterns ||= {}
+        @patterns
       end
 
       def reset!
-        self.patterns = {}
+        @patterns = {}
       end
     end
 

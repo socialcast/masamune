@@ -9,11 +9,6 @@ describe Masamune::Actions::S3Cmd do
   end
 
   let(:instance) { klass.new }
-  let(:configuration) { {} }
-
-  before do
-    instance.stub_chain(:configuration, :s3cmd).and_return(configuration)
-  end
 
   describe '.s3cmd' do
     before do

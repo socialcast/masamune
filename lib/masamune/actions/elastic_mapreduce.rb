@@ -6,7 +6,6 @@ module Masamune::Actions
 
     def elastic_mapreduce(opts = {})
       opts = opts.to_hash.symbolize_keys
-      opts.reverse_merge!(configuration.elastic_mapreduce) if configuration
 
       command = Masamune::Commands::Interactive.new(context, :interactive => opts.fetch(:interactive, false))
       command = Masamune::Commands::ElasticMapReduce.new(command, opts)

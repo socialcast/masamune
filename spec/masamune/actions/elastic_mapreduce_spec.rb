@@ -10,13 +10,8 @@ describe Masamune::Actions::ElasticMapreduce do
   end
 
   let(:instance) { klass.new }
-  let(:configuration) { {} }
 
-  before do
-    instance.stub_chain(:configuration, :elastic_mapreduce).and_return(configuration)
-  end
-
-  describe '.elasitc_mapreduce' do
+  describe '.elastic_mapreduce' do
     before do
       mock_command(/\Aelastic-mapreduce/, mock_success)
     end

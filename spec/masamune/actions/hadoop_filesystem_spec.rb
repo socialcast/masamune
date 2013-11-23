@@ -9,11 +9,6 @@ describe Masamune::Actions::HadoopFilesystem do
   end
 
   let(:instance) { klass.new }
-  let(:configuration) { {} }
-
-  before do
-    instance.stub_chain(:configuration, :hadoop_filesystem).and_return(configuration)
-  end
 
   describe '.hadoop_filesystem' do
     before do

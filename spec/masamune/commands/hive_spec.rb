@@ -6,7 +6,11 @@ describe Masamune::Commands::Hive do
   let(:attrs) { {} }
 
   let(:delegate) { double }
-  let(:instance) { described_class.new(delegate, configuration.merge(attrs)) }
+  let(:instance) { described_class.new(delegate, attrs) }
+
+  before do
+    delegate.stub_chain(:configuration, :hive).and_return(configuration)
+  end
 
   describe '#stdin' do
     context 'with exec' do

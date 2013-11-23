@@ -9,12 +9,6 @@ describe Masamune::Actions::HadoopStreaming do
   end
 
   let(:instance) { klass.new }
-  let(:configuration) { {} }
-
-  before do
-    instance.stub_chain(:configuration, :hadoop_streaming).and_return(configuration)
-    instance.stub_chain(:configuration, :elastic_mapreduce).and_return({})
-  end
 
   describe '.hadoop_streaming' do
     before do

@@ -6,7 +6,11 @@ describe Masamune::Commands::HadoopFilesystem do
   let(:attrs) { {} }
 
   let(:delegate) { double }
-  let(:instance) { described_class.new(delegate, configuration.merge(attrs)) }
+  let(:instance) { described_class.new(delegate, attrs) }
+
+  before do
+    delegate.stub_chain(:configuration, :hadoop_filesystem).and_return(configuration)
+  end
 
   describe '#command_args' do
     let(:attrs) { {extra: ['-ls', '/']} }

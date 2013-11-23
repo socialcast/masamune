@@ -5,7 +5,12 @@ describe Masamune::Commands::PostgresAdmin do
   let(:attrs) { {} }
 
   let(:delegate) { double }
-  let(:instance) { described_class.new(delegate, configuration.merge(attrs)) }
+  let(:instance) { described_class.new(delegate, attrs) }
+
+  before do
+    delegate.stub_chain(:configuration, :postgres).and_return({})
+    delegate.stub_chain(:configuration, :postgres_admin).and_return(configuration)
+  end
 
   describe '#command_args' do
     subject do

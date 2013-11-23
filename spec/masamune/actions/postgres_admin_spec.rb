@@ -9,12 +9,6 @@ describe Masamune::Actions::PostgresAdmin do
   end
 
   let(:instance) { klass.new }
-  let(:configuration) { {} }
-
-  before do
-    instance.stub_chain(:configuration, :postgres).and_return({})
-    instance.stub_chain(:configuration, :postgres_admin).and_return(configuration)
-  end
 
   describe '.postgres_admin' do
     subject { instance.postgres_admin(action: action, database: 'zombo') }

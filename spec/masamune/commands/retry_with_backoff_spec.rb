@@ -5,6 +5,10 @@ describe Masamune::Commands::RetryWithBackoff do
   let(:delegate) { double }
   let(:instance) { described_class.new(delegate, options) }
 
+  before do
+    delegate.stub(:logger).and_return(double)
+  end
+
   describe '#around_execute' do
     let(:retries) { 3 }
 

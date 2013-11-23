@@ -36,7 +36,7 @@ module Masamune::Commands
 
     def initialize(delegate, attrs = {})
       @delegate = delegate
-      DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
+      DEFAULT_ATTRIBUTES.merge(configuration.hadoop_streaming).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
       @input = Array.wrap(@input)

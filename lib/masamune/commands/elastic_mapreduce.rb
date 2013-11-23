@@ -17,7 +17,7 @@ module Masamune::Commands
 
     def initialize(delegate, attrs = {})
       @delegate = delegate
-      DEFAULT_ATTRIBUTES.merge(attrs).each do |name, value|
+      DEFAULT_ATTRIBUTES.merge(configuration.elastic_mapreduce).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
     end
@@ -60,7 +60,7 @@ module Masamune::Commands
     def ssh_command
       @ssh_command ||= begin
         result = nil
-        execute(ssh_args, fail_fast: true, safe: true) do |line|
+        execute(*ssh_args, fail_fast: true, safe: true) do |line|
           result = line.sub(/ exit\Z/, '').split(' ')
         end
         result

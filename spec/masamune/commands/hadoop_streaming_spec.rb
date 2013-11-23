@@ -10,10 +10,11 @@ describe Masamune::Commands::HadoopStreaming do
   let(:attrs) { {} }
 
   let(:delegate) { double }
-  let(:instance) { described_class.new(delegate, configuration.merge(attrs)) }
+  let(:instance) { described_class.new(delegate, attrs) }
 
   before do
-    instance.stub(:filesystem) { filesystem }
+    delegate.stub(:filesystem) { filesystem }
+    delegate.stub_chain(:configuration, :hadoop_streaming).and_return(configuration)
   end
 
   describe '#before_execute' do
