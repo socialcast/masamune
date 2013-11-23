@@ -19,11 +19,11 @@ module Masamune::Actions
       base.after_initialize do |thor, options|
         next if thor.configuration.elastic_mapreduce.empty?
         next unless thor.configuration.elastic_mapreduce.fetch(:enabled, true)
+        defined_jobflows = thor.configuration.elastic_mapreduce.fetch(:jobflows, {}).symbolize_keys
         thor.configuration.elastic_mapreduce[:jobflow] = options[:jobflow] if options[:jobflow]
         jobflow = thor.configuration.elastic_mapreduce[:jobflow]
-        defined_jobflows = (thor.configuration.elastic_mapreduce.fetch(:jobflows, {}) || {}).symbolize_keys
-        jobflow = defined_jobflows.fetch(jobflow.to_sym, jobflow.to_s)
         raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless jobflow if thor.extra.empty?
+        thor.configuration.elastic_mapreduce[:jobflow] = defined_jobflows.fetch(jobflow.to_sym, jobflow.to_s)
         raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{jobflow}' for '--jobflow' doesn't exist) unless thor.elastic_mapreduce(extra: '--list', jobflow: jobflow, fail_fast: false).success?
       end if defined?(base.after_initialize)
     end
