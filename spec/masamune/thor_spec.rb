@@ -105,7 +105,7 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--dry_run'] }
       before do
-        klass.any_instance.should_receive(:hive).with(exec: 'show tables;', safe: true, fail_fast: false).and_return(double(success?: false))
+        klass.any_instance.should_receive(:hive).with(exec: 'SHOW TABLES;', safe: true, fail_fast: false).and_return(double(success?: false))
       end
       it { expect { subject }.to raise_error Thor::InvocationError, /Dry run of hive failed/ }
     end

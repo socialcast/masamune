@@ -70,12 +70,8 @@ describe Masamune::Actions::Hive do
 
     context 'with dryrun' do
       let(:options) { {dry_run: true} }
-      let(:schema_files) { ['schema.hql'] }
-      let(:setup_files) { ['setup.hql'] }
       before do
         instance.should_receive(:hive).with(exec: 'SHOW TABLES;', safe: true, fail_fast: false).once.and_return(mock_success)
-        instance.should_not_receive(:hive).with(file: setup_files.first)
-        instance.should_not_receive(:hive).with(file: schema_files.first)
         after_initialize_invoke
       end
       it 'should not call hive with setup_file nor schema_file' do; end
