@@ -17,10 +17,25 @@ module Masamune::Actions
       command.interactive? ? command.replace : command.execute
     end
 
+    def load_setup_files
+      configuration.hive[:setup_files].each do |file|
+        hive(file: file)
+      end if configuration.hive.has_key?(:setup_files)
+    end
+
+    def load_schema_files
+      configuration.hive[:schema_files].each do |file|
+        hive(file: file)
+      end if configuration.hive.has_key?(:schema_files)
+    end
+
     included do |base|
       base.after_initialize do |thor, options|
         if options[:dry_run]
-          raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'show tables;', safe: true, fail_fast: false).success?
+          raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'SHOW TABLES;', safe: true, fail_fast: false).success?
+        else
+          thor.load_setup_files
+          thor.load_schema_files
         end
       end if defined?(base.after_initialize)
     end
