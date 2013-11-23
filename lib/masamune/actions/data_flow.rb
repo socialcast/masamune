@@ -5,8 +5,6 @@ module Masamune::Actions
   module DataFlow
     extend ActiveSupport::Concern
 
-    include Masamune::HasContext
-
     def data_plan
       self.class.data_plan
     end
@@ -48,9 +46,9 @@ module Masamune::Actions
 
       # Execute this block last
       base.after_initialize(-1) do |thor, options|
-        # Only execute this block DataPlan is not currently executing
+        # Only execute this block if DataPlan is not currently executing
         next if thor.data_plan.current_rule.present?
-        context = thor.data_plan.context = thor.context
+        thor.data_plan.context = thor.context
 
         raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
         raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]

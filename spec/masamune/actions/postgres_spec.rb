@@ -27,7 +27,6 @@ describe Masamune::Actions::Postgres do
   end
 
   describe '.after_initialize' do
-
     subject(:after_initialize_invoke) do
       klass.after_initialize_invoke(instance)
     end
