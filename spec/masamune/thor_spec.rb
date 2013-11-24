@@ -15,7 +15,6 @@ describe Masamune::Thor do
     Class.new(Thor) do
       include Masamune::Thor
       include Masamune::Actions::DataFlow
-      include Masamune::Actions::Hive
       include Masamune::ThorMute
 
       desc 'command', 'command'
@@ -99,15 +98,6 @@ describe Masamune::Thor do
         Masamune::Filesystem.any_instance.should_receive(:resolve_file)
       end
       it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /Option --config or valid system configuration file required/ }
-    end
-
-    context 'with command and --dry_run' do
-      let(:command) { 'command' }
-      let(:options) { ['--dry_run'] }
-      before do
-        klass.any_instance.should_receive(:hive).with(exec: 'SHOW TABLES;', safe: true, fail_fast: false).and_return(double(success?: false))
-      end
-      it { expect { subject }.to raise_error Thor::InvocationError, /Dry run of hive failed/ }
     end
 
     context 'with command and -- --extra --args' do

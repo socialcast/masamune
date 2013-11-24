@@ -42,39 +42,37 @@ describe Masamune::Actions::Hive do
 
   describe '.after_initialize' do
     let(:options) { {} }
-    let(:setup_files) { [] }
-    let(:schema_files) { [] }
-    let(:configuration) { {database: 'test', setup_files: setup_files, schema_files: schema_files} }
+    let(:configuration) { {database: 'test'} }
 
     subject(:after_initialize_invoke) do
       instance.after_initialize_invoke(options)
     end
 
-    context 'when setup_files are configured' do
-      let(:setup_files) { ['setup.hql'] }
+    context 'with database' do
       before do
-        instance.should_receive(:hive).with(file: setup_files.first).once
+        instance.should_receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
         after_initialize_invoke
       end
-      it 'should call hive with setup_file' do; end
+      it 'should call hive with create database' do; end
     end
 
-    context 'when schema_files are configured' do
-      let(:schema_files) { ['schema.hql'] }
+    context 'with location' do
+      let(:configuration) { {database: 'test', location: '/tmp'} }
       before do
-        instance.should_receive(:hive).with(file: schema_files.first).once
+        instance.should_receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test LOCATION "/tmp";', :database => nil).once.and_return(mock_success)
         after_initialize_invoke
       end
-      it 'should call hive with schema_file' do; end
+      it 'should call hive with create database' do; end
     end
 
     context 'with dryrun' do
       let(:options) { {dry_run: true} }
       before do
+        instance.should_receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
         instance.should_receive(:hive).with(exec: 'SHOW TABLES;', safe: true, fail_fast: false).once.and_return(mock_success)
         after_initialize_invoke
       end
-      it 'should not call hive with setup_file nor schema_file' do; end
+      it 'should call hive with show tables' do; end
     end
   end
 end

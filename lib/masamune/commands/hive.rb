@@ -11,17 +11,19 @@ module Masamune::Commands
 
     DEFAULT_ATTRIBUTES =
     {
-      :path       => 'hive',
-      :options    => [],
-      :database   => 'default',
-      :file       => nil,
-      :exec       => nil,
-      :input      => nil,
-      :output     => nil,
-      :print      => false,
-      :block      => nil,
-      :variables  => {},
-      :rollback   => nil
+      :path         => 'hive',
+      :options      => [],
+      :database     => 'default',
+      :setup_files  => [],
+      :schema_files => [],
+      :file         => nil,
+      :exec         => nil,
+      :input        => nil,
+      :output       => nil,
+      :print        => false,
+      :block        => nil,
+      :variables    => {},
+      :rollback     => nil
     }
 
     def initialize(delegate, attrs = {})
@@ -50,6 +52,7 @@ module Masamune::Commands
       args << @path
       args << ['--database', @database] if @database
       args << @options.map(&:to_a)
+      args << load_setup_and_schema_files.map(&:to_a)
       args << ['-f', @file] if @file
       @variables.each do |key, val|
         args << ['-d', "#{key.to_s}=#{val.to_s}"]
@@ -104,6 +107,13 @@ module Masamune::Commands
         logger.error('rolling back')
         @rollback.call
       end
+    end
+
+    def load_setup_and_schema_files
+      files = []
+      files << @setup_files if @setup_files
+      files << @schema_files if @schema_files
+      files.flatten.compact.map { |file| {'-i' => file} }
     end
   end
 end

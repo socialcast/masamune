@@ -44,5 +44,15 @@ describe Masamune::Commands::Hive do
       let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
       it { should == [*default_command, '-d', 'R=R2DO', '-d', 'C=C3PO'] }
     end
+
+    context 'with setup files' do
+      let(:attrs) { {setup_files: ['setup_a.hql', 'setup_b.hql']} }
+      it { should == [*default_command, '-i', 'setup_a.hql', '-i', 'setup_b.hql'] }
+    end
+
+    context 'with schema files' do
+      let(:attrs) { {schema_files: ['schema_a.hql', 'schema_b.hql']} }
+      it { should == [*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql'] }
+    end
   end
 end

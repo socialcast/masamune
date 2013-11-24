@@ -17,25 +17,21 @@ module Masamune::Actions
       command.interactive? ? command.replace : command.execute
     end
 
-    def load_setup_files
-      configuration.hive[:setup_files].each do |file|
-        hive(file: file)
-      end if configuration.hive.has_key?(:setup_files)
-    end
-
-    def load_schema_files
-      configuration.hive[:schema_files].each do |file|
-        hive(file: file)
-      end if configuration.hive.has_key?(:schema_files)
+    # TODO warn or error if database is not defined
+    def create_database_if_not_exists
+      sql = []
+      sql << %Q(CREATE DATABASE IF NOT EXISTS #{configuration.hive[:database]})
+      sql << %Q(LOCATION "#{configuration.hive[:location]}") if configuration.hive[:location]
+      hive(exec: sql.join(' ') + ';', database: nil)
     end
 
     included do |base|
       base.after_initialize do |thor, options|
+        thor.create_database_if_not_exists
         if options[:dry_run]
           raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'SHOW TABLES;', safe: true, fail_fast: false).success?
         end
-        thor.load_setup_files
-        thor.load_schema_files
+        # thor.load_setup_and_schema_files
       end if defined?(base.after_initialize)
     end
   end
