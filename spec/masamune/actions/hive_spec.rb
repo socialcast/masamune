@@ -3,8 +3,8 @@ require 'spec_helper'
 describe Masamune::Actions::Hive do
   let(:klass) do
     Class.new do
-      extend Masamune::Thor::BeforeInitializeCallbacks
       include Masamune::HasContext
+      include Masamune::AfterInitializeCallbacks
       include Masamune::Actions::Hive
     end
   end
@@ -47,7 +47,7 @@ describe Masamune::Actions::Hive do
     let(:configuration) { {database: 'test', setup_files: setup_files, schema_files: schema_files} }
 
     subject(:after_initialize_invoke) do
-      klass.after_initialize_invoke(instance, options)
+      instance.after_initialize_invoke(options)
     end
 
     context 'when setup_files are configured' do

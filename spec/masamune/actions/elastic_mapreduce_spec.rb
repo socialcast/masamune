@@ -3,8 +3,8 @@ require 'spec_helper'
 describe Masamune::Actions::ElasticMapreduce do
   let(:klass) do
     Class.new do
-      extend Masamune::Thor::BeforeInitializeCallbacks
       include Masamune::HasContext
+      include Masamune::AfterInitializeCallbacks
       include Masamune::Actions::ElasticMapreduce
     end
   end
@@ -32,7 +32,7 @@ describe Masamune::Actions::ElasticMapreduce do
     let(:options) { {} }
 
     subject(:after_initialize_invoke) do
-      klass.after_initialize_invoke(instance, options)
+      instance.after_initialize_invoke(options)
     end
 
     context 'when configuration is empty' do

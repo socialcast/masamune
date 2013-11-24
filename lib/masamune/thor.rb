@@ -2,6 +2,8 @@ require 'date'
 require 'thor'
 require 'active_support/concern'
 
+require 'masamune/after_initialize_callbacks'
+
 module Masamune
   module Thor
     extend ActiveSupport::Concern
@@ -39,25 +41,12 @@ module Masamune
       end
     end
 
-    module BeforeInitializeCallbacks
-      # Callbacks registered with the highest priority are executed first, ties are broken by callback registration order
-      def after_initialize(priority = 0, &block)
-        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
-        @after_initialize[priority] << block
-      end
-
-      def after_initialize_invoke(*a)
-        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
-        @after_initialize.sort.reverse.each { |p, x| x.each { |y| y.call(*a) } }
-      end
-    end
-
     included do |thor|
       thor.extend ExtraArguments
       thor.extend RescueLogger
-      thor.extend BeforeInitializeCallbacks
       thor.class_eval do
         include Masamune::HasContext
+        include Masamune::AfterInitializeCallbacks
         include Masamune::Actions::Filesystem
         include Masamune::Actions::ElasticMapreduce
 
@@ -121,10 +110,6 @@ module Masamune
         end
 
         private
-
-        def after_initialize_invoke(*a)
-          self.class.after_initialize_invoke(self, *a)
-        end
 
         def display_help?
           options[:help] || current_task_name == 'help'
