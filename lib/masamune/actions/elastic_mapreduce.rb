@@ -31,10 +31,10 @@ module Masamune::Actions
 
     included do |base|
       base.class_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: elastic-mapreduce --list)' if defined?(base.class_option)
-      base.after_initialize do |thor, options|
+      base.after_initialize(5) do |thor, options|
         next if thor.configuration.elastic_mapreduce.empty?
         next unless thor.configuration.elastic_mapreduce.fetch(:enabled, true)
-        jobflow = thor.resolve_jobflow(options.fetch(:jobflow, thor.configuration.elastic_mapreduce[:jobflow]))
+        jobflow = thor.resolve_jobflow(options.symbolize_keys.fetch(:jobflow, thor.configuration.elastic_mapreduce[:jobflow]))
         if thor.jobflow_required?
           raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless jobflow
           raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{jobflow}' for '--jobflow' doesn't exist) unless thor.elastic_mapreduce(extra: '--list', jobflow: jobflow, fail_fast: false).success?
