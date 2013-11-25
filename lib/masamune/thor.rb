@@ -1,11 +1,15 @@
 require 'date'
 require 'thor'
-require 'forwardable'
 require 'active_support/concern'
+
+require 'masamune/after_initialize_callbacks'
 
 module Masamune
   module Thor
     extend ActiveSupport::Concern
+
+    include Masamune::HasContext
+    include Masamune::AfterInitializeCallbacks
 
     SYSTEM_CONFIG_FILES = [
       '/etc/masamune/config.yml',
@@ -40,28 +44,12 @@ module Masamune
       end
     end
 
-    module BeforeInitializeCallbacks
-      # Callbacks registered with the highest priority are executed first, ties are broken by callback registration order
-      def after_initialize(priority = 0, &block)
-        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
-        @after_initialize[priority] << block
-      end
-
-      def after_initialize_invoke(*a)
-        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
-        @after_initialize.sort.reverse.each { |p, x| x.each { |y| y.call(*a) } }
-      end
-    end
-
     included do |thor|
-      thor.extend Forwardable
       thor.extend ExtraArguments
       thor.extend RescueLogger
-      thor.extend BeforeInitializeCallbacks
       thor.class_eval do
         include Masamune::Actions::Filesystem
-        include Masamune::Actions::ElasticMapreduce
-        attr_accessor :current_client
+
         attr_accessor :current_namespace
         attr_accessor :current_task_name
         attr_accessor :current_command_name
@@ -74,12 +62,11 @@ module Masamune
         class_option :debug, :type => :boolean, :aliases => '-d', :desc => 'Print debugging information', :default => false
         class_option :no_op, :type => :boolean, :desc => 'Do not execute commands that modify state', :default => false
         class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Combination of --no-op and --verbose', :default => false
-        class_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: elastic-mapreduce --list)'
         class_option :config, :desc => 'Configuration file'
         class_option :version, :desc => 'Print version and exit'
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
-          self.current_client = Masamune.client
+          self.context.parent = self
           self.current_namespace = self.class.namespace
           self.current_task_name = _config[:current_command].name
           self.current_command_name = self.current_namespace + ':' + self.current_task_name
@@ -95,10 +82,7 @@ module Masamune
             exit
           end
 
-          # TODO remove ability to reference to global configuration outside of current_client
-          Masamune.configure do |config|
-            config.client.context = self
-
+          context.configure do |config|
             if options[:config]
               config.load(options[:config]) rescue raise ::Thor::MalformattedArgumentError, "Could not load file provided for '--config'"
             elsif default_config_file = config.filesystem.resolve_file([Masamune.default_config_file] + SYSTEM_CONFIG_FILES)
@@ -112,7 +96,6 @@ module Masamune
             config.debug    = options[:debug]
             config.no_op    = options[:no_op] || options[:dry_run]
             config.dry_run  = options[:dry_run]
-            config.jobflow  = options[:jobflow]
 
             if options[:version]
               puts config.version
@@ -125,15 +108,7 @@ module Masamune
           after_initialize_invoke(options)
         end
 
-        no_tasks do
-          def_delegators :current_client, :configuration
-        end
-
         private
-
-        def after_initialize_invoke(*a)
-          self.class.after_initialize_invoke(self, *a)
-        end
 
         def display_help?
           options[:help] || current_task_name == 'help'

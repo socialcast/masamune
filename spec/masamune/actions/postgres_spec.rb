@@ -1,22 +1,19 @@
 require 'spec_helper'
 
 describe Masamune::Actions::Postgres do
-  # TODO move to universal example group
-  let(:client) { Masamune::Client.new }
-  let(:default_configuration) { client.configuration }
-
   let(:klass) do
     Class.new do
-      extend Masamune::Thor::BeforeInitializeCallbacks
+      include Masamune::HasContext
+      include Masamune::AfterInitializeCallbacks
       include Masamune::Actions::Postgres
     end
   end
 
   let(:instance) { klass.new }
-  let(:configuration) { {} }
+  let(:configuration) { {database: 'test'} }
 
   before do
-    instance.stub_chain(:configuration, :postgres).and_return(default_configuration.postgres.merge(configuration))
+    instance.stub_chain(:configuration, :postgres).and_return(configuration)
   end
 
   describe '.postgres' do
@@ -30,15 +27,19 @@ describe Masamune::Actions::Postgres do
   end
 
   describe '.after_initialize' do
+    let(:options) { {} }
+    let(:setup_files) { [] }
+    let(:schema_files) { [] }
+    let(:configuration) { {database: 'test', setup_files: setup_files, schema_files: schema_files} }
 
     subject(:after_initialize_invoke) do
-      klass.after_initialize_invoke(instance)
+      instance.after_initialize_invoke(options)
     end
 
     context 'when database does not exist' do
       before do
         instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_failure)
-        instance.should_receive(:postgres_admin).with(action: :create, database: an_instance_of(String)).once
+        instance.should_receive(:postgres_admin).with(action: :create, database: 'test', safe: true).once
         after_initialize_invoke
       end
       it 'should call posgres_admin once' do; end
@@ -54,25 +55,33 @@ describe Masamune::Actions::Postgres do
     end
 
     context 'when setup_files are configured' do
-      let(:setup_file) { 'setup.psql' }
-      let(:configuration) { {setup_files: [setup_file]} }
+      let(:setup_files) { ['setup.psql'] }
       before do
         instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
-        instance.should_receive(:postgres).with(file: setup_file).once
+        instance.should_receive(:postgres).with(file: setup_files.first).once
         after_initialize_invoke
       end
-      it 'should not call postgres_admin' do; end
+      it 'should call postgres with setup_files' do; end
     end
 
     context 'when schema_files are configured' do
-      let(:schema_file) { 'schema.psql' }
-      let(:configuration) { {schema_files: [schema_file]} }
+      let(:schema_files) { ['schema.psql'] }
       before do
         instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
-        instance.should_receive(:postgres).with(file: schema_file).once
+        instance.should_receive(:postgres).with(file: schema_files.first).once
         after_initialize_invoke
       end
-      it 'should not call postgres_admin' do; end
+      it 'should call postgres with schema_files' do; end
+    end
+
+    context 'when schema_files are configured' do
+      let(:schema_files) { ['schema.psql'] }
+      before do
+        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
+        instance.should_receive(:postgres).with(file: schema_files.first).once
+        after_initialize_invoke
+      end
+      it 'should call postgres with schema_files' do; end
     end
   end
 end

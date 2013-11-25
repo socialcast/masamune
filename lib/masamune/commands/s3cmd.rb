@@ -1,22 +1,34 @@
+require 'masamune/proxy_delegate'
+
 module Masamune::Commands
   class S3Cmd
-    attr_accessor :extra, :block
+    include Masamune::ProxyDelegate
 
-    def initialize(opts = {})
-      self.extra    = opts[:extra]
-      self.block    = opts[:block]
+    DEFAULT_ATTRIBUTES =
+    {
+      :path     => 's3cmd',
+      :options  => [],
+      :extra    => [],
+      :block    => nil
+    }
+
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
+      DEFAULT_ATTRIBUTES.merge(configuration.s3cmd).merge(attrs).each do |name, value|
+        instance_variable_set("@#{name}", value)
+      end
     end
 
     def command_args
       args = []
-      args << Masamune.configuration.s3cmd[:path]
-      args << Masamune.configuration.s3cmd[:options].map(&:to_a)
-      args << extra
+      args << @path
+      args << @options.map(&:to_a)
+      args << @extra
       args.flatten
     end
 
     def handle_stdout(line, line_no)
-      block.call(line) if block
+      @block.call(line) if @block
     end
 
     module ClassMethods

@@ -3,12 +3,6 @@ require 'thor'
 
 ENV['THOR_DEBUG'] = '1'
 describe Masamune::Thor do
-  let(:client) { Masamune::Client.new }
-
-  before do
-    Masamune.client = client
-  end
-
   def capture(stdout, stderr, &block)
     tmp_stdout, $stdout = $stdout, stdout
     tmp_stderr, $stderr = $stderr, stderr
@@ -21,7 +15,6 @@ describe Masamune::Thor do
     Class.new(Thor) do
       include Masamune::Thor
       include Masamune::Actions::DataFlow
-      include Masamune::Actions::Hive
       include Masamune::ThorMute
 
       desc 'command', 'command'
@@ -107,15 +100,6 @@ describe Masamune::Thor do
       it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /Option --config or valid system configuration file required/ }
     end
 
-    context 'with command and --dry_run' do
-      let(:command) { 'command' }
-      let(:options) { ['--dry_run'] }
-      before do
-        klass.any_instance.should_receive(:hive).with(exec: 'show tables;', safe: true, fail_fast: false).and_return(double(success?: false))
-      end
-      it { expect { subject }.to raise_error Thor::InvocationError, /Dry run of hive failed/ }
-    end
-
     context 'with command and -- --extra --args' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--', '--extra', '--args'] }
@@ -161,27 +145,6 @@ describe Masamune::Thor do
         klass.stub(:dispatch).and_raise('random exception')
       end
       it { expect { subject }.to raise_error /random exception/ }
-    end
-
-    context 'when elastic_mapreduce is enabled' do
-      before do
-        Masamune::Configuration.any_instance.stub(:elastic_mapreduce_enabled?) { true }
-      end
-
-      context 'with command and --start and no --jobflow' do
-        let(:command) { 'command' }
-        let(:options) { ['--start', '2013-01-01'] }
-        it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--jobflow'/ }
-      end
-
-      context 'with command and --start and invalid --jobflow' do
-        let(:command) { 'command' }
-        let(:options) { ['--start', '2013-01-01', '--jobflow', 'xxx'] }
-        before do
-          klass.any_instance.should_receive(:elastic_mapreduce).with(extra: '--list', jobflow: 'xxx', fail_fast: false).and_return(double(success?: false))
-        end
-        it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /'--jobflow' doesn't exist/ }
-      end
     end
   end
 

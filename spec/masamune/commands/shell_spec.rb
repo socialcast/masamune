@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Masamune::Commands::Shell do
-  let(:options) { {fail_fast: false} }
   let(:input) { nil }
+  let(:options) { {fail_fast: false} }
   let(:delegate) { Masamune::MockDelegate.new(command, input) }
   let(:instance) { described_class.new(delegate, options) }
 

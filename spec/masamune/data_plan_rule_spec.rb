@@ -20,7 +20,7 @@ describe Masamune::DataPlanRule do
     end
 
     context 'with lambda' do
-      let(:pattern) { lambda { 'report/%Y-%m-%d/%H' } }
+      let(:pattern) { lambda { |_| 'report/%Y-%m-%d/%H' } }
       it { should == 'report/%Y-%m-%d/%H' }
     end
   end

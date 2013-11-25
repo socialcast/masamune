@@ -1,20 +1,20 @@
 require 'spec_helper'
 
 describe Masamune::Commands::Postgres do
-  let(:configuration) { {:path => 'psql', :database => 'postgres', :options => command_options} }
-  let(:general_options) { {} }
-  let(:command_options) { [] }
-  let(:context_options) { {} }
+  let(:configuration) { {:path => 'psql', :database => 'postgres', :options => options} }
+  let(:options) { [] }
+  let(:attrs) { {} }
 
-  let(:instance) { Masamune::Commands::Postgres.new(general_options.merge(context_options)) }
+  let(:delegate) { double }
+  let(:instance) { described_class.new(delegate, attrs) }
 
   before do
-    instance.stub(:configuration) { configuration }
+    delegate.stub_chain(:configuration, :postgres).and_return(configuration)
   end
 
   describe '#stdin' do
-    context 'with exec' do
-      let(:context_options) { {exec: %q(SELECT * FROM table;)} }
+    context 'with input' do
+      let(:attrs) { {input: %q(SELECT * FROM table;)} }
       subject { instance.stdin }
       it { should be_a(StringIO) }
       its(:string) { should == %q(SELECT * FROM table;) }
@@ -22,7 +22,7 @@ describe Masamune::Commands::Postgres do
   end
 
   describe '#command_args' do
-    let(:default_command) { ['psql', '--dbname=postgres', '--no-password'] }
+    let(:default_command) { ['psql', '--host=localhost', '--dbname=postgres', '--username=postgres', '--no-password'] }
 
     subject do
       instance.command_args
@@ -30,18 +30,18 @@ describe Masamune::Commands::Postgres do
 
     it { should == default_command }
 
-    context 'with command options' do
-      let(:command_options) { [{'-A' => nil}] }
+    context 'with options' do
+      let(:options) { [{'-A' => nil}] }
       it { should == [*default_command, '-A'] }
     end
 
     context 'with file' do
-      let(:context_options) { {file: 'zomg.hql'} }
+      let(:attrs) { {file: 'zomg.hql'} }
       it { should == [*default_command, '--file=zomg.hql'] }
     end
 
     context 'with variables' do
-      let(:context_options) { {variables: {R: 'R2DO', C: 'C3PO'}} }
+      let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
       it { should == [*default_command, %q(--set=R='R2DO'), %q(--set=C='C3PO')] }
     end
   end

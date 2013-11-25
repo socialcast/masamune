@@ -1,101 +1,119 @@
+require 'masamune/proxy_delegate'
 require 'masamune/string_format'
 require 'masamune/commands/shell'
 
 module Masamune::Commands
   class Hive
+    include Masamune::StringFormat
+    include Masamune::ProxyDelegate
+
     PROMPT = 'hive>'
 
-    include Masamune::StringFormat
+    DEFAULT_ATTRIBUTES =
+    {
+      :path         => 'hive',
+      :options      => [],
+      :database     => 'default',
+      :setup_files  => [],
+      :schema_files => [],
+      :file         => nil,
+      :exec         => nil,
+      :input        => nil,
+      :output       => nil,
+      :print        => false,
+      :block        => nil,
+      :variables    => {},
+      :rollback     => nil
+    }
 
-    attr_accessor :file, :exec, :input, :output, :print, :block, :variables, :rollback
-
-    def initialize(opts = {})
-      self.file       = opts[:file]
-      self.exec       = opts[:exec]
-      self.output     = opts[:output]
-      self.print      = opts.fetch(:print, false)
-      self.block      = opts[:block]
-      self.variables  = opts.fetch(:variables, {})
-      self.rollback   = opts[:rollback]
-    end
-
-    def exec=(sql = nil)
-      return unless sql
-      self.input = @exec = strip_sql(sql)
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
+      DEFAULT_ATTRIBUTES.merge(configuration.hive).merge(attrs).each do |name, value|
+        instance_variable_set("@#{name}", value)
+      end
     end
 
     def stdin
-      if input
-        @stdin ||= StringIO.new(input)
+      if @input || @exec
+        @stdin ||= StringIO.new(strip_sql(@input || @exec))
       end
     end
 
     def interactive?
-      !(exec || file)
+      !(@exec || @file)
     end
 
     def print?
-      self.print
+      @print
     end
 
     def command_args
       args = []
-      args << Masamune.configuration.hive[:path]
-      args << Masamune.configuration.hive[:options].map(&:to_a)
-      args << ['-f', file] if file
-      variables.each do |key, val|
+      args << @path
+      args << ['--database', @database] if @database
+      args << @options.map(&:to_a)
+      args << load_setup_and_schema_files.map(&:to_a)
+      args << ['-f', @file] if @file
+      @variables.each do |key, val|
         args << ['-d', "#{key.to_s}=#{val.to_s}"]
       end
       args.flatten
     end
 
     def before_execute
-      if file
-        Masamune.print("hive with file #{file}")
+      if @file
+        console("hive with file #{@file}")
       end
 
-      if exec
-        Masamune.print("hive exec '#{exec}' #{'into ' + output if output}")
+      if @exec
+        console("hive exec '#{strip_sql(@exec)}' #{'into ' + @output if @output}")
       end
 
-      if output
+      if @output
         @tmpfile = Tempfile.new('masamune')
       end
     end
 
     def around_execute(&block)
-      Dir.chdir(Masamune.filesystem.path(:var_dir)) do
+      Dir.chdir(filesystem.path(:var_dir)) do
         yield
       end
     end
 
     def after_execute
-      if output
+      if @output
         @tmpfile.close
-        Masamune.filesystem.move_file(@tmpfile.path, output)
+        filesystem.move_file(@tmpfile.path, @output)
         @tmpfile.unlink
       end
     end
 
     def handle_stdout(line, line_no)
       if line =~ /\A#{PROMPT}/
-        Masamune.logger.debug(line)
+        logger.debug(line)
       else
-        block.call(line) if block
+        @block.call(line) if @block
 
         if @tmpfile
           @tmpfile.puts(line)
         else
-          Masamune::print(line) if print?
+          console(line) if print?
         end
       end
     end
 
     def handle_failure(status)
-      if rollback
-        Masamune::logger.error('rolling back')
-        rollback.call
+      if @rollback
+        logger.error('rolling back')
+        @rollback.call
       end
+    end
+
+    def load_setup_and_schema_files
+      files = []
+      files << @setup_files if @setup_files
+      files << @schema_files if @schema_files
+      files.flatten.compact.map { |file| {'-i' => file} }
     end
   end
 end

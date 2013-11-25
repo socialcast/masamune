@@ -346,7 +346,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs file to s3 dir' do
       before do
-        filesystem.should_receive(:execute_hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir')
+        filesystem.should_receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir')
         instance.copy_file('file://' + old_file, 's3://bucket/new_dir')
       end
 
@@ -373,8 +373,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to hdfs dir' do
       before do
-        filesystem.should_receive(:execute_hadoop_fs).with('-mkdir', 'file://' + new_dir)
-        filesystem.should_receive(:execute_hadoop_fs).with('-cp', 's3n://bucket/old_file', 'file://' + new_dir)
+        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
+        filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_file', 'file://' + new_dir)
         instance.copy_file('s3://bucket/old_file', 'file://' + new_dir)
       end
 
@@ -475,7 +475,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs file to s3 file' do
       before do
-        filesystem.should_receive(:execute_hadoop_fs).with('-mv', 'file://' + old_file, 's3n://bucket/new_dir')
+        filesystem.should_receive(:hadoop_fs).with('-mv', 'file://' + old_file, 's3n://bucket/new_dir')
         instance.move_file('file://' + old_file, 's3://bucket/new_dir')
       end
 
@@ -503,8 +503,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to hdfs file' do
       before do
-        filesystem.should_receive(:execute_hadoop_fs).with('-mkdir', 'file://' + File.dirname(new_file))
-        filesystem.should_receive(:execute_hadoop_fs).with('-mv', 's3n://bucket/old_file', 'file://' + new_file)
+        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + File.dirname(new_file))
+        filesystem.should_receive(:hadoop_fs).with('-mv', 's3n://bucket/old_file', 'file://' + new_file)
         instance.move_file('s3://bucket/old_file', 'file://' + new_file)
       end
 

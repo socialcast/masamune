@@ -1,22 +1,62 @@
+require 'active_support/concern'
+
 module Masamune::MockCommand
+  extend ActiveSupport::Concern
+
   class CommandMatcher
     require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
 
-    attr_accessor :pattern, :value
+    def initialize(delegate)
+      @delegate = delegate
+    end
 
-    def initialize(delegate, options = {})
-      @delegate    = delegate
-      self.pattern = options[:pattern]
-      self.value   = options[:value]
+    class << self
+      def add_pattern(pattern, value, io)
+        @patterns ||= {}
+        @patterns[pattern] = [value, io]
+      end
+
+      def patterns
+        @patterns ||= {}
+        @patterns
+      end
+
+      def reset!
+        @patterns = {}
+      end
     end
 
     def around_execute(&block)
-      if @delegate.command_args.join(' ') =~ pattern
-        value
-      else
-        @delegate.around_execute(&block)
+      self.class.patterns.each do |pattern, (value, io)|
+        if @delegate.command_args.join(' ') =~ pattern
+          while line = io.gets
+            line_no ||= 0
+            @delegate.handle_stdout(line.chomp, line_no) if @delegate.respond_to?(:handle_stdout)
+            line_no += 1
+          end
+          return value.respond_to?(:call) ? value.call : value
+        end
       end
+
+      if @delegate.respond_to?(:around_execute)
+        @delegate.around_execute(&block)
+      else
+        block.call
+      end
+    end
+  end
+
+  included do |base|
+    base.before do
+      new_method = Masamune::Commands::Shell.method(:new)
+      Masamune::Commands::Shell.stub(:new).and_return do |command, options|
+        new_method.call(CommandMatcher.new(command), options || {})
+      end
+    end
+
+    base.after do
+      CommandMatcher.reset!
     end
   end
 
@@ -28,11 +68,8 @@ module Masamune::MockCommand
     OpenStruct.new(:success? => false)
   end
 
-  def mock_command(pattern, value)
-    new_method = Masamune::Commands::Shell.method(:new)
-    Masamune::Commands::Shell.stub(:new).and_return do |command, options|
-      new_method.call(CommandMatcher.new(command, pattern: pattern, value: value), options || {})
-    end
+  def mock_command(pattern, value = nil, io = StringIO.new, &block)
+    CommandMatcher.add_pattern(pattern, block_given? ? block.to_proc : value, io, &block)
   end
 end
 

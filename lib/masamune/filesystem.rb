@@ -1,8 +1,11 @@
+require 'masamune/has_context'
+
 module Masamune
   class Filesystem
+    include Masamune::HasContext
     include Masamune::Accumulate
     include Masamune::Actions::S3Cmd
-    include Masamune::Actions::Execute
+    include Masamune::Actions::HadoopFilesystem
 
     def initialize
       @paths = {}
@@ -18,9 +21,9 @@ module Masamune
     end
 
     def get_path(symbol, *extra)
-      lazy_path = lambda do
-        @paths.has_key?(symbol) or raise "Path :#{symbol} not defined"
-        path, options = @paths[symbol]
+      lazy_path = lambda do |fs|
+        fs.has_path?(symbol) or raise "Path :#{symbol} not defined"
+        path, options = fs.paths[symbol]
         mkdir!(path) if options[:mkdir]
         if extra.any?
           File.join(path, extra)
@@ -30,7 +33,7 @@ module Masamune
       end
 
       if eager_load_paths?
-        eager_load_path lazy_path.call
+        eager_load_path lazy_path.call(self)
       else
         lazy_path
       end
@@ -79,7 +82,7 @@ module Masamune
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
         when :hdfs
-          execute_hadoop_fs('-touchz', *file_set)
+          hadoop_fs('-touchz', *file_set)
         when :s3
           # NOTE intentionally skip
         when :local
@@ -92,7 +95,7 @@ module Masamune
     def exists?(file)
       case type(file)
       when :hdfs
-        execute_hadoop_fs('-test', '-e', file, safe: true).success?
+        hadoop_fs('-test', '-e', file, safe: true).success?
       when :s3
         s3cmd('ls', s3b(file), safe: true).present?
       when :local
@@ -104,7 +107,7 @@ module Masamune
       dirs.group_by { |path| type(path) }.each do |type, dir_set|
         case type
         when :hdfs
-          execute_hadoop_fs('-mkdir', *dir_set)
+          hadoop_fs('-mkdir', *dir_set)
         when :s3
           # NOTE intentionally skip
         when :local
@@ -116,7 +119,7 @@ module Masamune
     def glob(pattern, &block)
       case type(pattern)
       when :hdfs
-        execute_hadoop_fs('-ls', pattern, safe: true) do |line|
+        hadoop_fs('-ls', pattern, safe: true) do |line|
           next if line =~ /\AFound \d+ items/
           yield q(pattern, line.split(/\s+/).last)
         end
@@ -140,21 +143,21 @@ module Masamune
       mkdir!(dst)
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
-        execute_hadoop_fs('-cp', src, dst)
+        hadoop_fs('-cp', src, dst)
       when [:hdfs, :local]
-        execute_hadoop_fs('-copyToLocal', src, dst)
+        hadoop_fs('-copyToLocal', src, dst)
       when [:hdfs, :s3]
-        execute_hadoop_fs('-cp', src, s3n(dst))
+        hadoop_fs('-cp', src, s3n(dst))
       when [:s3, :s3]
         s3cmd('cp', src, s3b(dst, dir: true))
       when [:s3, :local]
         s3cmd('get', src, dst)
       when [:s3, :hdfs]
-        execute_hadoop_fs('-cp', s3n(src), dst)
+        hadoop_fs('-cp', s3n(src), dst)
       when [:local, :local]
         FileUtils.cp(src, dst, file_util_args)
       when [:local, :hdfs]
-        execute_hadoop_fs('-copyFromLocal', src, dst)
+        hadoop_fs('-copyFromLocal', src, dst)
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: true))
       end
@@ -166,7 +169,7 @@ module Masamune
       check_immutable_path!(dir)
       case type(dir)
       when :hdfs
-        execute_hadoop_fs('-rmr', dir)
+        hadoop_fs('-rmr', dir)
       when :s3
         s3cmd('del', '--recursive', s3b(dir, dir:true))
         s3cmd('del', '--recursive', s3b("#{dir}_$folder$"))
@@ -180,24 +183,24 @@ module Masamune
       mkdir!(File.dirname(dst))
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
-        execute_hadoop_fs('-mv', src, dst)
+        hadoop_fs('-mv', src, dst)
       when [:hdfs, :local]
-        # FIXME use execute_hadoop_fs('-moveToLocal', src, dst) if implemented
-        execute_hadoop_fs('-copyToLocal', src, dst)
-        execute_hadoop_fs('-rm', src)
+        # FIXME use hadoop_fs('-moveToLocal', src, dst) if implemented
+        hadoop_fs('-copyToLocal', src, dst)
+        hadoop_fs('-rm', src)
       when [:hdfs, :s3]
-        execute_hadoop_fs('-mv', src, s3n(dst))
+        hadoop_fs('-mv', src, s3n(dst))
       when [:s3, :s3]
         s3cmd('mv', src, dst)
       when [:s3, :local]
         s3cmd('get', src, dst)
         s3cmd('del', src)
       when [:s3, :hdfs]
-        execute_hadoop_fs('-mv', s3n(src), dst)
+        hadoop_fs('-mv', s3n(src), dst)
       when [:local, :local]
         FileUtils.mv(src, dst, file_util_args)
       when [:local, :hdfs]
-        execute_hadoop_fs('-moveFromLocal', src, dst)
+        hadoop_fs('-moveFromLocal', src, dst)
       when [:local, :s3]
         s3cmd('put', src, dst)
         FileUtils.rm(src, file_util_args)
@@ -239,7 +242,7 @@ module Masamune
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
         when :hdfs
-          execute_hadoop_fs('-chown', '-R', [user, group].compact.join(':'), *file_set)
+          hadoop_fs('-chown', '-R', [user, group].compact.join(':'), *file_set)
         when :s3
           # NOTE intentionally skip
         when :local
@@ -255,7 +258,7 @@ module Masamune
       when String
         path
       when Proc
-        path.call
+        path.call(self)
       else
         raise "Unknown path #{path.inspect}"
       end
@@ -276,26 +279,8 @@ module Masamune
       end
     end
 
-    def hadoop_fs_command(options = {})
-      args = []
-      args << Masamune.configuration.hadoop_filesystem[:path]
-      args << 'fs'
-      args << Masamune.configuration.hadoop_filesystem[:options].map(&:to_a)
-      args.flatten
-    end
-
     def file_util_args
-      {noop: Masamune.configuration.no_op, verbose: Masamune.configuration.verbose}
-    end
-
-    def execute_hadoop_fs(*args, &block)
-      if block_given?
-        execute(*hadoop_fs_command, *args) do |line, line_no|
-          yield line
-        end
-      else
-        execute(*hadoop_fs_command, *args)
-      end
+      {noop: configuration.no_op, verbose: configuration.verbose}
     end
 
     def qualify_file(dir, file)

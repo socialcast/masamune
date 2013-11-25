@@ -6,12 +6,10 @@ module Masamune::Actions
 
     def hive(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
-
-      opts.merge!(jobflow: Masamune.configuration.jobflow)
       opts.merge!(block: block.to_proc) if block_given?
 
-      command = Masamune::Commands::Hive.new(opts)
-      command = Masamune::Commands::ElasticMapReduce.new(command, opts) if opts[:jobflow]
+      command = Masamune::Commands::Hive.new(context, opts)
+      command = Masamune::Commands::ElasticMapReduce.new(command, opts) if configuration.elastic_mapreduce[:jobflow]
       command = Masamune::Commands::LineFormatter.new(command, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
@@ -19,10 +17,20 @@ module Masamune::Actions
       command.interactive? ? command.replace : command.execute
     end
 
+    # TODO warn or error if database is not defined
+    def create_database_if_not_exists
+      return if configuration.hive[:database] == 'default'
+      sql = []
+      sql << %Q(CREATE DATABASE IF NOT EXISTS #{configuration.hive[:database]})
+      sql << %Q(LOCATION "#{configuration.hive[:location]}") if configuration.hive[:location]
+      hive(exec: sql.join(' ') + ';', database: nil)
+    end
+
     included do |base|
       base.after_initialize do |thor, options|
+        thor.create_database_if_not_exists
         if options[:dry_run]
-          raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'show tables;', safe: true, fail_fast: false).success?
+          raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'SHOW TABLES;', safe: true, fail_fast: false).success?
         end
       end if defined?(base.after_initialize)
     end

@@ -1,12 +1,15 @@
+require 'active_support/concern'
+
 module Masamune::Actions
   module Filesystem
-    def filesystem
-      Masamune::configuration.filesystem
-    end
-    alias :fs :filesystem
+    extend ActiveSupport::Concern
 
-    def self.included(base)
-      base.extend(self)
+    module ClassMethods
+      def filesystem
+        defined?(context) ? context.filesystem : Masamune.context.filesystem
+      end
+      alias :fs :filesystem
     end
+    include ClassMethods
   end
 end

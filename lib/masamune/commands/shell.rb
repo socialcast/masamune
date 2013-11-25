@@ -2,12 +2,13 @@ require 'open3'
 require 'readline'
 require 'ostruct'
 
+require 'masamune/proxy_delegate'
+
 module Masamune::Commands
   class Shell
     SIGINT_EXIT_STATUS = 130
     PIPE_TIMEOUT = 10
 
-    require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
 
     attr_accessor :safe, :fail_fast
@@ -21,7 +22,7 @@ module Masamune::Commands
     end
 
     def replace
-      Masamune::logger.debug('replace: ' + command_args.join(' '))
+      logger.debug('replace: ' + command_args.join(' '))
       before_execute
       around_execute do
         pid = Process.fork
@@ -36,10 +37,10 @@ module Masamune::Commands
     end
 
     def before_execute
-      Masamune::logger.debug(command_args)
+      logger.debug(command_args)
 
-      if Masamune::configuration.verbose
-        Masamune::trace(command_args)
+      if configuration.verbose
+        trace(command_args)
       end
 
       if @delegate.respond_to?(:before_execute)
@@ -54,7 +55,7 @@ module Masamune::Commands
     end
 
     def around_execute(&block)
-      if Masamune::configuration.no_op && !safe
+      if configuration.no_op && !safe
         return OpenStruct.new(:success? => true)
       end
 
@@ -108,7 +109,7 @@ module Masamune::Commands
       Thread.new {
         if @delegate.respond_to?(:stdin)
           while line = @delegate.stdin.gets
-            Masamune::trace(line.chomp)
+            trace(line.chomp)
             p_stdin.puts line
             p_stdin.flush
           end
@@ -139,7 +140,7 @@ module Masamune::Commands
       t_err.join if t_err
       t_out.join if t_out
       t_in.join
-      Masamune::logger.debug(t_in.value)
+      logger.debug(t_in.value)
       t_in.value
     ensure
       t_err.join if t_err
@@ -152,7 +153,7 @@ module Masamune::Commands
       if @delegate.respond_to?(:handle_stdout)
         @delegate.handle_stdout(line, @stdout_line_no)
       else
-        Masamune::logger.debug(line)
+        logger.debug(line)
       end
       @stdout_line_no += 1
     end
@@ -163,7 +164,7 @@ module Masamune::Commands
       if @delegate.respond_to?(:handle_stderr)
         @delegate.handle_stderr(line, @stderr_line_no)
       else
-        Masamune::logger.debug(line)
+        logger.debug(line)
       end
       @stderr_line_no += 1
     end

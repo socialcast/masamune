@@ -1,13 +1,16 @@
+require 'masamune/proxy_delegate'
+
 module Masamune::Commands
   class Interactive
-    attr_accessor :interactive
+    include Masamune::ProxyDelegate
 
-    def initialize(opts = {})
-      self.interactive = opts[:interactive]
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
+      @interactive = attrs.fetch(:interactive, false)
     end
 
     def interactive?
-      interactive
+      @interactive
     end
   end
 end

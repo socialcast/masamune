@@ -1,40 +1,50 @@
+require 'masamune/proxy_delegate'
+require 'masamune/actions/execute'
+
 module Masamune::Commands
   class ElasticMapReduce
-    require 'masamune/proxy_delegate'
     include Masamune::ProxyDelegate
+    include Masamune::Actions::Execute
 
-    attr_accessor :jobflow, :input, :extra
+    DEFAULT_ATTRIBUTES =
+    {
+      :path       => 'elastic-mapreduce',
+      :options    => [],
+      :extra      => [],
+      :jobflow    => nil,
+      :input      => nil,
+    }
 
-    def initialize(delegate, opts = {})
-      @delegate    = delegate
-      self.jobflow = opts[:jobflow]
-      self.input   = opts[:input]
-      self.extra   = opts.fetch(:extra, [])
+    def initialize(delegate, attrs = {})
+      @delegate = delegate
+      DEFAULT_ATTRIBUTES.merge(configuration.elastic_mapreduce).merge(attrs).each do |name, value|
+        instance_variable_set("@#{name}", value)
+      end
     end
 
     def interactive?
       if @delegate.respond_to?(:interactive?)
         @delegate.interactive?
-      elsif extra.any?
+      elsif @extra.any?
         true
       else
-        input == nil
+        @input == nil
       end
     end
 
     def stdin
-      if @delegate.respond_to?(:input)
+      if @delegate.respond_to?(:stdin)
         @delegate.stdin
-      elsif input
-        @stdin ||= StringIO.new(input)
+      elsif @input
+        @stdin ||= StringIO.new(@input)
       end
     end
 
     def elastic_mapreduce_command
       args = []
-      args << Masamune.configuration.elastic_mapreduce[:path]
-      args << Masamune.configuration.elastic_mapreduce[:options].map(&:to_a)
-      args << ['--jobflow', jobflow] if jobflow
+      args << @path
+      args << @options.map(&:to_a)
+      args << ['--jobflow', @jobflow] if @jobflow
       args.flatten
     end
 
@@ -46,17 +56,21 @@ module Masamune::Commands
       args.flatten
     end
 
+    # Use elastic-mapreduce to translate jobflow into raw ssh command
     def ssh_command
       @ssh_command ||= begin
-        result = %x{#{ssh_args.join(' ')}}
-        result.sub(/ exit\Z/, '').split(' ')
+        result = nil
+        execute(*ssh_args, fail_fast: true, safe: true) do |line|
+          result = line.sub(/ exit\Z/, '').split(' ')
+        end
+        result
       end
     end
 
     def command_args
       args = []
       args << (ssh_command? ? ssh_command : elastic_mapreduce_command)
-      args << extra
+      args << @extra
       args << @delegate.command_args if @delegate.respond_to?(:command_args)
       args.flatten
     end
@@ -72,7 +86,7 @@ module Masamune::Commands
     private
 
     def ssh_command?
-      @delegate.respond_to?(:command_args) || input.present?
+      @delegate.respond_to?(:command_args) || @input.present?
     end
   end
 end

@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe Masamune::Commands::LineFormatter do
   let(:options) { {} }
-
   let(:delegate) { double }
   let(:instance) { described_class.new(delegate, options) }
 

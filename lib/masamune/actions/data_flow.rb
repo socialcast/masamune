@@ -20,7 +20,7 @@ module Masamune::Actions
     def parse_datetime_type(key)
       value = options[key]
       Chronic.parse(value).tap do |datetime_value|
-        Masamune::print("Using '#{datetime_value}' for --#{key}") if value != datetime_value
+        console("Using '#{datetime_value}' for --#{key}") if value != datetime_value
       end or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
     end
 
@@ -46,9 +46,9 @@ module Masamune::Actions
 
       # Execute this block last
       base.after_initialize(-1) do |thor, options|
-        # Only execute this block once, prevents expected reentrancy caused by Thor.invoke
-        next if Masamune.thor_instance
-        Masamune.thor_instance ||= thor
+        # Only execute this block if DataPlan is not currently executing
+        next if thor.data_plan.current_rule.present?
+        thor.data_plan.context = thor.context
 
         raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
         raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
@@ -57,7 +57,7 @@ module Masamune::Actions
         desired_targets = thor.parse_file_type(:targets, Set.new)
 
         if options[:start] && options[:stop]
-          desired_targets.merge data_plan.targets_for_date_range(thor.current_command_name, thor.parse_datetime_type(:start), thor.parse_datetime_type(:stop))
+          desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.parse_datetime_type(:start), thor.parse_datetime_type(:stop))
         end
 
         thor.data_plan.prepare(thor.current_command_name, sources: desired_sources, targets: desired_targets)

@@ -1,19 +1,28 @@
 require 'spec_helper'
 
 describe Masamune::Actions::Execute do
-  include Masamune::Actions::Execute
-
-  context 'with a simple command' do
-    let(:command) { %w(echo ping) }
-    let(:options) { {fail_fast: true} }
-
-    it { expect { |b| execute(*command, options, &b) }.to yield_with_args('ping', 0) }
+  let(:klass) do
+    Class.new do
+      include Masamune::HasContext
+      include Masamune::Actions::Execute
+    end
   end
 
-  context 'with a simple command with input' do
-    let(:command) { %w(cat) }
-    let(:options) { {input: 'pong', fail_fast: true} }
+  let(:instance) { klass.new }
 
-    it { expect { |b| execute(*command, options, &b) }.to yield_with_args('pong', 0) }
+  describe '.execute' do
+    context 'with a simple command' do
+      let(:command) { %w(echo ping) }
+      let(:options) { {fail_fast: true} }
+
+      it { expect { |b| instance.execute(*command, options, &b) }.to yield_with_args('ping', 0) }
+    end
+
+    context 'with a simple command with input' do
+      let(:command) { %w(cat) }
+      let(:options) { {input: 'pong', fail_fast: true} }
+
+      it { expect { |b| instance.execute(*command, options, &b) }.to yield_with_args('pong', 0) }
+    end
   end
 end
