@@ -35,7 +35,7 @@ module Masamune::MockCommand
             @delegate.handle_stdout(line.chomp, line_no) if @delegate.respond_to?(:handle_stdout)
             line_no += 1
           end
-          return value
+          return value.respond_to?(:call) ? value.call : value
         end
       end
 
@@ -68,8 +68,8 @@ module Masamune::MockCommand
     OpenStruct.new(:success? => false)
   end
 
-  def mock_command(pattern, value, io = StringIO.new)
-    CommandMatcher.add_pattern(pattern, value, io)
+  def mock_command(pattern, value = nil, io = StringIO.new, &block)
+    CommandMatcher.add_pattern(pattern, block_given? ? block.to_proc : value, io, &block)
   end
 end
 
