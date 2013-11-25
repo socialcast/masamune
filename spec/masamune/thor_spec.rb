@@ -146,27 +146,6 @@ describe Masamune::Thor do
       end
       it { expect { subject }.to raise_error /random exception/ }
     end
-
-    context 'when elastic_mapreduce is enabled' do
-      before do
-        Masamune::Configuration.any_instance.stub(:elastic_mapreduce).and_return({enabled: true})
-      end
-
-      context 'with command and --start and no --jobflow' do
-        let(:command) { 'command' }
-        let(:options) { ['--start', '2013-01-01'] }
-        it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--jobflow'/ }
-      end
-
-      context 'with command and --start and invalid --jobflow' do
-        let(:command) { 'command' }
-        let(:options) { ['--start', '2013-01-01', '--jobflow', 'xxx'] }
-        before do
-          klass.any_instance.should_receive(:elastic_mapreduce).with(extra: '--list', jobflow: 'xxx', fail_fast: false).and_return(double(success?: false))
-        end
-        it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /'--jobflow' doesn't exist/ }
-      end
-    end
   end
 
   context '.parse_extra' do

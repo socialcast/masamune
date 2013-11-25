@@ -49,7 +49,6 @@ module Masamune
       thor.extend RescueLogger
       thor.class_eval do
         include Masamune::Actions::Filesystem
-        include Masamune::Actions::ElasticMapreduce
 
         attr_accessor :current_namespace
         attr_accessor :current_task_name
@@ -63,7 +62,6 @@ module Masamune
         class_option :debug, :type => :boolean, :aliases => '-d', :desc => 'Print debugging information', :default => false
         class_option :no_op, :type => :boolean, :desc => 'Do not execute commands that modify state', :default => false
         class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Combination of --no-op and --verbose', :default => false
-        class_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: elastic-mapreduce --list)'
         class_option :config, :desc => 'Configuration file'
         class_option :version, :desc => 'Print version and exit'
         class_option :'--', :desc => 'Extra pass through arguments'
