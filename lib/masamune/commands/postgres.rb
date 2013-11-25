@@ -51,12 +51,6 @@ module Masamune::Commands
       @pgpass_file ? {'PGPASSFILE' => @pgpass_file} : {}
     end
 
-=begin
-    def command_bin
-      @path
-    end
-=end
-
     def command_args
       args = []
       args << @path
