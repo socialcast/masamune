@@ -6,7 +6,7 @@ module Masamune::Actions
 
     module ClassMethods
       def filesystem
-        context.filesystem
+        defined?(context) ? context.filesystem : Masamune.default_context.filesystem
       end
       alias :fs :filesystem
     end
