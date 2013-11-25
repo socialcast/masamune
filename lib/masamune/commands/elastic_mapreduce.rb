@@ -33,7 +33,7 @@ module Masamune::Commands
     end
 
     def stdin
-      if @delegate.respond_to?(:input)
+      if @delegate.respond_to?(:stdin)
         @delegate.stdin
       elsif @input
         @stdin ||= StringIO.new(@input)
