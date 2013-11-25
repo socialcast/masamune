@@ -31,7 +31,6 @@ module Masamune::Actions
         if options[:dry_run]
           raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'SHOW TABLES;', safe: true, fail_fast: false).success?
         end
-        # thor.load_setup_and_schema_files
       end if defined?(base.after_initialize)
     end
   end
