@@ -19,6 +19,7 @@ module Masamune::Actions
 
     # TODO warn or error if database is not defined
     def create_database_if_not_exists
+      return if configuration.hive[:database] == 'default'
       sql = []
       sql << %Q(CREATE DATABASE IF NOT EXISTS #{configuration.hive[:database]})
       sql << %Q(LOCATION "#{configuration.hive[:location]}") if configuration.hive[:location]

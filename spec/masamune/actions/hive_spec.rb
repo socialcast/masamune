@@ -48,6 +48,15 @@ describe Masamune::Actions::Hive do
       instance.after_initialize_invoke(options)
     end
 
+    context 'with default database' do
+      let(:configuration) { {database: 'default'} }
+      before do
+        instance.should_receive(:hive).never
+        after_initialize_invoke
+      end
+      it 'should not call hive with create database' do; end
+    end
+
     context 'with database' do
       before do
         instance.should_receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
