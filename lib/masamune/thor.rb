@@ -8,6 +8,9 @@ module Masamune
   module Thor
     extend ActiveSupport::Concern
 
+    include Masamune::HasContext
+    include Masamune::AfterInitializeCallbacks
+
     SYSTEM_CONFIG_FILES = [
       '/etc/masamune/config.yml',
       '/etc/masamune/config.yml.erb',
@@ -45,8 +48,6 @@ module Masamune
       thor.extend ExtraArguments
       thor.extend RescueLogger
       thor.class_eval do
-        include Masamune::HasContext
-        include Masamune::AfterInitializeCallbacks
         include Masamune::Actions::Filesystem
         include Masamune::Actions::ElasticMapreduce
 
@@ -67,7 +68,7 @@ module Masamune
         class_option :version, :desc => 'Print version and exit'
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
-          self.context = Masamune::Context.new(self)
+          self.context.parent = self
           self.current_namespace = self.class.namespace
           self.current_task_name = _config[:current_command].name
           self.current_command_name = self.current_namespace + ':' + self.current_task_name

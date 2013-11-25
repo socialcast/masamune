@@ -57,7 +57,7 @@ module Masamune::Actions
         desired_targets = thor.parse_file_type(:targets, Set.new)
 
         if options[:start] && options[:stop]
-          desired_targets.merge data_plan.targets_for_date_range(thor.current_command_name, thor.parse_datetime_type(:start), thor.parse_datetime_type(:stop))
+          desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.parse_datetime_type(:start), thor.parse_datetime_type(:stop))
         end
 
         thor.data_plan.prepare(thor.current_command_name, sources: desired_sources, targets: desired_targets)

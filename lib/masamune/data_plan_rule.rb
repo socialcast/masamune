@@ -38,7 +38,7 @@ class Masamune::DataPlanRule
   end
 
   def pattern
-    @pattern.respond_to?(:call) ? @pattern.call : @pattern
+    @pattern.respond_to?(:call) ? @pattern.call(plan.filesystem) : @pattern
   end
 
   def matches?(input_path)

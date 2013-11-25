@@ -21,9 +21,9 @@ module Masamune
     end
 
     def get_path(symbol, *extra)
-      lazy_path = lambda do
-        @paths.has_key?(symbol) or raise "Path :#{symbol} not defined"
-        path, options = @paths[symbol]
+      lazy_path = lambda do |fs|
+        fs.has_path?(symbol) or raise "Path :#{symbol} not defined"
+        path, options = fs.paths[symbol]
         mkdir!(path) if options[:mkdir]
         if extra.any?
           File.join(path, extra)
@@ -33,7 +33,7 @@ module Masamune
       end
 
       if eager_load_paths?
-        eager_load_path lazy_path.call
+        eager_load_path lazy_path.call(self)
       else
         lazy_path
       end
@@ -258,7 +258,7 @@ module Masamune
       when String
         path
       when Proc
-        path.call
+        path.call(self)
       else
         raise "Unknown path #{path.inspect}"
       end
