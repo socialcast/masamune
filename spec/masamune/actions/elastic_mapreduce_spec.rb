@@ -39,6 +39,12 @@ describe Masamune::Actions::ElasticMapreduce do
       it { expect { subject }.to_not raise_error }
     end
 
+    context 'when jobflow not required due to extra options' do
+      let(:configuration) { {enabled: true} }
+      let(:extra) { ['--create', '--name', 'zombo_cluster'] }
+      it { expect { subject }.to_not raise_error }
+    end
+
     context 'when jobflow is missing' do
       let(:configuration) { {enabled: true} }
       it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--jobflow'/ }

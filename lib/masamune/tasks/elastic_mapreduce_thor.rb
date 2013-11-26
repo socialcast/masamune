@@ -19,7 +19,7 @@ module Masamune::Tasks
     default_task :elastic_mapreduce_exec
 
     no_tasks do
-      after_initialize(10) do |thor, options|
+      after_initialize(:first) do |thor, options|
         begin
           thor.extra += thor.configuration.bind_template(:elastic_mapreduce, options['template'], options['params']) if options['template']
         rescue ArgumentError => e
