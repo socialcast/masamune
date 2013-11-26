@@ -18,6 +18,7 @@ module Masamune
   require 'masamune/cached_filesystem'
   require 'masamune/method_logger'
   require 'masamune/proxy_delegate'
+  require 'masamune/after_initialize_callbacks'
 
   extend self
   extend Masamune::HasContext

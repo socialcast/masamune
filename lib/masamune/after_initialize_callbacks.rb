@@ -1,13 +1,23 @@
 require 'active_support/concern'
+
 module Masamune
   module AfterInitializeCallbacks
     extend ActiveSupport::Concern
 
+    PRIORITY =
+    {
+      first:    20,
+      early:    10,
+      default:   0,
+      later:   -10,
+      final:   -20
+    }
+
     module ClassMethods
       # Callbacks registered with the highest priority are executed first, ties are broken by callback registration order
-      def after_initialize(priority = 0, &block)
+      def after_initialize(priority = :default, &block)
         @after_initialize ||= Hash.new { |h,k| h[k] = [] }
-        @after_initialize[priority] << block
+        @after_initialize[PRIORITY.fetch(priority, 0)] << block
       end
 
       def after_initialize_invoke(*a)

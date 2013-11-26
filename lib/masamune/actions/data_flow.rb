@@ -44,8 +44,7 @@ module Masamune::Actions
         class_option :no_resolve, :type => :boolean, :desc => 'Do not attempt to recursively resolve data dependencies', :default => false
       end
 
-      # Execute this block last
-      base.after_initialize(-1) do |thor, options|
+      base.after_initialize(:final) do |thor, options|
         # Only execute this block if DataPlan is not currently executing
         next if thor.data_plan.current_rule.present?
         thor.data_plan.context = thor.context

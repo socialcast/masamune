@@ -31,7 +31,7 @@ module Masamune::Actions
 
     included do |base|
       base.class_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: elastic-mapreduce --list)' if defined?(base.class_option)
-      base.after_initialize(5) do |thor, options|
+      base.after_initialize(:early) do |thor, options|
         next if thor.configuration.elastic_mapreduce.empty?
         next unless thor.configuration.elastic_mapreduce.fetch(:enabled, true)
         jobflow = thor.resolve_jobflow(options.symbolize_keys.fetch(:jobflow, thor.configuration.elastic_mapreduce[:jobflow]))
