@@ -63,7 +63,7 @@ module Masamune
         class_option :no_op, :type => :boolean, :desc => 'Do not execute commands that modify state', :default => false
         class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Combination of --no-op and --verbose', :default => false
         class_option :config, :desc => 'Configuration file'
-        class_option :version, :desc => 'Print version and exit'
+        class_option :version, :desc => 'Print version and exit', :type => :boolean
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
           self.context.parent = self
@@ -98,7 +98,7 @@ module Masamune
             config.dry_run  = options[:dry_run]
 
             if options[:version]
-              puts config.version
+              puts context.version
               puts options if options[:verbose]
               puts config.to_s if options[:verbose]
               exit

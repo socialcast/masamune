@@ -50,6 +50,19 @@ describe Masamune::Thor do
       end
     end
 
+    context 'with command and --version' do
+      let(:command) { 'command' }
+      let(:options) { ['--version'] }
+      it 'exits with status code 0 and prints version' do
+        expect { subject }.to raise_error { |e|
+          e.should be_a(SystemExit)
+          e.status.should == 0
+        }
+        stdout.string.should =~ /\Amasamune/
+        stderr.string.should be_blank
+      end
+    end
+
     context 'with command and no input options' do
       let(:command) { 'command' }
       it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--start'/ }
