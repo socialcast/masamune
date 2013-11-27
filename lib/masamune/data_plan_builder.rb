@@ -38,7 +38,7 @@ class Masamune::DataPlanBuilder
 
   def thor_command_wrapper
     Proc.new do |plan, rule, _|
-      Masamune.with_exclusive_lock(rule) do
+      plan.context.with_exclusive_lock(rule) do
         plan.context.parent.invoke(rule)
       end
       plan.filesystem.clear!
