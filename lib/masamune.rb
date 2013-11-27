@@ -22,8 +22,4 @@ module Masamune
 
   extend self
   extend Masamune::HasContext
-
-  def default_config_file
-    @default_config_file ||= File.join(File.expand_path('../../', __FILE__), 'config', 'masamune.yml.erb')
-  end
 end

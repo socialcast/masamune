@@ -4,6 +4,16 @@ describe Masamune::Configuration do
   let(:context) { Masamune::Context.new }
   let(:instance) { described_class.new(context) }
 
+  describe '.default_config_file' do
+    subject { described_class.default_config_file }
+    it { should =~ %r{config/masamune\.yml\.erb\Z} }
+  end
+
+  describe '#default_config_file' do
+    subject { instance.default_config_file }
+    it { should =~ %r{config/masamune\.yml\.erb\Z} }
+  end
+
   describe '#bind_template' do
     let(:section) { nil }
     let(:template) { nil }

@@ -91,6 +91,20 @@ class Masamune::Configuration
     YAML.load(ERB.new(File.read(file)).result(binding))
   end
 
+  class << self
+    def default_config_file=(config_file)
+      @default_config_file = config_file
+    end
+
+    def default_config_file
+      @default_config_file ||= File.join(File.expand_path('../../../', __FILE__), 'config', 'masamune.yml.erb')
+    end
+  end
+
+  def default_config_file
+    self.class.default_config_file
+  end
+
   private
 
   def load_template(section, template_name)
