@@ -5,6 +5,8 @@ module Masamune::Actions
   module DataFlow
     extend ActiveSupport::Concern
 
+    include Masamune::Actions::DateParse
+
     def data_plan
       self.class.data_plan
     end
@@ -15,13 +17,6 @@ module Masamune::Actions
 
     def sources
       data_plan.sources(current_command_name)
-    end
-
-    def parse_datetime_type(key)
-      value = options[key]
-      Chronic.parse(value).tap do |datetime_value|
-        console("Using '#{datetime_value}' for --#{key}") if value != datetime_value
-      end or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
     end
 
     # TODO sources from file or input array
@@ -37,8 +32,6 @@ module Masamune::Actions
     included do |base|
       base.extend ClassMethods
       base.class_eval do
-        class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
-        class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
         class_option :sources, :desc => 'File of data sources to process'
         class_option :targets, :desc => 'File of data targets to process'
         class_option :no_resolve, :type => :boolean, :desc => 'Do not attempt to recursively resolve data dependencies', :default => false
@@ -55,8 +48,8 @@ module Masamune::Actions
         desired_sources = thor.parse_file_type(:sources, Set.new)
         desired_targets = thor.parse_file_type(:targets, Set.new)
 
-        if options[:start] && options[:stop]
-          desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.parse_datetime_type(:start), thor.parse_datetime_type(:stop))
+        if thor.start_datetime && thor.stop_datetime
+          desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.start_datetime, thor.stop_datetime)
         end
 
         thor.data_plan.prepare(thor.current_command_name, sources: desired_sources, targets: desired_targets)
