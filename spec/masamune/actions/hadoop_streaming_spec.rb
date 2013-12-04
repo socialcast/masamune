@@ -8,6 +8,7 @@ describe Masamune::Actions::HadoopStreaming do
     end
   end
 
+  let(:extra) { [] }
   let(:instance) { klass.new }
 
   describe '.hadoop_streaming' do
@@ -15,7 +16,7 @@ describe Masamune::Actions::HadoopStreaming do
       mock_command(/\Ahadoop/, mock_success)
     end
 
-    subject { instance.hadoop_streaming }
+    subject { instance.hadoop_streaming(extra: extra) }
 
     it { should be_success }
 
@@ -27,7 +28,19 @@ describe Masamune::Actions::HadoopStreaming do
         mock_command(/\Assh fakehost hadoop/, mock_success)
       end
 
-      subject { instance.hadoop_streaming }
+      it { should be_success }
+    end
+
+    context 'with jobflow and extra' do
+      let(:extra) { ['-D', 'EXTRA'] }
+
+      before do
+        instance.stub_chain(:configuration, :elastic_mapreduce).and_return({jobflow: 'j-XYZ'})
+        mock_command(/\Ahadoop/, mock_failure)
+        mock_command(/\Aelastic-mapreduce/, mock_success, StringIO.new('ssh fakehost exit'))
+        mock_command(/\Assh fakehost -D EXTRA hadoop/, mock_failure)
+        mock_command(/\Assh fakehost hadoop .*? -D EXTRA/, mock_success)
+      end
 
       it { should be_success }
     end
