@@ -40,7 +40,11 @@ class Masamune::Configuration
   def load(file)
     @load_once ||= begin
       load_yaml_erb_file(file).each_pair do |command, value|
-        send("#{command}=", value) if COMMANDS.include?(command)
+        if COMMANDS.include?(command)
+          send("#{command}=", value)
+        elsif command == 'paths'
+          add_paths(value)
+        end
       end
       logger.debug("Loaded configuration #{file}")
     end
@@ -125,5 +129,12 @@ class Masamune::Configuration
     default = load_template(section, template).fetch(:default, {})
     param = free_param[/(?<=%).*/].to_sym
     default.merge(input_args.symbolize_keys || {})[param] or raise ArgumentError, "no param for #{free_param}"
+  end
+
+  def add_paths(paths)
+    paths.each do |value|
+      symbol, path, options = *value.to_a.flatten
+      filesystem.add_path(symbol, path, options)
+    end
   end
 end

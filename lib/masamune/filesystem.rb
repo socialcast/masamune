@@ -13,8 +13,10 @@ module Masamune
     end
 
     def add_path(symbol, path, options = {})
+      options ||= {}
+      options.symbolize_keys!
       eager_path = eager_load_path path
-      @paths[symbol] = [eager_path, options]
+      @paths[symbol.to_sym] = [eager_path, options]
       mkdir!(eager_path) if options[:mkdir]
       add_immutable_path(eager_path) if options[:immutable]
       self
