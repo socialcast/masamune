@@ -43,7 +43,7 @@ class Masamune::Configuration
         if COMMANDS.include?(command)
           send("#{command}=", value)
         elsif command == 'paths'
-          add_paths(value)
+          load_paths(value)
         end
       end
       logger.debug("Loaded configuration #{file}")
@@ -131,10 +131,10 @@ class Masamune::Configuration
     default.merge(input_args.symbolize_keys || {})[param] or raise ArgumentError, "no param for #{free_param}"
   end
 
-  def add_paths(paths)
+  def load_paths(paths)
     paths.each do |value|
       symbol, path, options = *value.to_a.flatten
-      filesystem.add_path(symbol, path, options)
+      add_path(symbol, path, options)
     end
   end
 end
