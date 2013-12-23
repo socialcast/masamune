@@ -3,6 +3,8 @@
   add_path :warehouse_dir, get_path(:var_dir, 'warehouse'), :mkdir => true
 %>
 ---
+  paths:
+    - data_dir: 's3://bucket/data'
   hive:
     database: masamune
     options:
