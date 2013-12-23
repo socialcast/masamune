@@ -83,12 +83,15 @@ module Masamune
           end
 
           context.configure do |config|
-            if options[:config]
-              config.load(options[:config]) rescue raise ::Thor::MalformattedArgumentError, "Could not load file provided for '--config'"
-            elsif default_config_file = config.filesystem.resolve_file([configuration.default_config_file] + SYSTEM_CONFIG_FILES)
-              config.load(default_config_file)
-            else
-              raise ::Thor::RequiredArgumentMissingError, 'Option --config or valid system configuration file required'
+            config_file = options[:config]
+            config_file ||= config.filesystem.resolve_file([config.default_config_file] + SYSTEM_CONFIG_FILES)
+            raise ::Thor::RequiredArgumentMissingError, 'Option --config or valid system configuration file required' unless config_file
+
+            begin
+              config.load(config_file)
+            rescue
+              raise $! if options[:debug]
+              raise ::Thor::MalformattedArgumentError, "Could not load file provided for '--config'"
             end
 
             config.quiet    = options[:quiet]
