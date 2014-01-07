@@ -248,7 +248,7 @@ module Masamune
         when :s3
           # NOTE intentionally skip
         when :local
-          FileUtils.chown_R(user, group, file_set, file_util_args)
+          FileUtils.chown_R(user, group, file_set, file_util_args.merge(force: true))
         end
       end
     end
