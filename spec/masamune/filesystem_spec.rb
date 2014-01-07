@@ -295,10 +295,6 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#copy_file' do
-    before do
-      filesystem.should_receive(:chown!).at_least(:once)
-    end
-
     subject do
       File.exists?(File.join(new_dir, File.basename(old_file)))
     end
@@ -415,10 +411,6 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#move_file' do
-    before do
-      filesystem.should_receive(:chown!).at_least(:once)
-    end
-
     subject(:removes_old_file) do
       !File.exists?(old_file)
     end
