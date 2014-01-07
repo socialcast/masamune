@@ -90,7 +90,6 @@ module Masamune
         when :local
           FileUtils.touch(*file_set, file_util_args)
         end
-        chown!(*file_set)
       end
     end
 
@@ -163,7 +162,6 @@ module Masamune
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: true))
       end
-      chown!(dst)
     end
 
     def remove_dir(dir)
@@ -207,7 +205,6 @@ module Masamune
         s3cmd('put', src, dst)
         FileUtils.rm(src, file_util_args)
       end
-      chown!(dst)
     end
 
     def cat(*files)
@@ -234,7 +231,6 @@ module Masamune
           file.write buf
         end
       end
-      chown!(dst)
     end
 
     def chown!(*files)
@@ -248,7 +244,7 @@ module Masamune
         when :s3
           # NOTE intentionally skip
         when :local
-          FileUtils.chown_R(user, group, file_set, file_util_args.merge(force: true))
+          FileUtils.chown_R(user, group, file_set, file_util_args)
         end
       end
     end
