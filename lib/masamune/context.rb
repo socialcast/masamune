@@ -83,8 +83,9 @@ module Masamune
       line = a.join(' ').chomp
       mutex.synchronize do
         logger.info(line)
-        $stdout.puts line if !configuration.quiet && !configuration.debug
+        $stdout.puts line unless configuration.quiet || configuration.debug
         $stdout.flush
+        $stderr.flush
       end
     end
 
@@ -94,6 +95,7 @@ module Masamune
         logger.info(line)
         $stdout.puts line if configuration.verbose && !configuration.debug
         $stdout.flush
+        $stderr.flush
       end
     end
 
