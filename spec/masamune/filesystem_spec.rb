@@ -644,7 +644,13 @@ shared_examples_for 'Filesystem' do
       end
     end
 
-    # TODO move_dir
+    describe '#move_dir' do
+      subject do
+        instance.move_dir(dir, 's3://bucket/processed/')
+      end
+
+      it { expect { subject }.to raise_error RuntimeError, /#{dir} is marked as immutable, cannot modify #{dir}/ }
+    end
   end
 
   describe '#cat' do
