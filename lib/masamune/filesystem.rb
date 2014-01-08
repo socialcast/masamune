@@ -186,11 +186,11 @@ module Masamune
         hadoop_fs('-mv', src, dst)
       when [:hdfs, :local]
         # FIXME use hadoop_fs('-moveToLocal', src, dst) if implemented
-        copy_file(src, dst)
+        hadoop_fs('-copyToLocal', src, dst)
         hadoop_fs('-rm', src)
       when [:hdfs, :s3]
-        # FIXME use copy / remove
-        hadoop_fs('-mv', src, s3n(dst))
+        copy_file(src, s3n(dst))
+        hadoop_fs('-rm', src)
       when [:s3, :s3]
         s3cmd('mv', src, dst)
       when [:s3, :local]

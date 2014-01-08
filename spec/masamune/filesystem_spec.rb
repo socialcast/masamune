@@ -467,7 +467,8 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs file to s3 file' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-mv', 'file://' + old_file, 's3n://bucket/new_dir')
+        filesystem.should_receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir')
+        filesystem.should_receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file('file://' + old_file, 's3://bucket/new_dir')
       end
 
