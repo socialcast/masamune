@@ -67,6 +67,7 @@ module Masamune
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
           self.context.parent = self
+          self.filesystem.context = self
           self.current_namespace = self.class.namespace
           self.current_task_name = _config[:current_command].name
           self.current_command_name = self.current_namespace + ':' + self.current_task_name

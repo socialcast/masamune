@@ -189,7 +189,8 @@ module Masamune
         hadoop_fs('-copyToLocal', src, dst)
         hadoop_fs('-rm', src)
       when [:hdfs, :s3]
-        hadoop_fs('-mv', src, s3n(dst))
+        copy_file(src, s3n(dst))
+        hadoop_fs('-rm', src)
       when [:s3, :s3]
         s3cmd('mv', src, dst)
       when [:s3, :local]
@@ -204,6 +205,35 @@ module Masamune
       when [:local, :s3]
         s3cmd('put', src, dst)
         FileUtils.rm(src, file_util_args)
+      end
+    end
+
+    def move_dir(src, dst)
+      check_immutable_path!(src)
+      case [type(src), type(dst)]
+      when [:hdfs, :hdfs]
+        move_file(src, dst)
+      when [:hdfs, :local]
+        copy_file(src, dst)
+        remove_dir(src)
+      when [:s3, :s3]
+        s3cmd('mv', '--recursive', d(src), f(dst))
+      when [:s3, :local]
+        s3cmd('get', '--recursive', d(src), f(dst))
+        remove_dir(src)
+      when [:s3, :hdfs]
+        copy_file(src, dst)
+        remove_dir(src)
+      when [:hdfs, :s3]
+        copy_file(src, d(dst))
+        remove_dir(src)
+      when [:local, :local]
+        move_file(src, dst)
+      when [:local, :hdfs]
+        move_file(src, dst)
+      when [:local, :s3]
+        s3cmd('put', '--recursive', d(src), d(dst))
+        remove_dir(src)
       end
     end
 
@@ -289,6 +319,16 @@ module Masamune
       end
     end
     alias :q :qualify_file
+
+    def ensure_dir(dir)
+      File.join(dir, '/')
+    end
+    alias :d :ensure_dir
+
+    def ensure_file(file)
+      file.chomp('/')
+    end
+    alias :f :ensure_file
 
     def remote_prefix(dir)
       dir[%r{\As3n?://.*?(?=/)}] ||

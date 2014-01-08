@@ -83,8 +83,9 @@ module Masamune
       line = a.join(' ').chomp
       mutex.synchronize do
         logger.info(line)
-        $stdout.puts line if !configuration.quiet && !configuration.debug
+        $stdout.puts line unless configuration.quiet || configuration.debug
         $stdout.flush
+        $stderr.flush
       end
     end
 
@@ -94,6 +95,7 @@ module Masamune
         logger.info(line)
         $stdout.puts line if configuration.verbose && !configuration.debug
         $stdout.flush
+        $stderr.flush
       end
     end
 
@@ -101,7 +103,7 @@ module Masamune
       @filesystem ||= begin
         filesystem = Masamune::Filesystem.new
         filesystem.add_path :root_dir, File.expand_path('../../../', __FILE__)
-        filesystem = Masamune::MethodLogger.new(filesystem, :copy_file, :remove_dir, :move_file)
+        filesystem = Masamune::MethodLogger.new(filesystem, :copy_file, :remove_dir, :move_file, :move_dir)
         Masamune::CachedFilesystem.new(filesystem)
       end
     end

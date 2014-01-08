@@ -33,7 +33,7 @@ module Masamune
     method_accumulate :glob
 
     # FIXME cache eviction policy can be more precise
-    [:touch!, :mkdir!, :copy_file, :remove_dir, :move_file, :write].each do |meth|
+    [:touch!, :mkdir!, :copy_file, :remove_dir, :move_file, :move_dir, :write].each do |meth|
       define_method(meth) do |*args|
         clear!
         @filesystem.send(meth, *args)
