@@ -504,6 +504,104 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  describe '#move_dir' do
+    subject(:removes_old_dir) do
+      !File.exists?(old_dir)
+    end
+
+    subject(:creates_new_dir) do
+      File.exists?(new_dir)
+    end
+
+    context 'local dir to local dir' do
+      before do
+        instance.move_dir(old_dir, new_dir)
+      end
+
+      it { removes_old_dir.should be_true }
+      it { creates_new_dir.should be_true }
+    end
+
+    context 'local dir to s3 dir' do
+      before do
+        filesystem.should_receive(:s3cmd).with('put', '--recursive', old_dir + '/', 's3://bucket/new_dir/')
+        instance.move_dir(old_dir, 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+      it { removes_old_dir.should be_true }
+    end
+
+    context 'local dir to hdfs dir' do
+      before do
+        instance.move_dir(old_dir, 'file://' + new_dir)
+      end
+
+      it { removes_old_dir.should be_true }
+      it { creates_new_dir.should be_true }
+    end
+
+    context 'hdfs dir to hdfs dir' do
+      before do
+        instance.move_dir('file://' + old_dir, 'file://' + new_dir)
+      end
+
+      it { removes_old_dir.should be_true }
+      it { creates_new_dir.should be_true }
+    end
+
+    context 'hdfs dir to local dir' do
+      before do
+        instance.move_dir('file://' + old_dir, new_dir)
+      end
+
+      it { removes_old_dir.should be_true }
+      it { creates_new_dir.should be_true }
+    end
+
+    context 'hdfs dir to s3 dir' do
+      before do
+        filesystem.should_receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 's3n://bucket/new_dir/')
+        filesystem.should_receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
+        instance.move_dir('file://' + old_dir, 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 dir to s3 dir' do
+      before do
+        filesystem.should_receive(:s3cmd).with('mv', '--recursive', 's3://bucket/old_dir/', 's3://bucket/new_dir')
+        instance.move_dir('s3://bucket/old_dir', 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 dir to local dir' do
+      before do
+        filesystem.should_receive(:s3cmd).with('get', '--recursive', 's3://bucket/old_dir/', new_dir)
+        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir/')
+        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir_$folder$')
+        instance.move_dir('s3://bucket/old_dir', new_dir)
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 dir to hdfs dir' do
+      before do
+        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
+        filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
+        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir/')
+        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir_$folder$')
+        instance.move_dir('s3://bucket/old_dir', 'file://' + new_dir)
+      end
+
+      it 'meets expectations' do; end
+    end
+  end
+
   context 'directory marked as immutable' do
     let(:dir) { 's3://bucket/incoming' }
     let(:file) { File.join(dir, '20130420.log') }
@@ -544,6 +642,8 @@ shared_examples_for 'Filesystem' do
         it { expect { subject }.to raise_error RuntimeError, /#{dir} is marked as immutable, cannot modify #{file}/ }
       end
     end
+
+    # TODO move_dir
   end
 
   describe '#cat' do
