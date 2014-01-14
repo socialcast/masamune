@@ -22,6 +22,7 @@ module Masamune::Commands
       :output       => nil,
       :print        => false,
       :block        => nil,
+      :csv          => false,
       :variables    => {}
     }
 
@@ -64,6 +65,7 @@ module Masamune::Commands
       @variables.each do |key, val|
         args << '--set=%s' % "#{key.to_s}='#{val.to_s}'"
       end
+      args << '--no-align' << '--field-separator=,' << '--pset=footer' if @csv
       args << '--command=%s' % @exec if @exec
       args.flatten.compact
     end
