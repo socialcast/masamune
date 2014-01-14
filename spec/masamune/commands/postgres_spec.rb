@@ -44,5 +44,10 @@ describe Masamune::Commands::Postgres do
       let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
       it { should == [*default_command, %q(--set=R='R2DO'), %q(--set=C='C3PO')] }
     end
+
+    context 'with csv' do
+      let(:attrs) { {csv: true} }
+      it { should == [*default_command, '--no-align', '--field-separator=,', '--pset=footer'] }
+    end
   end
 end
