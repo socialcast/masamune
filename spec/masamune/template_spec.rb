@@ -13,6 +13,11 @@ describe Masamune::Template do
       it { expect { subject }.to raise_error IOError }
     end
 
+    context 'with invalid template' do
+      let(:template) { File.expand_path('../../fixtures/invalid.sql.erb', __FILE__) }
+      it { expect { subject }.to raise_error IOError, /not_found.sql.erb/ }
+    end
+
     context 'with simple template' do
       let(:template) { File.expand_path('../../fixtures/simple.sql.erb', __FILE__) }
       let(:parameters) { {table: 'zombo'} }
@@ -29,6 +34,11 @@ describe Masamune::Template do
         SELECT * FROM bar;
       EOS
       end
+    end
+
+    context 'with aggregate template with relative path' do
+      let(:template) { File.join(File.dirname(__FILE__), '..', 'fixtures', 'relative.sql.erb') }
+      it { should == "SELECT * FROM relative;\n" }
     end
   end
 end
