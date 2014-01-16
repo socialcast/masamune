@@ -60,11 +60,8 @@ module Masamune::Commands
       args << '--username=%s' % @username if @username
       args << '--no-password'
       args << @options.map(&:to_a)
-      args << '--file=%s' % @file if @file
+      args << command_args_for_file if @file
       args << '--output=%s' % @output if @output
-      @variables.each do |key, val|
-        args << '--set=%s' % "#{key.to_s}='#{val.to_s}'"
-      end
       args << '--no-align' << '--field-separator=,' << '--pset=footer' if @csv
       args << '--command=%s' % @exec if @exec
       args.flatten.compact
@@ -85,6 +82,16 @@ module Masamune::Commands
 
     def prompt
       @database + '=>'
+    end
+
+    private
+
+    def command_args_for_file
+      ['--file=%s' % @file].tap do |args|
+        @variables.each do |key, val|
+          args << '--set=%s' % "#{key.to_s}='#{val.to_s}'"
+        end
+      end
     end
   end
 end
