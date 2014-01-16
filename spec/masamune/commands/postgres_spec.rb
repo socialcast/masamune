@@ -40,6 +40,14 @@ describe Masamune::Commands::Postgres do
       it { should == [*default_command, '--file=zomg.hql'] }
     end
 
+    context 'with template file' do
+      let(:attrs) { {file: 'zomg.hql.erb'} }
+      before do
+        Masamune::Template.should_receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
+      end
+      it { should == [*default_command, '--file=zomg.hql'] }
+    end
+
     context 'with variables and no file' do
       let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
       it { should == default_command }

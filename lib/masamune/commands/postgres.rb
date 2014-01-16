@@ -87,11 +87,19 @@ module Masamune::Commands
     private
 
     def command_args_for_file
+      @file =~ /\.erb\Z/ ? command_args_for_template : command_args_for_simple_file
+    end
+
+    def command_args_for_simple_file
       ['--file=%s' % @file].tap do |args|
         @variables.each do |key, val|
           args << '--set=%s' % "#{key.to_s}='#{val.to_s}'"
         end
       end
+    end
+
+    def command_args_for_template
+      ['--file=%s' % Masamune::Template.render_to_file(@file, @variables)]
     end
   end
 end
