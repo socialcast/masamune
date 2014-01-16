@@ -22,6 +22,7 @@ module Masamune
 
     class << self
       def render_to_file(template, parameters = {})
+        raise IOError, "File not found: #{template}" unless File.exists?(template)
         instance = Template.new(File.dirname(template))
         Tempfile.new('masamune').tap do |file|
           file.write(instance.render(template, parameters))
