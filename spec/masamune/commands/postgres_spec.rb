@@ -49,13 +49,13 @@ describe Masamune::Commands::Postgres do
     end
 
     context 'with variables and no file' do
-      let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
+      let(:attrs) { {variables: {R: 'R2D2', C: 'C3PO'}} }
       it { should == default_command }
     end
 
     context 'with variables and file' do
-      let(:attrs) { {file: 'zomg.hql', variables: {R: 'R2DO', C: 'C3PO'}} }
-      it { should == [*default_command, '--file=zomg.hql', %q(--set=R='R2DO'), %q(--set=C='C3PO')] }
+      let(:attrs) { {file: 'zomg.hql', variables: {R: 'R2D2', C: 'C3PO'}} }
+      it { should == [*default_command, '--file=zomg.hql', %q(--set=R='R2D2'), %q(--set=C='C3PO')] }
     end
 
     context 'with csv' do
