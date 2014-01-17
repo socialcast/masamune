@@ -2,6 +2,7 @@ module Masamune
   require 'masamune/context'
   require 'masamune/has_context'
   require 'masamune/io'
+  require 'masamune/template'
   require 'masamune/commands'
   require 'masamune/accumulate'
   require 'masamune/actions'

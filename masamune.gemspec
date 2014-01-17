@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency('activesupport')
   s.add_dependency('tzinfo')
   s.add_dependency('chronic')
+  s.add_dependency('tilt')
 
   # Development
   s.add_development_dependency('rake', '~> 0.9')
