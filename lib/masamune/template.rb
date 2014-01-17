@@ -7,7 +7,7 @@ module Masamune
     end
 
     def render(template, parameters = {})
-      resolved_template = resolve_file(template) or raise IOError, "File not found: #{template}"
+      resolved_template = resolve_file(template)
       Tilt.new(resolved_template).render(self, parameters)
     end
 
@@ -16,10 +16,11 @@ module Masamune
     # TODO unify with resolve_path
     def resolve_file(partial_file)
       return partial_file if Pathname.new(partial_file).absolute?
-      @paths.map do |path|
+      @paths.each do |path|
         file = File.expand_path(File.join(path, partial_file))
-        file if File.exists?(file) && File.file?(file)
-      end.compact.first
+        return file if File.exists?(file) && File.file?(file)
+      end
+      raise IOError, "File not found: #{partial_file}"
     end
 
     class << self
