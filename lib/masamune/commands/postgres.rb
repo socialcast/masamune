@@ -8,22 +8,23 @@ module Masamune::Commands
 
     DEFAULT_ATTRIBUTES =
     {
-      :path         => 'psql',
-      :options      => [],
-      :hostname     => 'localhost',
-      :database     => 'postgres',
-      :username     => 'postgres',
-      :pgpass_file  => nil,
-      :setup_files  => [],
-      :schema_files => [],
-      :file         => nil,
-      :exec         => nil,
-      :input        => nil,
-      :output       => nil,
-      :print        => false,
-      :block        => nil,
-      :csv          => false,
-      :variables    => {}
+      :path           => 'psql',
+      :options        => [],
+      :hostname       => 'localhost',
+      :database       => 'postgres',
+      :username       => 'postgres',
+      :pgpass_file    => nil,
+      :setup_files    => [],
+      :schema_files   => [],
+      :file           => nil,
+      :exec           => nil,
+      :input          => nil,
+      :output         => nil,
+      :print          => false,
+      :block          => nil,
+      :csv            => false,
+      :variables      => {},
+      :template_debug => false
     }
 
     def initialize(delegate, attrs = {})
@@ -99,7 +100,9 @@ module Masamune::Commands
     end
 
     def command_args_for_template
-      ['--file=%s' % Masamune::Template.render_to_file(@file, @variables)]
+      rendered_file = Masamune::Template.render_to_file(@file, @variables)
+      logger.debug("#{@file}:\n" + File.read(rendered_file)) if @template_debug
+      ['--file=%s' % rendered_file]
     end
   end
 end
