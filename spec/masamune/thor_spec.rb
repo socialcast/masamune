@@ -26,6 +26,10 @@ describe Masamune::Thor do
     end
   end
 
+  before do
+    klass.any_instance.stub(:top_level?).and_return(true)
+  end
+
   context 'CLI' do
     let(:command) { nil }
     let(:options) { {} }
@@ -36,6 +40,19 @@ describe Masamune::Thor do
     subject do
       capture(stdout, stderr) do
         klass.start([command, *options].compact)
+      end
+    end
+
+    context 'ouside of top level' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01'] }
+
+      before do
+        klass.any_instance.stub(:top_level?).and_return(false)
+      end
+
+      it 'continues execution' do
+        expect { subject }.to_not raise_error
       end
     end
 
