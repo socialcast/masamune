@@ -44,9 +44,9 @@ module Masamune::Commands
     def command_path
       case @action
       when :create
-        @create_db_path
+        [@create_db_path]
       when :drop
-        @drop_db_path
+        [@drop_db_path, '--if-exists']
       else
         raise ArgumentError, ':action must be :create or :drop'
       end

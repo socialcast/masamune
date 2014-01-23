@@ -29,7 +29,7 @@ describe Masamune::Commands::PostgresAdmin do
 
     context 'action :drop with database' do
       let(:attrs) { {action: :drop, database: 'zombo'} }
-      it { should == ['dropdb', '--host=localhost', '--username=postgres', '--no-password', 'zombo'] }
+      it { should == ['dropdb', '--if-exists', '--host=localhost', '--username=postgres', '--no-password', 'zombo'] }
     end
 
     context 'action :drop without database' do

@@ -64,7 +64,7 @@ module Masamune::Commands
       args << command_args_for_file if @file
       args << '--output=%s' % @output if @output
       args << '--no-align' << '--field-separator=,' << '--pset=footer' if @csv
-      args << '--command=%s' % @exec if @exec
+      args << '--command=%s' % @exec.gsub(/\n+/, ' ') if @exec
       args.flatten.compact
     end
 
