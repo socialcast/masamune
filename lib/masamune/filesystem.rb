@@ -81,6 +81,7 @@ module Masamune
     end
 
     def touch!(*files)
+      mkdir!(*files.map { |file| File.dirname(file) })
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
         when :hdfs
