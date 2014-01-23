@@ -3,15 +3,11 @@ module Masamune
   class MultiIO
     def initialize(*targets)
       @targets = targets
-      @targets.each do |t|
-        t.sync = true
-      end
+      @targets.each { |t| t.sync = true }
     end
 
     def write(*args)
-      @targets.each do |t|
-        t.write(*args)
-      end
+      @targets.each { |t| t.write(*args) }
     end
 
     def close
