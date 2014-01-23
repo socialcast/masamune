@@ -81,6 +81,7 @@ module Masamune
     end
 
     def touch!(*files)
+      mkdir!(*files.map { |file| File.dirname(file) })
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
         when :hdfs
@@ -276,6 +277,12 @@ module Masamune
         when :local
           FileUtils.chown_R(user, group, file_set, file_util_args)
         end
+      end
+    end
+
+    def mktemp!(path)
+      get_path(path, SecureRandom.base64).tap do |file|
+        touch!(file)
       end
     end
 

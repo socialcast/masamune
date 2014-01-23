@@ -112,6 +112,12 @@ module Masamune
           after_initialize_invoke(options)
         end
 
+        no_tasks do
+          def top_level?
+            self.current_command_name == ARGV.first
+          end
+        end
+
         private
 
         def display_help?
