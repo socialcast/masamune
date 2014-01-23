@@ -279,6 +279,12 @@ module Masamune
       end
     end
 
+    def mktemp!(path)
+      get_path(path, SecureRandom.base64).tap do |file|
+        touch!(file)
+      end
+    end
+
     private
 
     def eager_load_path(path)
