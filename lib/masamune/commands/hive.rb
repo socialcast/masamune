@@ -75,7 +75,7 @@ module Masamune::Commands
     end
 
     def around_execute(&block)
-      Dir.chdir(filesystem.path(:var_dir)) do
+      Dir.chdir(filesystem.path(:run_dir)) do
         yield
       end
     end

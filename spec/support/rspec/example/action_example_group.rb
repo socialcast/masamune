@@ -1,8 +1,8 @@
 module ActionExampleGroup
   def self.included(base)
-    base.let(:var_dir) { Dir.mktmpdir('masamune') }
+    base.let(:run_dir) { Dir.mktmpdir('masamune') }
     base.before do
-      Masamune.filesystem.add_path(:var_dir, var_dir)
+      Masamune.filesystem.add_path(:run_dir, run_dir)
     end
   end
 end
