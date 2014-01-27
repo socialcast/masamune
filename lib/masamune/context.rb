@@ -31,17 +31,20 @@ module Masamune
     end
 
     def with_exclusive_lock(name, &block)
+      raise 'filesystem path :run_dir not defined' unless filesystem.has_path?(:run_dir)
       logger.debug("acquiring lock '#{name}'")
       lock_file = lock_file(name)
       lock_status = lock_file.flock(File::LOCK_EX | File::LOCK_NB)
       if lock_status == 0
-        yield
+        yield if block_given?
       else
-        raise "acquire lock attempt failed for '#{name}'"
+        logger.error "acquire lock attempt failed for '#{name}'"
       end
     ensure
-      logger.debug("releasing lock '#{name}'")
-      lock_file.flock(File::LOCK_UN)
+      if lock_file
+        logger.debug("releasing lock '#{name}'")
+        lock_file.flock(File::LOCK_UN)
+      end
     end
 
     def log_file_template
@@ -111,12 +114,7 @@ module Masamune
     private
 
     def lock_file(name)
-      path =
-      if configuration.filesystem.has_path?(:var_dir)
-        configuration.filesystem.get_path(:var_dir, "#{name}.lock")
-      else
-        File.join(Dir.tmpdir, "#{name}.lock")
-      end
+      path = filesystem.get_path(:run_dir, "#{name}.lock")
       File.open(path, File::CREAT, 0644)
     end
   end
