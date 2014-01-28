@@ -294,6 +294,18 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  describe '#glob_sort' do
+    before do
+      Masamune::Filesystem.any_instance.stub(:glob).and_return(%w(/tmp/a/02.txt /tmp/b/01.txt /tmp/c/00.txt))
+    end
+
+    subject do
+      instance.glob_sort('/tmp/*', order: :basename)
+    end
+
+    it { should == %w(/tmp/c/00.txt /tmp/b/01.txt /tmp/a/02.txt) }
+  end
+
   describe '#copy_file' do
     subject do
       File.exists?(File.join(new_dir, File.basename(old_file)))
