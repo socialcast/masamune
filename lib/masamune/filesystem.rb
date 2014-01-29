@@ -141,6 +141,16 @@ module Masamune
     end
     method_accumulate :glob
 
+    def glob_sort(pattern, options = {})
+      result = glob(pattern)
+      case options[:order]
+      when :basename
+        result.sort { |x,y| File.basename(x) <=> File.basename(y) }
+      else
+        result
+      end
+    end
+
     def copy_file(src, dst)
       mkdir!(dst)
       case [type(src), type(dst)]
