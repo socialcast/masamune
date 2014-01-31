@@ -152,6 +152,7 @@ module Masamune
     end
 
     def copy_file(src, dst)
+      check_immutable_path!(dst)
       mkdir!(dst)
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
@@ -172,6 +173,31 @@ module Masamune
         hadoop_fs('-copyFromLocal', src, dst)
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: true))
+      end
+    end
+
+    def copy_dir(src, dst)
+      check_immutable_path!(dst)
+      case [type(src), type(dst)]
+      when [:hdfs, :hdfs]
+        copy_file(src, dst)
+      when [:hdfs, :local]
+        copy_file(src, dst)
+      when [:hdfs, :s3]
+        copy_file(src, dst)
+      when [:s3, :s3]
+        s3cmd('cp', '--recursive', src, s3b(dst, dir: true))
+      when [:s3, :local]
+        s3cmd('get', '--recursive', src, dst)
+      when [:s3, :hdfs]
+        copy_file(src, dst)
+      when [:local, :local]
+        FileUtils.mkdir_p(dst, file_util_args)
+        FileUtils.cp_r(src, dst, file_util_args)
+      when [:local, :hdfs]
+        copy_file(src, dst)
+      when [:local, :s3]
+        s3cmd('put', '--recursive', src, s3b(dst, dir: true))
       end
     end
 
