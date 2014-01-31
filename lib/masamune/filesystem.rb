@@ -186,9 +186,10 @@ module Masamune
       when [:hdfs, :s3]
         copy_file(src, dst)
       when [:s3, :s3]
-        s3cmd('cp', '--recursive', src, s3b(dst, dir: true))
+        s3cmd('cp', '--recursive', s3b(src, dir: true), s3b(dst, dir: true))
       when [:s3, :local]
-        s3cmd('get', '--recursive', src, dst)
+        FileUtils.mkdir_p(dst, file_util_args)
+        s3cmd('get', '--recursive', '--skip-existing', s3b(src, dir: true), dst)
       when [:s3, :hdfs]
         copy_file(src, dst)
       when [:local, :local]

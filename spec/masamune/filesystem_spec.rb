@@ -447,7 +447,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to s3 dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('cp', '--recursive', 's3://bucket/old_dir', 's3://bucket/new_dir/')
+        filesystem.should_receive(:s3cmd).with('cp', '--recursive', 's3://bucket/old_dir/', 's3://bucket/new_dir/')
         instance.copy_dir('s3://bucket/old_dir', 's3://bucket/new_dir')
       end
 
@@ -456,7 +456,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to local dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('get', '--recursive', 's3://bucket/old_dir', new_dir)
+        filesystem.should_receive(:s3cmd).with('get', '--recursive', '--skip-existing', 's3://bucket/old_dir/', new_dir)
         instance.copy_dir('s3://bucket/old_dir', new_dir)
       end
 
