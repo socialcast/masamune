@@ -1,5 +1,4 @@
 require 'masamune/has_context'
-require 'debugger'
 
 module Masamune
   class Filesystem
