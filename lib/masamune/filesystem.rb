@@ -1,4 +1,5 @@
 require 'masamune/has_context'
+require 'debugger'
 
 module Masamune
   class Filesystem
@@ -128,7 +129,7 @@ module Masamune
       when :s3
         head_glob, *tail_glob = pattern.split('*')
         tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
-        s3cmd('ls', s3b(head_glob + '*'), safe: true) do |line|
+        s3cmd('ls', '--recursive', s3b(head_glob + '*'), safe: true) do |line|
           next if line =~ /\$folder$/
           next unless line =~ tail_regexp
           yield q(pattern, line.split(/\s+/).last)

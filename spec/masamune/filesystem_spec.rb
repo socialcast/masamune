@@ -260,7 +260,7 @@ shared_examples_for 'Filesystem' do
 
       before do
         filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir", safe: true).at_most(:once)
-        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true)
+        filesystem.should_receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true)
       end
 
       it { should be_empty }
@@ -270,7 +270,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true).
+        filesystem.should_receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
       end
@@ -283,7 +283,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*' }
 
       before do
-        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true).
+        filesystem.should_receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
           and_yield(%q(                       DIR   s3://bucket/dir/file_$folder$)).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
