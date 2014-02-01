@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 describe Masamune::Commands::Hive do
+  let(:filesystem) { Masamune::MockFilesystem.new }
   let(:configuration) { {:options => options} }
   let(:options) { [] }
   let(:attrs) { {} }
@@ -9,6 +10,7 @@ describe Masamune::Commands::Hive do
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
+    delegate.stub(:filesystem) { filesystem }
     delegate.stub_chain(:configuration, :hive).and_return(configuration)
   end
 
@@ -46,12 +48,29 @@ describe Masamune::Commands::Hive do
     end
 
     context 'with setup files' do
+      before do
+        filesystem.touch!('setup_a.hql', 'setup_b.hql')
+      end
+
       let(:attrs) { {setup_files: ['setup_a.hql', 'setup_b.hql']} }
       it { should == [*default_command, '-i', 'setup_a.hql', '-i', 'setup_b.hql'] }
     end
 
     context 'with schema files' do
+      before do
+        filesystem.touch!('schema_a.hql', 'schema_b.hql')
+      end
+
       let(:attrs) { {schema_files: ['schema_a.hql', 'schema_b.hql']} }
+      it { should == [*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql'] }
+    end
+
+    context 'with schema files that are globs' do
+      before do
+        filesystem.touch!('schema_a.hql', 'schema_b.hql')
+      end
+
+      let(:attrs) { {schema_files: ['schema*.hql']} }
       it { should == [*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql'] }
     end
   end

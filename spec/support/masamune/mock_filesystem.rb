@@ -25,6 +25,10 @@ class Masamune::MockFilesystem < Delegator
   end
   method_accumulate :glob
 
+  def glob_sort(pattern, options = {})
+    glob(pattern)
+  end
+
   def __getobj__
     @filesystem
   end

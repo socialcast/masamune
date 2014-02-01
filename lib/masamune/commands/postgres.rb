@@ -14,8 +14,6 @@ module Masamune::Commands
       :database       => 'postgres',
       :username       => 'postgres',
       :pgpass_file    => nil,
-      :setup_files    => [],
-      :schema_files   => [],
       :file           => nil,
       :exec           => nil,
       :input          => nil,
