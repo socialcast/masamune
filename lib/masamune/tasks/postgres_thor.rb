@@ -18,8 +18,6 @@ module Masamune::Tasks
     def psql_exec
       postgres_options = options.dup
       postgres_options.merge!(print: true)
-      postgres_options.merge!(ifs: "\t", ofs: ',') if options[:csv]
-
       postgres(postgres_options)
     end
     default_task :psql_exec
