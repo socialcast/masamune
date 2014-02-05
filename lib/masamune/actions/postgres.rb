@@ -30,8 +30,10 @@ module Masamune::Actions
     end
 
     def load_schema_files
-      configuration.postgres[:schema_files].each do |file|
-        postgres(file: file)
+      configuration.postgres[:schema_files].each do |path|
+        filesystem.glob_sort(path, order: :basename).each do |file|
+          postgres(file: file)
+        end
       end if configuration.postgres.has_key?(:schema_files)
     end
 

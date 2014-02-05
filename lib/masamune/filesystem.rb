@@ -128,7 +128,7 @@ module Masamune
       when :s3
         head_glob, *tail_glob = pattern.split('*')
         tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
-        s3cmd('ls', s3b(head_glob + '*'), safe: true) do |line|
+        s3cmd('ls', '--recursive', s3b(head_glob + '*'), safe: true) do |line|
           next if line =~ /\$folder$/
           next unless line =~ tail_regexp
           yield q(pattern, line.split(/\s+/).last)
@@ -152,6 +152,7 @@ module Masamune
     end
 
     def copy_file(src, dst)
+      check_immutable_path!(dst)
       mkdir!(dst)
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
@@ -172,6 +173,33 @@ module Masamune
         hadoop_fs('-copyFromLocal', src, dst)
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: true))
+      end
+    end
+
+    def copy_dir(src, dst)
+      check_immutable_path!(dst)
+      case [type(src), type(dst)]
+      when [:hdfs, :hdfs]
+        copy_file(src, dst)
+      when [:hdfs, :local]
+        copy_file(src, dst)
+      when [:hdfs, :s3]
+        copy_file(src, dst)
+      when [:s3, :s3]
+        s3cmd('cp', '--recursive', s3b(src, dir: true), s3b(dst, dir: true))
+      when [:s3, :local]
+        fixed_dst = File.join(dst, src.split('/')[-1])
+        FileUtils.mkdir_p(fixed_dst, file_util_args)
+        s3cmd('get', '--recursive', '--skip-existing', s3b(src, dir: true), fixed_dst)
+      when [:s3, :hdfs]
+        copy_file(src, dst)
+      when [:local, :local]
+        FileUtils.mkdir_p(dst, file_util_args)
+        FileUtils.cp_r(src, dst, file_util_args)
+      when [:local, :hdfs]
+        copy_file(src, dst)
+      when [:local, :s3]
+        s3cmd('put', '--recursive', src, s3b(dst, dir: true))
       end
     end
 

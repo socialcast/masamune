@@ -10,7 +10,7 @@ shared_examples_for 'Filesystem' do
   let(:old_dir) { Dir.mktmpdir('masamune') }
   let(:new_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
   let(:new_file) { File.join(old_dir, SecureRandom.hex) }
-  let(:old_file) {
+  let!(:old_file) {
     File.join(old_dir, SecureRandom.hex).tap do |file|
       FileUtils.touch file
     end
@@ -260,7 +260,7 @@ shared_examples_for 'Filesystem' do
 
       before do
         filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir", safe: true).at_most(:once)
-        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true)
+        filesystem.should_receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true)
       end
 
       it { should be_empty }
@@ -270,7 +270,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true).
+        filesystem.should_receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
       end
@@ -283,7 +283,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*' }
 
       before do
-        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir/*", safe: true).
+        filesystem.should_receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
           and_yield(%q(                       DIR   s3://bucket/dir/file_$folder$)).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
@@ -384,6 +384,90 @@ shared_examples_for 'Filesystem' do
         filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
         filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_file', 'file://' + new_dir)
         instance.copy_file('s3://bucket/old_file', 'file://' + new_dir)
+      end
+
+      it 'meets expectations' do; end
+    end
+  end
+
+  describe '#copy_dir' do
+    subject do
+      File.exists?(File.join(new_dir, File.basename(old_dir), File.basename(old_file)))
+    end
+
+    context 'local dir to local dir' do
+      before do
+        instance.copy_dir(old_dir, new_dir)
+      end
+
+      it { should be_true }
+    end
+
+    context 'local dir to s3 dir' do
+      before do
+        filesystem.should_receive(:s3cmd).with('put', '--recursive', old_dir, 's3://bucket/new_dir/')
+        instance.copy_dir(old_dir, 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 'local dir to hdfs dir' do
+      before do
+        instance.copy_dir(old_dir, 'file://' + new_dir)
+      end
+
+      it { should be_true }
+    end
+
+    context 'hdfs dir to hdfs dir' do
+      before do
+        instance.copy_dir('file://' + old_dir, 'file://' + new_dir)
+      end
+
+      it { should be_true }
+    end
+
+    context 'hdfs dir to local dir' do
+      before do
+        instance.copy_dir('file://' + old_dir, new_dir)
+      end
+
+      it { should be_true }
+    end
+
+    context 'hdfs dir to s3 dir' do
+      before do
+        filesystem.should_receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 's3n://bucket/new_dir')
+        instance.copy_dir('file://' + old_dir, 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 dir to s3 dir' do
+      before do
+        filesystem.should_receive(:s3cmd).with('cp', '--recursive', 's3://bucket/old_dir/', 's3://bucket/new_dir/')
+        instance.copy_dir('s3://bucket/old_dir', 's3://bucket/new_dir')
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 dir to local dir' do
+      before do
+        filesystem.should_receive(:s3cmd).with('get', '--recursive', '--skip-existing', 's3://bucket/old_dir/', File.join(new_dir, 'old_dir'))
+        instance.copy_dir('s3://bucket/old_dir', new_dir)
+      end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 dir to hdfs dir' do
+      before do
+        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
+        filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
+        instance.copy_dir('s3://bucket/old_dir', 'file://' + new_dir)
       end
 
       it 'meets expectations' do; end

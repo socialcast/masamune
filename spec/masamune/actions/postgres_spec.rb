@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe Masamune::Actions::Postgres do
+  let(:filesystem) { Masamune::MockFilesystem.new }
+
   let(:klass) do
     Class.new do
       include Masamune::HasContext
@@ -13,6 +15,7 @@ describe Masamune::Actions::Postgres do
   let(:configuration) { {database: 'test'} }
 
   before do
+    instance.stub(:filesystem) { filesystem }
     instance.stub_chain(:configuration, :postgres).and_return(configuration)
   end
 
@@ -67,6 +70,7 @@ describe Masamune::Actions::Postgres do
     context 'when schema_files are configured' do
       let(:schema_files) { ['schema.psql'] }
       before do
+        filesystem.touch!(*schema_files)
         instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
         instance.should_receive(:postgres).with(file: schema_files.first).once
         after_initialize_invoke
@@ -74,11 +78,13 @@ describe Masamune::Actions::Postgres do
       it 'should call postgres with schema_files' do; end
     end
 
-    context 'when schema_files are configured' do
-      let(:schema_files) { ['schema.psql'] }
+    context 'when schema_files that are globs are configured' do
+      let(:schema_files) { ['schema*.psql'] }
       before do
+        filesystem.touch!('schema_1.psql', 'schema_2.psql')
         instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
-        instance.should_receive(:postgres).with(file: schema_files.first).once
+        instance.should_receive(:postgres).with(file: 'schema_1.psql').once
+        instance.should_receive(:postgres).with(file: 'schema_2.psql').once
         after_initialize_invoke
       end
       it 'should call postgres with schema_files' do; end
