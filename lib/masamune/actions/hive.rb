@@ -10,7 +10,6 @@ module Masamune::Actions
 
       command = Masamune::Commands::Hive.new(context, opts)
       command = Masamune::Commands::ElasticMapReduce.new(command, opts.except(:extra)) if configuration.elastic_mapreduce[:jobflow]
-      command = Masamune::Commands::LineFormatter.new(command, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
 

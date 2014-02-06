@@ -74,4 +74,17 @@ describe Masamune::Commands::Hive do
       it { should == [*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql'] }
     end
   end
+
+  describe '#handle_stdout' do
+    let(:buffer) { StringIO.new }
+    let(:delimiter) { "\001" }
+    let(:attrs) { {buffer: buffer, delimiter: delimiter, csv: true} }
+    let(:row) { %w(this is not a row) }
+
+    before do
+      instance.handle_stdout(row.join(delimiter), 0)
+    end
+
+    it { buffer.string.should == row.join(',') + "\n" }
+  end
 end

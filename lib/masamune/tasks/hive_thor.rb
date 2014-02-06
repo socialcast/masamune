@@ -15,11 +15,11 @@ module Masamune::Tasks
     method_option :file, :aliases => '-f', :desc => 'SQL from files'
     method_option :exec, :aliases => '-e', :desc => 'SQL from command line'
     method_option :output, :aliases => '-o', :desc => 'Save SQL output to file'
+    method_option :delimiter, :desc => 'Hive row format delimiter', :default => "\001"
     method_option :csv, :type => :boolean, :desc => 'Report SQL output in CSV format', :default => false
     def hive_exec
       hive_options = options.dup
       hive_options.merge!(print: true)
-      hive_options.merge!(ifs: "\t", ofs: ',') if options[:csv]
 
       if options[:file]
         remote_file = fs.path(:tmp_dir, File.basename(options[:file]))

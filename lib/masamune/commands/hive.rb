@@ -1,6 +1,7 @@
 require 'masamune/proxy_delegate'
 require 'masamune/string_format'
 require 'masamune/commands/shell'
+require 'csv'
 
 module Masamune::Commands
   class Hive
@@ -23,7 +24,10 @@ module Masamune::Commands
       :print        => false,
       :block        => nil,
       :variables    => {},
-      :rollback     => nil
+      :rollback     => nil,
+      :buffer       => nil,
+      :delimiter    => "\001",
+      :csv          => false
     }
 
     def initialize(delegate, attrs = {})
@@ -70,7 +74,7 @@ module Masamune::Commands
       end
 
       if @output
-        @tmpfile = Tempfile.new('masamune')
+        @buffer ||= Tempfile.new('masamune')
       end
     end
 
@@ -81,11 +85,10 @@ module Masamune::Commands
     end
 
     def after_execute
-      if @output
-        @tmpfile.close
-        filesystem.move_file(@tmpfile.path, @output)
-        @tmpfile.unlink
-      end
+      @buffer.flush if @buffer && @buffer.respond_to?(:flush)
+      @buffer.close if @buffer && @buffer.respond_to?(:close)
+
+      filesystem.move_file(@buffer.path, @output) if @output && @buffer && @buffer.respond_to?(:path)
     end
 
     def handle_stdout(line, line_no)
@@ -94,8 +97,8 @@ module Masamune::Commands
       else
         @block.call(line) if @block
 
-        if @tmpfile
-          @tmpfile.puts(line)
+        if @buffer
+          @buffer.puts(@csv ? line.split(@delimiter).to_csv : line)
         else
           console(line) if print?
         end
