@@ -89,8 +89,6 @@ module Masamune::Commands
       @buffer.close if @buffer && @buffer.respond_to?(:close)
 
       filesystem.move_file(@buffer.path, @output) if @output && @buffer && @buffer.respond_to?(:path)
-
-      @buffer.unlink if @buffer && @buffer.respond_to?(:unlink)
     end
 
     def handle_stdout(line, line_no)
