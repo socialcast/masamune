@@ -1,6 +1,7 @@
 <%
   add_path :var_dir, get_path(:root_dir, 'var'), :mkdir => true
   add_path :run_dir, get_path(:var_dir, 'run'), :mkdir => true
+  add_path :tmp_dir, get_path(:var_dir, 'tmp'), :mkdir => true
   add_path :warehouse_dir, get_path(:var_dir, 'warehouse'), :mkdir => true
 %>
 ---

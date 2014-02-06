@@ -8,7 +8,6 @@ module Masamune
     require 'masamune/commands/postgres'
     require 'masamune/commands/postgres_admin'
     require 'masamune/commands/interactive'
-    require 'masamune/commands/line_formatter'
     require 'masamune/commands/shell'
     require 'masamune/commands/retry_with_backoff'
   end
