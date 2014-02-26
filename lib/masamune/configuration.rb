@@ -1,6 +1,6 @@
 require 'delegate'
 require 'yaml'
-require 'erb'
+require 'tilt/erb'
 require 'pp'
 
 require 'active_support/core_ext/hash'
