@@ -91,6 +91,7 @@ module Masamune::Commands
       filesystem.move_file(@buffer.path, @output) if @output && @buffer && @buffer.respond_to?(:path)
     end
 
+    # FIXME use temporary tables with delimiters for CSV output format
     def handle_stdout(line, line_no)
       if line =~ /\A#{PROMPT}/
         logger.debug(line)
@@ -98,7 +99,7 @@ module Masamune::Commands
         @block.call(line) if @block
 
         if @buffer
-          @buffer.puts(@csv ? line.split(@delimiter).to_csv : line)
+          @buffer.puts(@csv ? line.split(@delimiter).map { |x| x == 'NULL' ? nil : x }.to_csv : line)
         else
           console(line) if print?
         end
