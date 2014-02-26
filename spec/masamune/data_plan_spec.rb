@@ -390,4 +390,18 @@ describe Masamune::DataPlan do
       end
     end
   end
+
+  context 'recursive plans' do
+    before do
+      plan.add_target_rule('primary', 'table/y=%Y/m=%m/d=%d')
+      plan.add_source_rule('primary', 'log/%Y%m%d.*.log')
+      plan.add_source_rule('derived', 'table/y=%Y/m=%m/d=%d')
+      plan.add_target_rule('derived', 'log/%Y%m%d.*.log')
+    end
+
+    it 'should raise exception' do
+      plan.prepare('derived', targets: ['log/20140228.wtf.log'])
+      expect { plan.execute('derived') }.to raise_error /Max depth .* exceeded for rule 'derived'/
+    end
+  end
 end

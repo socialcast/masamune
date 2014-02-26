@@ -4,6 +4,8 @@ require 'active_support/core_ext/numeric/time'
 require 'masamune/data_plan_set'
 
 class Masamune::DataPlan
+  MAX_DEPTH = 10
+
   include Masamune::HasContext
   include Masamune::Accumulate
 
@@ -15,6 +17,7 @@ class Masamune::DataPlan
     @sources = Hash.new { |set,rule| set[rule] = Masamune::DataPlanSet.new(@source_rules[rule]) }
     @set_cache = Hash.new { |cache,level| cache[level] = Hash.new }
     @current_rule = nil
+    @current_depth = 0
   end
 
   def add_target_rule(rule, target, target_options = {})
@@ -98,10 +101,13 @@ class Masamune::DataPlan
 
   def execute(rule, options = {})
     return if targets(rule).missing.empty?
-    sources(rule).missing.group_by { |source| rule_for_target(source.path) }.each do |derived_rule, sources|
-      if derived_rule != Masamune::DataPlanRule::TERMINAL
-        prepare(derived_rule, targets: sources.map(&:path))
-        execute(derived_rule, options)
+
+    constrain_max_depth(rule) do
+      sources(rule).missing.group_by { |source| rule_for_target(source.path) }.each do |derived_rule, sources|
+        if derived_rule != Masamune::DataPlanRule::TERMINAL
+          prepare(derived_rule, targets: sources.map(&:path))
+          execute(derived_rule, options)
+        end
       end
     end unless options[:no_resolve]
 
@@ -114,5 +120,13 @@ class Masamune::DataPlan
 
   def current_rule
     @current_rule
+  end
+
+  def constrain_max_depth(rule, &block)
+    @current_depth += 1
+    raise "Max depth of #{MAX_DEPTH} exceeded for rule '#{rule}'" if @current_depth > MAX_DEPTH
+    yield
+  ensure
+    @current_depth -= 1
   end
 end
