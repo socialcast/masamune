@@ -24,14 +24,18 @@ module Masamune::Actions
 
     def load_setup_files
       configuration.postgres[:setup_files].each do |file|
-        postgres(file: file)
+        configuration.with_quiet do
+          postgres(file: file)
+        end
       end if configuration.postgres.has_key?(:setup_files)
     end
 
     def load_schema_files
       configuration.postgres[:schema_files].each do |path|
         filesystem.glob_sort(path, order: :basename).each do |file|
-          postgres(file: file)
+          configuration.with_quiet do
+            postgres(file: file)
+          end
         end
       end if configuration.postgres.has_key?(:schema_files)
     end
