@@ -79,8 +79,8 @@ describe Masamune::Commands::Hive do
     let(:buffer) { StringIO.new }
     let(:delimiter) { "\t" }
     let(:attrs) { {buffer: buffer, delimiter: delimiter, csv: true} }
-    let(:input_row) { ['A', 'NULL', 'B', 'C'].join(delimiter) }
-    let(:output_row) { ['A', nil, 'B', 'C'].join(",") }
+    let(:input_row) { ['A', 'NULL', 'B', 'C', '', 'E'].join(delimiter) }
+    let(:output_row) { ['A', nil, 'B', 'C', nil, 'E'].join(',') }
 
     before do
       instance.handle_stdout(input_row, 0)

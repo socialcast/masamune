@@ -99,10 +99,16 @@ module Masamune::Commands
         @block.call(line) if @block
 
         if @buffer
-          @buffer.puts(@csv ? line.split(@delimiter).map { |x| x == 'NULL' ? nil : x }.to_csv : line)
+          @buffer.puts(@csv ? line.split(@delimiter).map { |row| encode_row(row) }.to_csv : line)
         else
           console(line) if print?
         end
+      end
+    end
+
+    def encode_row(row)
+      unless row == 'NULL' || row == ''
+        row
       end
     end
 
