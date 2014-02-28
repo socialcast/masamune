@@ -41,6 +41,10 @@ class Masamune::DataPlanRule
     @pattern.respond_to?(:call) ? @pattern.call(plan.filesystem) : @pattern
   end
 
+  def primary?
+    @options.fetch(:primary, true)
+  end
+
   def matches?(input_path)
     matched_pattern = match_data_hash(matcher.match(input_path))
     matched_pattern.present? && matched_pattern[:rest].blank?

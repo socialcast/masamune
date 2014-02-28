@@ -42,7 +42,7 @@ class Masamune::DataPlan
 
   # TODO use constructed reference instead
   def rule_for_target(target)
-    target_matches = @target_rules.select { |rule, matcher| matcher.matches?(target) }
+    target_matches = @target_rules.select { |rule, matcher| matcher.primary? && matcher.matches?(target) }
     source_matches = @source_rules.select { |rule, matcher| matcher.matches?(target) }
 
     if target_matches.empty?

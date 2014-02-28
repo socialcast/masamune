@@ -19,6 +19,9 @@ describe Masamune::DataPlan do
   end
 
   before do
+    plan.add_target_rule('non_primary', 'table/y=%Y/m=%m/d=%d', primary: false)
+    plan.add_source_rule('non_primary', 'log/%Y%m%d.*.log', primary: false)
+    plan.add_command_rule('non_primary', ->(*_) { fail } )
     plan.add_target_rule('primary', 'table/y=%Y/m=%m/d=%d')
     plan.add_source_rule('primary', 'log/%Y%m%d.*.log')
     plan.add_command_rule('primary', command)
