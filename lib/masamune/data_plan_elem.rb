@@ -28,6 +28,13 @@ class Masamune::DataPlanElem
     rule.plan.filesystem.exists?(path)
   end
 
+  def set(&block)
+    rule.plan.filesystem.glob(path) do |new_path|
+      yield new_path
+    end
+  end
+  method_accumulate :set
+
   def targets(&block)
     return Masamune::DataPlanSet::EMPTY if type == :target
     rule.plan.targets_for_source(rule.name, self) do |target|

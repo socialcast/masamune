@@ -30,14 +30,14 @@ class Masamune::DataPlanSet < Set
 
   def missing(&block)
     self.each do |elem|
-      yield elem if rule.plan.filesystem.glob(elem.path).empty?
+      yield elem if elem.set.empty?
     end
   end
   method_accumulate :missing, lambda { |set| set.class.new(set.rule) }
 
   def existing(&block)
     self.each do |elem|
-      rule.plan.filesystem.glob(elem.path) do |path|
+      elem.set do |path|
         yield elem.rule.bind_input(path)
       end
     end
