@@ -17,7 +17,7 @@ class Masamune::DataPlanRule
     @plan    = plan
     @name    = name
     @type    = type
-    @pattern = options[:path]
+    @pattern = options[:path] || options[:table].to_s
     @options = options
   end
 
@@ -27,6 +27,14 @@ class Masamune::DataPlanRule
 
   def for_sources?
     @type == :source
+  end
+
+  def for_path?
+    @options.key?(:path)
+  end
+
+  def for_table?
+    @options.key?(:table)
   end
 
   def ==(other)
@@ -79,6 +87,7 @@ class Masamune::DataPlanRule
 
   def generate(start_time, stop_time, &block)
     instance = bind_date(start_time)
+    return instance unless time_step
     begin
       yield instance
       instance = instance.next
@@ -122,8 +131,6 @@ class Masamune::DataPlanRule
       :months
     when /%-?Y/
       :years
-    else
-      raise "No time value for pattern #{pattern}"
     end
   end
 

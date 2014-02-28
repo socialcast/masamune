@@ -20,14 +20,21 @@ class Masamune::DataPlanElem
   alias :path :input
   alias :table :input
 
-  # TODO check if table exists
   def exists?
-    rule.plan.filesystem.exists?(path)
+    if rule.for_path?
+      rule.plan.filesystem.exists?(path)
+    elsif rule.for_table?
+      table
+    end
   end
 
   def set(&block)
-    rule.plan.filesystem.glob(path) do |new_path|
-      yield new_path
+    if rule.for_path?
+      rule.plan.filesystem.glob(path) do |new_path|
+        yield new_path
+      end
+    elsif rule.for_table?
+      table
     end
   end
   method_accumulate :set
