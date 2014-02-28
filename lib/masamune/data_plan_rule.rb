@@ -21,6 +21,14 @@ class Masamune::DataPlanRule
     @options = options
   end
 
+  def for_targets?
+    @type == :target
+  end
+
+  def for_sources?
+    @type == :source
+  end
+
   def ==(other)
     plan    == other.plan &&
     name    == other.name &&

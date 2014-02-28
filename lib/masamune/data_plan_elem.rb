@@ -10,10 +10,6 @@ class Masamune::DataPlanElem
     @options = options
   end
 
-  def type
-    @rule.type
-  end
-
   def input
     if glob
       start_time.strftime(@rule.strftime_format.sub('*', glob))
@@ -22,6 +18,7 @@ class Masamune::DataPlanElem
     end
   end
   alias :path :input
+  alias :table :input
 
   # TODO check if table exists
   def exists?
@@ -36,7 +33,7 @@ class Masamune::DataPlanElem
   method_accumulate :set
 
   def targets(&block)
-    return Masamune::DataPlanSet::EMPTY if type == :target
+    return Masamune::DataPlanSet::EMPTY if @rule.for_targets?
     rule.plan.targets_for_source(rule.name, self) do |target|
       yield target
     end
@@ -44,7 +41,7 @@ class Masamune::DataPlanElem
   method_accumulate :targets, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_target_rule(elem.rule.name)) }
 
   def sources(&block)
-    return Masamune::DataPlanSet::EMPTY if type == :source
+    return Masamune::DataPlanSet::EMPTY if @rule.for_sources?
     rule.plan.sources_for_target(rule.name, self) do |source|
       yield source
     end

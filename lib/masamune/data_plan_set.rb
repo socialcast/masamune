@@ -12,10 +12,6 @@ class Masamune::DataPlanSet < Set
     super convert_enum(enum)
   end
 
-  def type
-    @rule.type
-  end
-
   def union(enum = nil)
     super(convert_enum(enum) || EMPTY)
   end
@@ -55,9 +51,9 @@ class Masamune::DataPlanSet < Set
 
   def actionable(&block)
     self.each do |elem|
-      if type == :source
+      if @rule.for_sources?
         yield elem if elem.targets.existing.any?
-      elsif type == :target
+      elsif @rule.for_targets?
         yield elem if elem.sources.existing.any?
       end
     end
@@ -75,7 +71,7 @@ class Masamune::DataPlanSet < Set
   method_accumulate :with_grain, lambda { |set, grain| set.class.new(set.rule.round(grain)) }
 
   def targets
-    return Masamune::DataPlanSet::EMPTY if empty? || type == :target
+    return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_targets?
     self.class.new(self.first.targets.rule).tap do |set|
       self.each do |elem|
         set.merge elem.targets
@@ -84,7 +80,7 @@ class Masamune::DataPlanSet < Set
   end
 
   def sources
-    return Masamune::DataPlanSet::EMPTY if empty? || type == :source
+    return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_sources?
     self.class.new(self.first.sources.rule).tap do |set|
       self.each do |elem|
         set.merge elem.sources
