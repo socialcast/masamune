@@ -14,14 +14,16 @@ class Masamune::DataPlanElem
     @rule.type
   end
 
-  def path
+  def input
     if glob
       start_time.strftime(@rule.strftime_format.sub('*', glob))
     else
       start_time.strftime(@rule.strftime_format)
     end
   end
+  alias :path :input
 
+  # TODO check if table exists
   def exists?
     rule.plan.filesystem.exists?(path)
   end
@@ -110,6 +112,6 @@ class Masamune::DataPlanElem
   end
 
   def inspect
-    {rule: rule, path: path, start_date: start_time.to_s, stop_date: stop_time.to_s, :options => options}.to_s
+    {rule: rule, input: input, start_date: start_time.to_s, stop_date: stop_time.to_s, :options => options}.to_s
   end
 end

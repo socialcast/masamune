@@ -38,7 +38,7 @@ class Masamune::DataPlanSet < Set
   def existing(&block)
     self.each do |elem|
       rule.plan.filesystem.glob(elem.path) do |path|
-        yield elem.rule.bind_path(path)
+        yield elem.rule.bind_input(path)
       end
     end
   end
@@ -100,7 +100,7 @@ class Masamune::DataPlanSet < Set
     when Masamune::DataPlanElem
       elem
     when String
-      @rule.bind_path(elem)
+      @rule.bind_input(elem)
     else
       raise "Unhandled elem class #{elem.class}"
     end

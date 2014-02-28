@@ -5,8 +5,8 @@ describe Masamune::DataPlanElem do
   let(:plan) { Masamune::DataPlan.new }
   let(:name) { 'primary' }
   let(:type) { :target }
-  let(:rule) { Masamune::DataPlanRule.new(plan, name, type, 'report/%Y-%m-%d/%H') }
-  let(:other_rule) { Masamune::DataPlanRule.new(plan, name, type, 'log/%Y%m%d.*.log') }
+  let(:rule) { Masamune::DataPlanRule.new(plan, name, type, {path: 'report/%Y-%m-%d/%H'}) }
+  let(:other_rule) { Masamune::DataPlanRule.new(plan, name, type, {path: 'log/%Y%m%d.*.log'}) }
 
   let(:start_time) { DateTime.civil(2013,07,19,11,07) }
   let(:other_start_time) { DateTime.civil(2013,07,20,0,0) }

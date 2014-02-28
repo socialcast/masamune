@@ -13,11 +13,11 @@ class Masamune::DataPlanRule
 
   attr_reader :plan, :name, :type, :pattern, :options
 
-  def initialize(plan, name, type, pattern, options = {})
+  def initialize(plan, name, type, options = {})
     @plan    = plan
     @name    = name
     @type    = type
-    @pattern = pattern
+    @pattern = options[:path]
     @options = options
   end
 
@@ -45,26 +45,26 @@ class Masamune::DataPlanRule
     @options.fetch(:primary, true)
   end
 
-  def matches?(input_path)
-    matched_pattern = match_data_hash(matcher.match(input_path))
+  def matches?(input)
+    matched_pattern = match_data_hash(matcher.match(input))
     matched_pattern.present? && matched_pattern[:rest].blank?
   end
 
   def bind_date(input_date)
     output_date = tz.utc_to_local(input_date)
-    Masamune::DataPlanElem.new(self, output_date, @options)
+    Masamune::DataPlanElem.new(self, output_date, options_for_elem)
   end
 
-  def bind_path(input_path)
-    matched_pattern = match_data_hash(matcher.match(input_path))
-    raise "Cannot bind_path #{input_path} to #{pattern}" unless matched_pattern
+  def bind_input(input)
+    matched_pattern = match_data_hash(matcher.match(input))
+    raise "Cannot bind_input #{input} to #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
-    Masamune::DataPlanElem.new(self, output_date, @options.merge(matched_extra(matched_pattern)))
+    Masamune::DataPlanElem.new(self, output_date, options_for_elem.merge(matched_extra(matched_pattern)))
   end
 
-  def unify_path(input_path, rule)
-    matched_pattern = match_data_hash(matcher.match(input_path))
-    raise "Cannot unify_path #{input_path} with #{rule.pattern}, does not match #{pattern}" unless matched_pattern
+  def unify(input, rule)
+    matched_pattern = match_data_hash(matcher.match(input))
+    raise "Cannot unify #{input} with #{rule.pattern}, does not match #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
     rule.bind_date(output_date)
   end
@@ -78,8 +78,8 @@ class Masamune::DataPlanRule
   end
   method_accumulate :generate
 
-  def generate_via_unify_path(input_path, rule, &block)
-    instance = unify_path(input_path, rule)
+  def generate_via_unify(input, rule, &block)
+    instance = unify(input, rule)
 
     stop_time = instance.start_time.advance(time_step => 1)
     begin
@@ -87,7 +87,7 @@ class Masamune::DataPlanRule
       instance = instance.next
     end while instance.start_time < stop_time
   end
-  method_accumulate :generate_via_unify_path
+  method_accumulate :generate_via_unify
 
   def tz
     ActiveSupport::TimeZone[@options.fetch(:tz, 'UTC')]
@@ -168,7 +168,7 @@ class Masamune::DataPlanRule
     part_index = pattern_parts.find_index { |part| part =~ time_step_to_format(grain) }
     raise "cannot round to :#{grain} for #{pattern}" unless part_index
     new_pattern = pattern_parts[0..part_index].join('/')
-    self.class.new(plan, name, type, new_pattern, options)
+    self.class.new(plan, name, type, options.merge(path: new_pattern))
   end
 
   private
@@ -224,5 +224,9 @@ class Masamune::DataPlanRule
   def matched_extra(matched_data)
     return {} unless matched_data.has_key?(:glob)
     {glob: matched_data[:glob]}.reject { |_,v| v == '*' }
+  end
+
+  def options_for_elem
+    @options.reject { |k,_| [:path, :table].include?(k) }
   end
 end
