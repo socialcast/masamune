@@ -60,16 +60,16 @@ module Masamune::Actions
     end
 
     module ClassMethods
-      def source(source, loadtime_options = {})
+      def source(source_options = {})
         @@namespaces ||= []
         @@namespaces << namespace
         @@sources ||= []
-        @@sources << [source, loadtime_options]
+        @@sources << source_options
       end
 
-      def target(target, loadtime_options = {})
+      def target(target_options = {})
         @@targets ||= []
-        @@targets << [target, loadtime_options]
+        @@targets << target_options
       end
 
       def create_command(*a)

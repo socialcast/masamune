@@ -18,8 +18,8 @@ describe Masamune::Thor do
       include Masamune::ThorMute
 
       desc 'command', 'command'
-      target "target/%Y-%m-%d"
-      source "source/%Y%m%d*.log"
+      target path: "target/%Y-%m-%d"
+      source path: "source/%Y%m%d*.log"
       def command
         # NOP
       end

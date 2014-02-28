@@ -20,16 +20,16 @@ class Masamune::DataPlan
     @current_depth = 0
   end
 
-  def add_target_rule(rule, target, target_options = {})
-    @target_rules[rule] = Masamune::DataPlanRule.new(self, rule, :target, target, target_options)
+  def add_target_rule(rule, target_options = {})
+    @target_rules[rule] = Masamune::DataPlanRule.new(self, rule, :target, target_options[:path], target_options)
   end
 
   def get_target_rule(rule)
     @target_rules[rule]
   end
 
-  def add_source_rule(rule, source, source_options = {})
-    @source_rules[rule] = Masamune::DataPlanRule.new(self, rule, :source, source, source_options)
+  def add_source_rule(rule, source_options = {})
+    @source_rules[rule] = Masamune::DataPlanRule.new(self, rule, :source, source_options[:path], source_options)
   end
 
   def get_source_rule(rule)

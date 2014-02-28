@@ -11,14 +11,11 @@ class Masamune::DataPlanBuilder
       commands.each do |name, command|
         command_name = "#{namespaces.shift}:#{name}"
 
-        source = sources_for[name] || sources_anon.shift or next
-        target = targets_for[name] || targets_anon.shift or next
+        source_options = sources_for[name] || sources_anon.shift or next
+        target_options = targets_for[name] || targets_anon.shift or next
 
-        source_name, source_options = source
-        target_name, target_options = target
-
-        data_plan.add_source_rule(command_name, source_name, source_options)
-        data_plan.add_target_rule(command_name, target_name, target_options)
+        data_plan.add_source_rule(command_name, source_options)
+        data_plan.add_target_rule(command_name, target_options)
 
         data_plan.add_command_rule(command_name, thor_command_wrapper)
       end
@@ -28,10 +25,10 @@ class Masamune::DataPlanBuilder
   private
 
   def partition_by_for(annotations)
-    with_for, anon = annotations.partition { |_, opts| opts.has_key?(:for) }
+    with_for, anon = annotations.partition { |opts| opts.has_key?(:for) }
     decl = {}
-    with_for.each do |name, opts|
-      decl[opts[:for]] = [name, opts.reject { |k,_| k == :for }]
+    with_for.each do |opts|
+      decl[opts[:for]] = opts.reject { |k,_| k == :for }
     end
     [decl, anon]
   end
