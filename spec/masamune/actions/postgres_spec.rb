@@ -17,6 +17,7 @@ describe Masamune::Actions::Postgres do
   before do
     instance.stub(:filesystem) { filesystem }
     instance.stub_chain(:configuration, :postgres).and_return(configuration)
+    instance.stub_chain(:configuration, :with_quiet).and_yield
   end
 
   describe '.postgres' do
