@@ -107,9 +107,7 @@ module Masamune::Commands
     end
 
     def encode_row(row)
-      unless row == 'NULL' || row == ''
-        row
-      end
+      row unless row == 'NULL' || row == ''
     end
 
     def handle_failure(status)
