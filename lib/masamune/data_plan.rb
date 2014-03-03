@@ -4,6 +4,8 @@ require 'active_support/core_ext/numeric/time'
 require 'masamune/data_plan_set'
 
 class Masamune::DataPlan
+  MAX_DEPTH = 10
+
   include Masamune::HasContext
   include Masamune::Accumulate
 
@@ -15,18 +17,19 @@ class Masamune::DataPlan
     @sources = Hash.new { |set,rule| set[rule] = Masamune::DataPlanSet.new(@source_rules[rule]) }
     @set_cache = Hash.new { |cache,level| cache[level] = Hash.new }
     @current_rule = nil
+    @current_depth = 0
   end
 
-  def add_target_rule(rule, target, target_options = {})
-    @target_rules[rule] = Masamune::DataPlanRule.new(self, rule, :target, target, target_options)
+  def add_target_rule(rule, target_options = {})
+    @target_rules[rule] = Masamune::DataPlanRule.new(self, rule, :target, target_options)
   end
 
   def get_target_rule(rule)
     @target_rules[rule]
   end
 
-  def add_source_rule(rule, source, source_options = {})
-    @source_rules[rule] = Masamune::DataPlanRule.new(self, rule, :source, source, source_options)
+  def add_source_rule(rule, source_options = {})
+    @source_rules[rule] = Masamune::DataPlanRule.new(self, rule, :source, source_options)
   end
 
   def get_source_rule(rule)
@@ -39,7 +42,7 @@ class Masamune::DataPlan
 
   # TODO use constructed reference instead
   def rule_for_target(target)
-    target_matches = @target_rules.select { |rule, matcher| matcher.matches?(target) }
+    target_matches = @target_rules.select { |rule, matcher| matcher.primary? && matcher.matches?(target) }
     source_matches = @source_rules.select { |rule, matcher| matcher.matches?(target) }
 
     if target_matches.empty?
@@ -66,8 +69,8 @@ class Masamune::DataPlan
   def targets_for_source(rule, source, &block)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
-    source_instance = source.is_a?(Masamune::DataPlanElem) ? source : source_template.bind_path(source)
-    source_template.generate_via_unify_path(source_instance.path, target_template) do |target|
+    source_instance = source.is_a?(Masamune::DataPlanElem) ? source : source_template.bind_input(source)
+    source_template.generate_via_unify(source_instance.input, target_template) do |target|
       yield target
     end
   end
@@ -76,8 +79,8 @@ class Masamune::DataPlan
   def sources_for_target(rule, target, &block)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
-    target_instance = target.is_a?(Masamune::DataPlanElem) ? target : target_template.bind_path(target)
-    target_template.generate_via_unify_path(target_instance.path, source_template) do |source|
+    target_instance = target.is_a?(Masamune::DataPlanElem) ? target : target_template.bind_input(target)
+    target_template.generate_via_unify(target_instance.input, source_template) do |source|
       yield source
     end
   end
@@ -98,10 +101,13 @@ class Masamune::DataPlan
 
   def execute(rule, options = {})
     return if targets(rule).missing.empty?
-    sources(rule).missing.group_by { |source| rule_for_target(source.path) }.each do |derived_rule, sources|
-      if derived_rule != Masamune::DataPlanRule::TERMINAL
-        prepare(derived_rule, targets: sources.map(&:path))
-        execute(derived_rule, options)
+
+    constrain_max_depth(rule) do
+      sources(rule).missing.group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
+        if derived_rule != Masamune::DataPlanRule::TERMINAL
+          prepare(derived_rule, targets: sources.map(&:input))
+          execute(derived_rule, options)
+        end
       end
     end unless options[:no_resolve]
 
@@ -114,5 +120,13 @@ class Masamune::DataPlan
 
   def current_rule
     @current_rule
+  end
+
+  def constrain_max_depth(rule, &block)
+    @current_depth += 1
+    raise "Max depth of #{MAX_DEPTH} exceeded for rule '#{rule}'" if @current_depth > MAX_DEPTH
+    yield
+  ensure
+    @current_depth -= 1
   end
 end

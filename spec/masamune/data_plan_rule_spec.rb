@@ -5,9 +5,9 @@ describe Masamune::DataPlanRule do
   let(:name) { 'primary' }
   let(:type) { :target }
   let(:pattern) { 'report/%Y-%m-%d/%H' }
-  let(:options) { {} }
+  let(:options) { {path: pattern} }
 
-  let(:instance) { described_class.new(plan, name, type, pattern, options) }
+  let(:instance) { described_class.new(plan, name, type, options) }
 
   describe '#pattern' do
     subject do
@@ -48,53 +48,53 @@ describe Masamune::DataPlanRule do
     end
   end
 
-  describe '#bind_path' do
+  describe '#bind_input' do
     subject do
-      instance.bind_path(input_path)
+      instance.bind_input(input)
     end
 
     context 'with default' do
-      let(:input_path) { 'report/2013-04-05/23' }
+      let(:input) { 'report/2013-04-05/23' }
       let(:output_date) { DateTime.civil(2013,04,05,23) }
 
-      its(:path) { should == input_path }
+      its(:path) { should == input }
       its(:start_time) { should == output_date }
       its(:stop_time) { should == output_date.to_time + 1.hour }
     end
 
     context 'with unix timestamp pattern' do
       let(:pattern) { 'logs/%H-s.log' }
-      let(:input_path) { 'logs/1365202800.log' }
+      let(:input) { 'logs/1365202800.log' }
       let(:output_date) { DateTime.civil(2013,04,05,23) }
 
-      its(:path) { should == input_path }
+      its(:path) { should == input }
       its(:start_time) { should == output_date }
       its(:stop_time) { should == output_date.to_time + 1.hour }
     end
   end
 
-  describe '#unify_path' do
-    let(:induced) { described_class.new(plan, name, type, 'table/y=%Y/m=%m/d=%d/h=%H') }
+  describe '#unify' do
+    let(:induced) { described_class.new(plan, name, type, {path: 'table/y=%Y/m=%m/d=%d/h=%H'}) }
 
     subject do
-      instance.unify_path(input_path, induced)
+      instance.unify(input, induced)
     end
 
-    context 'when input_path fully matches basis pattern' do
-      let(:input_path) { 'report/2013-01-02/00' }
+    context 'when input fully matches basis pattern' do
+      let(:input) { 'report/2013-01-02/00' }
 
       its(:path) { should == 'table/y=2013/m=01/d=02/h=00' }
     end
 
-    context 'when input_path partially matches basis pattern' do
-      let(:induced) { described_class.new(plan, name, type, 'table/%Y-%m') }
+    context 'when input partially matches basis pattern' do
+      let(:induced) { described_class.new(plan, name, type, {path: 'table/%Y-%m'}) }
 
-      let(:input_path) { 'report/2013-01-02/00' }
+      let(:input) { 'report/2013-01-02/00' }
       its(:path) { should == 'table/2013-01' }
     end
 
-    context 'when input_path does not match basis pattern' do
-      let(:input_path) { 'report' }
+    context 'when input does not match basis pattern' do
+      let(:input) { 'report' }
 
       it { expect { subject }.to raise_error /Cannot unify/ }
     end

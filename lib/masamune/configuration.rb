@@ -1,6 +1,6 @@
 require 'delegate'
 require 'yaml'
-require 'erb'
+require 'tilt/erb'
 require 'pp'
 
 require 'active_support/core_ext/hash'
@@ -90,6 +90,13 @@ class Masamune::Configuration
   end
 
   def_delegators :filesystem, :add_path, :get_path
+
+  def with_quiet(&block)
+    prev_quiet, self.quiet = quiet, true
+    yield
+  ensure
+    self.quiet = prev_quiet
+  end
 
   def load_yaml_erb_file(file)
     YAML.load(ERB.new(File.read(file)).result(binding))

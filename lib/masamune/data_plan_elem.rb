@@ -10,24 +10,37 @@ class Masamune::DataPlanElem
     @options = options
   end
 
-  def type
-    @rule.type
-  end
-
-  def path
+  def input
     if glob
       start_time.strftime(@rule.strftime_format.sub('*', glob))
     else
       start_time.strftime(@rule.strftime_format)
     end
   end
+  alias :path :input
+  alias :table :input
 
   def exists?
-    rule.plan.filesystem.exists?(path)
+    if rule.for_path?
+      rule.plan.filesystem.exists?(path)
+    elsif rule.for_table?
+      table
+    end
   end
 
+  def set(&block)
+    if rule.for_path?
+      rule.plan.filesystem.glob(path) do |new_path|
+        yield new_path
+      end
+    elsif rule.for_table?
+      table
+    end
+  end
+  method_accumulate :set
+
   def targets(&block)
-    return Masamune::DataPlanSet::EMPTY if type == :target
+    return Masamune::DataPlanSet::EMPTY if @rule.for_targets?
     rule.plan.targets_for_source(rule.name, self) do |target|
       yield target
     end
@@ -35,7 +48,7 @@ class Masamune::DataPlanElem
   method_accumulate :targets, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_target_rule(elem.rule.name)) }
 
   def sources(&block)
-    return Masamune::DataPlanSet::EMPTY if type == :source
+    return Masamune::DataPlanSet::EMPTY if @rule.for_sources?
     rule.plan.sources_for_target(rule.name, self) do |source|
       yield source
     end
@@ -110,6 +123,6 @@ class Masamune::DataPlanElem
   end
 
   def inspect
-    {rule: rule, path: path, start_date: start_time.to_s, stop_date: stop_time.to_s, :options => options}.to_s
+    {rule: rule, input: input, start_date: start_time.to_s, stop_date: stop_time.to_s, :options => options}.to_s
   end
 end

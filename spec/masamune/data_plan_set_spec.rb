@@ -4,8 +4,8 @@ describe Masamune::DataPlanSet do
   let(:fs) { Masamune::MockFilesystem.new }
   let!(:plan) { Masamune::DataPlan.new }
 
-  let!(:source_rule) { plan.add_source_rule('primary', 'log/%Y%m%d.*.log') }
-  let!(:target_rule) { plan.add_target_rule('primary', 'table/y=%Y/m=%m/d=%d') }
+  let!(:source_rule) { plan.add_source_rule('primary', path: 'log/%Y%m%d.*.log') }
+  let!(:target_rule) { plan.add_target_rule('primary', path: 'table/y=%Y/m=%m/d=%d') }
 
   before do
     plan.filesystem = fs

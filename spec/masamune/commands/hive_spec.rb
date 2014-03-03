@@ -77,14 +77,15 @@ describe Masamune::Commands::Hive do
 
   describe '#handle_stdout' do
     let(:buffer) { StringIO.new }
-    let(:delimiter) { "\001" }
+    let(:delimiter) { "\t" }
     let(:attrs) { {buffer: buffer, delimiter: delimiter, csv: true} }
-    let(:row) { %w(this is not a row) }
+    let(:input_row) { ['A', 'NULL', 'B', 'C', '', 'E'].join(delimiter) }
+    let(:output_row) { ['A', nil, 'B', 'C', nil, 'E'].join(',') }
 
     before do
-      instance.handle_stdout(row.join(delimiter), 0)
+      instance.handle_stdout(input_row, 0)
     end
 
-    it { buffer.string.should == row.join(',') + "\n" }
+    it { buffer.string.should == output_row + "\n" }
   end
 end

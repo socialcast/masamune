@@ -19,14 +19,17 @@ describe Masamune::DataPlan do
   end
 
   before do
-    plan.add_target_rule('primary', 'table/y=%Y/m=%m/d=%d')
-    plan.add_source_rule('primary', 'log/%Y%m%d.*.log')
+    plan.add_target_rule('non_primary', path: 'table/y=%Y/m=%m/d=%d', primary: false)
+    plan.add_source_rule('non_primary', path: 'log/%Y%m%d.*.log', primary: false)
+    plan.add_command_rule('non_primary', ->(*_) { fail } )
+    plan.add_target_rule('primary', path: 'table/y=%Y/m=%m/d=%d')
+    plan.add_source_rule('primary', path: 'log/%Y%m%d.*.log')
     plan.add_command_rule('primary', command)
-    plan.add_target_rule('derived_daily', 'daily/%Y-%m-%d')
-    plan.add_source_rule('derived_daily', 'table/y=%Y/m=%m/d=%d')
+    plan.add_target_rule('derived_daily', path: 'daily/%Y-%m-%d')
+    plan.add_source_rule('derived_daily', path: 'table/y=%Y/m=%m/d=%d')
     plan.add_command_rule('derived_daily', command)
-    plan.add_target_rule('derived_monthly', 'monthly/%Y-%m')
-    plan.add_source_rule('derived_monthly', 'table/y=%Y/m=%m/d=%d')
+    plan.add_target_rule('derived_monthly', path: 'monthly/%Y-%m')
+    plan.add_source_rule('derived_monthly', path: 'table/y=%Y/m=%m/d=%d')
     plan.add_command_rule('derived_monthly', command)
   end
 
@@ -388,6 +391,20 @@ describe Masamune::DataPlan do
       it_behaves_like 'derived daily data' do
         let(:derived_command) { derived_monthly_command }
       end
+    end
+  end
+
+  context 'recursive plans' do
+    before do
+      plan.add_target_rule('primary', path: 'table/y=%Y/m=%m/d=%d')
+      plan.add_source_rule('primary', path: 'log/%Y%m%d.*.log')
+      plan.add_source_rule('derived', path: 'table/y=%Y/m=%m/d=%d')
+      plan.add_target_rule('derived', path: 'log/%Y%m%d.*.log')
+    end
+
+    it 'should raise exception' do
+      plan.prepare('derived', targets: ['log/20140228.wtf.log'])
+      expect { plan.execute('derived') }.to raise_error /Max depth .* exceeded for rule 'derived'/
     end
   end
 end
