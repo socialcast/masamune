@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'masamune/commands/postgres_common_spec'
 
 describe Masamune::Commands::Postgres do
   let(:configuration) { {:path => 'psql', :database => 'postgres', :options => options} }
@@ -63,4 +64,6 @@ describe Masamune::Commands::Postgres do
       it { should == [*default_command, '--no-align', '--field-separator=,', '--pset=footer'] }
     end
   end
+
+  it_should_behave_like Masamune::Commands::PostgresCommon
 end

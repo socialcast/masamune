@@ -3,6 +3,7 @@ require 'masamune/proxy_delegate'
 module Masamune::Commands
   class PostgresAdmin
     include Masamune::ProxyDelegate
+    include Masamune::Commands::PostgresCommon
 
     DEFAULT_ATTRIBUTES =
     {
@@ -21,11 +22,6 @@ module Masamune::Commands
       DEFAULT_ATTRIBUTES.merge(configuration.postgres).merge(configuration.postgres_admin).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
-    end
-
-    # TODO do something if file doesn't exist
-    def command_env
-      @pgpass_file ? {'PGPASSFILE' => @pgpass_file} : {}
     end
 
     def command_args
