@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'masamune/commands/postgres_common_spec'
 
 describe Masamune::Commands::PostgresAdmin do
   let(:configuration) { {:create_db_path => 'createdb', :drop_db_path => 'dropdb', :hostname => 'localhost', :username => 'postgres'} }
@@ -42,4 +43,6 @@ describe Masamune::Commands::PostgresAdmin do
       it { expect { subject }.to raise_error ArgumentError, ':action must be :create or :drop' }
     end
   end
+
+  it_should_behave_like Masamune::Commands::PostgresCommon
 end

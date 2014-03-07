@@ -5,6 +5,7 @@ module Masamune::Commands
   class Postgres
     include Masamune::ProxyDelegate
     include Masamune::StringFormat
+    include Masamune::Commands::PostgresCommon
 
     DEFAULT_ATTRIBUTES =
     {
@@ -44,11 +45,6 @@ module Masamune::Commands
 
     def print?
       @print
-    end
-
-    # TODO do something if file doesn't exist
-    def command_env
-      @pgpass_file ? {'PGPASSFILE' => @pgpass_file} : {}
     end
 
     def command_args

@@ -5,6 +5,7 @@ module Masamune
     require 'masamune/commands/hadoop_streaming'
     require 'masamune/commands/hadoop_filesystem'
     require 'masamune/commands/elastic_mapreduce'
+    require 'masamune/commands/postgres_common'
     require 'masamune/commands/postgres'
     require 'masamune/commands/postgres_admin'
     require 'masamune/commands/interactive'
