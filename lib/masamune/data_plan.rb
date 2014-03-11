@@ -62,7 +62,7 @@ class Masamune::DataPlan
     target_template = @target_rules[rule]
     target_template.generate(start.to_time.utc, stop.to_time.utc) do |target_instance|
       yield target_instance
-    end
+    end if target_template
   end
   method_accumulate :targets_for_date_range
 
@@ -70,7 +70,7 @@ class Masamune::DataPlan
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     source_instance = source.is_a?(Masamune::DataPlanElem) ? source : source_template.bind_input(source)
-    source_template.generate_via_unify(source_instance.input, target_template) do |target|
+    source_template.generate_via_unify(source_instance, target_template) do |target|
       yield target
     end
   end
@@ -80,7 +80,7 @@ class Masamune::DataPlan
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     target_instance = target.is_a?(Masamune::DataPlanElem) ? target : target_template.bind_input(target)
-    target_template.generate_via_unify(target_instance.input, source_template) do |source|
+    target_template.generate_via_unify(target_instance, source_template) do |source|
       yield source
     end
   end
