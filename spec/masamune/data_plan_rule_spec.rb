@@ -74,10 +74,12 @@ describe Masamune::DataPlanRule do
   end
 
   describe '#unify' do
+    let(:primary) { described_class.new(plan, name, type, {path: 'report/%Y-%m-%d/%H'}) }
     let(:induced) { described_class.new(plan, name, type, {path: 'table/y=%Y/m=%m/d=%d/h=%H'}) }
+    let(:elem) { primary.bind_input(input) }
 
     subject do
-      instance.unify(input, induced)
+      instance.unify(elem, induced)
     end
 
     context 'when input fully matches basis pattern' do
@@ -91,12 +93,6 @@ describe Masamune::DataPlanRule do
 
       let(:input) { 'report/2013-01-02/00' }
       its(:path) { should == 'table/2013-01' }
-    end
-
-    context 'when input does not match basis pattern' do
-      let(:input) { 'report' }
-
-      it { expect { subject }.to raise_error /Cannot unify/ }
     end
   end
 

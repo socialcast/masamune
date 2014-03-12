@@ -8,11 +8,12 @@ class Masamune::DataPlanBuilder
       sources_for, sources_anon = partition_by_for(sources)
       targets_for, targets_anon = partition_by_for(targets)
 
-      commands.each do |name, command|
+      commands.each do |name|
         command_name = "#{namespaces.shift}:#{name}"
 
         source_options = sources_for[name] || sources_anon.shift or next
         target_options = targets_for[name] || targets_anon.shift or next
+        next if source_options[:skip] || target_options[:skip]
 
         data_plan.add_source_rule(command_name, source_options)
         data_plan.add_target_rule(command_name, target_options)

@@ -78,16 +78,13 @@ class Masamune::DataPlanRule
     Masamune::DataPlanElem.new(self, output_date, options_for_elem.merge(matched_extra(matched_pattern)))
   end
 
-  def unify(input, rule)
-    matched_pattern = match_data_hash(matcher.match(input))
-    raise "Cannot unify #{input} with #{rule.pattern}, does not match #{pattern}" unless matched_pattern
-    output_date = matched_date(matched_pattern)
-    rule.bind_date(output_date)
+  def unify(elem, rule)
+    rule.bind_date(elem.start_time)
   end
 
   def generate(start_time, stop_time, &block)
     instance = bind_date(start_time)
-    return instance unless time_step
+
     begin
       yield instance
       instance = instance.next
@@ -95,8 +92,8 @@ class Masamune::DataPlanRule
   end
   method_accumulate :generate
 
-  def generate_via_unify(input, rule, &block)
-    instance = unify(input, rule)
+  def generate_via_unify(elem, rule, &block)
+    instance = unify(elem, rule)
 
     stop_time = instance.start_time.advance(time_step => 1)
     begin
@@ -131,6 +128,8 @@ class Masamune::DataPlanRule
       :months
     when /%-?Y/
       :years
+    else
+      :hours
     end
   end
 
