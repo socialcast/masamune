@@ -60,6 +60,15 @@ module Masamune::Actions
     end
 
     module ClassMethods
+      def skip
+        @@namespaces ||= []
+        @@namespaces << namespace
+        @@sources ||= []
+        @@sources << {skip: true}
+        @@targets ||= []
+        @@targets << {skip: true}
+      end
+
       def source(source_options = {})
         @@namespaces ||= []
         @@namespaces << namespace
@@ -75,7 +84,7 @@ module Masamune::Actions
       def create_command(*a)
         super.tap do
           @@commands ||= []
-          @@commands << a
+          @@commands += a
         end
       end
 
