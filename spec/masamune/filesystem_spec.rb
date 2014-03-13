@@ -517,6 +517,7 @@ shared_examples_for 'Filesystem' do
 
     context 'local file to local file' do
       before do
+        FileUtils.should_receive(:chmod).once
         instance.move_file(old_file, new_file)
       end
 
