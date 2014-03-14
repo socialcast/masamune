@@ -7,6 +7,8 @@ module Masamune
     include Masamune::Actions::S3Cmd
     include Masamune::Actions::HadoopFilesystem
 
+    FILE_MODE = 0777 - File.umask
+
     def initialize
       @paths = {}
       @immutable_paths = {}
@@ -239,6 +241,7 @@ module Masamune
         hadoop_fs('-mv', s3n(src), dst)
       when [:local, :local]
         FileUtils.mv(src, dst, file_util_args)
+        FileUtils.chmod(FILE_MODE, dst, file_util_args)
       when [:local, :hdfs]
         hadoop_fs('-moveFromLocal', src, dst)
       when [:local, :s3]
