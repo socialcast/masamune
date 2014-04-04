@@ -12,7 +12,7 @@ class Masamune::MockDelegate
   end
 
   def command_args
-    command
+    [command]
   end
 
   def handle_stdout(line, line_no)

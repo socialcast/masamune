@@ -38,7 +38,7 @@ describe Masamune::Commands::Shell do
     context 'with fail_fast and simple command that fails' do
       let(:command) { %Q{exit 1;} }
       let(:options) { {fail_fast: true} }
-      it { expect { subject }.to raise_error RuntimeError, 'fail_fast' }
+      it { expect { subject }.to raise_error RuntimeError, "fail_fast: #{command}" }
     end
 
     context 'when command is interrupted' do
