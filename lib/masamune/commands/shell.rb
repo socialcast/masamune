@@ -173,7 +173,7 @@ module Masamune::Commands
       if @delegate.respond_to?(:handle_failure)
         @delegate.handle_failure(status)
       end
-      raise "fail_fast" if fail_fast
+      raise "fail_fast: #{command_args.join(' ')}" if fail_fast
     end
 
     private
