@@ -122,6 +122,30 @@ module Masamune
       end
     end
 
+    def stat(pattern, &block)
+      case type(pattern)
+      when :hdfs
+        hadoop_fs('-ls', pattern, safe: true) do |line|
+          next if line =~ /\AFound \d+ items/
+          size, date, time, name = line.split(/\s+/).last(4)
+          next unless size && date && time && name
+          yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").utc, size: size.to_i)
+        end
+      when :s3
+        s3cmd('ls', s3b(pattern), safe: true) do |line|
+          date, time, size, name = line.split(/\s+/)
+          next unless size && date && time && name
+          yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").utc, size: size.to_i)
+        end
+      when :local
+        Dir.glob(pattern) do |file|
+          stat = File.stat(file)
+          yield OpenStruct.new(name: file, mtime: stat.mtime.utc, size: stat.size.to_i)
+        end
+      end
+    end
+    method_accumulate :stat
+
     def mkdir!(*dirs)
       dirs.group_by { |path| type(path) }.each do |type, dir_set|
         case type

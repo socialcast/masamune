@@ -67,7 +67,7 @@ module Masamune::Commands
     end
 
     def command_env
-      @delegate.respond_to?(:command_env) ? @delegate.command_env : {}
+      (@delegate.respond_to?(:command_env) ? @delegate.command_env : {}).merge('TZ' => 'UTC')
     end
 
     def command_args

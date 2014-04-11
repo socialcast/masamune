@@ -292,6 +292,57 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  describe '#stat' do
+    subject { result.last }
+    context 'local missing file' do
+      let(:result) { instance.stat(new_file) }
+      it { should be_nil }
+    end
+
+    context 'hdfs missing file' do
+      let(:result) { instance.stat('file://' + new_file) }
+      it { should be_nil }
+    end
+
+    context 's3 missing file' do
+      before do
+        filesystem.should_receive(:s3cmd).with('ls', 's3://bucket/file.txt', safe: true).
+          and_yield('')
+      end
+      let(:result) { instance.stat('s3://bucket/file.txt') }
+      it { should be_nil }
+    end
+
+    context 'local existing file' do
+      let(:result) { instance.stat(old_file) }
+      its(:name) { should == old_file }
+      its(:mtime) { should == File.stat(old_file).mtime.utc }
+      its(:mtime) { should be_a(Time) }
+      its(:size) { should be_an(Integer) }
+    end
+
+    context 'hdfs existing file' do
+      let(:result) { instance.stat('file://' + old_file) }
+      its(:name) { should == 'file://' + old_file }
+      # NOTE limitation of batch file stat with hadoop fs shell
+      its(:mtime) { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
+      its(:mtime) { should be_a(Time) }
+      its(:size) { should be_an(Integer) }
+    end
+
+    context 's3 existing file' do
+      before do
+        filesystem.should_receive(:s3cmd).with('ls', 's3://bucket/file.txt', safe: true).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/file.txt))
+      end
+      let(:result) { instance.stat('s3://bucket/file.txt') }
+      its(:name) { should == 's3://bucket/file.txt' }
+      its(:mtime) { should == Time.parse('2013-05-24 18:52:00 +0000') }
+      its(:mtime) { should be_a(Time) }
+      its(:size) { should == 2912 }
+    end
+  end
+
   describe '#mkdir!' do
     subject do
       Dir.exists?(new_dir) && Dir.exists?(other_new_dir)
