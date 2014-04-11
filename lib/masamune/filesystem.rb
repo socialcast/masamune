@@ -87,6 +87,13 @@ module Masamune
       parent_paths(path).last || path
     end
 
+    def basename(path)
+      return unless path
+      node = remote_prefix(path) ? path.split(remote_prefix(path)).last : path
+      return if node.nil? || node.blank?
+      node.split('/').last
+    end
+
     def touch!(*files)
       mkdir!(*files.map { |file| File.dirname(file) })
       files.group_by { |path| type(path) }.each do |type, file_set|
