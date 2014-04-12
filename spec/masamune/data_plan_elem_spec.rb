@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 describe Masamune::DataPlanElem do
-
   let(:plan) { Masamune::DataPlan.new }
   let(:name) { 'primary' }
   let(:type) { :target }
