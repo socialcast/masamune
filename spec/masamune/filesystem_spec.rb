@@ -35,6 +35,21 @@ shared_examples_for 'Filesystem' do
       context 'with extra directories delimited by "/"' do
         it { instance.get_path(:home_dir, '/a/b', 'c').should == '/home/a/b/c' }
       end
+
+      context 'with parameter substitution' do
+        before do
+          instance.configuration.params[:user] = 'zombo'
+          instance.add_path(:user_path, '/home/%user/files')
+        end
+        it { instance.get_path(:user_path).should == '/home/zombo/files' }
+
+        context 'in extra section' do
+          before do
+            instance.configuration.params[:file] = 'anything_is_possible.txt'
+          end
+          it { instance.get_path(:user_path, '%file').should == '/home/zombo/files/anything_is_possible.txt' }
+        end
+      end
     end
 
     context 'before add_path is called' do
