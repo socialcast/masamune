@@ -14,6 +14,7 @@ class Masamune::Configuration
   attr_accessor :debug
   attr_accessor :no_op
   attr_accessor :dry_run
+  attr_accessor :params
 
   COMMANDS = %w(hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd postgres postgres_admin)
   COMMANDS.each do |command|
@@ -30,6 +31,8 @@ class Masamune::Configuration
     self.debug    = false
     self.no_op    = false
     self.dry_run  = false
+    self.params   = HashWithIndifferentAccess.new
+
     @templates    = Hash.new { |h,k| h[k] = {} }
 
     COMMANDS.each do |command|
@@ -44,6 +47,9 @@ class Masamune::Configuration
           send("#{command}=", value)
         elsif command == 'paths'
           load_paths(value)
+        elsif command == 'params'
+          raise ArgumentError, 'params section must only contain key value pairs' unless value.is_a?(Hash)
+          self.params.merge! value
         end
       end
       logger.debug("Loaded configuration #{file}")

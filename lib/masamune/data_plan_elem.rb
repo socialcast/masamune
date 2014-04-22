@@ -47,6 +47,10 @@ class Masamune::DataPlanElem
   end
   method_accumulate :targets, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_target_rule(elem.rule.name)) }
 
+  def target
+    targets.first
+  end
+
   def sources(&block)
     return Masamune::DataPlanSet::EMPTY if @rule.for_sources?
     rule.plan.sources_for_target(rule.name, self) do |source|
@@ -54,6 +58,10 @@ class Masamune::DataPlanElem
     end
   end
   method_accumulate :sources, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_source_rule(elem.rule.name)) }
+
+  def source
+    sources.first
+  end
 
   def start_time
     @start_time.to_time.utc

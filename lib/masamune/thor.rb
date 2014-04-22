@@ -113,6 +113,10 @@ module Masamune
         end
 
         no_tasks do
+          def param(key)
+            context.configuration.params[key]
+          end
+
           def top_level?
             self.current_command_name == ARGV.first
           end

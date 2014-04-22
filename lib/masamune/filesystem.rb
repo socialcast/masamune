@@ -28,12 +28,9 @@ module Masamune
       lazy_path = lambda do |fs|
         fs.has_path?(symbol) or raise "Path :#{symbol} not defined"
         path, options = fs.paths[symbol]
+
         mkdir!(path) if options[:mkdir]
-        if extra.any?
-          File.join(path, extra)
-        else
-          path
-        end
+        expand_params(fs, extra.any? ? File.join(path, extra) : path)
       end
 
       if eager_load_paths?
@@ -50,6 +47,14 @@ module Masamune
 
     def paths
       @paths
+    end
+
+    def expand_params(fs, path)
+      new_path = path.dup
+      fs.context.configuration.params.each do |key, value|
+        new_path.gsub!("%#{key.to_s}", value.to_s)
+      end
+      new_path
     end
 
     def parent_paths(path, &block)
@@ -80,6 +85,13 @@ module Masamune
 
     def dirname(path)
       parent_paths(path).last || path
+    end
+
+    def basename(path)
+      return unless path
+      node = remote_prefix(path) ? path.split(remote_prefix(path)).last : path
+      return if node.nil? || node.blank?
+      node.split('/').last
     end
 
     def touch!(*files)

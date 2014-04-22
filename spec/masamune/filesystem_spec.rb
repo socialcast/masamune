@@ -35,6 +35,21 @@ shared_examples_for 'Filesystem' do
       context 'with extra directories delimited by "/"' do
         it { instance.get_path(:home_dir, '/a/b', 'c').should == '/home/a/b/c' }
       end
+
+      context 'with parameter substitution' do
+        before do
+          instance.configuration.params[:user] = 'zombo'
+          instance.add_path(:user_path, '/home/%user/files')
+        end
+        it { instance.get_path(:user_path).should == '/home/zombo/files' }
+
+        context 'in extra section' do
+          before do
+            instance.configuration.params[:file] = 'anything_is_possible.txt'
+          end
+          it { instance.get_path(:user_path, '%file').should == '/home/zombo/files/anything_is_possible.txt' }
+        end
+      end
     end
 
     context 'before add_path is called' do
@@ -158,9 +173,68 @@ shared_examples_for 'Filesystem' do
       it { should == 'hdfs:///a/b' }
     end
 
-    context 'with hdfs directory with path' do
+    context 'with hdfs directory with relative path' do
       let(:path) { 'hdfs:///a/b/../c' }
       it { should == 'hdfs:///a/c' }
+    end
+  end
+
+  describe '#basename' do
+    subject { instance.basename(path) }
+
+    context 'with local blank' do
+      let(:path) { '' }
+      it { should be_blank }
+    end
+
+    context 'with local path with slash' do
+      let(:path) { '/a/b/c' }
+      it { should == 'c' }
+    end
+
+    context 'with local path without slash' do
+      let(:path) { 'a/b/c' }
+      it { should == 'c' }
+    end
+
+    context 'with local relative path' do
+      let(:path) { '/a/b/../c' }
+      it { should == 'c' }
+    end
+
+    context 'with s3 bucket with blank' do
+      let(:path) { 's3://bucket' }
+      it { should be_nil }
+    end
+
+    context 'with s3 bucket with slash' do
+      let(:path) { 's3://bucket/' }
+      it { should be_nil }
+    end
+
+    context 'with s3 bucket with path' do
+      let(:path) { 's3://bucket/a/b/c' }
+      it { should == 'c' }
+    end
+
+    context 'with s3 bucket with relative path' do
+      let(:path) { 's3://bucket/a/b/../c' }
+      it { should == 'c' }
+    end
+
+    context 'with hdfs directory with path' do
+      let(:path) { 'hdfs:///a/b/c' }
+      it { should == 'c' }
+    end
+
+    context 'with hdfs directory with path' do
+      let(:path) { 'hdfs:///a/b/c' }
+      it { should == 'c' }
+    end
+
+    context 'with hdfs directory with relative path' do
+      let(:path) { 'hdfs:///a/b/../c' }
+      it { should == 'c' }
     end
   end
 
