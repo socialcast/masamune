@@ -1,4 +1,4 @@
-rvm gemset use masamune --create
+rvm gemset use default@masamune --create
 if ! command -v bundle ; then
   gem install bundler
   bundle
