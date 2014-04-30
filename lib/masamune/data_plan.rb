@@ -109,7 +109,7 @@ class Masamune::DataPlan
           execute(derived_rule, options)
         end
       end
-    end unless options[:no_resolve]
+    end if options.fetch(:resolve, true)
 
     @current_rule = rule
     @command_rules[rule].call(self, rule, options)

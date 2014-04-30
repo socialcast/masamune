@@ -34,7 +34,7 @@ module Masamune::Actions
       base.class_eval do
         class_option :sources, :desc => 'File of data sources to process'
         class_option :targets, :desc => 'File of data targets to process'
-        class_option :no_resolve, :type => :boolean, :desc => 'Do not attempt to recursively resolve data dependencies', :default => false
+        class_option :resolve, :type => :boolean, :desc => 'Recursively resolve data dependencies', :default => true
       end
 
       base.after_initialize(:final) do |thor, options|
