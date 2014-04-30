@@ -130,12 +130,16 @@ module Masamune
 
         def display_help
           if options[:help]
-            current_namespace ? help(current_namespace, current_task_name) : help(current_task_name)
+            help current_task_name
           elsif current_task_name == 'help'
-            current_namespace ? help(current_namespace, args.first) : help(args.first)
+            help args.first || default_and_only_command
           else
             help
           end
+        end
+
+        def default_and_only_command
+          self.class.default_command if self.class.tasks.count == 1
         end
       end
     end

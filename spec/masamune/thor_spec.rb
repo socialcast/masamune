@@ -24,6 +24,12 @@ describe Masamune::Thor do
       def command
         # NOP
       end
+
+      desc 'other', 'other'
+      skip
+      def other
+        # NOP
+      end
     end
   end
 
