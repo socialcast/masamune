@@ -1,6 +1,5 @@
 require 'active_support/concern'
 
-require 'debugger'
 module Masamune::Actions
   module Hive
     extend ActiveSupport::Concern
