@@ -68,9 +68,9 @@ module Masamune
         def initialize(_args=[], _options={}, _config={})
           self.context.parent = self
           self.filesystem.context = self
-          self.current_namespace = self.class.namespace
+          self.current_namespace = self.class.namespace unless self.class.namespace == 'masamune'
           self.current_task_name = _config[:current_command].name
-          self.current_command_name = self.current_namespace + ':' + self.current_task_name
+          self.current_command_name = current_namespace ? current_namespace + ':' + current_task_name : current_task_name
 
           if _options.is_a?(Array)
             _options, self.extra = self.class.parse_extra(_options)
@@ -129,7 +129,17 @@ module Masamune
         end
 
         def display_help
-          help
+          if options[:help]
+            help current_task_name
+          elsif current_task_name == 'help'
+            help args.first || default_and_only_command
+          else
+            help
+          end
+        end
+
+        def default_and_only_command
+          self.class.default_command if self.class.tasks.count == 1
         end
       end
     end

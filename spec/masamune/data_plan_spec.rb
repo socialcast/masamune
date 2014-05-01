@@ -362,8 +362,8 @@ describe Masamune::DataPlan do
         it 'should call touch!' do; end
       end
 
-      context 'when primary target data exists and :no_resolve is specified' do
-        let(:options) { {no_resolve: true} }
+      context 'when primary target data exists and :resolve is false' do
+        let(:options) { {resolve: false} }
 
         before do
           fs.touch!('log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log')

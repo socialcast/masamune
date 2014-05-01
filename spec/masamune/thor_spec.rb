@@ -20,7 +20,14 @@ describe Masamune::Thor do
       desc 'command', 'command'
       target path: "target/%Y-%m-%d"
       source path: "source/%Y%m%d*.log"
+      method_option :zombo, desc: 'Anything is possible'
       def command
+        # NOP
+      end
+
+      desc 'other', 'other'
+      skip
+      def other
         # NOP
       end
     end
@@ -56,8 +63,8 @@ describe Masamune::Thor do
       end
     end
 
-    context 'without command' do
-      it 'exits with status code 0 and prints usage' do
+    shared_examples 'general usage' do
+      it 'exits with status code 0 and prints general usage' do
         expect { subject }.to raise_error { |e|
           e.should be_a(SystemExit)
           e.status.should == 0
@@ -65,6 +72,39 @@ describe Masamune::Thor do
         stdout.string.should =~ /^Commands:/
         stderr.string.should be_blank
       end
+    end
+
+    context 'without command' do
+      it_behaves_like 'general usage'
+    end
+
+    context 'with help command ' do
+      let(:command) { 'help' }
+      it_behaves_like 'general usage'
+    end
+
+    shared_examples 'command usage' do
+      it 'exits with status code 0 and prints command usage' do
+        expect { subject }.to raise_error { |e|
+          e.should be_a(SystemExit)
+          e.status.should == 0
+        }
+        stdout.string.should =~ /^Usage:/
+        stdout.string.should =~ /--zombo/
+        stderr.string.should be_blank
+      end
+    end
+
+    context 'with --help option' do
+      let(:command) { 'command' }
+      let(:options) { ['--help'] }
+      it_behaves_like 'command usage'
+    end
+
+    context 'with help subcommand ' do
+      let(:command) { 'help' }
+      let(:options) { ['command'] }
+      it_behaves_like 'command usage'
     end
 
     context 'with command and --version' do

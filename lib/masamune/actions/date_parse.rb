@@ -16,26 +16,37 @@ module Masamune::Actions
 
     included do |base|
       base.class_eval do
-        attr_accessor :start_datetime
-        attr_accessor :stop_datetime
+        attr_accessor :start_value
+        attr_accessor :stop_value
+        attr_accessor :exact_value
 
-        class_option :start, :aliases => '-a', :desc => 'Start time', :default => nil
-        class_option :stop, :aliases => '-b', :desc => 'Stop time', :default => Date.today.to_s
+        class_option :start, :aliases => '-a', :desc => 'Start time'
+        class_option :stop, :aliases => '-b', :desc => 'Stop time'
+        class_option :at, :desc => 'Exact time'
 
-        private
+        no_tasks do
+          def start_date
+            (start_value || exact_value).try(:to_date)
+          end
 
-        def start_date
-          start_datetime.to_date
-        end
+          def start_time
+            (start_value || exact_value).try(:to_time)
+          end
 
-        def stop_date
-          stop_datetime.to_date
+          def stop_date
+            (stop_value || exact_value).try(:to_date)
+          end
+
+          def stop_time
+            (stop_value || exact_value).try(:to_time)
+          end
         end
       end
 
       base.after_initialize(:latest) do |thor, options|
-        thor.start_datetime = thor.parse_datetime_type(:start) if options[:start]
-        thor.stop_datetime = thor.parse_datetime_type(:stop) if options[:stop]
+        thor.start_value = thor.parse_datetime_type(:start) if options[:start]
+        thor.exact_value = thor.parse_datetime_type(:at)    if options[:at]
+        thor.stop_value  = thor.parse_datetime_type(:stop)  if options[:stop]
       end
     end
   end

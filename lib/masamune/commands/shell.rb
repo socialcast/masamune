@@ -83,7 +83,7 @@ module Masamune::Commands
     end
 
     def execute
-      status = OpenStruct.new(:success? => false)
+      status = OpenStruct.new(:success? => false, :exitstatus => 1)
 
       before_execute
       status = around_execute do
@@ -108,6 +108,7 @@ module Masamune::Commands
 
       Thread.new {
         if @delegate.respond_to?(:stdin)
+          @delegate.stdin.rewind
           while line = @delegate.stdin.gets
             trace(line.chomp)
             p_stdin.puts line

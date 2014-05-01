@@ -12,7 +12,35 @@ describe Masamune::Commands::RetryWithBackoff do
   describe '#around_execute' do
     let(:retries) { 3 }
 
-    context 'when retry command eventually succeeds' do
+    context 'when retry command fails with status but eventually succeeds' do
+      before do
+        instance.logger.should_receive(:error).with('exited with code: 42').exactly(retries - 1)
+        instance.logger.should_receive(:debug).with(/retrying.*/).exactly(retries - 1)
+        subject
+      end
+
+      subject do
+        @retry_count = 0
+        instance.around_execute do
+          @retry_count += 1
+          if @retry_count < retries
+            OpenStruct.new(:success? => false, :exitstatus => 42)
+          else
+            OpenStruct.new(:success? => true)
+          end
+        end
+      end
+
+      it 'logs useful debug and error messages' do; end
+      it 'attempts to retry the specified number of times' do
+        @retry_count.should == retries
+      end
+      it 'returns result status' do
+        should be_success
+      end
+    end
+
+    context 'when retry command fails with exception but eventually succeeds' do
       before do
         instance.logger.should_receive(:error).with('wtf').exactly(retries - 1)
         instance.logger.should_receive(:debug).with(/retrying.*/).exactly(retries - 1)

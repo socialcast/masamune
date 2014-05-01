@@ -6,6 +6,7 @@ module Masamune::Commands
 
     DEFAULT_RETRIES = 3
     DEFAULT_BACKOFF = 5
+    MAX_RETRY_EXIT_STATUS = 8
 
     def initialize(delegate, attrs = {})
       @delegate     = delegate
@@ -16,11 +17,13 @@ module Masamune::Commands
 
     def around_execute(&block)
       begin
-        if @delegate.respond_to?(:around_execute)
+        status = if @delegate.respond_to?(:around_execute)
           @delegate.around_execute(&block)
         else
           block.call
         end
+        raise "exited with code: #{status.exitstatus}" unless status.success?
+        status
       rescue => e
         logger.error(e.to_s)
         sleep @backoff
@@ -30,7 +33,7 @@ module Masamune::Commands
           retry
         else
           logger.debug("max retries (#{@retries}) attempted, bailing")
-          OpenStruct.new(:success? => false)
+          OpenStruct.new(:success? => false, :exitstatus => MAX_RETRY_EXIT_STATUS)
         end
       end
     end
