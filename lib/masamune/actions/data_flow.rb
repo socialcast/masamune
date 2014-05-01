@@ -43,14 +43,14 @@ module Masamune::Actions
         thor.data_plan.context = thor.context
         thor.data_plan.filesystem.context = thor.context
 
-        raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start'" unless options[:start] || options[:sources] || options[:targets]
+        raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start' or '--at'" unless options[:start] || options[:at] || options[:sources] || options[:targets]
         raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
 
         desired_sources = thor.parse_file_type(:sources, Set.new)
         desired_targets = thor.parse_file_type(:targets, Set.new)
 
-        if thor.start_datetime && thor.stop_datetime
-          desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.start_datetime, thor.stop_datetime)
+        if thor.start_time && thor.stop_time
+          desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.start_time, thor.stop_time)
         end
 
         thor.data_plan.prepare(thor.current_command_name, sources: desired_sources, targets: desired_targets)
