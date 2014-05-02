@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'masamune/commands/postgres_common_spec'
 
 describe Masamune::Commands::Postgres do
   let(:configuration) { {:path => 'psql', :database => 'postgres', :options => options} }

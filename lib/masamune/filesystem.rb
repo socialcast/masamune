@@ -95,15 +95,18 @@ module Masamune
     end
 
     def touch!(*files)
-      mkdir!(*files.map { |file| File.dirname(file) })
       files.group_by { |path| type(path) }.each do |type, file_set|
+        mkdir!(*file_set.map { |file| File.dirname(file) }) unless type == :s3
         case type
         when :hdfs
           hadoop_fs('-touchz', *file_set)
         when :s3
-          # NOTE intentionally skip
+          empty = Tempfile.new('masamune')
+          file_set.each do |file|
+            s3cmd('put', empty.path, s3b(file, dir: false))
+          end
         when :local
-          FileUtils.touch(*file_set, file_util_args)
+          FileUtils.touch(file_set, file_util_args)
         end
       end
     end
@@ -125,9 +128,9 @@ module Masamune
         when :hdfs
           hadoop_fs('-mkdir', *dir_set)
         when :s3
-          # NOTE intentionally skip
+          touch! *dir_set.map { |dir| File.join(dir, '.not_empty') }
         when :local
-          FileUtils.mkdir_p(*dir_set, file_util_args)
+          FileUtils.mkdir_p(dir_set, file_util_args)
         end
       end
     end
@@ -167,7 +170,7 @@ module Masamune
 
     def copy_file(src, dst)
       check_immutable_path!(dst)
-      mkdir!(dst)
+      mkdir!(dst) unless type(dst) == :s3
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
         hadoop_fs('-cp', src, dst)
@@ -233,7 +236,7 @@ module Masamune
 
     def move_file(src, dst)
       check_immutable_path!(src)
-      mkdir!(File.dirname(dst))
+      mkdir!(File.dirname(dst)) unless type(dst) == :s3
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
         hadoop_fs('-mv', src, dst)

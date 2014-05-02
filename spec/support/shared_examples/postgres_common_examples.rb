@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 shared_examples_for Masamune::Commands::PostgresCommon do
   describe '#command_env' do
     subject do
