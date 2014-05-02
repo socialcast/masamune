@@ -95,10 +95,10 @@ module Masamune
     end
 
     def touch!(*files)
-      mkdir!(*files.map { |file| File.dirname(file) })
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
         when :hdfs
+          mkdir!(*file_set.map { |file| File.dirname(file) })
           hadoop_fs('-touchz', *file_set)
         when :s3
           empty = Tempfile.new('masamune')
@@ -106,6 +106,7 @@ module Masamune
             s3cmd('put', empty.path, s3b(file, dir: false))
           end
         when :local
+          mkdir!(*file_set.map { |file| File.dirname(file) })
           FileUtils.touch(file_set, file_util_args)
         end
       end
@@ -128,7 +129,7 @@ module Masamune
         when :hdfs
           hadoop_fs('-mkdir', *dir_set)
         when :s3
-          # NOTE intentionally skip
+          touch! *dir_set.map { |dir| File.join(dir, '.not_empty') }
         when :local
           FileUtils.mkdir_p(dir_set, file_util_args)
         end
