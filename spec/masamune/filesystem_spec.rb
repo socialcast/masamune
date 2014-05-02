@@ -9,7 +9,9 @@ shared_examples_for 'Filesystem' do
 
   let(:old_dir) { Dir.mktmpdir('masamune') }
   let(:new_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
+  let(:other_new_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
   let(:new_file) { File.join(old_dir, SecureRandom.hex) }
+  let(:other_new_file) { File.join(old_dir, SecureRandom.hex) }
   let!(:old_file) {
     File.join(old_dir, SecureRandom.hex).tap do |file|
       FileUtils.touch file
@@ -240,19 +242,19 @@ shared_examples_for 'Filesystem' do
 
   describe '#touch!' do
     subject do
-      File.exists?(new_file)
+      File.exists?(new_file) && File.exists?(other_new_file)
     end
 
     context 'local' do
       before do
-        instance.touch!(new_file)
+        instance.touch!(new_file, other_new_file)
       end
       it { should be_true }
     end
 
     context 'hdfs' do
       before do
-        instance.touch!('file://' + new_file)
+        instance.touch!('file://' + new_file, 'file://' + other_new_file)
       end
       it { should be_true }
     end
@@ -260,7 +262,8 @@ shared_examples_for 'Filesystem' do
     context 's3' do
       before do
         filesystem.should_receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/file').at_most(:once)
-        instance.touch!('s3://bucket/file')
+        filesystem.should_receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/other_file').at_most(:once)
+        instance.touch!('s3://bucket/file', 's3://bucket/other_file')
       end
 
       it 'meets expectations' do; end
@@ -291,19 +294,19 @@ shared_examples_for 'Filesystem' do
 
   describe '#mkdir!' do
     subject do
-      Dir.exists?(new_dir)
+      Dir.exists?(new_dir) && Dir.exists?(other_new_dir)
     end
 
     context 'local directory' do
       before do
-        instance.mkdir!(new_dir)
+        instance.mkdir!(new_dir, other_new_dir)
       end
       it { should be_true }
     end
 
     context 'hdfs directory' do
       before do
-        instance.mkdir!('file://' + new_dir)
+        instance.mkdir!('file://' + new_dir, 'file://' + other_new_dir)
       end
       it { should be_true }
     end

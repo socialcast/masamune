@@ -106,7 +106,7 @@ module Masamune
             s3cmd('put', empty.path, s3b(file, dir: false))
           end
         when :local
-          FileUtils.touch(*file_set, file_util_args)
+          FileUtils.touch(file_set, file_util_args)
         end
       end
     end
@@ -130,7 +130,7 @@ module Masamune
         when :s3
           # NOTE intentionally skip
         when :local
-          FileUtils.mkdir_p(*dir_set, file_util_args)
+          FileUtils.mkdir_p(dir_set, file_util_args)
         end
       end
     end
