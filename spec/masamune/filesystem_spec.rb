@@ -256,6 +256,15 @@ shared_examples_for 'Filesystem' do
       end
       it { should be_true }
     end
+
+    context 's3' do
+      before do
+        filesystem.should_receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/file').at_most(:once)
+        instance.touch!('s3://bucket/file')
+      end
+
+      it 'meets expectations' do; end
+    end
   end
 
   describe '#exists?' do

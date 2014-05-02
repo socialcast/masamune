@@ -101,7 +101,10 @@ module Masamune
         when :hdfs
           hadoop_fs('-touchz', *file_set)
         when :s3
-          # NOTE intentionally skip
+          empty = Tempfile.new('masamune')
+          file_set.each do |file|
+            s3cmd('put', empty.path, s3b(file, dir: false))
+          end
         when :local
           FileUtils.touch(*file_set, file_util_args)
         end
