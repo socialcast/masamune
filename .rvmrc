@@ -1,7 +1,7 @@
 if [ -z "${PREFERRED_RUBY_VERSION}" ] ; then
   PREFERRED_RUBY_VERSION=ruby-2.1.1
 fi
-FALLBACK_RUBY_VERSION=ruby-1.9.3-p484
+FALLBACK_RUBY_VERSION=default
 
 rvm use "${PREFERRED_RUBY_VERSION}@masamune" --create
 if [ $? -ne 0 ] ; then
