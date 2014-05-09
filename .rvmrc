@@ -1,5 +1,25 @@
-rvm gemset use default@masamune --create
+if [ -z "${PREFERRED_RUBY_VERSION}" ] ; then
+  PREFERRED_RUBY_VERSION=ruby-2.1.1
+fi
+FALLBACK_RUBY_VERSION=default
+
+rvm use "${PREFERRED_RUBY_VERSION}@masamune" --create
+if [ $? -ne 0 ] ; then
+  echo "WARNING: Falling back to ${FALLBACK_RUBY_VERSION}"
+  rvm use "${FALLBACK_RUBY_VERSION}@masamune" --create
+fi
+
 if ! command -v bundle ; then
   gem install bundler
-  bundle
+  bundle install --local
+fi
+
+if [[ "${RUBY_VERSION}" == *1.9.3* ]] ; then
+  export RUBY_HEAP_MIN_SLOTS=500000
+  export RUBY_GC_MALLOC_LIMIT=100000000
+  export RUBY_FREE_MIN=100000
+else
+  unset RUBY_HEAP_MIN_SLOTS
+  unset RUBY_GC_MALLOC_LIMIT
+  unset RUBY_FREE_MIN
 fi

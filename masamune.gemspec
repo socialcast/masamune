@@ -21,11 +21,12 @@ Gem::Specification.new do |s|
   s.add_dependency('tzinfo')
   s.add_dependency('chronic')
   s.add_dependency('tilt')
+  s.add_dependency('erubis')
 
   # Development
-  s.add_development_dependency('rake', '~> 0.9')
+  s.add_development_dependency('rake', '>= 0.9')
 
   # Testing
-  s.add_development_dependency('rspec', '~> 2.12')
+  s.add_development_dependency('rspec', '>= 2.12')
   s.add_development_dependency('debugger')
 end
