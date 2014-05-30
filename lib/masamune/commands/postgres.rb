@@ -23,6 +23,7 @@ module Masamune::Commands
       :block          => nil,
       :csv            => false,
       :variables      => {},
+      :tuple_output   => false,
       :template_debug => false
     }
 
@@ -58,7 +59,8 @@ module Masamune::Commands
       args << command_args_for_file if @file
       args << '--output=%s' % @output if @output
       args << '--no-align' << '--field-separator=,' << '--pset=footer' if @csv
-      args << '--command=%s' % @exec.gsub(/\n+/, ' ') if @exec
+      args << '--command=%s' % strip_sql(@exec) if @exec
+      args << '--pset=tuples_only' if @tuple_output
       args.flatten.compact
     end
 

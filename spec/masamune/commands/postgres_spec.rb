@@ -62,6 +62,11 @@ describe Masamune::Commands::Postgres do
       let(:attrs) { {csv: true} }
       it { should == [*default_command, '--no-align', '--field-separator=,', '--pset=footer'] }
     end
+
+    context 'with tuple_output' do
+      let(:attrs) { {tuple_output: true} }
+      it { should == [*default_command, '--pset=tuples_only'] }
+    end
   end
 
   it_should_behave_like Masamune::Commands::PostgresCommon
