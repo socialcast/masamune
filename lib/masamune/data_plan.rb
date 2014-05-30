@@ -52,7 +52,7 @@ class Masamune::DataPlan
         Masamune::DataPlanRule::TERMINAL
       end
     else
-      context.logger.error("Multiple rules match target #{target}") if target_matches.length > 1
+      logger.error("Multiple rules match target #{target}") if target_matches.length > 1
       target_matches.map(&:first).first
     end
   end
@@ -128,5 +128,9 @@ class Masamune::DataPlan
     yield
   ensure
     @current_depth -= 1
+  end
+
+  def postgres_helper
+    @postgres_helper ||= Masamune::Helpers::Postgres.new(context)
   end
 end

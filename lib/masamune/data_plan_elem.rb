@@ -11,18 +11,20 @@ class Masamune::DataPlanElem
   end
 
   def input
-    if glob
-      start_time.strftime(@rule.strftime_format.sub('*', glob))
-    else
-      start_time.strftime(@rule.strftime_format)
-    end
+    @input ||= start_time.strftime(strftime_format)
   end
   alias :path :input
   alias :table :input
 
+  def partition
+    input.split('_').last
+  end
+
   def exists?
     if rule.for_path?
       rule.plan.filesystem.exists?(path)
+    elsif rule.for_table_with_partition?
+      rule.plan.postgres_helper.table_exists?(table)
     elsif rule.for_table?
       table
     end
@@ -33,6 +35,8 @@ class Masamune::DataPlanElem
       rule.plan.filesystem.glob(path) do |new_path|
         yield new_path
       end
+    elsif rule.for_table_with_partition?
+      table if rule.plan.postgres_helper.table_exists?(table)
     elsif rule.for_table?
       table
     end
@@ -132,5 +136,11 @@ class Masamune::DataPlanElem
 
   def inspect
     {rule: rule, input: input, start_date: start_time.to_s, stop_date: stop_time.to_s, :options => options}.to_s
+  end
+
+  private
+
+  def strftime_format
+    @strftime_format ||= glob ? @rule.strftime_format.sub('*', glob) : @rule.strftime_format
   end
 end
