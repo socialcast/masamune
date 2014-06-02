@@ -23,3 +23,5 @@ else
   unset RUBY_GC_MALLOC_LIMIT
   unset RUBY_FREE_MIN
 fi
+
+PATH=$PATH:$(pwd)/bin
