@@ -109,7 +109,7 @@ module Masamune
             end
           end
 
-          after_initialize_invoke(options)
+          after_initialize_invoke(options.symbolize_keys)
         end
 
         no_tasks do
