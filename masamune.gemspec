@@ -29,5 +29,5 @@ Gem::Specification.new do |s|
   # Testing
   s.add_development_dependency('rspec', '>= 2.12')
   s.add_development_dependency('debugger') if RUBY_VERSION =~ /\A1/
-  s.add_development_dependency('debugger2') if RUBY_VERSION =~ /\A2/
+  s.add_development_dependency('byebug') if RUBY_VERSION =~ /\A2/
 end
