@@ -306,7 +306,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 missing file' do
       before do
-        filesystem.should_receive(:s3cmd).with('ls', 's3://bucket/file.txt', safe: true).
+        filesystem.should_receive(:s3cmd).with('ls', 's3://bucket/', safe: true).at_most(:once)
+        filesystem.should_receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|file.txt]}, safe: true).
           and_yield('')
       end
       let(:result) { instance.stat('s3://bucket/file.txt') }
@@ -332,7 +333,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 existing file' do
       before do
-        filesystem.should_receive(:s3cmd).with('ls', 's3://bucket/file.txt', safe: true).
+        filesystem.should_receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|file.txt]}, safe: true).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/file.txt))
       end
       let(:result) { instance.stat('s3://bucket/file.txt') }

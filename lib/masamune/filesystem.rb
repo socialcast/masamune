@@ -132,9 +132,12 @@ module Masamune
           yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").utc, size: size.to_i)
         end
       when :s3
-        s3cmd('ls', s3b(pattern), safe: true) do |line|
+        file_glob, file_regexp = glob_split(pattern)
+        s3cmd('ls', '--recursive', s3b(file_glob), safe: true) do |line|
+          next if line =~ /\$folder$/
           date, time, size, name = line.split(/\s+/)
           next unless size && date && time && name
+          next unless name =~ file_regexp
           yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").utc, size: size.to_i)
         end
       when :local
@@ -167,11 +170,10 @@ module Masamune
           yield q(pattern, line.split(/\s+/).last)
         end
       when :s3
-        head_glob, *tail_glob = pattern.split('*')
-        tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
-        s3cmd('ls', '--recursive', s3b(head_glob + '*'), safe: true) do |line|
+        file_glob, file_regexp = glob_split(pattern)
+        s3cmd('ls', '--recursive', s3b(file_glob), safe: true) do |line|
           next if line =~ /\$folder$/
-          next unless line =~ tail_regexp
+          next unless line =~ file_regexp
           yield q(pattern, line.split(/\s+/).last)
         end
       when :local
@@ -441,6 +443,20 @@ module Masamune
     def current_group
       Etc.getgrgid(Etc.getpwnam(current_user).gid).name
     rescue
+    end
+
+    # FIXME strip prefix from glob regexp
+    def glob_split(input)
+      if input.include?('*')
+        head, *tail = input.split('*')
+        [ head + '*', glob_to_regexp(tail.join('*')) ]
+      else
+        [ input, /.*/ ]
+      end
+    end
+
+    def glob_to_regexp(input)
+      Regexp.compile(input.split('*').map { |s| Regexp.escape(s) }.join('.*?') + '\z')
     end
   end
 end
