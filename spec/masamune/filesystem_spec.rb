@@ -15,7 +15,7 @@ shared_examples_for 'Filesystem' do
   let(:other_new_file) { File.join(old_dir, SecureRandom.hex) }
   let!(:old_file) {
     FileUtils.mkdir_p(old_dir)
-    File.join(old_dir, SecureRandom.hex).tap do |file|
+    File.join(old_dir, SecureRandom.hex + '.txt').tap do |file|
       FileUtils.touch file
     end
   }
@@ -328,6 +328,22 @@ shared_examples_for 'Filesystem' do
       its(:size) { should be_an(Integer) }
     end
 
+    context 'local existing file (recursive)' do
+      let(:result) { instance.stat(File.join(tmp_dir, '*')) }
+      its(:name) { should == old_file }
+      its(:mtime) { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
+      its(:mtime) { should be_a(Time) }
+      its(:size) { should be_an(Integer) }
+    end
+
+    context 'local existing file (with suffix)' do
+      let(:result) { instance.stat(File.join(old_dir, '*.txt')) }
+      its(:name) { should == old_file }
+      its(:mtime) { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
+      its(:mtime) { should be_a(Time) }
+      its(:size) { should be_an(Integer) }
+    end
+
     context 'hdfs existing file' do
       let(:result) { instance.stat('file://' + old_file) }
       its(:name) { should == 'file://' + old_file }
@@ -393,6 +409,21 @@ shared_examples_for 'Filesystem' do
     context 'local one matches' do
       let(:pattern) { File.join(File.dirname(old_file), '*') }
       it { should_not be_empty }
+      it { expect { |b| instance.glob(pattern, &b) }.to yield_with_args(old_file) }
+    end
+
+    context 'local one matches (recursive)' do
+      let(:pattern) { File.join(tmp_dir, '*') }
+      it { should have(2).items }
+      it { should include old_dir }
+      it { should include old_file }
+      it { expect { |b| instance.glob(pattern, &b) }.to yield_successive_args(old_dir, old_file) }
+    end
+
+    context 'local one matches (with suffix)' do
+      let(:pattern) { File.join(File.dirname(old_file), '*.txt') }
+      it { should have(1).items }
+      it { should include old_file }
       it { expect { |b| instance.glob(pattern, &b) }.to yield_with_args(old_file) }
     end
 

@@ -141,7 +141,7 @@ module Masamune
           yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").at_beginning_of_minute.utc, size: size.to_i)
         end
       when :local
-        Dir.glob(pattern) do |file|
+        Dir.glob(pattern.gsub(%r{/\*\Z}, '/**/*')) do |file|
           stat = File.stat(file)
           yield OpenStruct.new(name: file, mtime: stat.mtime.at_beginning_of_minute.utc, size: stat.size.to_i)
         end
@@ -181,7 +181,7 @@ module Masamune
           yield q(pattern, name)
         end
       when :local
-        Dir.glob(pattern) do |file|
+        Dir.glob(pattern.gsub(%r{/\*\Z}, '/**/*')) do |file|
           yield file
         end
       end

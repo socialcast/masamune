@@ -61,6 +61,8 @@ describe Masamune::CachedFilesystem do
       cached_filesystem.glob('/logs/box1_*.txt').should_not be_empty
       cached_filesystem.glob('/logs/box2_*.txt').should_not be_empty
       cached_filesystem.glob('/logs/box3_*.txt').should_not be_empty
+      cached_filesystem.glob('/logs/box*.txt').should have(3).items
+      cached_filesystem.glob('/logs/box*.csv').should be_empty
     end
   end
 
