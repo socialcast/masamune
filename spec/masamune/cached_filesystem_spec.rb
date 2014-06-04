@@ -7,10 +7,10 @@ describe Masamune::CachedFilesystem do
   context 'when path is present' do
     before do
       filesystem.touch!('/a/b/c/1.txt', '/a/b/c/2.txt', '/a/b/c/3.txt')
-      filesystem.should_receive(:glob).with('/a/b/c/*').once.and_call_original
+      filesystem.should_receive(:stat).with('/a/b/c/*').once.and_call_original
     end
 
-    it 'calls Filesystem#glob once for multiple calls' do
+    it 'calls Filesystem#stat once for multiple calls' do
       cached_filesystem.exists?('/a/b/c/1.txt').should be_true
       cached_filesystem.exists?('/a/b/c/2.txt').should be_true
       cached_filesystem.exists?('/a/b/c/3.txt').should be_true
@@ -28,10 +28,10 @@ describe Masamune::CachedFilesystem do
   context 'when path is present, checking for similar non existant paths' do
     before do
       filesystem.touch!('/y=2013/m=1/d=22/00000')
-      filesystem.should_receive(:glob).with('/y=2013/m=1/d=22/*').once.and_call_original
+      filesystem.should_receive(:stat).with('/y=2013/m=1/d=22/*').once.and_call_original
     end
 
-    it 'calls Filesystem#glob once for multiple calls' do
+    it 'calls Filesystem#stat once for multiple calls' do
       cached_filesystem.exists?('/y=2013/m=1/d=22/00000').should be_true
       cached_filesystem.exists?('/y=2013/m=1/d=22').should be_true
       cached_filesystem.exists?('/y=2013/m=1/d=2').should be_false
@@ -44,10 +44,10 @@ describe Masamune::CachedFilesystem do
   context 'when path is present, checking for similar existing paths' do
     before do
       filesystem.touch!('/logs/box1_123.txt', '/logs/box2_123.txt', '/logs/box3_123.txt')
-      filesystem.should_receive(:glob).with('/logs/*').once.and_call_original
+      filesystem.should_receive(:stat).with('/logs/*').once.and_call_original
     end
 
-    it 'calls Filesystem#glob once for multiple calls' do
+    it 'calls Filesystem#stat once for multiple calls' do
       cached_filesystem.exists?('/logs/box1_123.txt').should be_true
       cached_filesystem.exists?('/logs/box1_456.txt').should be_false
       cached_filesystem.exists?('/logs/box2_123.txt').should be_true
@@ -67,10 +67,11 @@ describe Masamune::CachedFilesystem do
   context 'when path is missing' do
     before do
       filesystem.touch!('/a/b/c')
-      filesystem.should_receive(:glob).with('/a/b/c/*').once.and_call_original
+      filesystem.should_receive(:stat).with('/a/b/c/*').once.and_call_original
+      filesystem.should_receive(:stat).with('/a/b/*').once.and_call_original
     end
 
-    it 'calls Filesystem#glob once for multiple calls' do
+    it 'calls Filesystem#stat once for multiple calls' do
       cached_filesystem.exists?('/a/b/c/1.txt').should be_false
       cached_filesystem.exists?('/a/b/c/2.txt').should be_false
       cached_filesystem.exists?('/a/b/c/3.txt').should be_false

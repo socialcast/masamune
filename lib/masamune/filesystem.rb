@@ -165,16 +165,20 @@ module Masamune
     def glob(pattern, &block)
       case type(pattern)
       when :hdfs
+        file_glob, file_regexp = glob_split(pattern)
         hadoop_fs('-ls', pattern, safe: true) do |line|
           next if line =~ /\AFound \d+ items/
-          yield q(pattern, line.split(/\s+/).last)
+          name = line.split(/\s+/).last
+          next unless name && name =~ file_regexp
+          yield q(pattern, name)
         end
       when :s3
         file_glob, file_regexp = glob_split(pattern)
         s3cmd('ls', '--recursive', s3b(file_glob), safe: true) do |line|
           next if line =~ /\$folder$/
-          next unless line =~ file_regexp
-          yield q(pattern, line.split(/\s+/).last)
+          name = line.split(/\s+/).last
+          next unless name && name =~ file_regexp
+          yield q(pattern, name)
         end
       when :local
         Dir.glob(pattern) do |file|
@@ -368,6 +372,22 @@ module Masamune
       end
     end
 
+    # FIXME strip prefix from glob regexp
+    def glob_split(input)
+      [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input) ]
+    end
+
+    def glob_to_regexp(input)
+      /\A#{Regexp.escape(input).gsub('\\*', '.*?')}\z/
+    end
+
+    def remote_prefix(dir)
+      dir[%r{\As3n?://.*?(?=/)}] ||
+      dir[%r{\As3n?://.*?\Z}] ||
+      dir[%r{\Afile://}] ||
+      dir[%r{\Ahdfs://}]
+    end
+
     private
 
     def eager_load_path(path)
@@ -419,13 +439,6 @@ module Masamune
     end
     alias :f :ensure_file
 
-    def remote_prefix(dir)
-      dir[%r{\As3n?://.*?(?=/)}] ||
-      dir[%r{\As3n?://.*?\Z}] ||
-      dir[%r{\Afile://}] ||
-      dir[%r{\Ahdfs://}]
-    end
-
     def add_immutable_path(path)
       @immutable_paths[path] = /\A#{Regexp.escape(path)}/
     end
@@ -443,20 +456,6 @@ module Masamune
     def current_group
       Etc.getgrgid(Etc.getpwnam(current_user).gid).name
     rescue
-    end
-
-    # FIXME strip prefix from glob regexp
-    def glob_split(input)
-      if input.include?('*')
-        head, *tail = input.split('*')
-        [ head + '*', glob_to_regexp(tail.join('*')) ]
-      else
-        [ input, /.*/ ]
-      end
-    end
-
-    def glob_to_regexp(input)
-      Regexp.compile(input.split('*').map { |s| Regexp.escape(s) }.join('.*?') + '\z')
     end
   end
 end

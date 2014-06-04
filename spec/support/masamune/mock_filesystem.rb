@@ -17,6 +17,7 @@ class Masamune::MockFilesystem < Delegator
     @files.include?(file)
   end
 
+  # FIXME replace with glob_to_regexp
   def glob(pattern, &block)
     matcher = Regexp.compile(pattern.gsub('*', '.*?'))
     @files.each do |elem|
@@ -28,6 +29,15 @@ class Masamune::MockFilesystem < Delegator
   def glob_sort(pattern, options = {})
     glob(pattern)
   end
+
+  # FIXME replace with glob_to_regexp
+  def stat(pattern, &block)
+    matcher = Regexp.compile(pattern.gsub('*', '.*?'))
+    @files.each do |elem|
+      yield OpenStruct.new(name: elem) if matcher.match(elem)
+    end
+  end
+  method_accumulate :stat
 
   def __getobj__
     @filesystem

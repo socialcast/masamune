@@ -11,23 +11,30 @@ module Masamune
     end
 
     def clear!
-      @path_cache = Set.new
+      @cache = {}
     end
 
     def exists?(file)
       glob(file).any?
     end
 
-    def glob(wildcard, &block)
-      pattern = /\A#{wildcard.gsub('*', '.*?')}\Z/
-      dirname = @filesystem.dirname(wildcard)
-
-      unless @path_cache.include?(dirname)
-        @path_cache.merge(glob_with_parent_paths(wildcard))
+    def stat(file_or_glob, &block)
+      update!(file_or_glob)
+      file_regexp = glob_to_regexp(file_or_glob)
+      @cache.keys.each do |file|
+        if file =~ file_regexp
+          @cache[file] ||= @filesystem.stat(file)
+          yield @cache[file]
+        end
       end
+    end
+    method_accumulate :stat
 
-      @path_cache.each do |file|
-        yield file if file =~ pattern
+    def glob(file_or_glob, &block)
+      update!(file_or_glob)
+      file_regexp = glob_to_regexp(file_or_glob)
+      @cache.keys.each do |file|
+        yield file if file =~ file_regexp
       end
     end
     method_accumulate :glob
@@ -50,19 +57,17 @@ module Masamune
 
     private
 
-    def glob_with_parent_paths(wildcard)
-      dirname = @filesystem.dirname(wildcard)
-      Set.new.tap do |paths|
-        @filesystem.glob(File.join(dirname, '*')) do |file|
-          @filesystem.parent_paths(file) { |path| paths.add path }
-          paths.add file
-        end
+    def update!(file_or_glob, &block)
+      return if file_or_glob.blank?
+      return if file_or_glob.chomp('/') == @filesystem.remote_prefix(file_or_glob)
 
-        if paths.empty? && @filesystem.exists?(dirname)
-          @filesystem.parent_paths(dirname) { |path| paths.add path }
-          paths.add dirname
-        end
+      dirname = @filesystem.dirname(file_or_glob)
+      return if @cache.key?(dirname)
+      @filesystem.stat(File.join(dirname, '*')) do |entry|
+        @filesystem.parent_paths(entry.name) { |path| @cache[path] ||= nil }
+        @cache[entry.name] = entry
       end
+      update!(dirname)
     end
   end
 end
