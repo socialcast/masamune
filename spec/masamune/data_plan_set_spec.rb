@@ -205,6 +205,71 @@ describe Masamune::DataPlanSet do
     end
   end
 
+  describe '#stale' do
+    context 'when source rule' do
+      let(:paths) { ['log/20130101.random_1.log', 'log/20130102.random_1.log'] }
+      let(:instance) { Masamune::DataPlanSet.new(source_rule, paths) }
+
+      subject(:stale_sources) do
+        instance.stale
+      end
+
+      it { stale_sources.should be_empty }
+    end
+
+    let(:paths) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03'] }
+    let(:instance) { Masamune::DataPlanSet.new(target_rule, paths) }
+    let(:prev_time) { Time.parse('2013-01-01 09:00:00 +0000') }
+    let(:next_time) { Time.parse('2013-01-01 10:00:00 +0000') }
+
+    before do
+      fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log', mtime: prev_time)
+      fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log', mtime: prev_time)
+      fs.touch!('log/20130103.random_1.log', 'log/20130103.random_2.log', mtime: prev_time)
+      fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03', mtime: prev_time)
+    end
+
+    subject(:stale_targets) do
+      instance.stale
+    end
+
+    context 'when none stale targets' do
+      it { stale_targets.should be_empty }
+    end
+
+    context 'when some stale targets (first source)' do
+      before do
+        fs.touch!('log/20130101.random_1.log', mtime: next_time)
+      end
+
+      it { stale_targets.should have(1).items }
+      it { stale_targets.should include 'table/y=2013/m=01/d=01' }
+    end
+
+    context 'when some stale targets (second source)' do
+      before do
+        fs.touch!('log/20130101.random_2.log', mtime: next_time)
+      end
+
+      it { stale_targets.should have(1).items }
+      it { stale_targets.should include 'table/y=2013/m=01/d=01' }
+    end
+
+    context 'when all stale targets' do
+      before do
+        fs.touch!('log/20130101.random_1.log', mtime: next_time)
+        fs.touch!('log/20130102.random_2.log', mtime: next_time)
+        fs.touch!('log/20130103.random_1.log', mtime: next_time)
+        fs.touch!('log/20130103.random_2.log', mtime: next_time)
+      end
+
+      it { stale_targets.should have(3).items }
+      it { stale_targets.should include 'table/y=2013/m=01/d=01' }
+      it { stale_targets.should include 'table/y=2013/m=01/d=02' }
+      it { stale_targets.should include 'table/y=2013/m=01/d=03' }
+    end
+  end
+
   describe '#with_grain' do
     let(:paths) { ['table/y=2012/m=12/d=29', 'table/y=2012/m=12/d=30', 'table/y=2012/m=12/d=31',
                    'table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=02/d=01', ] }

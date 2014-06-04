@@ -60,6 +60,14 @@ class Masamune::DataPlanSet < Set
   end
   method_accumulate :actionable, lambda { |set| set.class.new(set.rule) }
 
+  def stale(&block)
+    return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_sources?
+    self.each do |target|
+      yield target if target.sources.existing.any? { |source| source.last_modified_at > target.last_modified_at }
+    end
+  end
+  method_accumulate :stale, lambda { |set| set.class.new(set.rule) }
+
   # TODO detect & warn or correct if coarser grain set is incomplete
   def with_grain(grain, &block)
     seen = Set.new
