@@ -22,6 +22,7 @@ module Masamune::Helpers
 
     # TODO consider bulk operation
     def last_modified_at(table, column = 'last_modified_at')
+      return unless table_exists?(table)
       value = nil
       postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true) do |line|
         begin
@@ -33,6 +34,7 @@ module Masamune::Helpers
     end
 
     def truncate_table(table)
+      return unless table_exists?(table)
       postgres(exec: "TRUNCATE TABLE #{table};", fail_fast: true).success?
     end
 
