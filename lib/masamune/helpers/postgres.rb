@@ -20,6 +20,17 @@ module Masamune::Helpers
       tables.include?(table)
     end
 
+    def last_modified_at(table, column = 'last_modified_at')
+      value = nil
+      postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true) do |line|
+        begin
+          value = DateTime.parse(line.strip).at_beginning_of_minute.utc
+        rescue ArgumentError
+        end
+      end
+      value
+    end
+
     def tables
       @table_cache ||= begin
         tables = Set.new
