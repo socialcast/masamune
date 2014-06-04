@@ -129,7 +129,7 @@ module Masamune
           next if line =~ /\AFound \d+ items/
           size, date, time, name = line.split(/\s+/).last(4)
           next unless size && date && time && name
-          yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").utc, size: size.to_i)
+          yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").at_beginning_of_minute.utc, size: size.to_i)
         end
       when :s3
         file_glob, file_regexp = glob_split(pattern)
@@ -138,12 +138,12 @@ module Masamune
           date, time, size, name = line.split(/\s+/)
           next unless size && date && time && name
           next unless name =~ file_regexp
-          yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").utc, size: size.to_i)
+          yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").at_beginning_of_minute.utc, size: size.to_i)
         end
       when :local
         Dir.glob(pattern) do |file|
           stat = File.stat(file)
-          yield OpenStruct.new(name: file, mtime: stat.mtime.utc, size: stat.size.to_i)
+          yield OpenStruct.new(name: file, mtime: stat.mtime.at_beginning_of_minute.utc, size: stat.size.to_i)
         end
       end
     end

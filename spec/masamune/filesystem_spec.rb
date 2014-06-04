@@ -323,7 +323,7 @@ shared_examples_for 'Filesystem' do
     context 'local existing file' do
       let(:result) { instance.stat(old_file) }
       its(:name) { should == old_file }
-      its(:mtime) { should == File.stat(old_file).mtime.utc }
+      its(:mtime) { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
       its(:mtime) { should be_a(Time) }
       its(:size) { should be_an(Integer) }
     end
@@ -331,7 +331,6 @@ shared_examples_for 'Filesystem' do
     context 'hdfs existing file' do
       let(:result) { instance.stat('file://' + old_file) }
       its(:name) { should == 'file://' + old_file }
-      # NOTE limitation of batch file stat with hadoop fs shell
       its(:mtime) { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
       its(:mtime) { should be_a(Time) }
       its(:size) { should be_an(Integer) }
