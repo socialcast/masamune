@@ -4,7 +4,7 @@ describe Masamune::Helpers::Postgres do
   let(:context) { double }
   let(:instance) { described_class.new(context) }
 
-  describe '.table_exists' do
+  describe '#table_exists' do
     before do
       instance.should_receive(:postgres).with(hash_including(:exec, :fail_fast)).and_return(mock_success)
       instance.should_receive(:postgres).with(hash_including(:exec, :tuple_output)).and_yield('  foo').and_yield('  bar').and_yield('  baz')
@@ -28,7 +28,7 @@ describe Masamune::Helpers::Postgres do
     end
   end
 
-  describe '.last_modified_at' do
+  describe '#last_modified_at' do
     before do
       instance.should_receive(:postgres).with(hash_including(:exec, :tuple_output)).and_yield(output)
     end
@@ -53,5 +53,15 @@ describe Masamune::Helpers::Postgres do
 
       it { should be_nil }
     end
+  end
+
+  describe '#truncate_table' do
+    before do
+      instance.should_receive(:postgres).with(exec: 'TRUNCATE TABLE foo;', fail_fast: true).and_return(mock_success)
+      instance.truncate_table('foo')
+    end
+
+
+    it 'meets expectations' do; end
   end
 end
