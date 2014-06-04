@@ -37,10 +37,10 @@ describe Masamune::Helpers::Postgres do
     subject { instance.last_modified_at('foo') }
 
     context 'with expected output' do
-      let(:output) { '  2014-06-04 09:15:52.027382' }
+      let(:output) { '  2014-06-04 10:20:19.539656-07' }
 
-      it { should be_a(DateTime) }
-      it { should == DateTime.civil(2014,6,4,9,15) }
+      it { should be_a(Time) }
+      it { should == Time.parse('2014-06-04 17:20:00 +0000') }
     end
 
     context 'with blank output' do

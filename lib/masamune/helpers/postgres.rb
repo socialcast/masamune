@@ -26,7 +26,7 @@ module Masamune::Helpers
       value = nil
       postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true) do |line|
         begin
-          value = DateTime.parse(line.strip).at_beginning_of_minute.utc
+          value = Time.parse(line.strip).at_beginning_of_minute.utc
         rescue ArgumentError
         end
       end
