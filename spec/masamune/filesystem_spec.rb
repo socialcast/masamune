@@ -7,20 +7,26 @@ require 'securerandom'
 shared_examples_for 'Filesystem' do
   let(:filesystem) { Masamune::Filesystem.new }
 
-  let(:old_dir) { Dir.mktmpdir('masamune') }
-  let(:new_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
-  let(:other_new_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
+  let(:tmp_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
+  let(:old_dir) { File.join(tmp_dir, SecureRandom.hex) }
+  let(:new_dir) { File.join(tmp_dir, SecureRandom.hex) }
+  let(:other_new_dir) { File.join(tmp_dir, SecureRandom.hex) }
   let(:new_file) { File.join(old_dir, SecureRandom.hex) }
   let(:other_new_file) { File.join(old_dir, SecureRandom.hex) }
   let!(:old_file) {
+    FileUtils.mkdir_p(old_dir)
     File.join(old_dir, SecureRandom.hex).tap do |file|
       FileUtils.touch file
     end
   }
 
+  before do
+    filesystem.configuration.retries = 0
+    FileUtils.mkdir_p(old_dir)
+  end
+
   after do
-    FileUtils.rmdir(old_dir)
-    FileUtils.rmdir(new_dir)
+    FileUtils.rmdir(tmp_dir)
   end
 
   describe '#get_path' do
@@ -529,7 +535,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to hdfs dir' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
+        filesystem.should_receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_file', 'file://' + new_dir)
         instance.copy_file('s3://bucket/old_file', 'file://' + new_dir)
       end
@@ -613,7 +619,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to hdfs dir' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
+        filesystem.should_receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
         instance.copy_dir('s3://bucket/old_dir', 'file://' + new_dir)
       end
@@ -741,7 +747,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to hdfs file' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + File.dirname(new_file))
+        filesystem.should_receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + File.dirname(new_file))
         filesystem.should_receive(:hadoop_fs).with('-mv', 's3n://bucket/old_file', 'file://' + new_file)
         instance.move_file('s3://bucket/old_file', 'file://' + new_file)
       end
@@ -837,7 +843,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to hdfs dir' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
+        filesystem.should_receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
         filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir/')
         filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir_$folder$')

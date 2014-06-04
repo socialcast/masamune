@@ -153,7 +153,7 @@ module Masamune
       dirs.group_by { |path| type(path) }.each do |type, dir_set|
         case type
         when :hdfs
-          hadoop_fs('-mkdir', *dir_set)
+          hadoop_fs('-mkdir', '-p', *dir_set)
         when :s3
           touch! *dir_set.map { |dir| File.join(dir, '.not_empty') }
         when :local

@@ -14,6 +14,8 @@ class Masamune::Configuration
   attr_accessor :debug
   attr_accessor :no_op
   attr_accessor :dry_run
+  attr_accessor :retries
+  attr_accessor :backoff
   attr_accessor :params
 
   COMMANDS = %w(hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd postgres postgres_admin)
@@ -31,6 +33,8 @@ class Masamune::Configuration
     self.debug    = false
     self.no_op    = false
     self.dry_run  = false
+    self.retries  = 3
+    self.backoff  = 5
     self.params   = HashWithIndifferentAccess.new
 
     @templates    = Hash.new { |h,k| h[k] = {} }

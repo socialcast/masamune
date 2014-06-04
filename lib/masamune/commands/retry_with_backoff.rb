@@ -4,14 +4,12 @@ module Masamune::Commands
   class RetryWithBackoff
     include Masamune::ProxyDelegate
 
-    DEFAULT_RETRIES = 3
-    DEFAULT_BACKOFF = 5
     MAX_RETRY_EXIT_STATUS = 8
 
     def initialize(delegate, attrs = {})
       @delegate     = delegate
-      @retries      = attrs.fetch(:retries, DEFAULT_RETRIES)
-      @backoff      = attrs.fetch(:backoff, DEFAULT_BACKOFF)
+      @retries      = attrs.fetch(:retries, configuration.retries)
+      @backoff      = attrs.fetch(:backoff, configuration.backoff)
       @retry_count  = 0
     end
 

@@ -7,6 +7,7 @@ describe Masamune::Commands::RetryWithBackoff do
 
   before do
     delegate.stub(:logger).and_return(double)
+    delegate.stub(:configuration).and_return(double(retries: 0, backoff: 0))
   end
 
   describe '#around_execute' do
