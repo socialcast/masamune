@@ -21,8 +21,9 @@ module Masamune::Helpers
     end
 
     # TODO consider bulk operation
-    def last_modified_at(table, column = 'last_modified_at')
+    def last_modified_at(table, options = {})
       return unless table_exists?(table)
+      column = options.fetch(:column, 'last_modified_at')
       value = nil
       postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true) do |line|
         begin

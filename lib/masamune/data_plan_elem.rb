@@ -30,6 +30,14 @@ class Masamune::DataPlanElem
     end
   end
 
+  def last_modified_at
+    if rule.for_path?
+      rule.plan.filesystem.stat(path).mtime
+    elsif rule.for_table?
+      rule.plan.postgres_helper.last_modified_at(table, @options)
+    end
+  end
+
   def set(&block)
     if rule.for_path?
       rule.plan.filesystem.glob(path) do |new_path|
