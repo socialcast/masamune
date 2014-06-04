@@ -63,7 +63,7 @@ class Masamune::DataPlanSet < Set
   def stale(&block)
     return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_sources?
     self.each do |target|
-      yield target if target.sources.existing.any? { |source| source.last_modified_at > target.last_modified_at }
+      yield target if target.sources.existing.any? { |source| target_stale?(source, target) }
     end
   end
   method_accumulate :stale, lambda { |set| set.class.new(set.rule) }
@@ -122,5 +122,11 @@ class Masamune::DataPlanSet < Set
     else
       raise "Unhandled enum class #{enum.class}"
     end
+  end
+
+  def target_stale?(source, target)
+    target.last_modified_at != Masamune::DataPlanElem::MISSING_MODIFIED_AT &&
+    source.last_modified_at != Masamune::DataPlanElem::MISSING_MODIFIED_AT &&
+    source.last_modified_at > target.last_modified_at
   end
 end

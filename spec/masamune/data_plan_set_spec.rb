@@ -268,6 +268,14 @@ describe Masamune::DataPlanSet do
       it { stale_targets.should include 'table/y=2013/m=01/d=02' }
       it { stale_targets.should include 'table/y=2013/m=01/d=03' }
     end
+
+    context 'when missing source last_modified_at' do
+      before do
+        fs.touch!('log/20130101.random_1.log', mtime: Masamune::DataPlanElem::MISSING_MODIFIED_AT)
+      end
+
+      it { stale_targets.should be_empty }
+    end
   end
 
   describe '#with_grain' do
