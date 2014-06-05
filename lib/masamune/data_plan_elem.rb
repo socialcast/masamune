@@ -40,15 +40,24 @@ class Masamune::DataPlanElem
     end || MISSING_MODIFIED_AT
   end
 
+  def remove
+    if rule.for_path?
+      # TODO detect partition, drop if not immutable
+      # rule.plan.filesystem.remove_dir(path)
+    elsif rule.for_table_with_partition?
+      rule.plan.postgres_helper.truncate_table(table)
+    end
+  end
+
   def set(&block)
     if rule.for_path?
       rule.plan.filesystem.glob(path) do |new_path|
         yield new_path
       end
     elsif rule.for_table_with_partition?
-      table if rule.plan.postgres_helper.table_exists?(table)
+      yield table if rule.plan.postgres_helper.table_exists?(table)
     elsif rule.for_table?
-      table
+      # TODO set is used to construct set of elements in missing
     end
   end
   method_accumulate :set

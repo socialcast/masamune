@@ -100,6 +100,11 @@ class Masamune::DataPlan
   end
 
   def execute(rule, options = {})
+    targets(rule).stale do |target|
+      logger.warn("Detected stale target #{target.input}, removing")
+      target.remove
+    end
+
     return if targets(rule).missing.empty?
 
     constrain_max_depth(rule) do
@@ -114,6 +119,7 @@ class Masamune::DataPlan
     @current_rule = rule
     @command_rules[rule].call(self, rule, options)
     @set_cache.clear
+    postgres_helper.clear!
   ensure
     @current_rule = nil
   end

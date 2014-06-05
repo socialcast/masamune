@@ -40,6 +40,18 @@ class Masamune::DataPlanRule
     @options.key?(:table) && @options.key?(:partition)
   end
 
+  def path
+    @options[:path]
+  end
+
+  def table
+    @options[:table]
+  end
+
+  def partition
+    @options[:partition]
+  end
+
   def ==(other)
     plan    == other.plan &&
     name    == other.name &&
@@ -58,11 +70,13 @@ class Masamune::DataPlanRule
 
   def pattern
     @pattern ||= begin
-      if path = @options[:path]
+      if for_path?
         path.respond_to?(:call) ? path.call(plan.filesystem) : path
-      elsif @options[:table]
-        [@options[:table] , @options[:partition]].join('_')
-      end
+      elsif for_table_with_partition?
+        [table , partition].join('_')
+      elsif for_table?
+        table
+      end.to_s
     end
   end
 
