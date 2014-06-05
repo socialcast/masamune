@@ -59,7 +59,6 @@ module Masamune
 
     def update!(file_or_glob, expand = true, &block)
       return if file_or_glob.blank?
-      return if file_or_glob.chomp('/') == @filesystem.remote_prefix(file_or_glob)
 
       dirname = @filesystem.dirname(file_or_glob)
       return if @cache.key?(dirname)
@@ -67,7 +66,7 @@ module Masamune
         @filesystem.parent_paths(entry.name) { |path| @cache[path] ||= nil }
         @cache[entry.name] = entry
       end
-      update!(dirname, false) if expand
+      update!(dirname, false) if expand && !@filesystem.root_path?(dirname)
     end
   end
 end

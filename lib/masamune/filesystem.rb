@@ -79,6 +79,12 @@ module Masamune
     end
     method_accumulate :parent_paths
 
+    def root_path?(path)
+      raise ArgumentError, 'path cannot be nil' if path.nil?
+      raise ArgumentError, 'path cannot be blank' if path.blank?
+      parent_paths(path).length < 1
+    end
+
     def resolve_file(paths = [])
       Array.wrap(paths).select { |path| File.exists?(path) && File.file?(path) }.first
     end
@@ -381,13 +387,6 @@ module Masamune
       /\A#{Regexp.escape(input).gsub('\\*', '.*?')}\z/
     end
 
-    def remote_prefix(dir)
-      dir[%r{\As3n?://.*?(?=/)}] ||
-      dir[%r{\As3n?://.*?\Z}] ||
-      dir[%r{\Afile://}] ||
-      dir[%r{\Ahdfs://}]
-    end
-
     private
 
     def eager_load_path(path)
@@ -399,6 +398,13 @@ module Masamune
       else
         raise "Unknown path #{path.inspect}"
       end
+    end
+
+    def remote_prefix(dir)
+      dir[%r{\As3n?://.*?(?=/)}] ||
+      dir[%r{\As3n?://.*?\Z}] ||
+      dir[%r{\Afile://}] ||
+      dir[%r{\Ahdfs://}]
     end
 
     def eager_load_paths?

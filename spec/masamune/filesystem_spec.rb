@@ -104,6 +104,55 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  describe '#root_path?' do
+    subject { instance.root_path?(path) }
+
+    context 'with nil' do
+      let(:path) { nil }
+      it { expect { |b| subject }.to raise_error ArgumentError }
+    end
+
+    context 'with blank' do
+      let(:path) { ' ' }
+      it { expect { |b| subject }.to raise_error ArgumentError }
+    end
+
+    context 'with local root' do
+      let(:path) { '/' }
+      it { should be_true }
+    end
+
+    context 'with local non-root' do
+      let(:path) { '/tmp' }
+      it { should be_false }
+    end
+
+    context 'with hdfs root' do
+      let(:path) { 'file:///' }
+      it { should be_true }
+    end
+
+    context 'with hdfs non-root' do
+      let(:path) { 'file:///tmp' }
+      it { should be_false }
+    end
+
+    context 'with s3 root' do
+      let(:path) { 's3://bucket/' }
+      it { should be_true }
+    end
+
+    context 'with s3 non-root' do
+      let(:path) { 's3://bucket/tmp' }
+      it { should be_false }
+    end
+
+    context 'with s3 bucket' do
+      let(:path) { 's3://bucket' }
+      it { should be_true }
+    end
+  end
+
   describe '#resolve_file' do
     subject { instance.resolve_file(paths) }
 
