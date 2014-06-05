@@ -16,7 +16,6 @@ module Masamune::Actions
       command.interactive? ? command.replace : command.execute
     end
 
-    # TODO use database_exists?
     def create_database_if_not_exists
       unless postgres_helper.database_exists?
         postgres_admin(action: :create, database: configuration.postgres[:database], safe: true)
