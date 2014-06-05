@@ -13,6 +13,6 @@ module Masamune
       @context = context
     end
 
-    def_delegators :context, :configure, :configuration, :with_exclusive_lock, :logger, :filesystem, :filesystem=, :trace, :console
+    def_delegators :context, :configure, :configuration, :with_exclusive_lock, :logger, :filesystem, :filesystem=, :trace, :console, :postgres_helper
   end
 end

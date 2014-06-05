@@ -111,6 +111,15 @@ module Masamune
       end
     end
 
+    def postgres_helper
+      @postgres_helper ||= Masamune::Helpers::Postgres.new(self)
+    end
+
+    def clear!
+      filesystem.clear!
+      postgres_helper.clear!
+    end
+
     private
 
     def lock_file(name)

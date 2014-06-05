@@ -104,6 +104,7 @@ class Masamune::DataPlan
       logger.warn("Detected stale target #{target.input}, removing")
       target.remove
     end
+    context.clear!
 
     return if targets(rule).missing.empty?
 
@@ -119,7 +120,7 @@ class Masamune::DataPlan
     @current_rule = rule
     @command_rules[rule].call(self, rule, options)
     @set_cache.clear
-    postgres_helper.clear!
+    context.clear!
   ensure
     @current_rule = nil
   end
@@ -134,9 +135,5 @@ class Masamune::DataPlan
     yield
   ensure
     @current_depth -= 1
-  end
-
-  def postgres_helper
-    @postgres_helper ||= Masamune::Helpers::Postgres.new(context)
   end
 end

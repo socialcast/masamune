@@ -40,6 +40,9 @@ class Masamune::MockFilesystem < Delegator
   end
   method_accumulate :stat
 
+  def clear!
+  end
+
   def __getobj__
     @filesystem
   end
