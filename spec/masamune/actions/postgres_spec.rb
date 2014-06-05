@@ -13,9 +13,11 @@ describe Masamune::Actions::Postgres do
 
   let(:instance) { klass.new }
   let(:configuration) { {database: 'test'} }
+  let(:postgres_helper) { double }
 
   before do
     instance.stub(:filesystem) { filesystem }
+    instance.stub(:postgres_helper) { postgres_helper }
     instance.stub_chain(:configuration, :postgres).and_return(configuration)
     instance.stub_chain(:configuration, :with_quiet).and_yield
   end
@@ -42,7 +44,7 @@ describe Masamune::Actions::Postgres do
 
     context 'when database does not exist' do
       before do
-        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_failure)
+        postgres_helper.should_receive(:database_exists?).and_return(false)
         instance.should_receive(:postgres_admin).with(action: :create, database: 'test', safe: true).once
         after_initialize_invoke
       end
@@ -51,7 +53,7 @@ describe Masamune::Actions::Postgres do
 
     context 'when database exists' do
       before do
-        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
+        postgres_helper.should_receive(:database_exists?).and_return(true)
         instance.should_receive(:postgres_admin).never
         after_initialize_invoke
       end
@@ -61,7 +63,7 @@ describe Masamune::Actions::Postgres do
     context 'when setup_files are configured' do
       let(:setup_files) { ['setup.psql'] }
       before do
-        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
+        postgres_helper.should_receive(:database_exists?).and_return(true)
         instance.should_receive(:postgres).with(file: setup_files.first).once
         after_initialize_invoke
       end
@@ -72,7 +74,7 @@ describe Masamune::Actions::Postgres do
       let(:schema_files) { ['schema.psql'] }
       before do
         filesystem.touch!(*schema_files)
-        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
+        postgres_helper.should_receive(:database_exists?).and_return(true)
         instance.should_receive(:postgres).with(file: schema_files.first).once
         after_initialize_invoke
       end
@@ -83,7 +85,7 @@ describe Masamune::Actions::Postgres do
       let(:schema_files) { ['schema*.psql'] }
       before do
         filesystem.touch!('schema_1.psql', 'schema_2.psql')
-        instance.should_receive(:postgres).with(exec: 'SELECT version();', fail_fast: false).and_return(mock_success)
+        postgres_helper.should_receive(:database_exists?).and_return(true)
         instance.should_receive(:postgres).with(file: 'schema_1.psql').once
         instance.should_receive(:postgres).with(file: 'schema_2.psql').once
         after_initialize_invoke
