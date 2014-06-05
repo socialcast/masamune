@@ -20,11 +20,10 @@ class Masamune::MockFilesystem < Delegator
     @files.keys.include?(file)
   end
 
-  # FIXME replace with glob_to_regexp
   def glob(pattern, &block)
-    matcher = Regexp.compile(pattern.gsub('*', '.*?'))
+    file_regexp = glob_to_regexp(pattern)
     @files.keys.each do |name|
-      yield name if matcher.match(name)
+      yield name if name =~ file_regexp
     end
   end
   method_accumulate :glob
@@ -33,11 +32,10 @@ class Masamune::MockFilesystem < Delegator
     glob(pattern)
   end
 
-  # FIXME replace with glob_to_regexp
   def stat(pattern, &block)
-    matcher = Regexp.compile(pattern.gsub('*', '.*?'))
+    file_regexp = glob_to_regexp(pattern)
     @files.each do |name, stat|
-      yield stat if matcher.match(name)
+      yield stat if name =~ file_regexp
     end
   end
   method_accumulate :stat
