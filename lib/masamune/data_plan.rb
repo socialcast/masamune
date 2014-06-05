@@ -97,15 +97,21 @@ class Masamune::DataPlan
   def prepare(rule, options = {})
     @targets[rule].merge options.fetch(:targets, [])
     @sources[rule].merge options.fetch(:sources, [])
+
+    dirty = false
+    targets(rule).stale do |target|
+      if target.removable?
+        logger.warn("Detected stale target #{target.input}, removing")
+        target.remove
+        dirty = true
+      else
+        logger.warn("Detected stale target #{target.input}, skipping")
+      end
+    end
+    context.clear! if dirty
   end
 
   def execute(rule, options = {})
-    targets(rule).stale do |target|
-      logger.warn("Detected stale target #{target.input}, removing")
-      target.remove
-    end
-    context.clear!
-
     return if targets(rule).missing.empty?
 
     constrain_max_depth(rule) do

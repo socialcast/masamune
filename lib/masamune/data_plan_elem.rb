@@ -41,12 +41,13 @@ class Masamune::DataPlanElem
   end
 
   def remove
-    if rule.for_path?
-      # TODO detect partition, drop if not immutable
-      # rule.plan.filesystem.remove_dir(path)
-    elsif rule.for_table_with_partition?
+    if rule.for_table_with_partition?
       rule.plan.postgres_helper.drop_table(table)
     end
+  end
+
+  def removable?
+    rule.for_table_with_partition?
   end
 
   def set(&block)
