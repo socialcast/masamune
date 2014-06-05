@@ -20,7 +20,7 @@ module Masamune::Helpers
       tables.include?(table)
     end
 
-    # TODO consider bulk operation
+    # TODO consider bulk operation + caching
     def last_modified_at(table, options = {})
       column = options[:last_modified_at]
       return unless column
@@ -35,9 +35,9 @@ module Masamune::Helpers
       value
     end
 
-    def truncate_table(table)
+    def drop_table(table)
       return unless table_exists?(table)
-      postgres(exec: "TRUNCATE TABLE #{table};", fail_fast: true).success?
+      postgres(exec: "DROP TABLE #{table};", fail_fast: true).success?
     end
 
     def tables

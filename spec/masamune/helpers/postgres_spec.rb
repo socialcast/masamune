@@ -71,11 +71,11 @@ describe Masamune::Helpers::Postgres do
     end
   end
 
-  describe '#truncate_table' do
+  describe '#drop_table' do
     before do
       instance.should_receive(:table_exists?).and_return(true)
-      instance.should_receive(:postgres).with(exec: 'TRUNCATE TABLE foo;', fail_fast: true).and_return(mock_success)
-      instance.truncate_table('foo')
+      instance.should_receive(:postgres).with(exec: 'DROP TABLE foo;', fail_fast: true).and_return(mock_success)
+      instance.drop_table('foo')
     end
 
 
