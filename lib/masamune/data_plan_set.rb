@@ -127,6 +127,6 @@ class Masamune::DataPlanSet < Set
   def target_stale?(source, target)
     target.last_modified_at != Masamune::DataPlanElem::MISSING_MODIFIED_AT &&
     source.last_modified_at != Masamune::DataPlanElem::MISSING_MODIFIED_AT &&
-    source.last_modified_at > target.last_modified_at
+    source.last_modified_at >= target.last_modified_at
   end
 end

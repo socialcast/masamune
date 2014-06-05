@@ -219,14 +219,15 @@ describe Masamune::DataPlanSet do
 
     let(:paths) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03'] }
     let(:instance) { Masamune::DataPlanSet.new(target_rule, paths) }
-    let(:prev_time) { Time.parse('2013-01-01 09:00:00 +0000') }
-    let(:next_time) { Time.parse('2013-01-01 10:00:00 +0000') }
+    let(:past_time) { Time.parse('2013-01-01 09:00:00 +0000') }
+    let(:present_time) { Time.parse('2013-01-01 09:30:00 +0000') }
+    let(:future_time) { Time.parse('2013-01-01 10:00:00 +0000') }
 
     before do
-      fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log', mtime: prev_time)
-      fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log', mtime: prev_time)
-      fs.touch!('log/20130103.random_1.log', 'log/20130103.random_2.log', mtime: prev_time)
-      fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03', mtime: prev_time)
+      fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log', mtime: past_time)
+      fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log', mtime: past_time)
+      fs.touch!('log/20130103.random_1.log', 'log/20130103.random_2.log', mtime: past_time)
+      fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03', mtime: present_time)
     end
 
     subject(:stale_targets) do
@@ -239,7 +240,7 @@ describe Masamune::DataPlanSet do
 
     context 'when some stale targets (first source)' do
       before do
-        fs.touch!('log/20130101.random_1.log', mtime: next_time)
+        fs.touch!('log/20130101.random_1.log', mtime: future_time)
       end
 
       it { stale_targets.should have(1).items }
@@ -248,7 +249,16 @@ describe Masamune::DataPlanSet do
 
     context 'when some stale targets (second source)' do
       before do
-        fs.touch!('log/20130101.random_2.log', mtime: next_time)
+        fs.touch!('log/20130101.random_2.log', mtime: future_time)
+      end
+
+      it { stale_targets.should have(1).items }
+      it { stale_targets.should include 'table/y=2013/m=01/d=01' }
+    end
+
+    context 'when some stale targets (tie breaker)' do
+      before do
+        fs.touch!('log/20130101.random_1.log', mtime: present_time)
       end
 
       it { stale_targets.should have(1).items }
@@ -257,10 +267,10 @@ describe Masamune::DataPlanSet do
 
     context 'when all stale targets' do
       before do
-        fs.touch!('log/20130101.random_1.log', mtime: next_time)
-        fs.touch!('log/20130102.random_2.log', mtime: next_time)
-        fs.touch!('log/20130103.random_1.log', mtime: next_time)
-        fs.touch!('log/20130103.random_2.log', mtime: next_time)
+        fs.touch!('log/20130101.random_1.log', mtime: future_time)
+        fs.touch!('log/20130102.random_2.log', mtime: future_time)
+        fs.touch!('log/20130103.random_1.log', mtime: future_time)
+        fs.touch!('log/20130103.random_2.log', mtime: future_time)
       end
 
       it { stale_targets.should have(3).items }
