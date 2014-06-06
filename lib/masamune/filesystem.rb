@@ -378,7 +378,6 @@ module Masamune
       end
     end
 
-    # FIXME strip prefix from glob regexp
     def glob_split(input)
       [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input) ]
     end
