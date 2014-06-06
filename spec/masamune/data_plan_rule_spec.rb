@@ -26,15 +26,13 @@ describe Masamune::DataPlanRule do
   end
 
   describe '#bind_date' do
-    subject do
-      instance.bind_date(input_date)
-    end
+    subject(:elem) { instance.bind_date(input_date) }
 
     context 'with default' do
       let(:input_date) { DateTime.civil(2013,04,05,23,13) }
 
       describe '#path' do
-        subject { super().path }
+        subject { elem.path }
         it { should == 'report/2013-04-05/23' }
       end
       let(:start_time) { DateTime.civil(2013,04,05,23) }
@@ -46,7 +44,7 @@ describe Masamune::DataPlanRule do
       let(:input_date) { DateTime.civil(2013,04,05,23,13) }
 
       describe '#path' do
-        subject { super().path }
+        subject { elem.path }
         it { should == 'logs/1365202800.log' }
       end
       let(:start_time) { DateTime.civil(2013,04,05,23) }
@@ -64,17 +62,17 @@ describe Masamune::DataPlanRule do
       let(:output_date) { DateTime.civil(2013,04,05,23) }
 
       describe '#path' do
-        subject { super().path }
+        subject { elem.path }
         it { should == input }
       end
 
       describe '#start_time' do
-        subject { super().start_time }
+        subject { elem.start_time }
         it { should == output_date }
       end
 
       describe '#stop_time' do
-        subject { super().stop_time }
+        subject { elem.stop_time }
         it { should == output_date.to_time + 1.hour }
       end
     end
@@ -85,17 +83,17 @@ describe Masamune::DataPlanRule do
       let(:output_date) { DateTime.civil(2013,04,05,23) }
 
       describe '#path' do
-        subject { super().path }
+        subject { elem.path }
         it { should == input }
       end
 
       describe '#start_time' do
-        subject { super().start_time }
+        subject { elem.start_time }
         it { should == output_date }
       end
 
       describe '#stop_time' do
-        subject { super().stop_time }
+        subject { elem.stop_time }
         it { should == output_date.to_time + 1.hour }
       end
     end
@@ -106,15 +104,13 @@ describe Masamune::DataPlanRule do
     let(:induced) { described_class.new(plan, name, type, {path: 'table/y=%Y/m=%m/d=%d/h=%H'}) }
     let(:elem) { primary.bind_input(input) }
 
-    subject do
-      instance.unify(elem, induced)
-    end
+    subject(:elem) { instance.unify(elem, induced) }
 
     context 'when input fully matches basis pattern' do
       let(:input) { 'report/2013-01-02/00' }
 
       describe '#path' do
-        subject { super().path }
+        subject { elem.path }
         it { should == 'table/y=2013/m=01/d=02/h=00' }
       end
     end
@@ -125,7 +121,7 @@ describe Masamune::DataPlanRule do
       let(:input) { 'report/2013-01-02/00' }
 
       describe '#path' do
-        subject { super().path }
+        subject { elem.path }
         it { should == 'table/2013-01' }
       end
     end
@@ -285,7 +281,7 @@ describe Masamune::DataPlanRule do
         let(:grain) { :hour }
 
         describe '#pattern' do
-          subject { super().pattern }
+          subject { new_instance.pattern }
           it { should == 'table/y=%Y/m=%m/d=%d/h=%H' }
         end
       end
@@ -294,7 +290,7 @@ describe Masamune::DataPlanRule do
         let(:grain) { :day }
 
         describe '#pattern' do
-          subject { super().pattern }
+          subject { new_instance.pattern }
           it { should == 'table/y=%Y/m=%m/d=%d' }
         end
       end
@@ -303,7 +299,7 @@ describe Masamune::DataPlanRule do
         let(:grain) { :month }
 
         describe '#pattern' do
-          subject { super().pattern }
+          subject { new_instance.pattern }
           it { should == 'table/y=%Y/m=%m' }
         end
       end
@@ -312,7 +308,7 @@ describe Masamune::DataPlanRule do
         let(:grain) { :year }
 
         describe '#pattern' do
-          subject { super().pattern }
+          subject { new_instance.pattern }
           it { should == 'table/y=%Y' }
         end
       end
@@ -325,7 +321,7 @@ describe Masamune::DataPlanRule do
         let(:grain) { :hour }
 
         describe '#pattern' do
-          subject { super().pattern }
+          subject { new_instance.pattern }
           it { should == 'table/%Y-%m-%d/%H' }
         end
       end
@@ -334,7 +330,7 @@ describe Masamune::DataPlanRule do
         let(:grain) { :day }
 
         describe '#pattern' do
-          subject { super().pattern }
+          subject { new_instance.pattern }
           it { should == 'table/%Y-%m-%d' }
         end
       end
@@ -343,7 +339,7 @@ describe Masamune::DataPlanRule do
         let(:grain) { :month }
 
         describe '#pattern' do
-          subject { super().pattern }
+          subject { new_instance.pattern }
           it { should == 'table/%Y-%m-%d' }
         end
       end
@@ -352,7 +348,7 @@ describe Masamune::DataPlanRule do
         let(:grain) { :year }
 
         describe '#pattern' do
-          subject { super().pattern }
+          subject { new_instance.pattern }
           it { should == 'table/%Y-%m-%d' }
         end
       end

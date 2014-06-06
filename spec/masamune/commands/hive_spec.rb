@@ -17,12 +17,13 @@ describe Masamune::Commands::Hive do
   describe '#stdin' do
     context 'with exec' do
       let(:attrs) { {exec: %q(SELECT * FROM table;)} }
-      subject { instance.stdin }
+      subject(:stdin) { instance.stdin }
+
       it { is_expected.to be_a(StringIO) }
 
       describe '#string' do
-        subject { super().string }
-        it { should == %q(SELECT * FROM table;) }
+        subject { stdin.string }
+        it { is_expected.to eq(%q(SELECT * FROM table;)) }
       end
     end
   end

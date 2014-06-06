@@ -348,7 +348,7 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#stat' do
-    subject { result.last }
+    subject(:stat) { result.last }
     context 'local missing file' do
       let(:result) { instance.stat(new_file) }
       it { is_expected.to be_nil }
@@ -373,22 +373,22 @@ shared_examples_for 'Filesystem' do
       let(:result) { instance.stat(old_file) }
 
       describe '#name' do
-        subject { super().name }
+        subject { stat.name }
         it { should == old_file }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should be_a(Time) }
       end
 
       describe '#size' do
-        subject { super().size }
+        subject { stat.size }
         it { should be_an(Integer) }
       end
     end
@@ -397,22 +397,22 @@ shared_examples_for 'Filesystem' do
       let(:result) { instance.stat(File.join(tmp_dir, '*')) }
 
       describe '#name' do
-        subject { super().name }
+        subject { stat.name }
         it { should == old_file }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should be_a(Time) }
       end
 
       describe '#size' do
-        subject { super().size }
+        subject { stat.size }
         it { should be_an(Integer) }
       end
     end
@@ -421,22 +421,22 @@ shared_examples_for 'Filesystem' do
       let(:result) { instance.stat(File.join(old_dir, '*.txt')) }
 
       describe '#name' do
-        subject { super().name }
+        subject { stat.name }
         it { should == old_file }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should be_a(Time) }
       end
 
       describe '#size' do
-        subject { super().size }
+        subject { stat.size }
         it { should be_an(Integer) }
       end
     end
@@ -445,22 +445,22 @@ shared_examples_for 'Filesystem' do
       let(:result) { instance.stat('file://' + old_file) }
 
       describe '#name' do
-        subject { super().name }
+        subject { stat.name }
         it { should == 'file://' + old_file }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should be_a(Time) }
       end
 
       describe '#size' do
-        subject { super().size }
+        subject { stat.size }
         it { should be_an(Integer) }
       end
     end
@@ -473,22 +473,22 @@ shared_examples_for 'Filesystem' do
       let(:result) { instance.stat('s3://bucket/file.txt') }
 
       describe '#name' do
-        subject { super().name }
+        subject { stat.name }
         it { should == 's3://bucket/file.txt' }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should == Time.parse('2013-05-24 18:52:00 +0000') }
       end
 
       describe '#mtime' do
-        subject { super().mtime }
+        subject { stat.mtime }
         it { should be_a(Time) }
       end
 
       describe '#size' do
-        subject { super().size }
+        subject { stat.size }
         it { should == 2912 }
       end
     end
