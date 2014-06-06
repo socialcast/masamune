@@ -50,18 +50,16 @@ class Masamune::DataPlanElem
     rule.for_table_with_partition?
   end
 
-  def set(&block)
+  def explode(&block)
     if rule.for_path?
       rule.plan.filesystem.glob(path) do |new_path|
-        yield new_path
+        yield rule.bind_input(new_path)
       end
     elsif rule.for_table_with_partition?
       yield table if rule.plan.postgres_helper.table_exists?(table)
-    elsif rule.for_table?
-      # TODO set is used to construct set of elements in missing
     end
   end
-  method_accumulate :set
+  method_accumulate :explode
 
   def targets(&block)
     return Masamune::DataPlanSet::EMPTY if @rule.for_targets?
