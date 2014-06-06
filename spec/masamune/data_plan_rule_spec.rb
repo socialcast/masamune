@@ -103,47 +103,47 @@ describe Masamune::DataPlanRule do
 
     context 'when input fully matches' do
       let(:input) { 'report/2013-01-02/00' }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'when input under matches' do
       let(:input) { 'report/2013-01-02' }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'when input over matches' do
       let(:pattern) { 'report/%Y-%m-%d' }
       let(:input) { 'report/2013-01-02/00' }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'when input does not match' do
       let(:input) { 'report' }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'with alternative hour' do
       let(:pattern) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k' }
       let(:input) { 'requests/y=2013/m=5/d=1/h=1' }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'with alternative hour' do
       let(:pattern) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k' }
       let(:input) { 'requests/y=2013/m=4/d=30/h=20' }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'with wildcard pattern' do
       let(:pattern) { 'request_logs/%Y%m%d*request.log' }
       let(:input) { 'request_logs/20130524.random.request.log' }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'with unix timestamp pattern' do
       let(:pattern) { 'request_logs/%H-s.log' }
       let(:input) { 'request_logs/1374192000.log' }
-      it { should be_true }
+      it { should == true }
     end
   end
 

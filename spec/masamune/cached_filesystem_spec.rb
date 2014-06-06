@@ -11,13 +11,13 @@ describe Masamune::CachedFilesystem do
     end
 
     it 'calls Filesystem#stat once for multiple calls' do
-      cached_filesystem.exists?('/a/b/c/1.txt').should be_true
-      cached_filesystem.exists?('/a/b/c/2.txt').should be_true
-      cached_filesystem.exists?('/a/b/c/3.txt').should be_true
-      cached_filesystem.exists?('/a/b/c/4.txt').should be_false
-      cached_filesystem.exists?('/a').should be_true
-      cached_filesystem.exists?('/a/b').should be_true
-      cached_filesystem.exists?('/a/b/c').should be_true
+      cached_filesystem.exists?('/a/b/c/1.txt').should == true
+      cached_filesystem.exists?('/a/b/c/2.txt').should == true
+      cached_filesystem.exists?('/a/b/c/3.txt').should == true
+      cached_filesystem.exists?('/a/b/c/4.txt').should == false
+      cached_filesystem.exists?('/a').should == true
+      cached_filesystem.exists?('/a/b').should == true
+      cached_filesystem.exists?('/a/b/c').should == true
       cached_filesystem.glob('/a/*').should_not be_empty
       cached_filesystem.glob('/a/b/*').should_not be_empty
       cached_filesystem.glob('/a/b/c/*').should_not be_empty
@@ -32,9 +32,9 @@ describe Masamune::CachedFilesystem do
     end
 
     it 'calls Filesystem#stat once for multiple calls' do
-      cached_filesystem.exists?('/y=2013/m=1/d=22/00000').should be_true
-      cached_filesystem.exists?('/y=2013/m=1/d=22').should be_true
-      cached_filesystem.exists?('/y=2013/m=1/d=2').should be_false
+      cached_filesystem.exists?('/y=2013/m=1/d=22/00000').should == true
+      cached_filesystem.exists?('/y=2013/m=1/d=22').should == true
+      cached_filesystem.exists?('/y=2013/m=1/d=2').should == false
       cached_filesystem.glob('/y=2013/*').should_not be_empty
       cached_filesystem.glob('/y=2013/m=1/*').should_not be_empty
       cached_filesystem.glob('/y=2013/m=1/d=22/*').should_not be_empty
@@ -48,14 +48,14 @@ describe Masamune::CachedFilesystem do
     end
 
     it 'calls Filesystem#stat once for multiple calls' do
-      cached_filesystem.exists?('/logs/box1_123.txt').should be_true
-      cached_filesystem.exists?('/logs/box1_456.txt').should be_false
-      cached_filesystem.exists?('/logs/box2_123.txt').should be_true
-      cached_filesystem.exists?('/logs/box2_456.txt').should be_false
-      cached_filesystem.exists?('/logs/box3_123.txt').should be_true
-      cached_filesystem.exists?('/logs/box3_456.txt').should be_false
-      cached_filesystem.exists?('/logs/box4_123.txt').should be_false
-      cached_filesystem.exists?('/logs/box4_456.txt').should be_false
+      cached_filesystem.exists?('/logs/box1_123.txt').should == true
+      cached_filesystem.exists?('/logs/box1_456.txt').should == false
+      cached_filesystem.exists?('/logs/box2_123.txt').should == true
+      cached_filesystem.exists?('/logs/box2_456.txt').should == false
+      cached_filesystem.exists?('/logs/box3_123.txt').should == true
+      cached_filesystem.exists?('/logs/box3_456.txt').should == false
+      cached_filesystem.exists?('/logs/box4_123.txt').should == false
+      cached_filesystem.exists?('/logs/box4_456.txt').should == false
       cached_filesystem.glob('/logs/*').should_not be_empty
       cached_filesystem.glob('/logs/*.txt').should_not be_empty
       cached_filesystem.glob('/logs/box1_*.txt').should_not be_empty
@@ -74,12 +74,12 @@ describe Masamune::CachedFilesystem do
     end
 
     it 'calls Filesystem#stat once for multiple calls' do
-      cached_filesystem.exists?('/a/b/c/1.txt').should be_false
-      cached_filesystem.exists?('/a/b/c/2.txt').should be_false
-      cached_filesystem.exists?('/a/b/c/3.txt').should be_false
-      cached_filesystem.exists?('/a').should be_true
-      cached_filesystem.exists?('/a/b').should be_true
-      cached_filesystem.exists?('/a/b/c').should be_true
+      cached_filesystem.exists?('/a/b/c/1.txt').should == false
+      cached_filesystem.exists?('/a/b/c/2.txt').should == false
+      cached_filesystem.exists?('/a/b/c/3.txt').should == false
+      cached_filesystem.exists?('/a').should == true
+      cached_filesystem.exists?('/a/b').should == true
+      cached_filesystem.exists?('/a/b/c').should == true
       cached_filesystem.glob('/a/*').should_not be_empty
       cached_filesystem.glob('/a/b/*').should_not be_empty
       cached_filesystem.glob('/a/b/c/*').should be_empty

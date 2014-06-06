@@ -29,7 +29,7 @@ describe Masamune::DataPlanElem do
 
     context 'when rule, options, and start_time match' do
       let(:other) { described_class.new(rule, start_time, options) }
-      it { should be_true }
+      it { should == true }
       it 'should have same hash' do
         instance.hash.should == other.hash
       end
@@ -37,17 +37,17 @@ describe Masamune::DataPlanElem do
 
     context 'when rules differ' do
       let(:other) { described_class.new(other_rule, start_time) }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'when options differ' do
       let(:other) { described_class.new(rule, start_time, other_options) }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'when start_times differ' do
       let(:other) { described_class.new(rule, other_start_time) }
-      it { should be_false }
+      it { should == false }
     end
   end
 end

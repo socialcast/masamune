@@ -119,37 +119,37 @@ shared_examples_for 'Filesystem' do
 
     context 'with local root' do
       let(:path) { '/' }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'with local non-root' do
       let(:path) { '/tmp' }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'with hdfs root' do
       let(:path) { 'file:///' }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'with hdfs non-root' do
       let(:path) { 'file:///tmp' }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'with s3 root' do
       let(:path) { 's3://bucket/' }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'with s3 non-root' do
       let(:path) { 's3://bucket/tmp' }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'with s3 bucket' do
       let(:path) { 's3://bucket' }
-      it { should be_true }
+      it { should == true }
     end
   end
 
@@ -304,14 +304,14 @@ shared_examples_for 'Filesystem' do
       before do
         instance.touch!(new_file, other_new_file)
       end
-      it { should be_true }
+      it { should == true }
     end
 
     context 'hdfs' do
       before do
         instance.touch!('file://' + new_file, 'file://' + other_new_file)
       end
-      it { should be_true }
+      it { should == true }
     end
 
     context 's3' do
@@ -328,22 +328,22 @@ shared_examples_for 'Filesystem' do
   describe '#exists?' do
     context 'local missing file' do
       subject { instance.exists?(new_file) }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'hdfs missing file' do
       subject { instance.exists?('file://' + new_file) }
-      it { should be_false }
+      it { should == false }
     end
 
     context 'local existing file' do
       subject { instance.exists?(old_file) }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'hdfs existing file' do
       subject { instance.exists?('file://' + old_file) }
-      it { should be_true }
+      it { should == true }
     end
   end
 
@@ -423,14 +423,14 @@ shared_examples_for 'Filesystem' do
       before do
         instance.mkdir!(new_dir, other_new_dir)
       end
-      it { should be_true }
+      it { should == true }
     end
 
     context 'hdfs directory' do
       before do
         instance.mkdir!('file://' + new_dir, 'file://' + other_new_dir)
       end
-      it { should be_true }
+      it { should == true }
     end
 
     context 's3 directory' do
@@ -549,7 +549,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_file(old_file, new_dir)
       end
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'local file to s3 dir' do
@@ -566,7 +566,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_file(old_file, 'file://' + new_dir)
       end
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'hdfs file to hdfs dir' do
@@ -574,7 +574,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_file('file://' + old_file, 'file://' + new_dir)
       end
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'hdfs file to local dir' do
@@ -582,7 +582,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_file('file://' + old_file, new_dir)
       end
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'hdfs file to s3 dir' do
@@ -633,7 +633,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_dir(old_dir, new_dir)
       end
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'local dir to s3 dir' do
@@ -650,7 +650,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_dir(old_dir, 'file://' + new_dir)
       end
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'hdfs dir to hdfs dir' do
@@ -658,7 +658,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_dir('file://' + old_dir, 'file://' + new_dir)
       end
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'hdfs dir to local dir' do
@@ -666,7 +666,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_dir('file://' + old_dir, new_dir)
       end
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'hdfs dir to s3 dir' do
@@ -717,7 +717,7 @@ shared_examples_for 'Filesystem' do
         instance.remove_dir(old_dir)
       end
 
-      it { should be_false}
+      it { should == false}
     end
 
     context 'local root dir' do
@@ -731,7 +731,7 @@ shared_examples_for 'Filesystem' do
         instance.remove_dir('file://' + old_dir)
       end
 
-      it { should be_false}
+      it { should == false}
     end
 
     context 'hdfs root dir' do
@@ -776,8 +776,8 @@ shared_examples_for 'Filesystem' do
         instance.move_file(old_file, new_file)
       end
 
-      it { removes_old_file.should be_true }
-      it { creates_new_file.should be_true }
+      it { removes_old_file.should == true }
+      it { creates_new_file.should == true }
     end
 
     context 'local file to s3 file' do
@@ -787,7 +787,7 @@ shared_examples_for 'Filesystem' do
       end
 
       it 'meets expectations' do; end
-      it { removes_old_file.should be_true }
+      it { removes_old_file.should == true }
     end
 
     context 'local file to hdfs file' do
@@ -795,8 +795,8 @@ shared_examples_for 'Filesystem' do
         instance.move_file(old_file, 'file://' + new_file)
       end
 
-      it { removes_old_file.should be_true }
-      it { creates_new_file.should be_true }
+      it { removes_old_file.should == true }
+      it { creates_new_file.should == true }
     end
 
     context 'hdfs file to hdfs file' do
@@ -804,8 +804,8 @@ shared_examples_for 'Filesystem' do
         instance.move_file('file://' + old_file, 'file://' + new_file)
       end
 
-      it { removes_old_file.should be_true }
-      it { creates_new_file.should be_true }
+      it { removes_old_file.should == true }
+      it { creates_new_file.should == true }
     end
 
     context 'hdfs file to local file' do
@@ -813,8 +813,8 @@ shared_examples_for 'Filesystem' do
         instance.move_file('file://' + old_file, new_file)
       end
 
-      it { removes_old_file.should be_true }
-      it { creates_new_file.should be_true }
+      it { removes_old_file.should == true }
+      it { creates_new_file.should == true }
     end
 
     context 'hdfs file to s3 file' do
@@ -871,8 +871,8 @@ shared_examples_for 'Filesystem' do
         instance.move_dir(old_dir, new_dir)
       end
 
-      it { removes_old_dir.should be_true }
-      it { creates_new_dir.should be_true }
+      it { removes_old_dir.should == true }
+      it { creates_new_dir.should == true }
     end
 
     context 'local dir to s3 dir' do
@@ -882,7 +882,7 @@ shared_examples_for 'Filesystem' do
       end
 
       it 'meets expectations' do; end
-      it { removes_old_dir.should be_true }
+      it { removes_old_dir.should == true }
     end
 
     context 'local dir to hdfs dir' do
@@ -890,8 +890,8 @@ shared_examples_for 'Filesystem' do
         instance.move_dir(old_dir, 'file://' + new_dir)
       end
 
-      it { removes_old_dir.should be_true }
-      it { creates_new_dir.should be_true }
+      it { removes_old_dir.should == true }
+      it { creates_new_dir.should == true }
     end
 
     context 'hdfs dir to hdfs dir' do
@@ -899,8 +899,8 @@ shared_examples_for 'Filesystem' do
         instance.move_dir('file://' + old_dir, 'file://' + new_dir)
       end
 
-      it { removes_old_dir.should be_true }
-      it { creates_new_dir.should be_true }
+      it { removes_old_dir.should == true }
+      it { creates_new_dir.should == true }
     end
 
     context 'hdfs dir to local dir' do
@@ -908,8 +908,8 @@ shared_examples_for 'Filesystem' do
         instance.move_dir('file://' + old_dir, new_dir)
       end
 
-      it { removes_old_dir.should be_true }
-      it { creates_new_dir.should be_true }
+      it { removes_old_dir.should == true }
+      it { creates_new_dir.should == true }
     end
 
     context 'hdfs dir to s3 dir' do

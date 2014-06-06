@@ -14,17 +14,17 @@ describe Masamune::Helpers::Postgres do
 
     context 'when table exists' do
       let(:table) { 'foo' }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'when other table exists' do
       let(:table) { 'baz' }
-      it { should be_true }
+      it { should == true }
     end
 
     context 'when table does not exist' do
       let(:table) { 'zombo' }
-      it { should be_false }
+      it { should == false }
     end
   end
 

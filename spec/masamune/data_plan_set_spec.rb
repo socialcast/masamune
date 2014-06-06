@@ -335,28 +335,28 @@ describe Masamune::DataPlanSet do
       let(:enum) { ['log/20130101.random_1.log', 'log/20130102.random_2.log'] }
       let(:elem) { 'log/20130101.random_1.log' }
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'with basic enum and wildcard elem' do
       let(:enum) { ['log/20130101.random_1.log', 'log/20130102.random_2.log'] }
       let(:elem) { 'log/20130101.*.log' }
 
-      it { should be_false }
+      it { should == false }
     end
 
     context 'with wildcard enum and wildcard elem' do
       let(:enum) { ['log/20130101.*.log', 'log/20130102.*.log'] }
       let(:elem) { 'log/20130101.*.log' }
 
-      it { should be_true }
+      it { should == true }
     end
 
     context 'with wildcard enum and basic elem' do
       let(:enum) { ['log/20130101.*.log', 'log/20130102.*.log'] }
       let(:elem) { 'log/20130101.random_1.log' }
 
-      it { should be_false  }
+      it { should == false  }
     end
   end
 end
