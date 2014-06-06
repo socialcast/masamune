@@ -257,7 +257,7 @@ module Masamune
     end
 
     def remove_dir(dir)
-      # FIXME never rm blank or slash
+      raise "#{dir} is root path, cannot remove" if root_path?(dir)
       check_immutable_path!(dir)
       case type(dir)
       when :hdfs

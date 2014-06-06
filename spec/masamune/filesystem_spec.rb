@@ -720,6 +720,12 @@ shared_examples_for 'Filesystem' do
       it { should be_false}
     end
 
+    context 'local root dir' do
+      it { expect { instance.remove_dir('/') }.to raise_error /root path/ }
+
+      it 'meets expectations' do; end
+    end
+
     context 'hdfs dir' do
       before do
         instance.remove_dir('file://' + old_dir)
@@ -728,12 +734,28 @@ shared_examples_for 'Filesystem' do
       it { should be_false}
     end
 
+    context 'hdfs root dir' do
+      it { expect { instance.remove_dir('file:///') }.to raise_error /root path/ }
+
+      it 'meets expectations' do; end
+    end
+
     context 's3 dir' do
       before do
         filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir/')
         filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir_$folder$')
         instance.remove_dir('s3://bucket/dir')
       end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 root dir' do
+      before do
+        filesystem.should_receive(:s3cmd).never
+      end
+
+      it { expect { instance.remove_dir('s3://bucket/') }.to raise_error /root path/ }
 
       it 'meets expectations' do; end
     end
