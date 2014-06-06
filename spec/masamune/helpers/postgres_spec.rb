@@ -28,8 +28,8 @@ describe Masamune::Helpers::Postgres do
     end
   end
 
-  describe '#last_modified_at' do
-    subject { instance.last_modified_at('foo', options) }
+  describe '#table_last_modified_at' do
+    subject { instance.table_last_modified_at('foo', options) }
 
     context 'with last_modified_at option' do
       before do

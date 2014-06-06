@@ -36,7 +36,7 @@ class Masamune::DataPlanElem
     if rule.for_path?
       rule.plan.filesystem.stat(path).map(&:mtime).max
     elsif rule.for_table?
-      rule.plan.postgres_helper.last_modified_at(table, @options)
+      rule.plan.postgres_helper.table_last_modified_at(table, @options)
     end || MISSING_MODIFIED_AT
   end
 
