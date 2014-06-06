@@ -50,7 +50,7 @@ module Masamune::MockCommand
   included do |base|
     base.before do
       new_method = Masamune::Commands::Shell.method(:new)
-      Masamune::Commands::Shell.stub(:new).and_return do |command, options|
+      Masamune::Commands::Shell.stub(:new) do |command, options|
         new_method.call(CommandMatcher.new(command), options || {})
       end
     end
