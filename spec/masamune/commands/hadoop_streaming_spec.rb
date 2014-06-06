@@ -13,7 +13,7 @@ describe Masamune::Commands::HadoopStreaming do
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
-    delegate.stub(:filesystem) { filesystem }
+    allow(delegate).to receive(:filesystem) { filesystem }
     delegate.stub_chain(:configuration, :hadoop_streaming).and_return(configuration)
   end
 
@@ -26,7 +26,7 @@ describe Masamune::Commands::HadoopStreaming do
         filesystem.touch!('dir/input.txt')
         instance.before_execute
       end
-      it { should == ['dir/input.txt'] }
+      it { is_expected.to eq(['dir/input.txt']) }
     end
 
     context 'input path hadoop part' do
@@ -35,7 +35,7 @@ describe Masamune::Commands::HadoopStreaming do
         filesystem.touch!('dir/part_0000')
         instance.before_execute
       end
-      it { should == ['dir/part_0000'] }
+      it { is_expected.to eq(['dir/part_0000']) }
     end
 
     context 'input path directory' do
@@ -44,15 +44,15 @@ describe Masamune::Commands::HadoopStreaming do
         filesystem.touch!('dir')
         instance.before_execute
       end
-      it { should == ['dir/*'] }
+      it { is_expected.to eq(['dir/*']) }
     end
 
     context 'input path does not exist' do
       before do
-        instance.logger.should_receive(:debug).with(/\ARemoving missing input/)
+        expect(instance.logger).to receive(:debug).with(/\ARemoving missing input/)
         instance.before_execute
       end
-      it { should be_empty }
+      it { is_expected.to be_empty }
     end
   end
 
@@ -62,12 +62,12 @@ describe Masamune::Commands::HadoopStreaming do
 
     subject { instance.command_args }
 
-    it { should == pre_command_args + extra + post_command_args }
+    it { is_expected.to eq(pre_command_args + extra + post_command_args) }
 
     context 'with options' do
       let(:options) { [{'-cacheFile' => 'cache.rb'}] }
 
-      it { should == pre_command_args + extra + options.map(&:to_a).flatten + post_command_args }
+      it { is_expected.to eq(pre_command_args + extra + options.map(&:to_a).flatten + post_command_args) }
     end
 
     context 'with quote' do
@@ -76,7 +76,7 @@ describe Masamune::Commands::HadoopStreaming do
 
       subject { instance.command_args }
 
-      it { should == pre_command_args + quoted_extra + post_command_args }
+      it { is_expected.to eq(pre_command_args + quoted_extra + post_command_args) }
     end
   end
 end

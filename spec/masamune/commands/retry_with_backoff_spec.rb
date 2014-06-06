@@ -6,8 +6,8 @@ describe Masamune::Commands::RetryWithBackoff do
   let(:instance) { described_class.new(delegate, options) }
 
   before do
-    delegate.stub(:logger).and_return(double)
-    delegate.stub(:configuration).and_return(double(retries: 0, backoff: 0))
+    allow(delegate).to receive(:logger).and_return(double)
+    allow(delegate).to receive(:configuration).and_return(double(retries: 0, backoff: 0))
   end
 
   describe '#around_execute' do
@@ -15,8 +15,8 @@ describe Masamune::Commands::RetryWithBackoff do
 
     context 'when retry command fails with status but eventually succeeds' do
       before do
-        instance.logger.should_receive(:error).with('exited with code: 42').exactly(retries - 1)
-        instance.logger.should_receive(:debug).with(/retrying.*/).exactly(retries - 1)
+        expect(instance.logger).to receive(:error).with('exited with code: 42').exactly(retries - 1)
+        expect(instance.logger).to receive(:debug).with(/retrying.*/).exactly(retries - 1)
         subject
       end
 
@@ -34,17 +34,17 @@ describe Masamune::Commands::RetryWithBackoff do
 
       it 'logs useful debug and error messages' do; end
       it 'attempts to retry the specified number of times' do
-        @retry_count.should == retries
+        expect(@retry_count).to eq(retries)
       end
       it 'returns result status' do
-        should be_success
+        is_expected.to be_success
       end
     end
 
     context 'when retry command fails with exception but eventually succeeds' do
       before do
-        instance.logger.should_receive(:error).with('wtf').exactly(retries - 1)
-        instance.logger.should_receive(:debug).with(/retrying.*/).exactly(retries - 1)
+        expect(instance.logger).to receive(:error).with('wtf').exactly(retries - 1)
+        expect(instance.logger).to receive(:debug).with(/retrying.*/).exactly(retries - 1)
         subject
       end
 
@@ -59,18 +59,18 @@ describe Masamune::Commands::RetryWithBackoff do
 
       it 'logs useful debug and error messages' do; end
       it 'attempts to retry the specified number of times' do
-        @retry_count.should == retries
+        expect(@retry_count).to eq(retries)
       end
       it 'returns result status' do
-        should be_success
+        is_expected.to be_success
       end
     end
 
     context 'when retry command eventually fails' do
       before do
-        instance.logger.should_receive(:error).with('wtf').exactly(retries + 1)
-        instance.logger.should_receive(:debug).with(/retrying.*/).exactly(retries)
-        instance.logger.should_receive(:debug).with(/max retries.*bailing/)
+        expect(instance.logger).to receive(:error).with('wtf').exactly(retries + 1)
+        expect(instance.logger).to receive(:debug).with(/retrying.*/).exactly(retries)
+        expect(instance.logger).to receive(:debug).with(/max retries.*bailing/)
         subject
       end
 
@@ -84,10 +84,10 @@ describe Masamune::Commands::RetryWithBackoff do
 
       it 'logs useful debug and error messages' do; end
       it 'attempts to retry the specified number of times' do
-        @retry_count.should == retries + 1
+        expect(@retry_count).to eq(retries + 1)
       end
       it 'returns failure status' do
-        should_not be_success
+        is_expected.not_to be_success
       end
     end
   end

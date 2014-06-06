@@ -20,7 +20,7 @@ describe Masamune::Actions::PostgresAdmin do
         mock_command(/\Acreatedb/, mock_success)
       end
 
-      it { should be_success }
+      it { is_expected.to be_success }
     end
 
     context 'with :action :drop' do
@@ -30,7 +30,7 @@ describe Masamune::Actions::PostgresAdmin do
         mock_command(/\Adropdb/, mock_success)
       end
 
-      it { should be_success }
+      it { is_expected.to be_success }
     end
   end
 end

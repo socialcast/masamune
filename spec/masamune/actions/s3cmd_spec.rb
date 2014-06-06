@@ -17,6 +17,6 @@ describe Masamune::Actions::S3Cmd do
 
     subject { instance.s3cmd 'ls', 's3://fake-bucket' }
 
-    it { should be_success }
+    it { is_expected.to be_success }
   end
 end

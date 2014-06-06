@@ -10,7 +10,7 @@ describe Masamune::Commands::Hive do
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
-    delegate.stub(:filesystem) { filesystem }
+    allow(delegate).to receive(:filesystem) { filesystem }
     delegate.stub_chain(:configuration, :hive).and_return(configuration)
   end
 
@@ -18,8 +18,12 @@ describe Masamune::Commands::Hive do
     context 'with exec' do
       let(:attrs) { {exec: %q(SELECT * FROM table;)} }
       subject { instance.stdin }
-      it { should be_a(StringIO) }
-      its(:string) { should == %q(SELECT * FROM table;) }
+      it { is_expected.to be_a(StringIO) }
+
+      describe '#string' do
+        subject { super().string }
+        it { should == %q(SELECT * FROM table;) }
+      end
     end
   end
 
@@ -30,21 +34,21 @@ describe Masamune::Commands::Hive do
       instance.command_args
     end
 
-    it { should == default_command }
+    it { is_expected.to eq(default_command) }
 
     context 'with command attrs' do
       let(:options) { [{'-d' => 'DATABASE=development'}] }
-      it { should == [*default_command, '-d', 'DATABASE=development'] }
+      it { is_expected.to eq([*default_command, '-d', 'DATABASE=development']) }
     end
 
     context 'with file' do
       let(:attrs) { {file: 'zomg.hql'} }
-      it { should == [*default_command, '-f', 'zomg.hql'] }
+      it { is_expected.to eq([*default_command, '-f', 'zomg.hql']) }
     end
 
     context 'with variables' do
       let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
-      it { should == [*default_command, '-d', 'R=R2DO', '-d', 'C=C3PO'] }
+      it { is_expected.to eq([*default_command, '-d', 'R=R2DO', '-d', 'C=C3PO']) }
     end
 
     context 'with setup files' do
@@ -53,7 +57,7 @@ describe Masamune::Commands::Hive do
       end
 
       let(:attrs) { {setup_files: ['setup_a.hql', 'setup_b.hql']} }
-      it { should == [*default_command, '-i', 'setup_a.hql', '-i', 'setup_b.hql'] }
+      it { is_expected.to eq([*default_command, '-i', 'setup_a.hql', '-i', 'setup_b.hql']) }
     end
 
     context 'with schema files' do
@@ -62,7 +66,7 @@ describe Masamune::Commands::Hive do
       end
 
       let(:attrs) { {schema_files: ['schema_a.hql', 'schema_b.hql']} }
-      it { should == [*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql'] }
+      it { is_expected.to eq([*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql']) }
     end
 
     context 'with schema files that are globs' do
@@ -71,7 +75,7 @@ describe Masamune::Commands::Hive do
       end
 
       let(:attrs) { {schema_files: ['schema*.hql']} }
-      it { should == [*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql'] }
+      it { is_expected.to eq([*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql']) }
     end
   end
 
@@ -86,6 +90,6 @@ describe Masamune::Commands::Hive do
       instance.handle_stdout(input_row, 0)
     end
 
-    it { buffer.string.should == output_row + "\n" }
+    it { expect(buffer.string).to eq(output_row + "\n") }
   end
 end

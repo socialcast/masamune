@@ -21,25 +21,25 @@ describe Masamune::DataPlanSet do
     end
 
     context 'when all missing' do
-      it { missing.should have(3).items }
-      it { missing.should include 'table/y=2013/m=01/d=01' }
-      it { missing.should include 'table/y=2013/m=01/d=02' }
-      it { missing.should include 'table/y=2013/m=01/d=03' }
+      it { expect(missing.size).to eq(3) }
+      it { expect(missing).to include 'table/y=2013/m=01/d=01' }
+      it { expect(missing).to include 'table/y=2013/m=01/d=02' }
+      it { expect(missing).to include 'table/y=2013/m=01/d=03' }
     end
 
     context 'when some missing' do
       before do
         fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02')
       end
-      it { missing.should have(1).items }
-      it { missing.should include 'table/y=2013/m=01/d=03' }
+      it { expect(missing.size).to eq(1) }
+      it { expect(missing).to include 'table/y=2013/m=01/d=03' }
     end
 
     context 'when none missing' do
       before do
         fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03')
       end
-      it { missing.should be_empty }
+      it { expect(missing).to be_empty }
     end
   end
 
@@ -54,15 +54,15 @@ describe Masamune::DataPlanSet do
       let(:paths) { ['log/20130101.random_1.log', 'log/20130102.random_1.log'] }
 
       context 'when none existing' do
-        it { existing.should be_empty }
+        it { expect(existing).to be_empty }
       end
 
       context 'when some existing' do
         before do
           fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
         end
-        it { existing.should have(1).items }
-        it { existing.should include 'log/20130101.random_1.log' }
+        it { expect(existing.size).to eq(1) }
+        it { expect(existing).to include 'log/20130101.random_1.log' }
       end
 
       context 'when all existing' do
@@ -70,9 +70,9 @@ describe Masamune::DataPlanSet do
           fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
           fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log')
         end
-        it { existing.should have(2).items }
-        it { existing.should include 'log/20130101.random_1.log' }
-        it { existing.should include 'log/20130102.random_1.log' }
+        it { expect(existing.size).to eq(2) }
+        it { expect(existing).to include 'log/20130101.random_1.log' }
+        it { expect(existing).to include 'log/20130102.random_1.log' }
       end
     end
 
@@ -80,16 +80,16 @@ describe Masamune::DataPlanSet do
       let(:paths) { ['log/20130101.*.log', 'log/20130102.*.log'] }
 
       context 'when none existing' do
-        it { existing.should be_empty }
+        it { expect(existing).to be_empty }
       end
 
       context 'when some existing' do
         before do
           fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
         end
-        it { existing.should have(2).items }
-        it { existing.should include 'log/20130101.random_1.log' }
-        it { existing.should include 'log/20130101.random_2.log' }
+        it { expect(existing.size).to eq(2) }
+        it { expect(existing).to include 'log/20130101.random_1.log' }
+        it { expect(existing).to include 'log/20130101.random_2.log' }
       end
 
       context 'when all existing' do
@@ -97,11 +97,11 @@ describe Masamune::DataPlanSet do
           fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
           fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log')
         end
-        it { existing.should have(4).items }
-        it { existing.should include 'log/20130101.random_1.log' }
-        it { existing.should include 'log/20130101.random_2.log' }
-        it { existing.should include 'log/20130102.random_1.log' }
-        it { existing.should include 'log/20130102.random_2.log' }
+        it { expect(existing.size).to eq(4) }
+        it { expect(existing).to include 'log/20130101.random_1.log' }
+        it { expect(existing).to include 'log/20130101.random_2.log' }
+        it { expect(existing).to include 'log/20130102.random_1.log' }
+        it { expect(existing).to include 'log/20130102.random_2.log' }
       end
     end
   end
@@ -121,25 +121,25 @@ describe Masamune::DataPlanSet do
       let(:paths) { ['log/20130101.*.log'] }
 
       before do
-        instance.rule.stub(:window) { 1 }
+        allow(instance.rule).to receive(:window) { 1 }
       end
 
-      it { sources.should have(3).items }
-      it { sources.should include 'log/20121231.*.log' }
-      it { sources.should include 'log/20130101.*.log' }
-      it { sources.should include 'log/20130102.*.log' }
+      it { expect(sources.size).to eq(3) }
+      it { expect(sources).to include 'log/20121231.*.log' }
+      it { expect(sources).to include 'log/20130101.*.log' }
+      it { expect(sources).to include 'log/20130102.*.log' }
 
       context 'when none existing' do
-        it { existing.should be_empty }
+        it { expect(existing).to be_empty }
       end
 
       context 'when some existing' do
         before do
           fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
         end
-        it { existing.should have(2).items }
-        it { existing.should include 'log/20130101.random_1.log' }
-        it { existing.should include 'log/20130101.random_2.log' }
+        it { expect(existing.size).to eq(2) }
+        it { expect(existing).to include 'log/20130101.random_1.log' }
+        it { expect(existing).to include 'log/20130101.random_2.log' }
       end
 
       context 'when all existing' do
@@ -149,13 +149,13 @@ describe Masamune::DataPlanSet do
           fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log')
           fs.touch!('log/20130103.random_1.log', 'log/20130103.random_2.log')
         end
-        it { existing.should have(6).items }
-        it { existing.should include 'log/20121231.random_1.log' }
-        it { existing.should include 'log/20121231.random_2.log' }
-        it { existing.should include 'log/20130101.random_1.log' }
-        it { existing.should include 'log/20130101.random_2.log' }
-        it { existing.should include 'log/20130102.random_1.log' }
-        it { existing.should include 'log/20130102.random_2.log' }
+        it { expect(existing.size).to eq(6) }
+        it { expect(existing).to include 'log/20121231.random_1.log' }
+        it { expect(existing).to include 'log/20121231.random_2.log' }
+        it { expect(existing).to include 'log/20130101.random_1.log' }
+        it { expect(existing).to include 'log/20130101.random_2.log' }
+        it { expect(existing).to include 'log/20130102.random_1.log' }
+        it { expect(existing).to include 'log/20130102.random_2.log' }
       end
     end
   end
@@ -174,18 +174,18 @@ describe Masamune::DataPlanSet do
     end
 
     context 'when all sources missing' do
-      it { actionable_targets.should be_empty }
-      it { actionable_sources.should be_empty }
+      it { expect(actionable_targets).to be_empty }
+      it { expect(actionable_sources).to be_empty }
     end
 
     context 'when some sources missing' do
       before do
         fs.touch!('log/20130101.random_1.log', 'log/20130101.random_2.log')
       end
-      it { actionable_targets.should have(1).items }
-      it { actionable_targets.should include 'table/y=2013/m=01/d=01' }
-      it { actionable_sources.should have(1).items }
-      it { actionable_sources.should include 'log/20130101.*.log' }
+      it { expect(actionable_targets.size).to eq(1) }
+      it { expect(actionable_targets).to include 'table/y=2013/m=01/d=01' }
+      it { expect(actionable_sources.size).to eq(1) }
+      it { expect(actionable_sources).to include 'log/20130101.*.log' }
     end
 
     context 'when all sources existing' do
@@ -194,14 +194,14 @@ describe Masamune::DataPlanSet do
         fs.touch!('log/20130102.random_1.log', 'log/20130102.random_2.log')
         fs.touch!('log/20130103.random_1.log', 'log/20130103.random_2.log')
       end
-      it { actionable_targets.should have(3).items }
-      it { actionable_targets.should include 'table/y=2013/m=01/d=01' }
-      it { actionable_targets.should include 'table/y=2013/m=01/d=02' }
-      it { actionable_targets.should include 'table/y=2013/m=01/d=03' }
-      it { actionable_sources.should have(3).items }
-      it { actionable_sources.should include 'log/20130101.*.log' }
-      it { actionable_sources.should include 'log/20130102.*.log' }
-      it { actionable_sources.should include 'log/20130103.*.log' }
+      it { expect(actionable_targets.size).to eq(3) }
+      it { expect(actionable_targets).to include 'table/y=2013/m=01/d=01' }
+      it { expect(actionable_targets).to include 'table/y=2013/m=01/d=02' }
+      it { expect(actionable_targets).to include 'table/y=2013/m=01/d=03' }
+      it { expect(actionable_sources.size).to eq(3) }
+      it { expect(actionable_sources).to include 'log/20130101.*.log' }
+      it { expect(actionable_sources).to include 'log/20130102.*.log' }
+      it { expect(actionable_sources).to include 'log/20130103.*.log' }
     end
   end
 
@@ -214,7 +214,7 @@ describe Masamune::DataPlanSet do
         instance.stale
       end
 
-      it { stale_sources.should be_empty }
+      it { expect(stale_sources).to be_empty }
     end
 
     let(:paths) { ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03'] }
@@ -235,7 +235,7 @@ describe Masamune::DataPlanSet do
     end
 
     context 'when none stale targets' do
-      it { stale_targets.should be_empty }
+      it { expect(stale_targets).to be_empty }
     end
 
     context 'when some stale targets (first source)' do
@@ -243,8 +243,8 @@ describe Masamune::DataPlanSet do
         fs.touch!('log/20130101.random_1.log', mtime: future_time)
       end
 
-      it { stale_targets.should have(1).items }
-      it { stale_targets.should include 'table/y=2013/m=01/d=01' }
+      it { expect(stale_targets.size).to eq(1) }
+      it { expect(stale_targets).to include 'table/y=2013/m=01/d=01' }
     end
 
     context 'when some stale targets (second source)' do
@@ -252,8 +252,8 @@ describe Masamune::DataPlanSet do
         fs.touch!('log/20130101.random_2.log', mtime: future_time)
       end
 
-      it { stale_targets.should have(1).items }
-      it { stale_targets.should include 'table/y=2013/m=01/d=01' }
+      it { expect(stale_targets.size).to eq(1) }
+      it { expect(stale_targets).to include 'table/y=2013/m=01/d=01' }
     end
 
     context 'when some stale targets (tie breaker)' do
@@ -261,8 +261,8 @@ describe Masamune::DataPlanSet do
         fs.touch!('log/20130101.random_1.log', mtime: present_time)
       end
 
-      it { stale_targets.should have(1).items }
-      it { stale_targets.should include 'table/y=2013/m=01/d=01' }
+      it { expect(stale_targets.size).to eq(1) }
+      it { expect(stale_targets).to include 'table/y=2013/m=01/d=01' }
     end
 
     context 'when all stale targets' do
@@ -273,10 +273,10 @@ describe Masamune::DataPlanSet do
         fs.touch!('log/20130103.random_2.log', mtime: future_time)
       end
 
-      it { stale_targets.should have(3).items }
-      it { stale_targets.should include 'table/y=2013/m=01/d=01' }
-      it { stale_targets.should include 'table/y=2013/m=01/d=02' }
-      it { stale_targets.should include 'table/y=2013/m=01/d=03' }
+      it { expect(stale_targets.size).to eq(3) }
+      it { expect(stale_targets).to include 'table/y=2013/m=01/d=01' }
+      it { expect(stale_targets).to include 'table/y=2013/m=01/d=02' }
+      it { expect(stale_targets).to include 'table/y=2013/m=01/d=03' }
     end
 
     context 'when missing source last_modified_at' do
@@ -284,7 +284,7 @@ describe Masamune::DataPlanSet do
         fs.touch!('log/20130101.random_1.log', mtime: Masamune::DataPlanElem::MISSING_MODIFIED_AT)
       end
 
-      it { stale_targets.should be_empty }
+      it { expect(stale_targets).to be_empty }
     end
   end
 
@@ -300,28 +300,34 @@ describe Masamune::DataPlanSet do
 
     context 'when :day' do
       let(:grain) { :day }
-      it { should have(6).items }
-      it { should include 'table/y=2012/m=12/d=29' }
-      it { should include 'table/y=2012/m=12/d=30' }
-      it { should include 'table/y=2012/m=12/d=31' }
-      it { should include 'table/y=2013/m=01/d=01' }
-      it { should include 'table/y=2013/m=01/d=02' }
-      it { should include 'table/y=2013/m=02/d=01' }
+      it 'has 6 items' do
+        expect(subject.size).to eq(6)
+      end
+      it { is_expected.to include 'table/y=2012/m=12/d=29' }
+      it { is_expected.to include 'table/y=2012/m=12/d=30' }
+      it { is_expected.to include 'table/y=2012/m=12/d=31' }
+      it { is_expected.to include 'table/y=2013/m=01/d=01' }
+      it { is_expected.to include 'table/y=2013/m=01/d=02' }
+      it { is_expected.to include 'table/y=2013/m=02/d=01' }
     end
 
     context 'when :month' do
       let(:grain) { :month }
-      it { should have(3).items }
-      it { should include 'table/y=2012/m=12' }
-      it { should include 'table/y=2013/m=01' }
-      it { should include 'table/y=2013/m=02' }
+      it 'has 3 items' do
+        expect(subject.size).to eq(3)
+      end
+      it { is_expected.to include 'table/y=2012/m=12' }
+      it { is_expected.to include 'table/y=2013/m=01' }
+      it { is_expected.to include 'table/y=2013/m=02' }
     end
 
     context 'when :year' do
       let(:grain) { :year }
-      it { should have(2).items }
-      it { should include 'table/y=2012' }
-      it { should include 'table/y=2013' }
+      it 'has 2 items' do
+        expect(subject.size).to eq(2)
+      end
+      it { is_expected.to include 'table/y=2012' }
+      it { is_expected.to include 'table/y=2013' }
     end
   end
 
@@ -335,28 +341,28 @@ describe Masamune::DataPlanSet do
       let(:enum) { ['log/20130101.random_1.log', 'log/20130102.random_2.log'] }
       let(:elem) { 'log/20130101.random_1.log' }
 
-      it { should == true }
+      it { is_expected.to eq(true) }
     end
 
     context 'with basic enum and wildcard elem' do
       let(:enum) { ['log/20130101.random_1.log', 'log/20130102.random_2.log'] }
       let(:elem) { 'log/20130101.*.log' }
 
-      it { should == false }
+      it { is_expected.to eq(false) }
     end
 
     context 'with wildcard enum and wildcard elem' do
       let(:enum) { ['log/20130101.*.log', 'log/20130102.*.log'] }
       let(:elem) { 'log/20130101.*.log' }
 
-      it { should == true }
+      it { is_expected.to eq(true) }
     end
 
     context 'with wildcard enum and basic elem' do
       let(:enum) { ['log/20130101.*.log', 'log/20130102.*.log'] }
       let(:elem) { 'log/20130101.random_1.log' }
 
-      it { should == false  }
+      it { is_expected.to eq(false)  }
     end
   end
 end

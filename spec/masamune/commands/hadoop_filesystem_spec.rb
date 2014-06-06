@@ -17,12 +17,12 @@ describe Masamune::Commands::HadoopFilesystem do
 
     subject { instance.command_args }
 
-    it { should == ['hadoop', 'fs', '-ls', '/'] }
+    it { is_expected.to eq(['hadoop', 'fs', '-ls', '/']) }
 
     context 'with options' do
       let(:options) { [{'--conf' => 'hadoop.conf'}] }
 
-      it { should == ['hadoop', 'fs', '--conf', 'hadoop.conf', '-ls', '/'] }
+      it { is_expected.to eq(['hadoop', 'fs', '--conf', 'hadoop.conf', '-ls', '/']) }
     end
   end
 end

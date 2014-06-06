@@ -18,9 +18,9 @@ describe Masamune::Commands::Shell do
         subject
       end
 
-      it { delegate.status.should == 0 }
-      it { delegate.stdout.should == ['stdout 1', 'stdout 2'] }
-      it { delegate.stderr.should == ['stderr 1', 'stderr 2'] }
+      it { expect(delegate.status).to eq(0) }
+      it { expect(delegate.stdout).to eq(['stdout 1', 'stdout 2']) }
+      it { expect(delegate.stderr).to eq(['stderr 1', 'stderr 2']) }
     end
 
     context 'with simple command that fails' do
@@ -30,9 +30,9 @@ describe Masamune::Commands::Shell do
         subject
       end
 
-      it { delegate.status.should == 1 }
-      it { delegate.stdout.should == [] }
-      it { delegate.stderr.should == [] }
+      it { expect(delegate.status).to eq(1) }
+      it { expect(delegate.stdout).to eq([]) }
+      it { expect(delegate.stderr).to eq([]) }
     end
 
     context 'with fail_fast and simple command that fails' do
@@ -45,11 +45,11 @@ describe Masamune::Commands::Shell do
       let(:command) { %Q{echo 'test'} }
 
       before do
-        delegate.should_receive(:after_execute) { raise Interrupt }
+        expect(delegate).to receive(:after_execute) { raise Interrupt }
         subject
       end
 
-      it { delegate.status.should == 130 }
+      it { expect(delegate.status).to eq(130) }
     end
 
     context 'with simple command with input' do
@@ -60,9 +60,9 @@ describe Masamune::Commands::Shell do
         subject
       end
 
-      it { delegate.status.should == 0 }
-      it { delegate.stdout.should == ['ping', 'pong'] }
-      it { delegate.stderr.should == [] }
+      it { expect(delegate.status).to eq(0) }
+      it { expect(delegate.stdout).to eq(['ping', 'pong']) }
+      it { expect(delegate.stderr).to eq([]) }
     end
 
     context 'with simple command with not-ready input' do
@@ -70,7 +70,7 @@ describe Masamune::Commands::Shell do
       let(:input) { "ping\npong" }
 
       before do
-        IO.any_instance.should_receive(:wait_writable).and_return(nil)
+        expect_any_instance_of(IO).to receive(:wait_writable).and_return(nil)
       end
 
       it { expect { subject }.to raise_error RuntimeError, /IO stdin not ready/ }

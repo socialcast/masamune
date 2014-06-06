@@ -41,24 +41,30 @@ describe Masamune::DataPlan do
 
     context 'primary' do
       let(:rule) { 'primary' }
-      it { should include 'table/y=2013/m=01/d=01' }
-      it { should include 'table/y=2013/m=01/d=02' }
-      it { should include 'table/y=2013/m=01/d=03' }
-      it { should have(3).items }
+      it { is_expected.to include 'table/y=2013/m=01/d=01' }
+      it { is_expected.to include 'table/y=2013/m=01/d=02' }
+      it { is_expected.to include 'table/y=2013/m=01/d=03' }
+      it 'has 3 items' do
+        expect(subject.size).to eq(3)
+      end
     end
 
     context 'derived_daily' do
       let(:rule) { 'derived_daily' }
-      it { should include 'daily/2013-01-01' }
-      it { should include 'daily/2013-01-02' }
-      it { should include 'daily/2013-01-03' }
-      it { should have(3).items }
+      it { is_expected.to include 'daily/2013-01-01' }
+      it { is_expected.to include 'daily/2013-01-02' }
+      it { is_expected.to include 'daily/2013-01-03' }
+      it 'has 3 items' do
+        expect(subject.size).to eq(3)
+      end
     end
 
     context 'derived_monthly' do
       let(:rule) { 'derived_monthly' }
-      it { should include 'monthly/2013-01' }
-      it { should have(1).items }
+      it { is_expected.to include 'monthly/2013-01' }
+      it 'has 1 item' do
+        expect(subject.size).to eq(1)
+      end
     end
   end
 
@@ -71,27 +77,27 @@ describe Masamune::DataPlan do
       let(:rule) { 'primary' }
       let(:source) { 'log/20130101.random.log' }
 
-      it { targets.first.start_time.should == Date.civil(2013,01,01) }
-      it { targets.first.stop_time.should == Date.civil(2013,01,02) }
-      it { targets.first.path.should == 'table/y=2013/m=01/d=01' }
+      it { expect(targets.first.start_time).to eq(Date.civil(2013,01,01)) }
+      it { expect(targets.first.stop_time).to eq(Date.civil(2013,01,02)) }
+      it { expect(targets.first.path).to eq('table/y=2013/m=01/d=01') }
     end
 
     context 'derived_daily' do
       let(:rule) { 'derived_daily' }
       let(:source)  { 'table/y=2013/m=01/d=01' }
 
-      it { targets.first.start_time.should == Date.civil(2013,01,01) }
-      it { targets.first.stop_time.should == Date.civil(2013,01,02) }
-      it { targets.first.path.should == 'daily/2013-01-01' }
+      it { expect(targets.first.start_time).to eq(Date.civil(2013,01,01)) }
+      it { expect(targets.first.stop_time).to eq(Date.civil(2013,01,02)) }
+      it { expect(targets.first.path).to eq('daily/2013-01-01') }
     end
 
     context 'derived_monthly' do
       let(:rule) { 'derived_monthly' }
       let(:source)  { 'table/y=2013/m=01/d=01' }
 
-      it { targets.first.start_time.should == Date.civil(2013,01,01) }
-      it { targets.first.stop_time.should == Date.civil(2013,02,01) }
-      it { targets.first.path.should == 'monthly/2013-01' }
+      it { expect(targets.first.start_time).to eq(Date.civil(2013,01,01)) }
+      it { expect(targets.first.stop_time).to eq(Date.civil(2013,02,01)) }
+      it { expect(targets.first.path).to eq('monthly/2013-01') }
     end
   end
 
@@ -115,18 +121,18 @@ describe Masamune::DataPlan do
       let(:rule) { 'primary' }
       let(:target) { 'table/y=2013/m=01/d=01' }
 
-      it { sources.should have(1).items }
-      it { sources.should include 'log/20130101.*.log' }
-      it { existing.should have(2).items }
-      it { existing.should include 'log/20130101.app1.log' }
-      it { existing.should include 'log/20130101.app2.log' }
+      it { expect(sources.size).to eq(1) }
+      it { expect(sources).to include 'log/20130101.*.log' }
+      it { expect(existing.size).to eq(2) }
+      it { expect(existing).to include 'log/20130101.app1.log' }
+      it { expect(existing).to include 'log/20130101.app2.log' }
     end
 
     context 'valid target associated with a single source file' do
       let(:rule) { 'derived_daily' }
       let(:target) { 'daily/2013-01-03' }
 
-      it { sources.should include 'table/y=2013/m=01/d=03' }
+      it { expect(sources).to include 'table/y=2013/m=01/d=03' }
     end
 
     context 'valid target associated with a group of source files' do
@@ -134,9 +140,9 @@ describe Masamune::DataPlan do
       let(:target) { 'monthly/2013-01' }
 
       (1..31).each do |day|
-        it { sources.should include 'table/y=2013/m=01/d=%02d' % day }
+        it { expect(sources).to include 'table/y=2013/m=01/d=%02d' % day }
       end
-      it { sources.should have(31).items }
+      it { expect(sources.size).to eq(31) }
     end
 
     context 'invalid target' do
@@ -151,22 +157,22 @@ describe Masamune::DataPlan do
 
     context 'primary source' do
       let(:target) { 'log/20130101.random_1.log' }
-      it { should == Masamune::DataPlanRule::TERMINAL }
+      it { is_expected.to eq(Masamune::DataPlanRule::TERMINAL) }
     end
 
     context 'primary target' do
       let(:target) { 'table/y=2013/m=01/d=01' }
-      it { should == 'primary' }
+      it { is_expected.to eq('primary') }
     end
 
     context 'derived_daily target' do
       let(:target) { 'daily/2013-01-03' }
-      it { should == 'derived_daily' }
+      it { is_expected.to eq('derived_daily') }
     end
 
     context 'derived_monthly target' do
       let(:target) { 'monthly/2013-01' }
-      it { should == 'derived_monthly' }
+      it { is_expected.to eq('derived_monthly') }
     end
 
     context 'invalid target' do
@@ -193,10 +199,10 @@ describe Masamune::DataPlan do
 
       let(:options) { {targets: ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02']} }
 
-      it { targets.should include 'table/y=2013/m=01/d=01' }
-      it { targets.should include 'table/y=2013/m=01/d=02' }
-      it { sources.should include 'log/20130101.*.log' }
-      it { sources.should include 'log/20130102.*.log' }
+      it { expect(targets).to include 'table/y=2013/m=01/d=01' }
+      it { expect(targets).to include 'table/y=2013/m=01/d=02' }
+      it { expect(sources).to include 'log/20130101.*.log' }
+      it { expect(sources).to include 'log/20130102.*.log' }
     end
 
     context 'with :sources' do
@@ -204,10 +210,10 @@ describe Masamune::DataPlan do
 
       let(:options) { {sources: ['table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=02']} }
 
-      it { targets.should include "daily/2013-01-01" }
-      it { targets.should include "daily/2013-01-02" }
-      it { sources.should include 'table/y=2013/m=01/d=01' }
-      it { sources.should include 'table/y=2013/m=01/d=02' }
+      it { expect(targets).to include "daily/2013-01-01" }
+      it { expect(targets).to include "daily/2013-01-02" }
+      it { expect(sources).to include 'table/y=2013/m=01/d=01' }
+      it { expect(sources).to include 'table/y=2013/m=01/d=02' }
     end
   end
 
@@ -230,10 +236,10 @@ describe Masamune::DataPlan do
     end
 
     context 'when targets are missing' do
-      it { missing.should have(2).items }
-      it { missing.should include 'table/y=2013/m=01/d=01' }
-      it { missing.should include 'table/y=2013/m=01/d=02' }
-      it { existing.should be_empty }
+      it { expect(missing.size).to eq(2) }
+      it { expect(missing).to include 'table/y=2013/m=01/d=01' }
+      it { expect(missing).to include 'table/y=2013/m=01/d=02' }
+      it { expect(existing).to be_empty }
     end
 
     context 'when targets exist' do
@@ -241,10 +247,10 @@ describe Masamune::DataPlan do
         fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02')
       end
 
-      it { missing.should be_empty }
-      it { existing.should have(2).items }
-      it { existing.should include 'table/y=2013/m=01/d=01' }
-      it { existing.should include 'table/y=2013/m=01/d=02' }
+      it { expect(missing).to be_empty }
+      it { expect(existing.size).to eq(2) }
+      it { expect(existing).to include 'table/y=2013/m=01/d=01' }
+      it { expect(existing).to include 'table/y=2013/m=01/d=02' }
     end
   end
 
@@ -267,10 +273,10 @@ describe Masamune::DataPlan do
     end
 
     context 'when sources are missing' do
-      it { missing.should have(2).items }
-      it { missing.should include 'log/20130101.*.log' }
-      it { missing.should include 'log/20130102.*.log' }
-      it { existing.should be_empty }
+      it { expect(missing.size).to eq(2) }
+      it { expect(missing).to include 'log/20130101.*.log' }
+      it { expect(missing).to include 'log/20130102.*.log' }
+      it { expect(existing).to be_empty }
     end
 
     context 'when sources exist' do
@@ -278,12 +284,12 @@ describe Masamune::DataPlan do
         fs.touch!('log/20130101.app1.log', 'log/20130101.app2.log', 'log/20130102.app1.log', 'log/20130102.app2.log')
       end
 
-      it { missing.should be_empty }
-      it { existing.should include 'log/20130101.app1.log' }
-      it { existing.should include 'log/20130101.app2.log' }
-      it { existing.should include 'log/20130102.app1.log' }
-      it { existing.should include 'log/20130102.app2.log' }
-      it { existing.should have(4).items }
+      it { expect(missing).to be_empty }
+      it { expect(existing).to include 'log/20130101.app1.log' }
+      it { expect(existing).to include 'log/20130101.app2.log' }
+      it { expect(existing).to include 'log/20130102.app1.log' }
+      it { expect(existing).to include 'log/20130102.app2.log' }
+      it { expect(existing.size).to eq(4) }
     end
 
     context 'when sources partially exist' do
@@ -291,11 +297,11 @@ describe Masamune::DataPlan do
         fs.touch!('log/20130101.app1.log', 'log/20130101.app2.log')
       end
 
-      it { missing.should have(1).items }
-      it { missing.should include 'log/20130102.*.log' }
-      it { existing.should have(2).items }
-      it { existing.should include 'log/20130101.app1.log' }
-      it { existing.should include 'log/20130101.app2.log' }
+      it { expect(missing.size).to eq(1) }
+      it { expect(missing).to include 'log/20130102.*.log' }
+      it { expect(existing.size).to eq(2) }
+      it { expect(existing).to include 'log/20130101.app1.log' }
+      it { expect(existing).to include 'log/20130101.app2.log' }
     end
   end
 
@@ -320,7 +326,7 @@ describe Masamune::DataPlan do
       context 'when target data exists' do
         before do
           fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=02', 'table/y=2013/m=01/d=03')
-          fs.should_receive(:touch!).never
+          expect(fs).to receive(:touch!).never
           execute
         end
 
@@ -331,7 +337,7 @@ describe Masamune::DataPlan do
         before do
           fs.touch!('log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log')
           fs.touch!('table/y=2013/m=01/d=01', 'table/y=2013/m=01/d=03')
-          fs.should_receive(:touch!).with('table/y=2013/m=01/d=02').and_call_original
+          expect(fs).to receive(:touch!).with('table/y=2013/m=01/d=02').and_call_original
           execute
         end
 
@@ -340,7 +346,7 @@ describe Masamune::DataPlan do
 
       context 'when source data does not exist' do
         before do
-          fs.should_receive(:touch!).never
+          expect(fs).to receive(:touch!).never
           execute
         end
 
@@ -354,8 +360,8 @@ describe Masamune::DataPlan do
 
         before do
           fs.touch!('log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log')
-          fs.should_receive(:touch!).with(*derived_targets).and_call_original
-          fs.should_receive(:touch!).with(*targets).and_call_original
+          expect(fs).to receive(:touch!).with(*derived_targets).and_call_original
+          expect(fs).to receive(:touch!).with(*targets).and_call_original
           execute
         end
 
@@ -367,7 +373,7 @@ describe Masamune::DataPlan do
 
         before do
           fs.touch!('log/20130101.app1.log', 'log/20130102.app1.log', 'log/20130103.app1.log')
-          fs.should_not_receive(:touch!)
+          expect(fs).not_to receive(:touch!)
           execute
         end
 

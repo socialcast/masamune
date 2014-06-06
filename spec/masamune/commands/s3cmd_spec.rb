@@ -17,12 +17,12 @@ describe Masamune::Commands::S3Cmd do
 
     subject { instance.command_args }
 
-    it { should == ['s3cmd', 'ls', 's3://fake'] }
+    it { is_expected.to eq(['s3cmd', 'ls', 's3://fake']) }
 
     context 'with options' do
       let(:options) { [{'--config' => '/opt/etc/etl/s3cfg'}] }
 
-      it { should == ['s3cmd', '--config', '/opt/etc/etl/s3cfg', 'ls', 's3://fake'] }
+      it { is_expected.to eq(['s3cmd', '--config', '/opt/etc/etl/s3cfg', 'ls', 's3://fake']) }
     end
   end
 end
