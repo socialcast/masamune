@@ -374,22 +374,22 @@ shared_examples_for 'Filesystem' do
 
       describe '#name' do
         subject { stat.name }
-        it { should == old_file }
+        it { is_expected.to eq(old_file) }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
+        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should be_a(Time) }
+        it { is_expected.to be_a(Time) }
       end
 
       describe '#size' do
         subject { stat.size }
-        it { should be_an(Integer) }
+        it { is_expected.to be_an(Integer) }
       end
     end
 
@@ -398,22 +398,22 @@ shared_examples_for 'Filesystem' do
 
       describe '#name' do
         subject { stat.name }
-        it { should == old_file }
+        it { is_expected.to eq(old_file) }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
+        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should be_a(Time) }
+        it { is_expected.to be_a(Time) }
       end
 
       describe '#size' do
         subject { stat.size }
-        it { should be_an(Integer) }
+        it { is_expected.to be_an(Integer) }
       end
     end
 
@@ -422,22 +422,22 @@ shared_examples_for 'Filesystem' do
 
       describe '#name' do
         subject { stat.name }
-        it { should == old_file }
+        it { is_expected.to eq(old_file) }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
+        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should be_a(Time) }
+        it { is_expected.to be_a(Time) }
       end
 
       describe '#size' do
         subject { stat.size }
-        it { should be_an(Integer) }
+        it { is_expected.to be_an(Integer) }
       end
     end
 
@@ -446,22 +446,22 @@ shared_examples_for 'Filesystem' do
 
       describe '#name' do
         subject { stat.name }
-        it { should == 'file://' + old_file }
+        it { is_expected.to eq('file://' + old_file) }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should == File.stat(old_file).mtime.at_beginning_of_minute.utc }
+        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should be_a(Time) }
+        it { is_expected.to be_a(Time) }
       end
 
       describe '#size' do
         subject { stat.size }
-        it { should be_an(Integer) }
+        it { is_expected.to be_an(Integer) }
       end
     end
 
@@ -474,22 +474,22 @@ shared_examples_for 'Filesystem' do
 
       describe '#name' do
         subject { stat.name }
-        it { should == 's3://bucket/file.txt' }
+        it { is_expected.to eq('s3://bucket/file.txt') }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should == Time.parse('2013-05-24 18:52:00 +0000') }
+        it { is_expected.to eq(Time.parse('2013-05-24 18:52:00 +0000')) }
       end
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { should be_a(Time) }
+        it { is_expected.to be_a(Time) }
       end
 
       describe '#size' do
         subject { stat.size }
-        it { should == 2912 }
+        it { is_expected.to eq(2912) }
       end
     end
   end

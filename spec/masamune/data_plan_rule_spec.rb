@@ -33,7 +33,7 @@ describe Masamune::DataPlanRule do
 
       describe '#path' do
         subject { elem.path }
-        it { should == 'report/2013-04-05/23' }
+        it { is_expected.to eq('report/2013-04-05/23') }
       end
       let(:start_time) { DateTime.civil(2013,04,05,23) }
       let(:stop_time) { DateTime.civil(2013,04,05,0) }
@@ -45,7 +45,7 @@ describe Masamune::DataPlanRule do
 
       describe '#path' do
         subject { elem.path }
-        it { should == 'logs/1365202800.log' }
+        it { is_expected.to eq('logs/1365202800.log') }
       end
       let(:start_time) { DateTime.civil(2013,04,05,23) }
       let(:stop_time) { DateTime.civil(2013,04,05,0) }
@@ -53,9 +53,7 @@ describe Masamune::DataPlanRule do
   end
 
   describe '#bind_input' do
-    subject do
-      instance.bind_input(input)
-    end
+    subject(:elem) { instance.bind_input(input) }
 
     context 'with default' do
       let(:input) { 'report/2013-04-05/23' }
@@ -63,17 +61,17 @@ describe Masamune::DataPlanRule do
 
       describe '#path' do
         subject { elem.path }
-        it { should == input }
+        it { is_expected.to eq(input) }
       end
 
       describe '#start_time' do
         subject { elem.start_time }
-        it { should == output_date }
+        it { is_expected.to eq(output_date) }
       end
 
       describe '#stop_time' do
         subject { elem.stop_time }
-        it { should == output_date.to_time + 1.hour }
+        it { is_expected.to eq(output_date.to_time + 1.hour) }
       end
     end
 
@@ -84,17 +82,17 @@ describe Masamune::DataPlanRule do
 
       describe '#path' do
         subject { elem.path }
-        it { should == input }
+        it { is_expected.to eq(input) }
       end
 
       describe '#start_time' do
         subject { elem.start_time }
-        it { should == output_date }
+        it { is_expected.to eq(output_date) }
       end
 
       describe '#stop_time' do
         subject { elem.stop_time }
-        it { should == output_date.to_time + 1.hour }
+        it { is_expected.to eq(output_date.to_time + 1.hour) }
       end
     end
   end
@@ -104,14 +102,14 @@ describe Masamune::DataPlanRule do
     let(:induced) { described_class.new(plan, name, type, {path: 'table/y=%Y/m=%m/d=%d/h=%H'}) }
     let(:elem) { primary.bind_input(input) }
 
-    subject(:elem) { instance.unify(elem, induced) }
+    subject(:new_elem) { instance.unify(elem, induced) }
 
     context 'when input fully matches basis pattern' do
       let(:input) { 'report/2013-01-02/00' }
 
       describe '#path' do
-        subject { elem.path }
-        it { should == 'table/y=2013/m=01/d=02/h=00' }
+        subject { new_elem.path }
+        it { is_expected.to eq('table/y=2013/m=01/d=02/h=00') }
       end
     end
 
@@ -121,8 +119,8 @@ describe Masamune::DataPlanRule do
       let(:input) { 'report/2013-01-02/00' }
 
       describe '#path' do
-        subject { elem.path }
-        it { should == 'table/2013-01' }
+        subject { new_elem.path }
+        it { is_expected.to eq('table/2013-01') }
       end
     end
   end
@@ -282,7 +280,7 @@ describe Masamune::DataPlanRule do
 
         describe '#pattern' do
           subject { new_instance.pattern }
-          it { should == 'table/y=%Y/m=%m/d=%d/h=%H' }
+          it { is_expected.to eq('table/y=%Y/m=%m/d=%d/h=%H') }
         end
       end
 
@@ -291,7 +289,7 @@ describe Masamune::DataPlanRule do
 
         describe '#pattern' do
           subject { new_instance.pattern }
-          it { should == 'table/y=%Y/m=%m/d=%d' }
+          it { is_expected.to eq('table/y=%Y/m=%m/d=%d') }
         end
       end
 
@@ -300,7 +298,7 @@ describe Masamune::DataPlanRule do
 
         describe '#pattern' do
           subject { new_instance.pattern }
-          it { should == 'table/y=%Y/m=%m' }
+          it { is_expected.to eq('table/y=%Y/m=%m') }
         end
       end
 
@@ -309,7 +307,7 @@ describe Masamune::DataPlanRule do
 
         describe '#pattern' do
           subject { new_instance.pattern }
-          it { should == 'table/y=%Y' }
+          it { is_expected.to eq('table/y=%Y') }
         end
       end
     end
@@ -322,7 +320,7 @@ describe Masamune::DataPlanRule do
 
         describe '#pattern' do
           subject { new_instance.pattern }
-          it { should == 'table/%Y-%m-%d/%H' }
+          it { is_expected.to eq('table/%Y-%m-%d/%H') }
         end
       end
 
@@ -331,7 +329,7 @@ describe Masamune::DataPlanRule do
 
         describe '#pattern' do
           subject { new_instance.pattern }
-          it { should == 'table/%Y-%m-%d' }
+          it { is_expected.to eq('table/%Y-%m-%d') }
         end
       end
 
@@ -340,7 +338,7 @@ describe Masamune::DataPlanRule do
 
         describe '#pattern' do
           subject { new_instance.pattern }
-          it { should == 'table/%Y-%m-%d' }
+          it { is_expected.to eq('table/%Y-%m-%d') }
         end
       end
 
@@ -349,7 +347,7 @@ describe Masamune::DataPlanRule do
 
         describe '#pattern' do
           subject { new_instance.pattern }
-          it { should == 'table/%Y-%m-%d' }
+          it { is_expected.to eq('table/%Y-%m-%d') }
         end
       end
     end

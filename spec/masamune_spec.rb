@@ -5,6 +5,6 @@ describe Masamune do
 
   describe '#context' do
     subject { described_class.context }
-    it { should be_a(Masamune::Context) }
+    it { is_expected.to be_a(Masamune::Context) }
   end
 end
