@@ -24,7 +24,6 @@ module Masamune::Commands
       :print        => false,
       :block        => nil,
       :variables    => {},
-      :rollback     => nil,
       :buffer       => nil,
       :delimiter    => "\001",
       :csv          => false
@@ -108,13 +107,6 @@ module Masamune::Commands
 
     def encode_row(row)
       row unless row == 'NULL' || row == ''
-    end
-
-    def handle_failure(status)
-      if @rollback
-        logger.error('rolling back')
-        @rollback.call
-      end
     end
 
     def load_setup_and_schema_files
