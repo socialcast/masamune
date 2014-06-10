@@ -16,24 +16,25 @@ describe Masamune::DataPlanRule do
 
     context 'with string' do
       let(:pattern) { 'report/%Y-%m-%d/%H' }
-      it { should == 'report/%Y-%m-%d/%H' }
+      it { is_expected.to eq('report/%Y-%m-%d/%H') }
     end
 
     context 'with lambda' do
       let(:pattern) { lambda { |_| 'report/%Y-%m-%d/%H' } }
-      it { should == 'report/%Y-%m-%d/%H' }
+      it { is_expected.to eq('report/%Y-%m-%d/%H') }
     end
   end
 
   describe '#bind_date' do
-    subject do
-      instance.bind_date(input_date)
-    end
+    subject(:elem) { instance.bind_date(input_date) }
 
     context 'with default' do
       let(:input_date) { DateTime.civil(2013,04,05,23,13) }
 
-      its(:path) { should == 'report/2013-04-05/23' }
+      describe '#path' do
+        subject { elem.path }
+        it { is_expected.to eq('report/2013-04-05/23') }
+      end
       let(:start_time) { DateTime.civil(2013,04,05,23) }
       let(:stop_time) { DateTime.civil(2013,04,05,0) }
     end
@@ -42,24 +43,36 @@ describe Masamune::DataPlanRule do
       let(:pattern) { 'logs/%H-s.log' }
       let(:input_date) { DateTime.civil(2013,04,05,23,13) }
 
-      its(:path) { should == 'logs/1365202800.log' }
+      describe '#path' do
+        subject { elem.path }
+        it { is_expected.to eq('logs/1365202800.log') }
+      end
       let(:start_time) { DateTime.civil(2013,04,05,23) }
       let(:stop_time) { DateTime.civil(2013,04,05,0) }
     end
   end
 
   describe '#bind_input' do
-    subject do
-      instance.bind_input(input)
-    end
+    subject(:elem) { instance.bind_input(input) }
 
     context 'with default' do
       let(:input) { 'report/2013-04-05/23' }
       let(:output_date) { DateTime.civil(2013,04,05,23) }
 
-      its(:path) { should == input }
-      its(:start_time) { should == output_date }
-      its(:stop_time) { should == output_date.to_time + 1.hour }
+      describe '#path' do
+        subject { elem.path }
+        it { is_expected.to eq(input) }
+      end
+
+      describe '#start_time' do
+        subject { elem.start_time }
+        it { is_expected.to eq(output_date) }
+      end
+
+      describe '#stop_time' do
+        subject { elem.stop_time }
+        it { is_expected.to eq(output_date.to_time + 1.hour) }
+      end
     end
 
     context 'with unix timestamp pattern' do
@@ -67,9 +80,20 @@ describe Masamune::DataPlanRule do
       let(:input) { 'logs/1365202800.log' }
       let(:output_date) { DateTime.civil(2013,04,05,23) }
 
-      its(:path) { should == input }
-      its(:start_time) { should == output_date }
-      its(:stop_time) { should == output_date.to_time + 1.hour }
+      describe '#path' do
+        subject { elem.path }
+        it { is_expected.to eq(input) }
+      end
+
+      describe '#start_time' do
+        subject { elem.start_time }
+        it { is_expected.to eq(output_date) }
+      end
+
+      describe '#stop_time' do
+        subject { elem.stop_time }
+        it { is_expected.to eq(output_date.to_time + 1.hour) }
+      end
     end
   end
 
@@ -78,21 +102,26 @@ describe Masamune::DataPlanRule do
     let(:induced) { described_class.new(plan, name, type, {path: 'table/y=%Y/m=%m/d=%d/h=%H'}) }
     let(:elem) { primary.bind_input(input) }
 
-    subject do
-      instance.unify(elem, induced)
-    end
+    subject(:new_elem) { instance.unify(elem, induced) }
 
     context 'when input fully matches basis pattern' do
       let(:input) { 'report/2013-01-02/00' }
 
-      its(:path) { should == 'table/y=2013/m=01/d=02/h=00' }
+      describe '#path' do
+        subject { new_elem.path }
+        it { is_expected.to eq('table/y=2013/m=01/d=02/h=00') }
+      end
     end
 
     context 'when input partially matches basis pattern' do
       let(:induced) { described_class.new(plan, name, type, {path: 'table/%Y-%m'}) }
 
       let(:input) { 'report/2013-01-02/00' }
-      its(:path) { should == 'table/2013-01' }
+
+      describe '#path' do
+        subject { new_elem.path }
+        it { is_expected.to eq('table/2013-01') }
+      end
     end
   end
 
@@ -103,47 +132,47 @@ describe Masamune::DataPlanRule do
 
     context 'when input fully matches' do
       let(:input) { 'report/2013-01-02/00' }
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'when input under matches' do
       let(:input) { 'report/2013-01-02' }
-      it { should be_false }
+      it { is_expected.to eq(false) }
     end
 
     context 'when input over matches' do
       let(:pattern) { 'report/%Y-%m-%d' }
       let(:input) { 'report/2013-01-02/00' }
-      it { should be_false }
+      it { is_expected.to eq(false) }
     end
 
     context 'when input does not match' do
       let(:input) { 'report' }
-      it { should be_false }
+      it { is_expected.to eq(false) }
     end
 
     context 'with alternative hour' do
       let(:pattern) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k' }
       let(:input) { 'requests/y=2013/m=5/d=1/h=1' }
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'with alternative hour' do
       let(:pattern) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k' }
       let(:input) { 'requests/y=2013/m=4/d=30/h=20' }
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'with wildcard pattern' do
       let(:pattern) { 'request_logs/%Y%m%d*request.log' }
       let(:input) { 'request_logs/20130524.random.request.log' }
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'with unix timestamp pattern' do
       let(:pattern) { 'request_logs/%H-s.log' }
       let(:input) { 'request_logs/1374192000.log' }
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
   end
 
@@ -162,7 +191,7 @@ describe Masamune::DataPlanRule do
         instance.generate(start_date, stop_date)
       end
 
-      it { elems.map(&:path).should == ['report/2013-04-05/20', 'report/2013-04-05/21', 'report/2013-04-05/22'] }
+      it { expect(elems.map(&:path)).to eq(['report/2013-04-05/20', 'report/2013-04-05/21', 'report/2013-04-05/22']) }
     end
   end
 
@@ -171,47 +200,47 @@ describe Masamune::DataPlanRule do
 
     context '24 hour' do
       let(:pattern) { '%Y-%m-%d/%k' }
-      it { should == :hours }
+      it { is_expected.to eq(:hours) }
     end
     context '24 hour (condensed)' do
       let(:pattern) { '%Y-%m-%d/%-k' }
-      it { should == :hours }
+      it { is_expected.to eq(:hours) }
     end
     context '12 hour' do
       let(:pattern) { '%Y-%m-%d/%H' }
-      it { should == :hours }
+      it { is_expected.to eq(:hours) }
     end
     context '12 hour (condensed)' do
       let(:pattern) { '%Y-%m-%d/%-H' }
-      it { should == :hours }
+      it { is_expected.to eq(:hours) }
     end
     context 'daily' do
       let(:pattern) { '%Y-%m-%d' }
-      it { should == :days }
+      it { is_expected.to eq(:days) }
     end
     context 'monthly' do
       let(:pattern) { '%Y-%m' }
-      it { should == :months }
+      it { is_expected.to eq(:months) }
     end
     context 'yearly' do
       let(:pattern) { '%Y' }
-      it { should == :years }
+      it { is_expected.to eq(:years) }
     end
     context 'hourly unix' do
       let(:pattern) { '%H-s' }
-      it { should == :hours }
+      it { is_expected.to eq(:hours) }
     end
     context 'daily unix' do
       let(:pattern) { '%d-s' }
-      it { should == :days }
+      it { is_expected.to eq(:days) }
     end
     context 'monthly unix' do
       let(:pattern) { '%m-s' }
-      it { should == :months }
+      it { is_expected.to eq(:months) }
     end
     context 'yearly unix' do
       let(:pattern) { '%Y-s' }
-      it { should == :years }
+      it { is_expected.to eq(:years) }
     end
   end
 
@@ -220,24 +249,24 @@ describe Masamune::DataPlanRule do
     subject { instance.time_round(input_time) }
 
     before do
-      instance.stub(:time_step) { time_step }
+      allow(instance).to receive(:time_step) { time_step }
     end
 
     context 'hourly' do
       let(:time_step) { :hours }
-      it { should == DateTime.civil(2013,9,13,23) }
+      it { is_expected.to eq(DateTime.civil(2013,9,13,23)) }
     end
     context 'daily' do
       let(:time_step) { :days }
-      it { should == DateTime.civil(2013,9,13) }
+      it { is_expected.to eq(DateTime.civil(2013,9,13)) }
     end
     context 'monthly' do
       let(:time_step) { :months }
-      it { should == DateTime.civil(2013,9) }
+      it { is_expected.to eq(DateTime.civil(2013,9)) }
     end
     context 'yearly' do
       let(:time_step) { :years }
-      it { should == DateTime.civil(2013) }
+      it { is_expected.to eq(DateTime.civil(2013)) }
     end
   end
 
@@ -248,22 +277,38 @@ describe Masamune::DataPlanRule do
       let(:pattern) { 'table/y=%Y/m=%m/d=%d/h=%H' }
       context 'with :hour' do
         let(:grain) { :hour }
-        its(:pattern) { should == 'table/y=%Y/m=%m/d=%d/h=%H' }
+
+        describe '#pattern' do
+          subject { new_instance.pattern }
+          it { is_expected.to eq('table/y=%Y/m=%m/d=%d/h=%H') }
+        end
       end
 
       context 'with :day' do
         let(:grain) { :day }
-        its(:pattern) { should == 'table/y=%Y/m=%m/d=%d' }
+
+        describe '#pattern' do
+          subject { new_instance.pattern }
+          it { is_expected.to eq('table/y=%Y/m=%m/d=%d') }
+        end
       end
 
       context 'with :month' do
         let(:grain) { :month }
-        its(:pattern) { should == 'table/y=%Y/m=%m' }
+
+        describe '#pattern' do
+          subject { new_instance.pattern }
+          it { is_expected.to eq('table/y=%Y/m=%m') }
+        end
       end
 
       context 'with :year' do
         let(:grain) { :year }
-        its(:pattern) { should == 'table/y=%Y' }
+
+        describe '#pattern' do
+          subject { new_instance.pattern }
+          it { is_expected.to eq('table/y=%Y') }
+        end
       end
     end
 
@@ -272,22 +317,38 @@ describe Masamune::DataPlanRule do
 
       context 'with :hour' do
         let(:grain) { :hour }
-        its(:pattern) { should == 'table/%Y-%m-%d/%H' }
+
+        describe '#pattern' do
+          subject { new_instance.pattern }
+          it { is_expected.to eq('table/%Y-%m-%d/%H') }
+        end
       end
 
       context 'with :day' do
         let(:grain) { :day }
-        its(:pattern) { should == 'table/%Y-%m-%d' }
+
+        describe '#pattern' do
+          subject { new_instance.pattern }
+          it { is_expected.to eq('table/%Y-%m-%d') }
+        end
       end
 
       context 'with :month' do
         let(:grain) { :month }
-        its(:pattern) { should == 'table/%Y-%m-%d' }
+
+        describe '#pattern' do
+          subject { new_instance.pattern }
+          it { is_expected.to eq('table/%Y-%m-%d') }
+        end
       end
 
       context 'with :year' do
         let(:grain) { :year }
-        its(:pattern) { should == 'table/%Y-%m-%d' }
+
+        describe '#pattern' do
+          subject { new_instance.pattern }
+          it { is_expected.to eq('table/%Y-%m-%d') }
+        end
       end
     end
 

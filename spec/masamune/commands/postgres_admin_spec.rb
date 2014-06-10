@@ -19,7 +19,7 @@ describe Masamune::Commands::PostgresAdmin do
 
     context 'action :create with database' do
       let(:attrs) { {action: :create, database: 'zombo'} }
-      it { should == ['createdb', '--host=localhost', '--username=postgres', '--no-password', 'zombo'] }
+      it { is_expected.to eq(['createdb', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
     end
 
     context 'action :create without database' do
@@ -29,7 +29,7 @@ describe Masamune::Commands::PostgresAdmin do
 
     context 'action :drop with database' do
       let(:attrs) { {action: :drop, database: 'zombo'} }
-      it { should == ['dropdb', '--if-exists', '--host=localhost', '--username=postgres', '--no-password', 'zombo'] }
+      it { is_expected.to eq(['dropdb', '--if-exists', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
     end
 
     context 'action :drop without database' do

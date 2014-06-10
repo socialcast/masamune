@@ -7,20 +7,26 @@ require 'securerandom'
 shared_examples_for 'Filesystem' do
   let(:filesystem) { Masamune::Filesystem.new }
 
-  let(:old_dir) { Dir.mktmpdir('masamune') }
-  let(:new_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
-  let(:other_new_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
+  let(:tmp_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
+  let(:old_dir) { File.join(tmp_dir, SecureRandom.hex) }
+  let(:new_dir) { File.join(tmp_dir, SecureRandom.hex) }
+  let(:other_new_dir) { File.join(tmp_dir, SecureRandom.hex) }
   let(:new_file) { File.join(old_dir, SecureRandom.hex) }
   let(:other_new_file) { File.join(old_dir, SecureRandom.hex) }
   let!(:old_file) {
-    File.join(old_dir, SecureRandom.hex).tap do |file|
+    FileUtils.mkdir_p(old_dir)
+    File.join(old_dir, SecureRandom.hex + '.txt').tap do |file|
       FileUtils.touch file
     end
   }
 
+  before do
+    filesystem.configuration.retries = 0
+    FileUtils.mkdir_p(old_dir)
+  end
+
   after do
-    FileUtils.rmdir(old_dir)
-    FileUtils.rmdir(new_dir)
+    FileUtils.rmdir(tmp_dir)
   end
 
   describe '#get_path' do
@@ -28,14 +34,14 @@ shared_examples_for 'Filesystem' do
       before do
         instance.add_path(:home_dir, '/home')
       end
-      it { instance.get_path(:home_dir).should == '/home' }
+      it { expect(instance.get_path(:home_dir)).to eq('/home') }
 
       context 'with extra directories' do
-        it { instance.get_path(:home_dir, 'a', 'b', 'c').should == '/home/a/b/c' }
+        it { expect(instance.get_path(:home_dir, 'a', 'b', 'c')).to eq('/home/a/b/c') }
       end
 
       context 'with extra directories delimited by "/"' do
-        it { instance.get_path(:home_dir, '/a/b', 'c').should == '/home/a/b/c' }
+        it { expect(instance.get_path(:home_dir, '/a/b', 'c')).to eq('/home/a/b/c') }
       end
 
       context 'with parameter substitution' do
@@ -43,19 +49,19 @@ shared_examples_for 'Filesystem' do
           instance.configuration.params[:user] = 'zombo'
           instance.add_path(:user_path, '/home/%user/files')
         end
-        it { instance.get_path(:user_path).should == '/home/zombo/files' }
+        it { expect(instance.get_path(:user_path)).to eq('/home/zombo/files') }
 
         context 'in extra section' do
           before do
             instance.configuration.params[:file] = 'anything_is_possible.txt'
           end
-          it { instance.get_path(:user_path, '%file').should == '/home/zombo/files/anything_is_possible.txt' }
+          it { expect(instance.get_path(:user_path, '%file')).to eq('/home/zombo/files/anything_is_possible.txt') }
         end
       end
     end
 
     context 'before add_path is called' do
-      it { instance.get_path(:home_dir).should be_a(Proc) }
+      it { expect(instance.get_path(:home_dir)).to be_a(Proc) }
     end
   end
 
@@ -64,37 +70,86 @@ shared_examples_for 'Filesystem' do
 
     context 'with local blank' do
       let(:path) { '' }
-      it { should == [] }
+      it { is_expected.to eq([]) }
     end
 
     context 'with local path with slash' do
       let(:path) { '/a/b/c' }
-      it { should == ['/', '/a', '/a/b'] }
+      it { is_expected.to eq(['/', '/a', '/a/b']) }
     end
 
     context 'with local path without slash' do
       let(:path) { 'a/b/c' }
-      it { should == ['a', 'a/b'] }
+      it { is_expected.to eq(['a', 'a/b']) }
     end
 
     context 'with s3 bucket with blank' do
       let(:path) { 's3://bucket' }
-      it { should == [] }
+      it { is_expected.to eq([]) }
     end
 
     context 'with s3 bucket with slash' do
       let(:path) { 's3://bucket/' }
-      it { should == [] }
+      it { is_expected.to eq([]) }
     end
 
     context 'with s3 bucket with path' do
       let(:path) { 's3://bucket/a/b/c' }
-      it { should == ['s3://bucket/', 's3://bucket/a', 's3://bucket/a/b'] }
+      it { is_expected.to eq(['s3://bucket/', 's3://bucket/a', 's3://bucket/a/b']) }
     end
 
     context 'with hdfs directory with path' do
       let(:path) { 'hdfs:///a/b/c' }
-      it { should == ['hdfs:///', 'hdfs:///a', 'hdfs:///a/b'] }
+      it { is_expected.to eq(['hdfs:///', 'hdfs:///a', 'hdfs:///a/b']) }
+    end
+  end
+
+  describe '#root_path?' do
+    subject { instance.root_path?(path) }
+
+    context 'with nil' do
+      let(:path) { nil }
+      it { expect { |b| subject }.to raise_error ArgumentError }
+    end
+
+    context 'with blank' do
+      let(:path) { ' ' }
+      it { expect { |b| subject }.to raise_error ArgumentError }
+    end
+
+    context 'with local root' do
+      let(:path) { '/' }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'with local non-root' do
+      let(:path) { '/tmp' }
+      it { is_expected.to eq(false) }
+    end
+
+    context 'with hdfs root' do
+      let(:path) { 'file:///' }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'with hdfs non-root' do
+      let(:path) { 'file:///tmp' }
+      it { is_expected.to eq(false) }
+    end
+
+    context 'with s3 root' do
+      let(:path) { 's3://bucket/' }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'with s3 non-root' do
+      let(:path) { 's3://bucket/tmp' }
+      it { is_expected.to eq(false) }
+    end
+
+    context 'with s3 bucket' do
+      let(:path) { 's3://bucket' }
+      it { is_expected.to eq(true) }
     end
   end
 
@@ -103,22 +158,22 @@ shared_examples_for 'Filesystem' do
 
     context 'with nil' do
       let(:paths) { nil }
-      it { should be_nil }
+      it { is_expected.to be_nil }
     end
 
     context 'with empty' do
       let(:paths) { [] }
-      it { should be_nil }
+      it { is_expected.to be_nil }
     end
 
     context 'with one file' do
       let(:paths) { old_file }
-      it { should == old_file }
+      it { is_expected.to eq(old_file) }
     end
 
     context 'with directories and file' do
       let(:paths) { [old_dir, new_dir, new_file, old_file] }
-      it { should == old_file }
+      it { is_expected.to eq(old_file) }
     end
   end
 
@@ -127,57 +182,57 @@ shared_examples_for 'Filesystem' do
 
     context 'with local blank' do
       let(:path) { '' }
-      it { should be_blank }
+      it { is_expected.to be_blank }
     end
 
     context 'with local path with slash' do
       let(:path) { '/a/b/c' }
-      it { should == '/a/b' }
+      it { is_expected.to eq('/a/b') }
     end
 
     context 'with local path without slash' do
       let(:path) { 'a/b/c' }
-      it { should == 'a/b' }
+      it { is_expected.to eq('a/b') }
     end
 
     context 'with local relative path' do
       let(:path) { '/a/b/../c' }
-      it { should == '/a/c' }
+      it { is_expected.to eq('/a/c') }
     end
 
     context 'with s3 bucket with blank' do
       let(:path) { 's3://bucket' }
-      it { should == 's3://bucket' }
+      it { is_expected.to eq('s3://bucket') }
     end
 
     context 'with s3 bucket with slash' do
       let(:path) { 's3://bucket/' }
-      it { should == 's3://bucket/' }
+      it { is_expected.to eq('s3://bucket/') }
     end
 
     context 'with s3 bucket with path' do
       let(:path) { 's3://bucket/a/b/c' }
-      it { should == 's3://bucket/a/b' }
+      it { is_expected.to eq('s3://bucket/a/b') }
     end
 
     context 'with s3 bucket with relative path' do
       let(:path) { 's3://bucket/a/b/../c' }
-      it { should == 's3://bucket/a/c' }
+      it { is_expected.to eq('s3://bucket/a/c') }
     end
 
     context 'with hdfs directory with path' do
       let(:path) { 'hdfs:///a/b/c' }
-      it { should == 'hdfs:///a/b' }
+      it { is_expected.to eq('hdfs:///a/b') }
     end
 
     context 'with hdfs directory with path' do
       let(:path) { 'hdfs:///a/b/c' }
-      it { should == 'hdfs:///a/b' }
+      it { is_expected.to eq('hdfs:///a/b') }
     end
 
     context 'with hdfs directory with relative path' do
       let(:path) { 'hdfs:///a/b/../c' }
-      it { should == 'hdfs:///a/c' }
+      it { is_expected.to eq('hdfs:///a/c') }
     end
   end
 
@@ -186,57 +241,57 @@ shared_examples_for 'Filesystem' do
 
     context 'with local blank' do
       let(:path) { '' }
-      it { should be_blank }
+      it { is_expected.to be_blank }
     end
 
     context 'with local path with slash' do
       let(:path) { '/a/b/c' }
-      it { should == 'c' }
+      it { is_expected.to eq('c') }
     end
 
     context 'with local path without slash' do
       let(:path) { 'a/b/c' }
-      it { should == 'c' }
+      it { is_expected.to eq('c') }
     end
 
     context 'with local relative path' do
       let(:path) { '/a/b/../c' }
-      it { should == 'c' }
+      it { is_expected.to eq('c') }
     end
 
     context 'with s3 bucket with blank' do
       let(:path) { 's3://bucket' }
-      it { should be_nil }
+      it { is_expected.to be_nil }
     end
 
     context 'with s3 bucket with slash' do
       let(:path) { 's3://bucket/' }
-      it { should be_nil }
+      it { is_expected.to be_nil }
     end
 
     context 'with s3 bucket with path' do
       let(:path) { 's3://bucket/a/b/c' }
-      it { should == 'c' }
+      it { is_expected.to eq('c') }
     end
 
     context 'with s3 bucket with relative path' do
       let(:path) { 's3://bucket/a/b/../c' }
-      it { should == 'c' }
+      it { is_expected.to eq('c') }
     end
 
     context 'with hdfs directory with path' do
       let(:path) { 'hdfs:///a/b/c' }
-      it { should == 'c' }
+      it { is_expected.to eq('c') }
     end
 
     context 'with hdfs directory with path' do
       let(:path) { 'hdfs:///a/b/c' }
-      it { should == 'c' }
+      it { is_expected.to eq('c') }
     end
 
     context 'with hdfs directory with relative path' do
       let(:path) { 'hdfs:///a/b/../c' }
-      it { should == 'c' }
+      it { is_expected.to eq('c') }
     end
   end
 
@@ -249,20 +304,20 @@ shared_examples_for 'Filesystem' do
       before do
         instance.touch!(new_file, other_new_file)
       end
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'hdfs' do
       before do
         instance.touch!('file://' + new_file, 'file://' + other_new_file)
       end
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 's3' do
       before do
-        filesystem.should_receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/file').at_most(:once)
-        filesystem.should_receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/other_file').at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/file').at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/other_file').at_most(:once)
         instance.touch!('s3://bucket/file', 's3://bucket/other_file')
       end
 
@@ -273,22 +328,169 @@ shared_examples_for 'Filesystem' do
   describe '#exists?' do
     context 'local missing file' do
       subject { instance.exists?(new_file) }
-      it { should be_false }
+      it { is_expected.to eq(false) }
     end
 
     context 'hdfs missing file' do
       subject { instance.exists?('file://' + new_file) }
-      it { should be_false }
+      it { is_expected.to eq(false) }
     end
 
     context 'local existing file' do
       subject { instance.exists?(old_file) }
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'hdfs existing file' do
       subject { instance.exists?('file://' + old_file) }
-      it { should be_true }
+      it { is_expected.to eq(true) }
+    end
+  end
+
+  describe '#stat' do
+    subject(:stat) { result.last }
+    context 'local missing file' do
+      let(:result) { instance.stat(new_file) }
+      it { is_expected.to be_nil }
+    end
+
+    context 'hdfs missing file' do
+      let(:result) { instance.stat('file://' + new_file) }
+      it { is_expected.to be_nil }
+    end
+
+    context 's3 missing file' do
+      before do
+        expect(filesystem).to receive(:s3cmd).with('ls', 's3://bucket/', safe: true).at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|file.txt]}, safe: true).
+          and_yield('')
+      end
+      let(:result) { instance.stat('s3://bucket/file.txt') }
+      it { is_expected.to be_nil }
+    end
+
+    context 'local existing file' do
+      let(:result) { instance.stat(old_file) }
+
+      describe '#name' do
+        subject { stat.name }
+        it { is_expected.to eq(old_file) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to be_a(Time) }
+      end
+
+      describe '#size' do
+        subject { stat.size }
+        it { is_expected.to be_an(Integer) }
+      end
+    end
+
+    context 'local existing file (recursive)' do
+      let(:result) { instance.stat(File.join(tmp_dir, '*')) }
+
+      describe '#name' do
+        subject { stat.name }
+        it { is_expected.to eq(old_file) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to be_a(Time) }
+      end
+
+      describe '#size' do
+        subject { stat.size }
+        it { is_expected.to be_an(Integer) }
+      end
+    end
+
+    context 'local existing file (with suffix)' do
+      let(:result) { instance.stat(File.join(old_dir, '*.txt')) }
+
+      describe '#name' do
+        subject { stat.name }
+        it { is_expected.to eq(old_file) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to be_a(Time) }
+      end
+
+      describe '#size' do
+        subject { stat.size }
+        it { is_expected.to be_an(Integer) }
+      end
+    end
+
+    context 'hdfs existing file' do
+      let(:result) { instance.stat('file://' + old_file) }
+
+      describe '#name' do
+        subject { stat.name }
+        it { is_expected.to eq('file://' + old_file) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to be_a(Time) }
+      end
+
+      describe '#size' do
+        subject { stat.size }
+        it { is_expected.to be_an(Integer) }
+      end
+    end
+
+    context 's3 existing file' do
+      before do
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|file.txt]}, safe: true).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/file.txt))
+      end
+      let(:result) { instance.stat('s3://bucket/file.txt') }
+
+      describe '#name' do
+        subject { stat.name }
+        it { is_expected.to eq('s3://bucket/file.txt') }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to eq(Time.parse('2013-05-24 18:52:00 +0000')) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to be_a(Time) }
+      end
+
+      describe '#size' do
+        subject { stat.size }
+        it { is_expected.to eq(2912) }
+      end
     end
   end
 
@@ -301,20 +503,20 @@ shared_examples_for 'Filesystem' do
       before do
         instance.mkdir!(new_dir, other_new_dir)
       end
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'hdfs directory' do
       before do
         instance.mkdir!('file://' + new_dir, 'file://' + other_new_dir)
       end
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 's3 directory' do
       before do
-        filesystem.should_receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/dir/.not_empty').at_most(:once)
-        filesystem.should_receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/other_dir/.not_empty').at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/dir/.not_empty').at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/other_dir/.not_empty').at_most(:once)
         instance.mkdir!('s3://bucket/dir', 's3://bucket/other_dir')
       end
 
@@ -329,25 +531,44 @@ shared_examples_for 'Filesystem' do
 
     context 'local no matches' do
       let(:pattern) { File.join(new_dir, '*') }
-      it { should be_empty }
+      it { is_expected.to be_empty }
       it { expect { |b| instance.glob(pattern, &b) }.to_not yield_control }
     end
 
     context 'local one matches' do
       let(:pattern) { File.join(File.dirname(old_file), '*') }
-      it { should_not be_empty }
+      it { is_expected.not_to be_empty }
+      it { expect { |b| instance.glob(pattern, &b) }.to yield_with_args(old_file) }
+    end
+
+    context 'local one matches (recursive)' do
+      let(:pattern) { File.join(tmp_dir, '*') }
+      it 'has 2 items' do
+        expect(subject.size).to eq(2)
+      end
+      it { is_expected.to include old_dir }
+      it { is_expected.to include old_file }
+      it { expect { |b| instance.glob(pattern, &b) }.to yield_successive_args(old_dir, old_file) }
+    end
+
+    context 'local one matches (with suffix)' do
+      let(:pattern) { File.join(File.dirname(old_file), '*.txt') }
+      it 'has 1 item' do
+        expect(subject.size).to eq(1)
+      end
+      it { is_expected.to include old_file }
       it { expect { |b| instance.glob(pattern, &b) }.to yield_with_args(old_file) }
     end
 
     context 'hdfs no matches' do
       let(:pattern) { File.join(new_dir, '*') }
-      it { should be_empty }
+      it { is_expected.to be_empty }
       it { expect { |b| instance.glob('file://' + pattern, &b) }.to_not yield_control }
     end
 
     context 'hdfs one matches' do
       let(:pattern) { File.join(File.dirname(old_file), '*') }
-      it { should_not be_empty }
+      it { is_expected.not_to be_empty }
       it { expect { |b| instance.glob('file://' + pattern, &b) }.to yield_with_args('file://' + old_file) }
     end
 
@@ -355,51 +576,51 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        filesystem.should_receive(:s3cmd).with('ls', "s3://bucket/dir", safe: true).at_most(:once)
-        filesystem.should_receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true)
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/*", safe: true).at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).at_most(:once)
       end
 
-      it { should be_empty }
+      it { is_expected.to be_empty }
     end
 
     context 's3 one matches' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        filesystem.should_receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
       end
 
-      it { should include 's3://bucket/dir/file.txt' }
-      it { should_not include 's3://bucket/dir/file.csv' }
+      it { is_expected.to include 's3://bucket/dir/file.txt' }
+      it { is_expected.not_to include 's3://bucket/dir/file.csv' }
     end
 
     context 's3 many matches' do
       let(:pattern) { 's3://bucket/dir/*' }
 
       before do
-        filesystem.should_receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
           and_yield(%q(                       DIR   s3://bucket/dir/file_$folder$)).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
       end
 
-      it { should include 's3://bucket/dir/file.txt' }
-      it { should include 's3://bucket/dir/file.csv' }
+      it { is_expected.to include 's3://bucket/dir/file.txt' }
+      it { is_expected.to include 's3://bucket/dir/file.csv' }
     end
   end
 
   describe '#glob_sort' do
     before do
-      Masamune::Filesystem.any_instance.stub(:glob).and_return(%w(/tmp/a/02.txt /tmp/b/01.txt /tmp/c/00.txt))
+      allow_any_instance_of(Masamune::Filesystem).to receive(:glob).and_return(%w(/tmp/a/02.txt /tmp/b/01.txt /tmp/c/00.txt))
     end
 
     subject do
       instance.glob_sort('/tmp/*', order: :basename)
     end
 
-    it { should == %w(/tmp/c/00.txt /tmp/b/01.txt /tmp/a/02.txt) }
+    it { is_expected.to eq(%w(/tmp/c/00.txt /tmp/b/01.txt /tmp/a/02.txt)) }
   end
 
   describe '#copy_file' do
@@ -412,12 +633,12 @@ shared_examples_for 'Filesystem' do
         instance.copy_file(old_file, new_dir)
       end
 
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'local file to s3 dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('put', old_file, 's3://bucket/new_dir/')
+        expect(filesystem).to receive(:s3cmd).with('put', old_file, 's3://bucket/new_dir/')
         instance.copy_file(old_file, 's3://bucket/new_dir')
       end
 
@@ -429,7 +650,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_file(old_file, 'file://' + new_dir)
       end
 
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'hdfs file to hdfs dir' do
@@ -437,7 +658,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_file('file://' + old_file, 'file://' + new_dir)
       end
 
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'hdfs file to local dir' do
@@ -445,12 +666,12 @@ shared_examples_for 'Filesystem' do
         instance.copy_file('file://' + old_file, new_dir)
       end
 
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'hdfs file to s3 dir' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir')
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir')
         instance.copy_file('file://' + old_file, 's3://bucket/new_dir')
       end
 
@@ -459,7 +680,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to s3 dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('cp', 's3://bucket/old_file', 's3://bucket/new_dir/')
+        expect(filesystem).to receive(:s3cmd).with('cp', 's3://bucket/old_file', 's3://bucket/new_dir/')
         instance.copy_file('s3://bucket/old_file', 's3://bucket/new_dir')
       end
 
@@ -468,7 +689,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to local dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('get', 's3://bucket/old_file', new_dir)
+        expect(filesystem).to receive(:s3cmd).with('get', 's3://bucket/old_file', new_dir)
         instance.copy_file('s3://bucket/old_file', new_dir)
       end
 
@@ -477,8 +698,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to hdfs dir' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
-        filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_file', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 's3n://bucket/old_file', 'file://' + new_dir)
         instance.copy_file('s3://bucket/old_file', 'file://' + new_dir)
       end
 
@@ -496,12 +717,12 @@ shared_examples_for 'Filesystem' do
         instance.copy_dir(old_dir, new_dir)
       end
 
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'local dir to s3 dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('put', '--recursive', old_dir, 's3://bucket/new_dir/')
+        expect(filesystem).to receive(:s3cmd).with('put', '--recursive', old_dir, 's3://bucket/new_dir/')
         instance.copy_dir(old_dir, 's3://bucket/new_dir')
       end
 
@@ -513,7 +734,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_dir(old_dir, 'file://' + new_dir)
       end
 
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'hdfs dir to hdfs dir' do
@@ -521,7 +742,7 @@ shared_examples_for 'Filesystem' do
         instance.copy_dir('file://' + old_dir, 'file://' + new_dir)
       end
 
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'hdfs dir to local dir' do
@@ -529,12 +750,12 @@ shared_examples_for 'Filesystem' do
         instance.copy_dir('file://' + old_dir, new_dir)
       end
 
-      it { should be_true }
+      it { is_expected.to eq(true) }
     end
 
     context 'hdfs dir to s3 dir' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 's3n://bucket/new_dir')
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 's3n://bucket/new_dir')
         instance.copy_dir('file://' + old_dir, 's3://bucket/new_dir')
       end
 
@@ -543,7 +764,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to s3 dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('cp', '--recursive', 's3://bucket/old_dir/', 's3://bucket/new_dir/')
+        expect(filesystem).to receive(:s3cmd).with('cp', '--recursive', 's3://bucket/old_dir/', 's3://bucket/new_dir/')
         instance.copy_dir('s3://bucket/old_dir', 's3://bucket/new_dir')
       end
 
@@ -552,7 +773,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to local dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('get', '--recursive', '--skip-existing', 's3://bucket/old_dir/', File.join(new_dir, 'old_dir'))
+        expect(filesystem).to receive(:s3cmd).with('get', '--recursive', '--skip-existing', 's3://bucket/old_dir/', File.join(new_dir, 'old_dir'))
         instance.copy_dir('s3://bucket/old_dir', new_dir)
       end
 
@@ -561,8 +782,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to hdfs dir' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
-        filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
         instance.copy_dir('s3://bucket/old_dir', 'file://' + new_dir)
       end
 
@@ -580,7 +801,13 @@ shared_examples_for 'Filesystem' do
         instance.remove_dir(old_dir)
       end
 
-      it { should be_false}
+      it { is_expected.to eq(false)}
+    end
+
+    context 'local root dir' do
+      it { expect { instance.remove_dir('/') }.to raise_error /root path/ }
+
+      it 'meets expectations' do; end
     end
 
     context 'hdfs dir' do
@@ -588,15 +815,31 @@ shared_examples_for 'Filesystem' do
         instance.remove_dir('file://' + old_dir)
       end
 
-      it { should be_false}
+      it { is_expected.to eq(false)}
+    end
+
+    context 'hdfs root dir' do
+      it { expect { instance.remove_dir('file:///') }.to raise_error /root path/ }
+
+      it 'meets expectations' do; end
     end
 
     context 's3 dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir/')
-        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir_$folder$')
+        expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir/')
+        expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir_$folder$')
         instance.remove_dir('s3://bucket/dir')
       end
+
+      it 'meets expectations' do; end
+    end
+
+    context 's3 root dir' do
+      before do
+        expect(filesystem).to receive(:s3cmd).never
+      end
+
+      it { expect { instance.remove_dir('s3://bucket/') }.to raise_error /root path/ }
 
       it 'meets expectations' do; end
     end
@@ -613,22 +856,22 @@ shared_examples_for 'Filesystem' do
 
     context 'local file to local file' do
       before do
-        FileUtils.should_receive(:chmod).once
+        expect(FileUtils).to receive(:chmod).once
         instance.move_file(old_file, new_file)
       end
 
-      it { removes_old_file.should be_true }
-      it { creates_new_file.should be_true }
+      it { expect(removes_old_file).to eq(true) }
+      it { expect(creates_new_file).to eq(true) }
     end
 
     context 'local file to s3 file' do
       before do
-        filesystem.should_receive(:s3cmd).with('put', old_file, 's3://bucket/new_dir')
+        expect(filesystem).to receive(:s3cmd).with('put', old_file, 's3://bucket/new_dir')
         instance.move_file(old_file, 's3://bucket/new_dir')
       end
 
       it 'meets expectations' do; end
-      it { removes_old_file.should be_true }
+      it { expect(removes_old_file).to eq(true) }
     end
 
     context 'local file to hdfs file' do
@@ -636,8 +879,8 @@ shared_examples_for 'Filesystem' do
         instance.move_file(old_file, 'file://' + new_file)
       end
 
-      it { removes_old_file.should be_true }
-      it { creates_new_file.should be_true }
+      it { expect(removes_old_file).to eq(true) }
+      it { expect(creates_new_file).to eq(true) }
     end
 
     context 'hdfs file to hdfs file' do
@@ -645,8 +888,8 @@ shared_examples_for 'Filesystem' do
         instance.move_file('file://' + old_file, 'file://' + new_file)
       end
 
-      it { removes_old_file.should be_true }
-      it { creates_new_file.should be_true }
+      it { expect(removes_old_file).to eq(true) }
+      it { expect(creates_new_file).to eq(true) }
     end
 
     context 'hdfs file to local file' do
@@ -654,14 +897,14 @@ shared_examples_for 'Filesystem' do
         instance.move_file('file://' + old_file, new_file)
       end
 
-      it { removes_old_file.should be_true }
-      it { creates_new_file.should be_true }
+      it { expect(removes_old_file).to eq(true) }
+      it { expect(creates_new_file).to eq(true) }
     end
 
     context 'hdfs file to s3 file' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir')
-        filesystem.should_receive(:hadoop_fs).with('-rm', 'file://' + old_file)
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir')
+        expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file('file://' + old_file, 's3://bucket/new_dir')
       end
 
@@ -670,7 +913,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to s3 file' do
       before do
-        filesystem.should_receive(:s3cmd).with('mv', 's3://bucket/old_file', 's3://bucket/new_dir')
+        expect(filesystem).to receive(:s3cmd).with('mv', 's3://bucket/old_file', 's3://bucket/new_dir')
         instance.move_file('s3://bucket/old_file', 's3://bucket/new_dir')
       end
 
@@ -679,8 +922,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to local file' do
       before do
-        filesystem.should_receive(:s3cmd).with('get', 's3://bucket/old_file', new_dir)
-        filesystem.should_receive(:s3cmd).with('del', 's3://bucket/old_file')
+        expect(filesystem).to receive(:s3cmd).with('get', 's3://bucket/old_file', new_dir)
+        expect(filesystem).to receive(:s3cmd).with('del', 's3://bucket/old_file')
         instance.move_file('s3://bucket/old_file', new_dir)
       end
 
@@ -689,8 +932,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 file to hdfs file' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + File.dirname(new_file))
-        filesystem.should_receive(:hadoop_fs).with('-mv', 's3n://bucket/old_file', 'file://' + new_file)
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + File.dirname(new_file))
+        expect(filesystem).to receive(:hadoop_fs).with('-mv', 's3n://bucket/old_file', 'file://' + new_file)
         instance.move_file('s3://bucket/old_file', 'file://' + new_file)
       end
 
@@ -712,18 +955,18 @@ shared_examples_for 'Filesystem' do
         instance.move_dir(old_dir, new_dir)
       end
 
-      it { removes_old_dir.should be_true }
-      it { creates_new_dir.should be_true }
+      it { expect(removes_old_dir).to eq(true) }
+      it { expect(creates_new_dir).to eq(true) }
     end
 
     context 'local dir to s3 dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('put', '--recursive', old_dir + '/', 's3://bucket/new_dir/')
+        expect(filesystem).to receive(:s3cmd).with('put', '--recursive', old_dir + '/', 's3://bucket/new_dir/')
         instance.move_dir(old_dir, 's3://bucket/new_dir')
       end
 
       it 'meets expectations' do; end
-      it { removes_old_dir.should be_true }
+      it { expect(removes_old_dir).to eq(true) }
     end
 
     context 'local dir to hdfs dir' do
@@ -731,8 +974,8 @@ shared_examples_for 'Filesystem' do
         instance.move_dir(old_dir, 'file://' + new_dir)
       end
 
-      it { removes_old_dir.should be_true }
-      it { creates_new_dir.should be_true }
+      it { expect(removes_old_dir).to eq(true) }
+      it { expect(creates_new_dir).to eq(true) }
     end
 
     context 'hdfs dir to hdfs dir' do
@@ -740,8 +983,8 @@ shared_examples_for 'Filesystem' do
         instance.move_dir('file://' + old_dir, 'file://' + new_dir)
       end
 
-      it { removes_old_dir.should be_true }
-      it { creates_new_dir.should be_true }
+      it { expect(removes_old_dir).to eq(true) }
+      it { expect(creates_new_dir).to eq(true) }
     end
 
     context 'hdfs dir to local dir' do
@@ -749,14 +992,14 @@ shared_examples_for 'Filesystem' do
         instance.move_dir('file://' + old_dir, new_dir)
       end
 
-      it { removes_old_dir.should be_true }
-      it { creates_new_dir.should be_true }
+      it { expect(removes_old_dir).to eq(true) }
+      it { expect(creates_new_dir).to eq(true) }
     end
 
     context 'hdfs dir to s3 dir' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 's3n://bucket/new_dir/')
-        filesystem.should_receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 's3n://bucket/new_dir/')
+        expect(filesystem).to receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
         instance.move_dir('file://' + old_dir, 's3://bucket/new_dir')
       end
 
@@ -765,7 +1008,7 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to s3 dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('mv', '--recursive', 's3://bucket/old_dir/', 's3://bucket/new_dir')
+        expect(filesystem).to receive(:s3cmd).with('mv', '--recursive', 's3://bucket/old_dir/', 's3://bucket/new_dir')
         instance.move_dir('s3://bucket/old_dir', 's3://bucket/new_dir')
       end
 
@@ -774,9 +1017,9 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to local dir' do
       before do
-        filesystem.should_receive(:s3cmd).with('get', '--recursive', 's3://bucket/old_dir/', new_dir)
-        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir/')
-        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir_$folder$')
+        expect(filesystem).to receive(:s3cmd).with('get', '--recursive', 's3://bucket/old_dir/', new_dir)
+        expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir/')
+        expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir_$folder$')
         instance.move_dir('s3://bucket/old_dir', new_dir)
       end
 
@@ -785,10 +1028,10 @@ shared_examples_for 'Filesystem' do
 
     context 's3 dir to hdfs dir' do
       before do
-        filesystem.should_receive(:hadoop_fs).with('-mkdir', 'file://' + new_dir)
-        filesystem.should_receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
-        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir/')
-        filesystem.should_receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir_$folder$')
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
+        expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir/')
+        expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir_$folder$')
         instance.move_dir('s3://bucket/old_dir', 'file://' + new_dir)
       end
 
@@ -856,7 +1099,7 @@ shared_examples_for 'Filesystem' do
         instance.cat(new_file).string
       end
 
-      it { should == 'dog' }
+      it { is_expected.to eq('dog') }
     end
 
     context 'result of directory glob' do
@@ -869,7 +1112,7 @@ shared_examples_for 'Filesystem' do
         instance.cat(*instance.glob(instance.path(:new_dir, '**', '*'))).string
       end
 
-      it { should == 'dog' }
+      it { is_expected.to eq('dog') }
     end
   end
 

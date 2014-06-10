@@ -26,15 +26,15 @@ class Masamune::DataPlanSet < Set
 
   def missing(&block)
     self.each do |elem|
-      yield elem if elem.set.empty?
+      yield elem if elem.explode.empty?
     end
   end
   method_accumulate :missing, lambda { |set| set.class.new(set.rule) }
 
   def existing(&block)
     self.each do |elem|
-      elem.set do |path|
-        yield elem.rule.bind_input(path)
+      elem.explode do |new_elem|
+        yield new_elem
       end
     end
   end
@@ -59,6 +59,14 @@ class Masamune::DataPlanSet < Set
     end
   end
   method_accumulate :actionable, lambda { |set| set.class.new(set.rule) }
+
+  def stale(&block)
+    return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_sources?
+    self.each do |target|
+      yield target if target.sources.existing.any? { |source| target_stale?(source, target) }
+    end
+  end
+  method_accumulate :stale, lambda { |set| set.class.new(set.rule) }
 
   # TODO detect & warn or correct if coarser grain set is incomplete
   def with_grain(grain, &block)
@@ -114,5 +122,11 @@ class Masamune::DataPlanSet < Set
     else
       raise "Unhandled enum class #{enum.class}"
     end
+  end
+
+  def target_stale?(source, target)
+    target.last_modified_at != Masamune::DataPlanElem::MISSING_MODIFIED_AT &&
+    source.last_modified_at != Masamune::DataPlanElem::MISSING_MODIFIED_AT &&
+    source.last_modified_at >= target.last_modified_at
   end
 end

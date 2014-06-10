@@ -79,6 +79,12 @@ module Masamune
     end
     method_accumulate :parent_paths
 
+    def root_path?(path)
+      raise ArgumentError, 'path cannot be nil' if path.nil?
+      raise ArgumentError, 'path cannot be blank' if path.blank?
+      parent_paths(path).length < 1
+    end
+
     def resolve_file(paths = [])
       Array.wrap(paths).select { |path| File.exists?(path) && File.file?(path) }.first
     end
@@ -122,11 +128,38 @@ module Masamune
       end
     end
 
+    def stat(pattern, &block)
+      case type(pattern)
+      when :hdfs
+        hadoop_fs('-ls', pattern, safe: true) do |line|
+          next if line =~ /\AFound \d+ items/
+          size, date, time, name = line.split(/\s+/).last(4)
+          next unless size && date && time && name
+          yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").at_beginning_of_minute.utc, size: size.to_i)
+        end
+      when :s3
+        file_glob, file_regexp = glob_split(pattern)
+        s3cmd('ls', '--recursive', s3b(file_glob), safe: true) do |line|
+          next if line =~ /\$folder$/
+          date, time, size, name = line.split(/\s+/)
+          next unless size && date && time && name
+          next unless name =~ file_regexp
+          yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").at_beginning_of_minute.utc, size: size.to_i)
+        end
+      when :local
+        Dir.glob(pattern.gsub(%r{/\*\Z}, '/**/*')) do |file|
+          stat = File.stat(file)
+          yield OpenStruct.new(name: file, mtime: stat.mtime.at_beginning_of_minute.utc, size: stat.size.to_i)
+        end
+      end
+    end
+    method_accumulate :stat
+
     def mkdir!(*dirs)
       dirs.group_by { |path| type(path) }.each do |type, dir_set|
         case type
         when :hdfs
-          hadoop_fs('-mkdir', *dir_set)
+          hadoop_fs('-mkdir', '-p', *dir_set)
         when :s3
           touch! *dir_set.map { |dir| File.join(dir, '.not_empty') }
         when :local
@@ -138,20 +171,23 @@ module Masamune
     def glob(pattern, &block)
       case type(pattern)
       when :hdfs
+        file_glob, file_regexp = glob_split(pattern)
         hadoop_fs('-ls', pattern, safe: true) do |line|
           next if line =~ /\AFound \d+ items/
-          yield q(pattern, line.split(/\s+/).last)
+          name = line.split(/\s+/).last
+          next unless name && name =~ file_regexp
+          yield q(pattern, name)
         end
       when :s3
-        head_glob, *tail_glob = pattern.split('*')
-        tail_regexp = Regexp.compile(tail_glob.map { |glob| Regexp.escape(glob) }.join('.*?') + '\z')
-        s3cmd('ls', '--recursive', s3b(head_glob + '*'), safe: true) do |line|
+        file_glob, file_regexp = glob_split(pattern)
+        s3cmd('ls', '--recursive', s3b(file_glob), safe: true) do |line|
           next if line =~ /\$folder$/
-          next unless line =~ tail_regexp
-          yield q(pattern, line.split(/\s+/).last)
+          name = line.split(/\s+/).last
+          next unless name && name =~ file_regexp
+          yield q(pattern, name)
         end
       when :local
-        Dir.glob(pattern) do |file|
+        Dir.glob(pattern.gsub(%r{/\*\Z}, '/**/*')) do |file|
           yield file
         end
       end
@@ -221,7 +257,7 @@ module Masamune
     end
 
     def remove_dir(dir)
-      # FIXME never rm blank or slash
+      raise "#{dir} is root path, cannot remove" if root_path?(dir)
       check_immutable_path!(dir)
       case type(dir)
       when :hdfs
@@ -342,6 +378,14 @@ module Masamune
       end
     end
 
+    def glob_split(input)
+      [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input) ]
+    end
+
+    def glob_to_regexp(input)
+      /\A#{Regexp.escape(input).gsub('\\*', '.*?')}\z/
+    end
+
     private
 
     def eager_load_path(path)
@@ -353,6 +397,13 @@ module Masamune
       else
         raise "Unknown path #{path.inspect}"
       end
+    end
+
+    def remote_prefix(dir)
+      dir[%r{\As3n?://.*?(?=/)}] ||
+      dir[%r{\As3n?://.*?\Z}] ||
+      dir[%r{\Afile://}] ||
+      dir[%r{\Ahdfs://}]
     end
 
     def eager_load_paths?
@@ -392,13 +443,6 @@ module Masamune
       file.chomp('/')
     end
     alias :f :ensure_file
-
-    def remote_prefix(dir)
-      dir[%r{\As3n?://.*?(?=/)}] ||
-      dir[%r{\As3n?://.*?\Z}] ||
-      dir[%r{\Afile://}] ||
-      dir[%r{\Ahdfs://}]
-    end
 
     def add_immutable_path(path)
       @immutable_paths[path] = /\A#{Regexp.escape(path)}/

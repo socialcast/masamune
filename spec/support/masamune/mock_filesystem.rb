@@ -6,27 +6,41 @@ class Masamune::MockFilesystem < Delegator
   def initialize
     @filesystem = Masamune::Filesystem.new
     @filesystem.add_path :root_dir, File.expand_path('../../../', __FILE__)
-    @files = []
+    @files = {}
   end
 
-  def touch!(*files)
-    @files += files
+  def touch!(*args)
+    opts = args.last.is_a?(Hash) ? args.pop : {}
+    args.each do |file|
+      @files[file] = OpenStruct.new(opts.merge(name: file))
+    end
   end
 
   def exists?(file)
-    @files.include?(file)
+    @files.keys.include?(file)
   end
 
   def glob(pattern, &block)
-    matcher = Regexp.compile(pattern.gsub('*', '.*?'))
-    @files.each do |elem|
-      yield elem if matcher.match(elem)
+    file_regexp = glob_to_regexp(pattern)
+    @files.keys.each do |name|
+      yield name if name =~ file_regexp
     end
   end
   method_accumulate :glob
 
   def glob_sort(pattern, options = {})
     glob(pattern)
+  end
+
+  def stat(pattern, &block)
+    file_regexp = glob_to_regexp(pattern)
+    @files.each do |name, stat|
+      yield stat if name =~ file_regexp
+    end
+  end
+  method_accumulate :stat
+
+  def clear!
   end
 
   def __getobj__

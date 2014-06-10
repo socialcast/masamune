@@ -6,12 +6,12 @@ describe Masamune::Configuration do
 
   describe '.default_config_file' do
     subject { described_class.default_config_file }
-    it { should =~ %r{config/masamune\.yml\.erb\Z} }
+    it { is_expected.to match(%r{config/masamune\.yml\.erb\Z}) }
   end
 
   describe '#default_config_file' do
     subject { instance.default_config_file }
-    it { should =~ %r{config/masamune\.yml\.erb\Z} }
+    it { is_expected.to match(%r{config/masamune\.yml\.erb\Z}) }
   end
 
   describe '#bind_template' do
@@ -61,7 +61,7 @@ describe Masamune::Configuration do
       context 'when params missing but default exists' do
         let(:template) { :list_with_state }
         let(:params) { {key_pair: 'emr-2013'} }
-        it { should == ['--list', '--key-pair', 'emr-2013', '--start', 'RUNNING', '--verbose=true'] }
+        it { is_expected.to eq(['--list', '--key-pair', 'emr-2013', '--start', 'RUNNING', '--verbose=true']) }
       end
 
       context 'when params missing and default missing' do
@@ -73,7 +73,7 @@ describe Masamune::Configuration do
       context 'with params' do
         let(:template) { :list_with_state }
         let(:params) { {key_pair: 'emr-2013', state: 'COMPLETED'} }
-        it { should == ['--list', '--key-pair', 'emr-2013', '--start', 'COMPLETED', '--verbose=true'] }
+        it { is_expected.to eq(['--list', '--key-pair', 'emr-2013', '--start', 'COMPLETED', '--verbose=true']) }
       end
     end
   end

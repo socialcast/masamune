@@ -22,13 +22,13 @@ describe Masamune::Template do
       let(:template) { File.expand_path('../../fixtures/simple.sql.erb', __FILE__) }
       let(:parameters) { {table: 'zombo'} }
 
-      it { should == "SELECT * FROM zombo;\n" }
+      it { is_expected.to eq("SELECT * FROM zombo;\n") }
     end
 
     context 'with aggregate template' do
       let(:template) { File.expand_path('../../fixtures/aggregate.sql.erb', __FILE__) }
 
-      it do should == <<-EOS.gsub(/^\s*/,'')
+      it do is_expected.to eq <<-EOS.gsub(/^\s*/,'')
         SHOW TABLES;
         SELECT * FROM foo;
         SELECT * FROM bar;
@@ -38,7 +38,7 @@ describe Masamune::Template do
 
     context 'with aggregate template with relative path' do
       let(:template) { File.join(File.dirname(__FILE__), '..', 'fixtures', 'relative.sql.erb') }
-      it { should == "SELECT * FROM relative;\n" }
+      it { is_expected.to eq("SELECT * FROM relative;\n") }
     end
   end
 end

@@ -17,7 +17,7 @@ module Masamune::Actions
     end
 
     def create_database_if_not_exists
-      unless postgres(exec: 'SELECT version();', fail_fast: false).success?
+      unless postgres_helper.database_exists?
         postgres_admin(action: :create, database: configuration.postgres[:database], safe: true)
       end if configuration.postgres.has_key?(:database)
     end

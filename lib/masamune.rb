@@ -6,6 +6,7 @@ module Masamune
   require 'masamune/commands'
   require 'masamune/accumulate'
   require 'masamune/actions'
+  require 'masamune/helpers'
   require 'masamune/configuration'
   require 'masamune/data_plan'
   require 'masamune/data_plan_rule'

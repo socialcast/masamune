@@ -52,7 +52,7 @@ class Masamune::DataPlan
         Masamune::DataPlanRule::TERMINAL
       end
     else
-      context.logger.error("Multiple rules match target #{target}") if target_matches.length > 1
+      logger.error("Multiple rules match target #{target}") if target_matches.length > 1
       target_matches.map(&:first).first
     end
   end
@@ -97,6 +97,18 @@ class Masamune::DataPlan
   def prepare(rule, options = {})
     @targets[rule].merge options.fetch(:targets, [])
     @sources[rule].merge options.fetch(:sources, [])
+
+    dirty = false
+    targets(rule).stale do |target|
+      if target.removable?
+        logger.warn("Detected stale target #{target.input}, removing")
+        target.remove
+        dirty = true
+      else
+        logger.warn("Detected stale target #{target.input}, skipping")
+      end
+    end
+    context.clear! if dirty
   end
 
   def execute(rule, options = {})
@@ -114,6 +126,7 @@ class Masamune::DataPlan
     @current_rule = rule
     @command_rules[rule].call(self, rule, options)
     @set_cache.clear
+    context.clear!
   ensure
     @current_rule = nil
   end

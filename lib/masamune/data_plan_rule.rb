@@ -11,13 +11,12 @@ class Masamune::DataPlanRule
 
   include Masamune::Accumulate
 
-  attr_reader :plan, :name, :type, :pattern, :options
+  attr_reader :plan, :name, :type, :options
 
   def initialize(plan, name, type, options = {})
     @plan    = plan
     @name    = name
     @type    = type
-    @pattern = options[:path] || options[:table].to_s
     @options = options
   end
 
@@ -37,6 +36,22 @@ class Masamune::DataPlanRule
     @options.key?(:table)
   end
 
+  def for_table_with_partition?
+    @options.key?(:table) && @options.key?(:partition)
+  end
+
+  def path
+    @options[:path]
+  end
+
+  def table
+    @options[:table]
+  end
+
+  def partition
+    @options[:partition]
+  end
+
   def ==(other)
     plan    == other.plan &&
     name    == other.name &&
@@ -54,7 +69,15 @@ class Masamune::DataPlanRule
   end
 
   def pattern
-    @pattern.respond_to?(:call) ? @pattern.call(plan.filesystem) : @pattern
+    @pattern ||= begin
+      if for_path?
+        path.respond_to?(:call) ? path.call(plan.filesystem) : path
+      elsif for_table_with_partition?
+        [table , partition].join('_')
+      elsif for_table?
+        table
+      end.to_s
+    end
   end
 
   def primary?

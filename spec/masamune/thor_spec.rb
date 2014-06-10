@@ -34,7 +34,7 @@ describe Masamune::Thor do
   end
 
   before do
-    klass.any_instance.stub(:top_level?).and_return(true)
+    allow_any_instance_of(klass).to receive(:top_level?).and_return(true)
   end
 
   context 'CLI' do
@@ -55,7 +55,7 @@ describe Masamune::Thor do
       let(:options) { ['--start', '2013-01-01'] }
 
       before do
-        klass.any_instance.stub(:top_level?).and_return(false)
+        allow_any_instance_of(klass).to receive(:top_level?).and_return(false)
       end
 
       it 'continues execution' do
@@ -66,11 +66,11 @@ describe Masamune::Thor do
     shared_examples 'general usage' do
       it 'exits with status code 0 and prints general usage' do
         expect { subject }.to raise_error { |e|
-          e.should be_a(SystemExit)
-          e.status.should == 0
+          expect(e).to be_a(SystemExit)
+          expect(e.status).to eq(0)
         }
-        stdout.string.should =~ /^Commands:/
-        stderr.string.should be_blank
+        expect(stdout.string).to match(/^Commands:/)
+        expect(stderr.string).to be_blank
       end
     end
 
@@ -86,12 +86,12 @@ describe Masamune::Thor do
     shared_examples 'command usage' do
       it 'exits with status code 0 and prints command usage' do
         expect { subject }.to raise_error { |e|
-          e.should be_a(SystemExit)
-          e.status.should == 0
+          expect(e).to be_a(SystemExit)
+          expect(e.status).to eq(0)
         }
-        stdout.string.should =~ /^Usage:/
-        stdout.string.should =~ /--zombo/
-        stderr.string.should be_blank
+        expect(stdout.string).to match(/^Usage:/)
+        expect(stdout.string).to match(/--zombo/)
+        expect(stderr.string).to be_blank
       end
     end
 
@@ -112,11 +112,11 @@ describe Masamune::Thor do
       let(:options) { ['--version'] }
       it 'exits with status code 0 and prints version' do
         expect { subject }.to raise_error { |e|
-          e.should be_a(SystemExit)
-          e.status.should == 0
+          expect(e).to be_a(SystemExit)
+          expect(e.status).to eq(0)
         }
-        stdout.string.should =~ /\Amasamune/
-        stderr.string.should be_blank
+        expect(stdout.string).to match(/\Amasamune/)
+        expect(stderr.string).to be_blank
       end
     end
 
@@ -165,7 +165,7 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
       before do
-        Masamune::Filesystem.any_instance.should_receive(:resolve_file)
+        expect_any_instance_of(Masamune::Filesystem).to receive(:resolve_file)
       end
       it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /Option --config or valid system configuration file required/ }
     end
@@ -174,7 +174,7 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--', '--extra', '--args'] }
       before do
-        klass.any_instance.should_receive(:extra=).with(['--extra', '--args'])
+        expect_any_instance_of(klass).to receive(:extra=).with(['--extra', '--args'])
       end
       it do
         expect { subject }.to raise_error SystemExit
@@ -186,11 +186,11 @@ describe Masamune::Thor do
       let(:options) { ['--start', '2013-01-01'] }
       it 'exits with status code 0 without error message' do
         expect { subject }.to raise_error { |e|
-          e.should be_a(SystemExit)
-          e.status.should == 0
+          expect(e).to be_a(SystemExit)
+          expect(e.status).to eq(0)
         }
-        stdout.string.should =~ /\AUsing '.*' for --start/
-        stderr.string.should == ''
+        expect(stdout.string).to match(/\AUsing '.*' for --start/)
+        expect(stderr.string).to eq('')
       end
     end
 
@@ -199,11 +199,11 @@ describe Masamune::Thor do
       let(:options) { ['--start', 'yesterday'] }
       it 'exits with status code  0 without error message' do
         expect { subject }.to raise_error { |e|
-          e.should be_a(SystemExit)
-          e.status.should == 0
+          expect(e).to be_a(SystemExit)
+          expect(e.status).to eq(0)
         }
-        stdout.string.should =~ /\AUsing '.*' for --start/
-        stderr.string.should == ''
+        expect(stdout.string).to match(/\AUsing '.*' for --start/)
+        expect(stderr.string).to eq('')
       end
     end
 
@@ -211,8 +211,8 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
       before do
-        Masamune.logger.should_receive(:error).with('random exception')
-        klass.stub(:dispatch).and_raise('random exception')
+        expect(Masamune.logger).to receive(:error).with('random exception')
+        allow(klass).to receive(:dispatch).and_raise('random exception')
       end
       it { expect { subject }.to raise_error /random exception/ }
     end
@@ -225,27 +225,27 @@ describe Masamune::Thor do
 
     context 'without --' do
       let(:argv) { ['--flag', 'true'] }
-      it { should == [['--flag', 'true'],[]] }
+      it { is_expected.to eq([['--flag', 'true'],[]]) }
     end
 
     context 'with -- and no following arguments' do
       let(:argv) { ['--flag', 'true', '--'] }
-      it { should == [['--flag', 'true'],[]] }
+      it { is_expected.to eq([['--flag', 'true'],[]]) }
     end
 
     context 'with -- and a single extra argument' do
       let(:argv) { ['--flag', 'true', '--', '--more'] }
-      it { should == [['--flag', 'true'], ['--more']] }
+      it { is_expected.to eq([['--flag', 'true'], ['--more']]) }
     end
 
     context 'with -- and multiple extra agruments' do
       let(:argv) { ['--flag', 'true', '--', '--more', 'flag'] }
-      it { should == [['--flag', 'true'], ['--more', 'flag']] }
+      it { is_expected.to eq([['--flag', 'true'], ['--more', 'flag']]) }
     end
 
     context 'with leading -- and a single extra argument' do
       let(:argv) { ['--', '--more'] }
-      it { should == [[], ['--more']] }
+      it { is_expected.to eq([[], ['--more']]) }
     end
   end
 end

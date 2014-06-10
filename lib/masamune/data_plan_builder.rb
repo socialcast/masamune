@@ -39,7 +39,6 @@ class Masamune::DataPlanBuilder
       plan.context.with_exclusive_lock(rule) do
         plan.context.parent.invoke(rule)
       end
-      plan.filesystem.clear!
     end
   end
 end
