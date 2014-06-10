@@ -1,5 +1,5 @@
 class Masamune::DataPlanElem
-  MISSING_MODIFIED_AT = Float::INFINITY
+  MISSING_MODIFIED_AT = -1
 
   include Masamune::Accumulate
   include Comparable
