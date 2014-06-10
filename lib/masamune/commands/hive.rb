@@ -12,21 +12,22 @@ module Masamune::Commands
 
     DEFAULT_ATTRIBUTES =
     {
-      :path         => 'hive',
-      :options      => [],
-      :database     => 'default',
-      :setup_files  => [],
-      :schema_files => [],
-      :file         => nil,
-      :exec         => nil,
-      :input        => nil,
-      :output       => nil,
-      :print        => false,
-      :block        => nil,
-      :variables    => {},
-      :buffer       => nil,
-      :delimiter    => "\001",
-      :csv          => false
+      :path           => 'hive',
+      :options        => [],
+      :database       => 'default',
+      :setup_files    => [],
+      :schema_files   => [],
+      :file           => nil,
+      :exec           => nil,
+      :input          => nil,
+      :output         => nil,
+      :print          => false,
+      :block          => nil,
+      :variables      => {},
+      :buffer         => nil,
+      :delimiter      => "\001",
+      :csv            => false,
+      :template_debug => false
     }
 
     def initialize(delegate, attrs = {})
@@ -56,10 +57,7 @@ module Masamune::Commands
       args << ['--database', @database] if @database
       args << @options.map(&:to_a)
       args << load_setup_and_schema_files.map(&:to_a)
-      args << ['-f', @file] if @file
-      @variables.each do |key, val|
-        args << ['-d', "#{key.to_s}=#{val.to_s}"]
-      end
+      args << command_args_for_file if @file
       args.flatten
     end
 
@@ -117,6 +115,24 @@ module Masamune::Commands
         end
       end
       files.flatten.compact.map { |file| {'-i' => file} }
+    end
+
+    def command_args_for_file
+      @file =~ /\.erb\Z/ ? command_args_for_template : command_args_for_simple_file
+    end
+
+    def command_args_for_simple_file
+      ['-f', @file].tap do |args|
+        @variables.each do |key, val|
+          args << ['-d', "#{key.to_s}=#{val.to_s}"]
+        end
+      end
+    end
+
+    def command_args_for_template
+      rendered_file = Masamune::Template.render_to_file(@file, @variables)
+      logger.debug("#{@file}:\n" + File.read(rendered_file)) if @template_debug
+      ['-f', rendered_file]
     end
   end
 end
