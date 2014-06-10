@@ -12,7 +12,7 @@ describe Masamune::Context do
     context 'when lock can be acquired' do
       before do
         instance.filesystem.add_path(:run_dir, run_dir)
-        File.any_instance.should_receive(:flock).twice.and_return(0)
+        expect_any_instance_of(File).to receive(:flock).twice.and_return(0)
       end
       it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to yield_control }
     end
@@ -20,8 +20,8 @@ describe Masamune::Context do
     context 'when lock cannot be acquired' do
       before do
         instance.filesystem.add_path(:run_dir, run_dir)
-        instance.logger.should_receive(:error).with(/acquire lock attempt failed for 'some_lock'/)
-        File.any_instance.should_receive(:flock).twice.and_return(1)
+        expect(instance.logger).to receive(:error).with(/acquire lock attempt failed for 'some_lock'/)
+        expect_any_instance_of(File).to receive(:flock).twice.and_return(1)
       end
 
       it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to_not raise_error }

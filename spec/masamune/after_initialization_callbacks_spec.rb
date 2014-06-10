@@ -25,12 +25,12 @@ describe Masamune::AfterInitializeCallbacks do
 
   describe '.after_initialize_invoke' do
     before do
-      instance.should_receive(:first_callback).once.ordered
-      instance.should_receive(:early_callback).once.ordered
-      instance.should_receive(:default_callback).once.ordered
-      instance.should_receive(:unknown_callback).once.ordered
-      instance.should_receive(:later_callback).once.ordered
-      instance.should_receive(:final_callback).once.ordered
+      expect(instance).to receive(:first_callback).once.ordered
+      expect(instance).to receive(:early_callback).once.ordered
+      expect(instance).to receive(:default_callback).once.ordered
+      expect(instance).to receive(:unknown_callback).once.ordered
+      expect(instance).to receive(:later_callback).once.ordered
+      expect(instance).to receive(:final_callback).once.ordered
       instance.after_initialize_invoke
     end
 

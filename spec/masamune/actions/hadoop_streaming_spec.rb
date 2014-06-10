@@ -18,7 +18,7 @@ describe Masamune::Actions::HadoopStreaming do
 
     subject { instance.hadoop_streaming(extra: extra) }
 
-    it { should be_success }
+    it { is_expected.to be_success }
 
     context 'with jobflow' do
       before do
@@ -28,7 +28,7 @@ describe Masamune::Actions::HadoopStreaming do
         mock_command(/\Assh fakehost hadoop/, mock_success)
       end
 
-      it { should be_success }
+      it { is_expected.to be_success }
     end
 
     context 'with jobflow and extra' do
@@ -42,7 +42,7 @@ describe Masamune::Actions::HadoopStreaming do
         mock_command(/\Assh fakehost hadoop .*? -D EXTRA/, mock_success)
       end
 
-      it { should be_success }
+      it { is_expected.to be_success }
     end
   end
 end

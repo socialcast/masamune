@@ -15,7 +15,7 @@ describe Masamune::Actions::ElasticMapreduce do
 
   before do
     instance.stub_chain(:configuration, :elastic_mapreduce).and_return(configuration)
-    instance.stub(:extra).and_return(extra)
+    allow(instance).to receive(:extra).and_return(extra)
   end
 
   describe '.elastic_mapreduce' do
@@ -25,7 +25,7 @@ describe Masamune::Actions::ElasticMapreduce do
 
     subject { instance.elastic_mapreduce }
 
-    it { should be_success }
+    it { is_expected.to be_success }
   end
 
   describe '.after_initialize' do
@@ -67,7 +67,7 @@ describe Masamune::Actions::ElasticMapreduce do
       end
       it do
         expect { subject }.to_not raise_error
-        configuration[:jobflow].should == 'j-XYZ'
+        expect(configuration[:jobflow]).to eq('j-XYZ')
       end
     end
 
@@ -79,7 +79,7 @@ describe Masamune::Actions::ElasticMapreduce do
       end
       it do
         expect { subject }.to_not raise_error
-        configuration[:jobflow].should == 'j-XYZ'
+        expect(configuration[:jobflow]).to eq('j-XYZ')
       end
     end
   end

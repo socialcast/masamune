@@ -17,6 +17,6 @@ describe Masamune::Actions::HadoopFilesystem do
 
     subject { instance.hadoop_filesystem }
 
-    it { should be_success }
+    it { is_expected.to be_success }
   end
 end

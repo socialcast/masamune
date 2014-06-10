@@ -24,7 +24,7 @@ describe Masamune::Actions::Hive do
 
     subject { instance.hive }
 
-    it { should be_success }
+    it { is_expected.to be_success }
 
     context 'with jobflow' do
       before do
@@ -36,7 +36,7 @@ describe Masamune::Actions::Hive do
 
       subject { instance.hive }
 
-      it { should be_success }
+      it { is_expected.to be_success }
     end
   end
 
@@ -51,7 +51,7 @@ describe Masamune::Actions::Hive do
     context 'with default database' do
       let(:configuration) { {database: 'default'} }
       before do
-        instance.should_receive(:hive).never
+        expect(instance).to receive(:hive).never
         after_initialize_invoke
       end
       it 'should not call hive with create database' do; end
@@ -59,7 +59,7 @@ describe Masamune::Actions::Hive do
 
     context 'with database' do
       before do
-        instance.should_receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
+        expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
         after_initialize_invoke
       end
       it 'should call hive with create database' do; end
@@ -68,7 +68,7 @@ describe Masamune::Actions::Hive do
     context 'with location' do
       let(:configuration) { {database: 'test', location: '/tmp'} }
       before do
-        instance.should_receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test LOCATION "/tmp";', :database => nil).once.and_return(mock_success)
+        expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test LOCATION "/tmp";', :database => nil).once.and_return(mock_success)
         after_initialize_invoke
       end
       it 'should call hive with create database' do; end
@@ -77,8 +77,8 @@ describe Masamune::Actions::Hive do
     context 'with dryrun' do
       let(:options) { {dry_run: true} }
       before do
-        instance.should_receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
-        instance.should_receive(:hive).with(exec: 'SHOW TABLES;', safe: true, fail_fast: false).once.and_return(mock_success)
+        expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
+        expect(instance).to receive(:hive).with(exec: 'SHOW TABLES;', safe: true, fail_fast: false).once.and_return(mock_success)
         after_initialize_invoke
       end
       it 'should call hive with show tables' do; end

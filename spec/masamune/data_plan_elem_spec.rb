@@ -19,7 +19,7 @@ describe Masamune::DataPlanElem do
     subject do
       instance.path
     end
-    it { should == 'report/2013-07-19/11' }
+    it { is_expected.to eq('report/2013-07-19/11') }
   end
 
   describe '#==' do
@@ -29,25 +29,25 @@ describe Masamune::DataPlanElem do
 
     context 'when rule, options, and start_time match' do
       let(:other) { described_class.new(rule, start_time, options) }
-      it { should be_true }
+      it { is_expected.to eq(true) }
       it 'should have same hash' do
-        instance.hash.should == other.hash
+        expect(instance.hash).to eq(other.hash)
       end
     end
 
     context 'when rules differ' do
       let(:other) { described_class.new(other_rule, start_time) }
-      it { should be_false }
+      it { is_expected.to eq(false) }
     end
 
     context 'when options differ' do
       let(:other) { described_class.new(rule, start_time, other_options) }
-      it { should be_false }
+      it { is_expected.to eq(false) }
     end
 
     context 'when start_times differ' do
       let(:other) { described_class.new(rule, other_start_time) }
-      it { should be_false }
+      it { is_expected.to eq(false) }
     end
   end
 end

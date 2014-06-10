@@ -5,27 +5,27 @@ shared_examples_for Masamune::Commands::PostgresCommon do
     end
 
     context 'by default' do
-      it { should == {} }
+      it { is_expected.to eq({}) }
     end
 
     context 'with pgpass_file' do
       let(:configuration) { {:pgpass_file => 'pgpass_file'} }
 
       before do
-        File.stub(:readable?) { true }
+        allow(File).to receive(:readable?) { true }
       end
 
-      it { should == {'PGPASSFILE' => 'pgpass_file'} }
+      it { is_expected.to eq({'PGPASSFILE' => 'pgpass_file'}) }
     end
 
     context 'with pgpass_file that is not readable' do
       let(:configuration) { {:pgpass_file => 'pgpass_file'} }
 
       before do
-        File.stub(:readable?) { false }
+        allow(File).to receive(:readable?) { false }
       end
 
-      it { should == {} }
+      it { is_expected.to eq({}) }
     end
   end
 end

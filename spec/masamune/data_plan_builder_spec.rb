@@ -13,12 +13,12 @@ describe Masamune::DataPlanBuilder do
       let(:targets) { [{ path: 'table/y=%Y/m=%m/d=%d' }, { path: 'daily/%Y-%m-%d' }] }
 
       before do
-        Masamune::DataPlan.any_instance.should_receive(:add_target_rule).with('a:load', { path: 'table/y=%Y/m=%m/d=%d'})
-        Masamune::DataPlan.any_instance.should_receive(:add_source_rule).with('a:load', { path: 'log/%Y%m%d.*.log' })
-        Masamune::DataPlan.any_instance.should_receive(:add_command_rule).with('a:load', an_instance_of(Proc))
-        Masamune::DataPlan.any_instance.should_receive(:add_target_rule).with('b:store', { path: 'daily/%Y-%m-%d' })
-        Masamune::DataPlan.any_instance.should_receive(:add_source_rule).with('b:store', { path: 'table/y=%Y/m=%m/d=%d' })
-        Masamune::DataPlan.any_instance.should_receive(:add_command_rule).with('b:store', an_instance_of(Proc))
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_target_rule).with('a:load', { path: 'table/y=%Y/m=%m/d=%d'})
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_source_rule).with('a:load', { path: 'log/%Y%m%d.*.log' })
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_command_rule).with('a:load', an_instance_of(Proc))
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_target_rule).with('b:store', { path: 'daily/%Y-%m-%d' })
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_source_rule).with('b:store', { path: 'table/y=%Y/m=%m/d=%d' })
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_command_rule).with('b:store', an_instance_of(Proc))
         subject
       end
 
@@ -32,15 +32,15 @@ describe Masamune::DataPlanBuilder do
       let(:targets) { [{ path: 'table/y=%Y/m=%m/d=%d', for: 'override' }] }
 
       before do
-        Masamune::DataPlan.any_instance.should_not_receive(:add_target_rule).with('a:missing_before', anything)
-        Masamune::DataPlan.any_instance.should_not_receive(:add_source_rule).with('a:missing_before', anything)
-        Masamune::DataPlan.any_instance.should_not_receive(:add_command_rule).with('a:missing_before', an_instance_of(Proc))
-        Masamune::DataPlan.any_instance.should_receive(:add_target_rule).with('a:override', { path: 'table/y=%Y/m=%m/d=%d' })
-        Masamune::DataPlan.any_instance.should_receive(:add_source_rule).with('a:override', { path: 'log/%Y%m%d.*.log' })
-        Masamune::DataPlan.any_instance.should_receive(:add_command_rule).with('a:override', an_instance_of(Proc))
-        Masamune::DataPlan.any_instance.should_not_receive(:add_target_rule).with('a:missing_after', anything)
-        Masamune::DataPlan.any_instance.should_not_receive(:add_source_rule).with('a:missing_after', anything)
-        Masamune::DataPlan.any_instance.should_not_receive(:add_command_rule).with('a:missing_after', an_instance_of(Proc))
+        expect_any_instance_of(Masamune::DataPlan).not_to receive(:add_target_rule).with('a:missing_before', anything)
+        expect_any_instance_of(Masamune::DataPlan).not_to receive(:add_source_rule).with('a:missing_before', anything)
+        expect_any_instance_of(Masamune::DataPlan).not_to receive(:add_command_rule).with('a:missing_before', an_instance_of(Proc))
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_target_rule).with('a:override', { path: 'table/y=%Y/m=%m/d=%d' })
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_source_rule).with('a:override', { path: 'log/%Y%m%d.*.log' })
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_command_rule).with('a:override', an_instance_of(Proc))
+        expect_any_instance_of(Masamune::DataPlan).not_to receive(:add_target_rule).with('a:missing_after', anything)
+        expect_any_instance_of(Masamune::DataPlan).not_to receive(:add_source_rule).with('a:missing_after', anything)
+        expect_any_instance_of(Masamune::DataPlan).not_to receive(:add_command_rule).with('a:missing_after', an_instance_of(Proc))
         subject
       end
 
@@ -54,12 +54,12 @@ describe Masamune::DataPlanBuilder do
       let(:targets) { [{ skip: true}, { path: 'table/y=%Y/m=%m/d=%d' }] }
 
       before do
-        Masamune::DataPlan.any_instance.should_not_receive(:add_target_rule).with('a:missing_before', anything)
-        Masamune::DataPlan.any_instance.should_not_receive(:add_source_rule).with('a:missing_before', anything)
-        Masamune::DataPlan.any_instance.should_not_receive(:add_command_rule).with('a:missing_before', an_instance_of(Proc))
-        Masamune::DataPlan.any_instance.should_receive(:add_target_rule).with('a:override', { path: 'table/y=%Y/m=%m/d=%d' })
-        Masamune::DataPlan.any_instance.should_receive(:add_source_rule).with('a:override', { path: 'log/%Y%m%d.*.log' })
-        Masamune::DataPlan.any_instance.should_receive(:add_command_rule).with('a:override', an_instance_of(Proc))
+        expect_any_instance_of(Masamune::DataPlan).not_to receive(:add_target_rule).with('a:missing_before', anything)
+        expect_any_instance_of(Masamune::DataPlan).not_to receive(:add_source_rule).with('a:missing_before', anything)
+        expect_any_instance_of(Masamune::DataPlan).not_to receive(:add_command_rule).with('a:missing_before', an_instance_of(Proc))
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_target_rule).with('a:override', { path: 'table/y=%Y/m=%m/d=%d' })
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_source_rule).with('a:override', { path: 'log/%Y%m%d.*.log' })
+        expect_any_instance_of(Masamune::DataPlan).to receive(:add_command_rule).with('a:override', an_instance_of(Proc))
         subject
       end
 
