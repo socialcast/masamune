@@ -15,7 +15,6 @@ module Masamune
   require 'masamune/data_plan_builder'
   require 'masamune/thor'
   require 'masamune/thor_loader'
-  require 'masamune/thor_data'
   require 'masamune/filesystem'
   require 'masamune/cached_filesystem'
   require 'masamune/method_logger'

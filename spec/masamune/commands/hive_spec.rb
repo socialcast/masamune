@@ -48,8 +48,8 @@ describe Masamune::Commands::Hive do
     end
 
     context 'with variables' do
-      let(:attrs) { {variables: {R: 'R2DO', C: 'C3PO'}} }
-      it { is_expected.to eq([*default_command, '-d', 'R=R2DO', '-d', 'C=C3PO']) }
+      let(:attrs) { {file: 'zomg.hql', variables: {R: 'R2DO', C: 'C3PO'}} }
+      it { is_expected.to eq([*default_command, '-f', 'zomg.hql', '-d', 'R=R2DO', '-d', 'C=C3PO']) }
     end
 
     context 'with setup files' do
@@ -77,6 +77,14 @@ describe Masamune::Commands::Hive do
 
       let(:attrs) { {schema_files: ['schema*.hql']} }
       it { is_expected.to eq([*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql']) }
+    end
+
+    context 'with template file' do
+      let(:attrs) { {file: 'zomg.hql.erb'} }
+      before do
+        expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
+      end
+      it { is_expected.to eq([*default_command, '-f', 'zomg.hql']) }
     end
   end
 
