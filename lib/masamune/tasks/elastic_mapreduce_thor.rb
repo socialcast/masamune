@@ -21,7 +21,7 @@ module Masamune::Tasks
     no_tasks do
       after_initialize(:first) do |thor, options|
         begin
-          thor.extra += thor.configuration.bind_template(:elastic_mapreduce, options['template'], options['params']) if options['template']
+          thor.extra += thor.configuration.bind_template(:elastic_mapreduce, options[:template], options[:params]) if options[:template]
         rescue ArgumentError => e
           raise ::Thor::MalformattedArgumentError, e.to_s
         end
