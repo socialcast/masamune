@@ -19,6 +19,14 @@ module Masamune::Actions
       data_plan.sources(current_command_name)
     end
 
+    def target
+      targets.first
+    end
+
+    def source
+      sources.first
+    end
+
     # TODO sources from file or input array
     def parse_file_type(key, default)
       return default unless key
