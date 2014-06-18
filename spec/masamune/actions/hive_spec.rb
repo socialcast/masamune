@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Masamune::Actions::Hive do
   let(:klass) do
     Class.new do
-      include Masamune::HasContext
+      include Masamune::HasEnvironment
       include Masamune::AfterInitializeCallbacks
       include Masamune::Actions::Hive
     end

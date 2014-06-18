@@ -1,8 +1,8 @@
-require 'masamune/has_context'
+require 'masamune/has_environment'
 
 module Masamune
   class Filesystem
-    include Masamune::HasContext
+    include Masamune::HasEnvironment
     include Masamune::Accumulate
     include Masamune::Actions::S3Cmd
     include Masamune::Actions::HadoopFilesystem
@@ -51,7 +51,7 @@ module Masamune
 
     def expand_params(fs, path)
       new_path = path.dup
-      fs.context.configuration.params.each do |key, value|
+      fs.environment.configuration.params.each do |key, value|
         new_path.gsub!("%#{key.to_s}", value.to_s)
       end
       new_path

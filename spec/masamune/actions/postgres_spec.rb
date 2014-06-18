@@ -5,7 +5,7 @@ describe Masamune::Actions::Postgres do
 
   let(:klass) do
     Class.new do
-      include Masamune::HasContext
+      include Masamune::HasEnvironment
       include Masamune::AfterInitializeCallbacks
       include Masamune::Actions::Postgres
     end

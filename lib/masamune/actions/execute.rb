@@ -6,7 +6,7 @@ module Masamune::Actions
 
       klass = Class.new
       klass.class_eval do
-        include Masamune::HasContext
+        include Masamune::HasEnvironment
         define_method(:command_args) do
           args
         end
@@ -25,7 +25,7 @@ module Masamune::Actions
       end if block_given?
 
       command = Masamune::Commands::Shell.new(klass.new, {fail_fast: false}.merge(opts))
-      command.context = context
+      command.environment = environment
       command.execute
     end
   end

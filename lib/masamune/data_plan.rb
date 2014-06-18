@@ -6,7 +6,7 @@ require 'masamune/data_plan_set'
 class Masamune::DataPlan
   MAX_DEPTH = 10
 
-  include Masamune::HasContext
+  include Masamune::HasEnvironment
   include Masamune::Accumulate
 
   def initialize
@@ -108,7 +108,7 @@ class Masamune::DataPlan
         logger.warn("Detected stale target #{target.input}, skipping")
       end
     end
-    context.clear! if dirty
+    environment.clear! if dirty
   end
 
   def execute(rule, options = {})
@@ -126,7 +126,7 @@ class Masamune::DataPlan
     @current_rule = rule
     @command_rules[rule].call(self, rule, options)
     @set_cache.clear
-    context.clear!
+    environment.clear!
   ensure
     @current_rule = nil
   end

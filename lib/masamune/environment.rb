@@ -6,7 +6,7 @@ require 'masamune/version'
 require 'masamune/multi_io'
 
 module Masamune
-  class Context
+  class Environment
     attr_accessor :parent
     attr_accessor :filesystem
 

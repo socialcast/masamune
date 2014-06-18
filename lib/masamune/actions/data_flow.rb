@@ -40,8 +40,8 @@ module Masamune::Actions
       base.after_initialize(:final) do |thor, options|
         # Only execute this block if DataPlan is not currently executing
         next if thor.data_plan.current_rule.present?
-        thor.data_plan.context = thor.context
-        thor.data_plan.filesystem.context = thor.context
+        thor.data_plan.environment = thor.environment
+        thor.data_plan.filesystem.environment = thor.environment
 
         raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start' or '--at'" unless options[:start] || options[:at] || options[:sources] || options[:targets]
         raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]

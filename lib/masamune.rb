@@ -1,6 +1,6 @@
 module Masamune
-  require 'masamune/context'
-  require 'masamune/has_context'
+  require 'masamune/environment'
+  require 'masamune/has_environment'
   require 'masamune/io'
   require 'masamune/template'
   require 'masamune/commands'
@@ -22,5 +22,5 @@ module Masamune
   require 'masamune/after_initialize_callbacks'
 
   extend self
-  extend Masamune::HasContext
+  extend Masamune::HasEnvironment
 end
