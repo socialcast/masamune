@@ -10,6 +10,7 @@ describe Masamune::Commands::Hive do
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
+    filesystem.add_path(:tmp_dir, File.join(Dir.tmpdir, SecureRandom.hex))
     allow(delegate).to receive(:filesystem) { filesystem }
     delegate.stub_chain(:configuration, :hive).and_return(configuration)
   end
@@ -83,8 +84,9 @@ describe Masamune::Commands::Hive do
       let(:attrs) { {file: 'zomg.hql.erb'} }
       before do
         expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
+        expect_any_instance_of(Masamune::Filesystem).to receive(:copy_file)
       end
-      it { is_expected.to eq([*default_command, '-f', 'zomg.hql']) }
+      it { is_expected.to eq([*default_command, '-f', filesystem.get_path(:tmp_dir, 'zomg.hql')]) }
     end
   end
 
