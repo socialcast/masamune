@@ -1,5 +1,5 @@
 class Masamune::MockDelegate
-  include Masamune::HasContext
+  include Masamune::HasEnvironment
 
   attr_accessor :command, :stdin, :stdout, :stderr, :status
 

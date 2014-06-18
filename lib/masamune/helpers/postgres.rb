@@ -1,14 +1,14 @@
-require 'masamune/has_context'
+require 'masamune/has_environment'
 require 'masamune/actions/postgres'
 
 module Masamune::Helpers
   class Postgres
-    include Masamune::HasContext
+    include Masamune::HasEnvironment
     include Masamune::Actions::Postgres
     include Masamune::Actions::PostgresAdmin
 
-    def initialize(context)
-      self.context = context
+    def initialize(environment)
+      self.environment = environment
       clear!
     end
 

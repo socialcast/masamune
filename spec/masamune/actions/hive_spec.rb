@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Masamune::Actions::Hive do
   let(:klass) do
     Class.new do
-      include Masamune::HasContext
+      include Masamune::HasEnvironment
       include Masamune::AfterInitializeCallbacks
       include Masamune::Actions::Hive
     end
@@ -13,8 +13,8 @@ describe Masamune::Actions::Hive do
   let(:configuration) { {database: 'test'} }
 
   before do
-    instance.stub_chain(:configuration, :elastic_mapreduce).and_return({})
-    instance.stub_chain(:configuration, :hive).and_return(configuration)
+    allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({})
+    allow(instance).to receive_message_chain(:configuration, :hive).and_return(configuration)
   end
 
   describe '.hive' do
@@ -28,7 +28,7 @@ describe Masamune::Actions::Hive do
 
     context 'with jobflow' do
       before do
-        instance.stub_chain(:configuration, :elastic_mapreduce).and_return({jobflow: 'j-XYZ'})
+        allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({jobflow: 'j-XYZ'})
         mock_command(/\Ahive/, mock_failure)
         mock_command(/\Aelastic-mapreduce/, mock_success, StringIO.new('ssh fakehost exit'))
         mock_command(/\Assh fakehost hive/, mock_success)

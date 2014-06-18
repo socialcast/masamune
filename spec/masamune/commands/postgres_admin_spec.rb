@@ -8,8 +8,8 @@ describe Masamune::Commands::PostgresAdmin do
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
-    delegate.stub_chain(:configuration, :postgres).and_return({})
-    delegate.stub_chain(:configuration, :postgres_admin).and_return(configuration)
+    allow(delegate).to receive_message_chain(:configuration, :postgres).and_return({})
+    allow(delegate).to receive_message_chain(:configuration, :postgres_admin).and_return(configuration)
   end
 
   describe '#command_args' do

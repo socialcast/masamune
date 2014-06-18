@@ -9,7 +9,7 @@ describe Masamune::Commands::Postgres do
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
-    delegate.stub_chain(:configuration, :postgres).and_return(configuration)
+    allow(delegate).to receive_message_chain(:configuration, :postgres).and_return(configuration)
   end
 
   describe '#stdin' do

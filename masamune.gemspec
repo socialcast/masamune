@@ -27,7 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rake', '>= 0.9')
 
   # Testing
-  s.add_development_dependency('rspec', '< 3')
+  s.add_development_dependency('rspec', '> 2.99')
   s.add_development_dependency('debugger') if RUBY_VERSION =~ /\A1/
   s.add_development_dependency('byebug') if RUBY_VERSION =~ /\A2/
 end

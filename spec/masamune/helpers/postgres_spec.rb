@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Masamune::Helpers::Postgres do
-  let(:context) { double }
-  let(:instance) { described_class.new(context) }
+  let(:environment) { double }
+  let(:instance) { described_class.new(environment) }
 
   describe '#table_exists' do
     before do

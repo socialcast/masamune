@@ -10,7 +10,7 @@ module Masamune::Actions
       opts = opts.to_hash.symbolize_keys
       opts.merge!(block: block.to_proc) if block_given?
 
-      command = Masamune::Commands::Postgres.new(context, opts)
+      command = Masamune::Commands::Postgres.new(environment, opts)
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.interactive? ? command.replace : command.execute

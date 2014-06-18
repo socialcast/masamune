@@ -8,7 +8,7 @@ module Masamune
   module Thor
     extend ActiveSupport::Concern
 
-    include Masamune::HasContext
+    include Masamune::HasEnvironment
     include Masamune::AfterInitializeCallbacks
 
     SYSTEM_CONFIG_FILES = [
@@ -66,8 +66,8 @@ module Masamune
         class_option :version, :desc => 'Print version and exit', :type => :boolean
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
-          self.context.parent = self
-          self.filesystem.context = self
+          self.environment.parent = self
+          self.filesystem.environment = self
           self.current_namespace = self.class.namespace unless self.class.namespace == 'masamune'
           self.current_task_name = _config[:current_command].name
           self.current_command_name = current_namespace ? current_namespace + ':' + current_task_name : current_task_name
@@ -83,7 +83,7 @@ module Masamune
             exit
           end
 
-          context.configure do |config|
+          environment.configure do |config|
             config_file = options[:config]
             config_file ||= config.filesystem.resolve_file([config.default_config_file] + SYSTEM_CONFIG_FILES)
             raise ::Thor::RequiredArgumentMissingError, 'Option --config or valid system configuration file required' unless config_file
@@ -102,7 +102,7 @@ module Masamune
             config.dry_run  = options[:dry_run]
 
             if options[:version]
-              puts context.version
+              puts environment.version
               puts options if options[:verbose]
               puts config.to_s if options[:verbose]
               exit
@@ -114,7 +114,7 @@ module Masamune
 
         no_tasks do
           def param(key)
-            context.configuration.params[key]
+            environment.configuration.params[key]
           end
 
           def top_level?

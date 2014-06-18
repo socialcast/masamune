@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Masamune::Actions::PostgresAdmin do
   let(:klass) do
     Class.new do
-      include Masamune::HasContext
+      include Masamune::HasEnvironment
       include Masamune::Actions::PostgresAdmin
     end
   end

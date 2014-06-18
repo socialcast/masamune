@@ -12,7 +12,7 @@ describe Masamune::Commands::Hive do
   before do
     filesystem.add_path(:tmp_dir, File.join(Dir.tmpdir, SecureRandom.hex))
     allow(delegate).to receive(:filesystem) { filesystem }
-    delegate.stub_chain(:configuration, :hive).and_return(configuration)
+    allow(delegate).to receive_message_chain(:configuration, :hive).and_return(configuration)
   end
 
   describe '#stdin' do

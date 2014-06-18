@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Masamune::Context do
+describe Masamune::Environment do
   let(:instance) { described_class.new }
   let(:run_dir) { Dir.mktmpdir('masamune') }
 

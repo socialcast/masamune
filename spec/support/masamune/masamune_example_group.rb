@@ -1,13 +1,13 @@
-require 'masamune/has_context'
+require 'masamune/has_environment'
 
-# Separate context for test harness itself
+# Separate environment for test harness itself
 module MasamuneExampleGroup
-  include Masamune::HasContext
+  include Masamune::HasEnvironment
   extend self
 
   def self.included(base)
     base.before(:all) do
-      self.filesystem.context = self.context = MasamuneExampleGroup.context
+      self.filesystem.environment = self.environment = MasamuneExampleGroup.environment
       Thor.send(:include, Masamune::ThorMute)
     end
   end

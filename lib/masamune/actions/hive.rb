@@ -8,7 +8,7 @@ module Masamune::Actions
       opts = opts.to_hash.symbolize_keys
       opts.merge!(block: block.to_proc) if block_given?
 
-      command = Masamune::Commands::Hive.new(context, opts)
+      command = Masamune::Commands::Hive.new(environment, opts)
       command = Masamune::Commands::ElasticMapReduce.new(command, opts.except(:extra)) if configuration.elastic_mapreduce[:jobflow]
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
       command = Masamune::Commands::Shell.new(command, opts)
