@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Masamune::Configuration do
-  let(:context) { Masamune::Environment.new }
-  let(:instance) { described_class.new(context) }
+  let(:environment) { Masamune::Environment.new }
+  let(:instance) { described_class.new(environment) }
 
   describe '.default_config_file' do
     subject { described_class.default_config_file }
