@@ -256,6 +256,18 @@ module Masamune
       end
     end
 
+    def remove_file(file)
+      check_immutable_path!(file)
+      case type(file)
+      when :hdfs
+        hadoop_fs('-rm', file)
+      when :s3
+        s3cmd('del', s3b(file, dir: false))
+      when :local
+        FileUtils.rm(file, file_util_args)
+      end
+    end
+
     def remove_dir(dir)
       raise "#{dir} is root path, cannot remove" if root_path?(dir)
       check_immutable_path!(dir)
@@ -263,7 +275,7 @@ module Masamune
       when :hdfs
         hadoop_fs('-rmr', dir)
       when :s3
-        s3cmd('del', '--recursive', s3b(dir, dir:true))
+        s3cmd('del', '--recursive', s3b(dir, dir: true))
         s3cmd('del', '--recursive', s3b("#{dir}_$folder$"))
       when :local
         FileUtils.rmtree(dir, file_util_args)

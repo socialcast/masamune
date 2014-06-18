@@ -791,6 +791,37 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  describe '#remove_file' do
+    subject do
+      File.exists?(old_file)
+    end
+
+    context 'local false' do
+      before do
+        instance.remove_file(old_file)
+      end
+
+      it { is_expected.to eq(false)}
+    end
+
+    context 'hdfs file' do
+      before do
+        instance.remove_file('file://' + old_file)
+      end
+
+      it { is_expected.to eq(false)}
+    end
+
+    context 's3 file' do
+      before do
+        expect(filesystem).to receive(:s3cmd).with('del', 's3://bucket/file')
+        instance.remove_file('s3://bucket/file')
+      end
+
+      it 'meets expectations' do; end
+    end
+  end
+
   describe '#remove_dir' do
     subject do
       File.exists?(old_dir)
