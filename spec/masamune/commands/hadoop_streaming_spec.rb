@@ -14,7 +14,7 @@ describe Masamune::Commands::HadoopStreaming do
 
   before do
     allow(delegate).to receive(:filesystem) { filesystem }
-    delegate.stub_chain(:configuration, :hadoop_streaming).and_return(configuration)
+    allow(delegate).to receive_message_chain(:configuration, :hadoop_streaming).and_return(configuration)
   end
 
   describe '#before_execute' do

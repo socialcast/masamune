@@ -9,7 +9,7 @@ describe Masamune::Commands::HadoopFilesystem do
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
-    delegate.stub_chain(:configuration, :hadoop_filesystem).and_return(configuration)
+    allow(delegate).to receive_message_chain(:configuration, :hadoop_filesystem).and_return(configuration)
   end
 
   describe '#command_args' do

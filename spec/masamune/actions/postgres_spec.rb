@@ -18,8 +18,8 @@ describe Masamune::Actions::Postgres do
   before do
     allow(instance).to receive(:filesystem) { filesystem }
     allow(instance).to receive(:postgres_helper) { postgres_helper }
-    instance.stub_chain(:configuration, :postgres).and_return(configuration)
-    instance.stub_chain(:configuration, :with_quiet).and_yield
+    allow(instance).to receive_message_chain(:configuration, :postgres).and_return(configuration)
+    allow(instance).to receive_message_chain(:configuration, :with_quiet).and_yield
   end
 
   describe '.postgres' do

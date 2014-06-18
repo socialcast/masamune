@@ -14,7 +14,7 @@ describe Masamune::Actions::ElasticMapreduce do
   let(:extra) { [] }
 
   before do
-    instance.stub_chain(:configuration, :elastic_mapreduce).and_return(configuration)
+    allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return(configuration)
     allow(instance).to receive(:extra).and_return(extra)
   end
 
