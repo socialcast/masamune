@@ -307,9 +307,9 @@ module Masamune
       end
     end
 
-    def move_file(src, dst)
+    def move_file_to_file(src, dst)
       check_immutable_path!(src)
-      mkdir!(File.dirname(dst)) unless type(dst) == :s3
+      mkdir!(dirname(dst)) unless type(dst) == :s3
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
         hadoop_fs('-mv', src, dst)
@@ -333,7 +333,38 @@ module Masamune
       when [:local, :hdfs]
         hadoop_fs('-moveFromLocal', src, dst)
       when [:local, :s3]
-        s3cmd('put', src, dst)
+        s3cmd('put', src, s3b(dst, dir: false))
+        FileUtils.rm(src, file_util_args)
+      end
+    end
+
+    def move_file_to_dir(src, dst)
+      check_immutable_path!(src)
+      mkdir!(dst) unless type(dst) == :s3
+      case [type(src), type(dst)]
+      when [:hdfs, :hdfs]
+        hadoop_fs('-mv', src, dst)
+      when [:hdfs, :local]
+        # FIXME use hadoop_fs('-moveToLocal', src, dst) if implemented
+        hadoop_fs('-copyToLocal', src, dst)
+        hadoop_fs('-rm', src)
+      when [:hdfs, :s3]
+        copy_file_to_dir(src, s3n(dst, dir: true))
+        hadoop_fs('-rm', src)
+      when [:s3, :s3]
+        s3cmd('mv', src, s3b(dst, dir: true))
+      when [:s3, :local]
+        s3cmd('get', src, dst)
+        s3cmd('del', src)
+      when [:s3, :hdfs]
+        hadoop_fs('-mv', s3n(src), dst)
+      when [:local, :local]
+        FileUtils.mv(src, dst, file_util_args)
+        FileUtils.chmod(FILE_MODE, dst, file_util_args)
+      when [:local, :hdfs]
+        hadoop_fs('-moveFromLocal', src, dst)
+      when [:local, :s3]
+        s3cmd('put', src, s3b(dst, dir: true))
         FileUtils.rm(src, file_util_args)
       end
     end
@@ -342,7 +373,7 @@ module Masamune
       check_immutable_path!(src)
       case [type(src), type(dst)]
       when [:hdfs, :hdfs]
-        move_file(src, dst)
+        move_file_to_file(src, dst)
       when [:hdfs, :local]
         copy_file_to_dir(src, dst)
         remove_dir(src)
@@ -358,9 +389,9 @@ module Masamune
         copy_file_to_dir(src, d(dst))
         remove_dir(src)
       when [:local, :local]
-        move_file(src, dst)
+        move_file_to_file(src, dst)
       when [:local, :hdfs]
-        move_file(src, dst)
+        move_file_to_file(src, dst)
       when [:local, :s3]
         s3cmd('put', '--recursive', d(src), d(dst))
         remove_dir(src)

@@ -85,7 +85,7 @@ module Masamune::Commands
       @buffer.flush if @buffer && @buffer.respond_to?(:flush)
       @buffer.close if @buffer && @buffer.respond_to?(:close)
 
-      filesystem.move_file(@buffer.path, @output) if @output && @buffer && @buffer.respond_to?(:path)
+      filesystem.move_file_to_file(@buffer.path, @output) if @output && @buffer && @buffer.respond_to?(:path)
     end
 
     # FIXME use temporary tables with delimiters for CSV output format
