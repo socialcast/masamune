@@ -26,7 +26,7 @@ module Masamune::Tasks
 
       if options[:file]
         remote_file = fs.path(:tmp_dir, File.basename(options[:file]))
-        fs.copy_file(options[:file], fs.path(:tmp_dir)) unless options[:file] == remote_file
+        fs.copy_file_to_dir(options[:file], fs.path(:tmp_dir)) unless options[:file] == remote_file
         hive_options.merge!(file: remote_file)
       end
 
