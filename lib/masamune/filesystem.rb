@@ -207,51 +207,13 @@ module Masamune
     def copy_file_to_file(src, dst)
       check_immutable_path!(dst)
       mkdir!(dirname(dst)) unless type(dst) == :s3
-      case [type(src), type(dst)]
-      when [:hdfs, :hdfs]
-        hadoop_fs('-cp', src, dst)
-      when [:hdfs, :local]
-        hadoop_fs('-copyToLocal', src, dst)
-      when [:hdfs, :s3]
-        hadoop_fs('-cp', src, s3n(dst))
-      when [:s3, :s3]
-        s3cmd('cp', src, s3b(dst, dir: false))
-      when [:s3, :local]
-        s3cmd('get', src, dst)
-      when [:s3, :hdfs]
-        hadoop_fs('-cp', s3n(src), dst)
-      when [:local, :local]
-        FileUtils.cp(src, dst, file_util_args)
-      when [:local, :hdfs]
-        hadoop_fs('-copyFromLocal', src, dst)
-      when [:local, :s3]
-        s3cmd('put', src, s3b(dst, dir: false))
-      end
+      copy_file_helper(src, dst, false)
     end
 
     def copy_file_to_dir(src, dst)
       check_immutable_path!(dst)
       mkdir!(dst) unless type(dst) == :s3
-      case [type(src), type(dst)]
-      when [:hdfs, :hdfs]
-        hadoop_fs('-cp', src, dst)
-      when [:hdfs, :local]
-        hadoop_fs('-copyToLocal', src, dst)
-      when [:hdfs, :s3]
-        hadoop_fs('-cp', src, s3n(dst))
-      when [:s3, :s3]
-        s3cmd('cp', src, s3b(dst, dir: true))
-      when [:s3, :local]
-        s3cmd('get', src, dst)
-      when [:s3, :hdfs]
-        hadoop_fs('-cp', s3n(src), dst)
-      when [:local, :local]
-        FileUtils.cp(src, dst, file_util_args)
-      when [:local, :hdfs]
-        hadoop_fs('-copyFromLocal', src, dst)
-      when [:local, :s3]
-        s3cmd('put', src, s3b(dst, dir: true))
-      end
+      copy_file_helper(src, dst, true)
     end
 
     def copy_dir(src, dst)
@@ -310,63 +272,13 @@ module Masamune
     def move_file_to_file(src, dst)
       check_immutable_path!(src)
       mkdir!(dirname(dst)) unless type(dst) == :s3
-      case [type(src), type(dst)]
-      when [:hdfs, :hdfs]
-        hadoop_fs('-mv', src, dst)
-      when [:hdfs, :local]
-        # FIXME use hadoop_fs('-moveToLocal', src, dst) if implemented
-        hadoop_fs('-copyToLocal', src, dst)
-        hadoop_fs('-rm', src)
-      when [:hdfs, :s3]
-        copy_file_to_file(src, s3n(dst, dir: false))
-        hadoop_fs('-rm', src)
-      when [:s3, :s3]
-        s3cmd('mv', src, dst)
-      when [:s3, :local]
-        s3cmd('get', src, dst)
-        s3cmd('del', src)
-      when [:s3, :hdfs]
-        hadoop_fs('-mv', s3n(src), dst)
-      when [:local, :local]
-        FileUtils.mv(src, dst, file_util_args)
-        FileUtils.chmod(FILE_MODE, dst, file_util_args)
-      when [:local, :hdfs]
-        hadoop_fs('-moveFromLocal', src, dst)
-      when [:local, :s3]
-        s3cmd('put', src, s3b(dst, dir: false))
-        FileUtils.rm(src, file_util_args)
-      end
+      move_file_helper(src, dst, false)
     end
 
     def move_file_to_dir(src, dst)
       check_immutable_path!(src)
       mkdir!(dst) unless type(dst) == :s3
-      case [type(src), type(dst)]
-      when [:hdfs, :hdfs]
-        hadoop_fs('-mv', src, dst)
-      when [:hdfs, :local]
-        # FIXME use hadoop_fs('-moveToLocal', src, dst) if implemented
-        hadoop_fs('-copyToLocal', src, dst)
-        hadoop_fs('-rm', src)
-      when [:hdfs, :s3]
-        copy_file_to_dir(src, s3n(dst, dir: true))
-        hadoop_fs('-rm', src)
-      when [:s3, :s3]
-        s3cmd('mv', src, s3b(dst, dir: true))
-      when [:s3, :local]
-        s3cmd('get', src, dst)
-        s3cmd('del', src)
-      when [:s3, :hdfs]
-        hadoop_fs('-mv', s3n(src), dst)
-      when [:local, :local]
-        FileUtils.mv(src, dst, file_util_args)
-        FileUtils.chmod(FILE_MODE, dst, file_util_args)
-      when [:local, :hdfs]
-        hadoop_fs('-moveFromLocal', src, dst)
-      when [:local, :s3]
-        s3cmd('put', src, s3b(dst, dir: true))
-        FileUtils.rm(src, file_util_args)
-      end
+      move_file_helper(src, dst, true)
     end
 
     def move_dir(src, dst)
@@ -529,6 +441,58 @@ module Masamune
     def current_group
       Etc.getgrgid(Etc.getpwnam(current_user).gid).name
     rescue
+    end
+
+    def copy_file_helper(src, dst, dir)
+      case [type(src), type(dst)]
+      when [:hdfs, :hdfs]
+        hadoop_fs('-cp', src, dst)
+      when [:hdfs, :local]
+        hadoop_fs('-copyToLocal', src, dst)
+      when [:hdfs, :s3]
+        hadoop_fs('-cp', src, s3n(dst))
+      when [:s3, :s3]
+        s3cmd('cp', src, s3b(dst, dir: dir))
+      when [:s3, :local]
+        s3cmd('get', src, dst)
+      when [:s3, :hdfs]
+        hadoop_fs('-cp', s3n(src), dst)
+      when [:local, :local]
+        FileUtils.cp(src, dst, file_util_args)
+      when [:local, :hdfs]
+        hadoop_fs('-copyFromLocal', src, dst)
+      when [:local, :s3]
+        s3cmd('put', src, s3b(dst, dir: dir))
+      end
+    end
+
+    def move_file_helper(src, dst, dir)
+      case [type(src), type(dst)]
+      when [:hdfs, :hdfs]
+        hadoop_fs('-mv', src, dst)
+      when [:hdfs, :local]
+        # FIXME use hadoop_fs('-moveToLocal', src, dst) if implemented
+        hadoop_fs('-copyToLocal', src, dst)
+        hadoop_fs('-rm', src)
+      when [:hdfs, :s3]
+        copy_file_to_file(src, s3n(dst, dir: dir))
+        hadoop_fs('-rm', src)
+      when [:s3, :s3]
+        s3cmd('mv', src, s3b(dst, dir: dir))
+      when [:s3, :local]
+        s3cmd('get', src, dst)
+        s3cmd('del', src)
+      when [:s3, :hdfs]
+        hadoop_fs('-mv', s3n(src), dst)
+      when [:local, :local]
+        FileUtils.mv(src, dst, file_util_args)
+        FileUtils.chmod(FILE_MODE, dst, file_util_args)
+      when [:local, :hdfs]
+        hadoop_fs('-moveFromLocal', src, dst)
+      when [:local, :s3]
+        s3cmd('put', src, s3b(dst, dir: dir))
+        FileUtils.rm(src, file_util_args)
+      end
     end
   end
 end
