@@ -106,7 +106,7 @@ module Masamune
       @filesystem ||= begin
         filesystem = Masamune::Filesystem.new
         filesystem.add_path :root_dir, File.expand_path('../../../', __FILE__)
-        filesystem = Masamune::MethodLogger.new(filesystem, :copy_file, :remove_dir, :move_file, :move_dir)
+        filesystem = Masamune::MethodLogger.new(filesystem, :copy_file_to_file, :copy_file_to_dir, :remove_dir, :move_file, :move_dir)
         Masamune::CachedFilesystem.new(filesystem)
       end
     end

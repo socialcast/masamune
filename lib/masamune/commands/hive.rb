@@ -132,7 +132,7 @@ module Masamune::Commands
     def command_args_for_template
       rendered_file = Masamune::Template.render_to_file(@file, @variables)
       logger.debug("#{@file}:\n" + File.read(rendered_file)) if @template_debug
-      filesystem.copy_file(rendered_file, filesystem.get_path(:tmp_dir))
+      filesystem.copy_file_to_dir(rendered_file, filesystem.get_path(:tmp_dir))
       ['-f', filesystem.get_path(:tmp_dir, File.basename(rendered_file))]
     end
   end
