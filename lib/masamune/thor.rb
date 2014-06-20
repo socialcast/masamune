@@ -48,7 +48,7 @@ module Masamune
         super
       rescue => e
         instance.logger.error("#{e.message} (#{e.class}) backtrace:")
-        e.backtrace.map { |x| instance.logger.error(x) }
+        e.backtrace.each { |x| instance.logger.error(x) }
         $stderr.puts "For complete debug log see: #{instance.log_file_name.to_s}"
         raise e
       end
