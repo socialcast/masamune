@@ -44,7 +44,7 @@ describe Masamune::Thor do
     let!(:stdout) { StringIO.new }
     let!(:stderr) { StringIO.new }
 
-    subject do
+    subject(:cli_invocation) do
       capture(stdout, stderr) do
         klass.start([command, *options].compact)
       end
@@ -59,13 +59,13 @@ describe Masamune::Thor do
       end
 
       it 'continues execution' do
-        expect { subject }.to_not raise_error
+        expect { cli_invocation }.to_not raise_error
       end
     end
 
     shared_examples 'general usage' do
       it 'exits with status code 0 and prints general usage' do
-        expect { subject }.to raise_error { |e|
+        expect { cli_invocation }.to raise_error { |e|
           expect(e).to be_a(SystemExit)
           expect(e.status).to eq(0)
         }
@@ -85,7 +85,7 @@ describe Masamune::Thor do
 
     shared_examples 'command usage' do
       it 'exits with status code 0 and prints command usage' do
-        expect { subject }.to raise_error { |e|
+        expect { cli_invocation }.to raise_error { |e|
           expect(e).to be_a(SystemExit)
           expect(e.status).to eq(0)
         }
@@ -111,7 +111,7 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--version'] }
       it 'exits with status code 0 and prints version' do
-        expect { subject }.to raise_error { |e|
+        expect { cli_invocation }.to raise_error { |e|
           expect(e).to be_a(SystemExit)
           expect(e.status).to eq(0)
         }
@@ -122,43 +122,43 @@ describe Masamune::Thor do
 
     context 'with command and no input options' do
       let(:command) { 'command' }
-      it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--start'/ }
+      it { expect { cli_invocation }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--start'/ }
     end
 
     context 'with command and invalid --start' do
       let(:command) { 'command' }
       let(:options) { ['--start', 'xxx'] }
-      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--start'; got/ }
+      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--start'; got/ }
     end
 
     context 'with command and invalid --stop' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--stop', 'xxx'] }
-      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--stop'; got/ }
+      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--stop'; got/ }
     end
 
     context 'with command and invalid --sources' do
       let(:command) { 'command' }
       let(:options) { ['--sources', 'foo'] }
-      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--sources'; got/ }
+      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--sources'; got/ }
     end
 
     context 'with command and invalid --targets' do
       let(:command) { 'command' }
       let(:options) { ['--targets', 'foo'] }
-      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--targets'; got/ }
+      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--targets'; got/ }
     end
 
     context 'with command and both --sources and --targets' do
       let(:command) { 'command' }
       let(:options) { ['--sources', 'sources', '--targets', 'targets'] }
-      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Cannot specify both option '--sources' and option '--targets'/ }
+      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Cannot specify both option '--sources' and option '--targets'/ }
     end
 
     context 'with command and --start and bad --config file' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--config', 'xxx'] }
-      it { expect { subject }.to raise_error Thor::MalformattedArgumentError, /Could not load file provided for '--config'/ }
+      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Could not load file provided for '--config'/ }
     end
 
     context 'with command and --start and missing system --config file' do
@@ -167,7 +167,7 @@ describe Masamune::Thor do
       before do
         expect_any_instance_of(Masamune::Filesystem).to receive(:resolve_file)
       end
-      it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /Option --config or valid system configuration file required/ }
+      it { expect { cli_invocation }.to raise_error Thor::RequiredArgumentMissingError, /Option --config or valid system configuration file required/ }
     end
 
     context 'with command and -- --extra --args' do
@@ -177,7 +177,7 @@ describe Masamune::Thor do
         expect_any_instance_of(klass).to receive(:extra=).with(['--extra', '--args'])
       end
       it do
-        expect { subject }.to raise_error SystemExit
+        expect { cli_invocation }.to raise_error SystemExit
       end
     end
 
@@ -185,7 +185,7 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
       it 'exits with status code 0 without error message' do
-        expect { subject }.to raise_error { |e|
+        expect { cli_invocation }.to raise_error { |e|
           expect(e).to be_a(SystemExit)
           expect(e.status).to eq(0)
         }
@@ -198,7 +198,7 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--start', 'yesterday'] }
       it 'exits with status code  0 without error message' do
-        expect { subject }.to raise_error { |e|
+        expect { cli_invocation }.to raise_error { |e|
           expect(e).to be_a(SystemExit)
           expect(e.status).to eq(0)
         }
@@ -214,7 +214,7 @@ describe Masamune::Thor do
         expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
         allow(klass).to receive(:dispatch).and_raise('random exception')
       end
-      it { expect { subject }.to raise_error /random exception/ }
+      it { expect { cli_invocation }.to raise_error /random exception/ }
     end
 
     context 'with command that raises exception after initialization' do
@@ -224,7 +224,7 @@ describe Masamune::Thor do
         expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
         allow(klass).to receive(:after_initialize_invoke).and_raise('random exception')
       end
-      it { expect { subject }.to raise_error /random exception/ }
+      it { expect { cli_invocation }.to raise_error /random exception/ }
     end
   end
 
