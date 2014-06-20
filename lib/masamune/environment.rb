@@ -60,20 +60,17 @@ module Masamune
       @logger = nil
     end
 
-    def log_enabled?
-      if parent && parent.respond_to?(:log_enabled?)
-        parent.log_enabled?
-      else
-        true
-      end
+    def log_file_name
+      @log_file_name
     end
 
     def logger
       @logger ||= begin
-        log_file_io = if log_enabled? && filesystem.has_path?(:log_dir)
-          log_file = File.open(File.join(filesystem.path(:log_dir), log_file_template), 'a')
+        log_file_io = if filesystem.has_path?(:log_dir)
+          @log_file_name = filesystem.get_path(:log_dir, log_file_template)
+          log_file = File.open(@log_file_name, 'a')
           log_file.sync = true
-          FileUtils.ln_s(log_file, File.join(filesystem.path(:log_dir), 'latest'), force: true)
+          FileUtils.ln_s(log_file, filesystem.path(:log_dir, 'latest'), force: true)
           configuration.debug ? Masamune::MultiIO.new($stderr, log_file) : log_file
         else
           configuration.debug ? $stderr : nil

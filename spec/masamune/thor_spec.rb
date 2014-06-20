@@ -207,12 +207,22 @@ describe Masamune::Thor do
       end
     end
 
-    context 'with command that raises exception' do
+    context 'with command that raises exception before initialization' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
       before do
-        expect(Masamune.logger).to receive(:error).with('random exception')
+        expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
         allow(klass).to receive(:dispatch).and_raise('random exception')
+      end
+      it { expect { subject }.to raise_error /random exception/ }
+    end
+
+    context 'with command that raises exception after initialization' do
+      let(:command) { 'command' }
+      let(:options) { ['--start', '2013-01-01'] }
+      before do
+        expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
+        allow(klass).to receive(:after_initialize_invoke).and_raise('random exception')
       end
       it { expect { subject }.to raise_error /random exception/ }
     end
