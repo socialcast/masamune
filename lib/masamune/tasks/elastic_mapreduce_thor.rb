@@ -27,10 +27,6 @@ module Masamune::Tasks
         end
       end
 
-      def log_enabled?
-        false
-      end
-
       def extra_or_ssh
         self.extra.any? ? self.extra : ['--ssh']
       end

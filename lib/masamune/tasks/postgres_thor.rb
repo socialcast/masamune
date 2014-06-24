@@ -21,11 +21,5 @@ module Masamune::Tasks
       postgres(postgres_options)
     end
     default_task :psql_exec
-
-    no_tasks do
-      def log_enabled?
-        false
-      end
-    end
   end
 end

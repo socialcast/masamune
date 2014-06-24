@@ -36,10 +36,20 @@ module Masamune
     end
 
     module RescueLogger
+      def instance=(instance)
+        @instance = instance
+      end
+
+      def instance
+        @instance || Masamune
+      end
+
       def start(*a)
         super
       rescue => e
-        Masamune.logger.error(e.to_s)
+        instance.logger.error("#{e.message} (#{e.class}) backtrace:")
+        e.backtrace.each { |x| instance.logger.error(x) }
+        $stderr.puts "For complete debug log see: #{instance.log_file_name.to_s}"
         raise e
       end
     end
@@ -71,6 +81,7 @@ module Masamune
           self.current_namespace = self.class.namespace unless self.class.namespace == 'masamune'
           self.current_task_name = _config[:current_command].name
           self.current_command_name = current_namespace ? current_namespace + ':' + current_task_name : current_task_name
+          self.class.instance = self
 
           if _options.is_a?(Array)
             _options, self.extra = self.class.parse_extra(_options)
