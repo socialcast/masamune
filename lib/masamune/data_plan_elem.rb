@@ -1,5 +1,5 @@
 class Masamune::DataPlanElem
-  MISSING_MODIFIED_AT = -1
+  MISSING_MODIFIED_AT = Time.new(0)
 
   include Masamune::Accumulate
   include Comparable
@@ -34,7 +34,7 @@ class Masamune::DataPlanElem
 
   def last_modified_at
     if rule.for_path?
-      rule.plan.filesystem.stat(path).map(&:mtime).max
+      rule.plan.filesystem.stat(path).map { |stat| stat.try(:mtime) }.compact.max
     elsif rule.for_table?
       rule.plan.postgres_helper.table_last_modified_at(table, @options)
     end || MISSING_MODIFIED_AT
