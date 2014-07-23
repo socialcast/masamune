@@ -8,7 +8,7 @@ module Masamune
 
     def render(template, parameters = {})
       resolved_template = resolve_file(template)
-      Tilt.new(resolved_template).render(self, parameters)
+      Tilt.new(resolved_template, nil, trim: '->').render(self, parameters)
     end
 
     private
