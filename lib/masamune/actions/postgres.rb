@@ -34,10 +34,23 @@ module Masamune::Actions
       configuration.postgres[:schema_files].each do |path|
         filesystem.glob_sort(path, order: :basename).each do |file|
           configuration.with_quiet do
-            postgres(file: file)
+            if file =~ /\.rb\Z/
+              registry.load(file)
+            else
+              postgres(file: file)
+            end
           end
         end
       end if configuration.postgres.has_key?(:schema_files)
+    end
+
+    def load_schema_registry
+      return if registry.empty?
+      postgres(file: registry.to_file)
+    rescue
+      logger.error("Could not load schema from registry")
+      logger.error("\n" + registry.to_s)
+      exit
     end
 
     included do |base|
@@ -45,6 +58,7 @@ module Masamune::Actions
         thor.create_database_if_not_exists
         thor.load_setup_files
         thor.load_schema_files
+        thor.load_schema_registry
       end if defined?(base.after_initialize)
     end
   end

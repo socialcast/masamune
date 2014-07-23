@@ -33,8 +33,19 @@ module Masamune::Schema
       @current_dimension.values << a
     end
 
-    def load(data)
-      instance_eval(data)
+    def load(file)
+      instance_eval(File.read(file))
+    end
+
+    def to_file
+      Tempfile.new('masamune').tap do |file|
+        file.write(to_s)
+        file.close
+      end.path
+    end
+
+    def empty?
+      dimensions.empty?
     end
 
     def to_s
