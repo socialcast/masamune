@@ -1,14 +1,31 @@
-CREATE TABLE IF NOT EXISTS <%= dimension.name %>_dimension
+<% dimension.references.each do |dimension| %>
+<%= dimension %>
+<%- end -%>
+
+CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
 (
-  uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  <%- dimension.columns.each do |column| -%>
-  <%= column.to_psql %>,
+  <%- dimension.columns.each_with_index do |column, i|
+  last_column = dimension.unique_columns.any? ? false : (i >= dimension.columns.length - 1)
+  -%>
+  <%= column %><%= ',' unless last_column %>
   <%- end -%>
-  start_at TIMESTAMP DEFAULT TO_TIMESTAMP(0),
-  end_at TIMESTAMP,
-  version INT DEFAULT 1,
-  last_modified_at TIMESTAMP DEFAULT NOW()
+  <%- if dimension.unique_columns.any? -%>
+  UNIQUE(<%= dimension.unique_columns.map(&:name).join(', ') %>)
+  <%- end -%>
 );
 
-CREATE INDEX <%= dimension.name %>_dimension_start_at_index ON <%= dimension.name %>_dimension (start_at);
-CREATE INDEX <%= dimension.name %>_dimension_end_at_index ON <%= dimension.name %>_dimension (end_at);
+<%
+dimension.values.each do |record|
+  unique_values = record.slice(*dimension.unique_columns.map(&:name))
+  next if unique_values.empty?
+  unique_constraints = unique_values.map { |key, value| "#{key} = '#{value}'" }.compact
+%>
+INSERT INTO <%= dimension.table_name %> (<%= record.keys.join(', ') %>)
+SELECT <%= record.values.map { |value| "'#{value}'" }.join(', ') %>
+WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= unique_constraints.join('AND') %>);
+<%- end -%>
+
+<%- dimension.index_columns.each do |column| -%>
+CREATE INDEX <%= dimension.table_name %>_<%= column.name %>_index ON <%= dimension.table_name %> (<%= column.name %>);
+<%- end -%>
+

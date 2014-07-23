@@ -35,7 +35,7 @@ module Masamune
       def render_to_string(template, parameters = {})
         raise IOError, "File not found: #{template}" unless File.exists?(template)
         instance = Template.new(File.dirname(template))
-        instance.render(template, parameters)
+        instance.render(template, parameters).gsub(/^\n+/, "\n").strip + "\n"
       end
     end
   end
