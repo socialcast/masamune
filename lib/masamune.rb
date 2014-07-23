@@ -20,6 +20,7 @@ module Masamune
   require 'masamune/method_logger'
   require 'masamune/proxy_delegate'
   require 'masamune/after_initialize_callbacks'
+  require 'masamune/schema'
 
   extend self
   extend Masamune::HasEnvironment

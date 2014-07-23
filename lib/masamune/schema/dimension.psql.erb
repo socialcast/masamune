@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS <%= dimension.name %>_dimension
+(
+  uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  <%- dimension.columns.each do |column| -%>
+  <%= column.to_psql %>,
+  <%- end -%>
+  start_at TIMESTAMP DEFAULT TO_TIMESTAMP(0),
+  end_at TIMESTAMP,
+  version INT DEFAULT 1,
+  last_modified_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX <%= dimension.name %>_dimension_start_at_index ON <%= dimension.name %>_dimension (start_at);
+CREATE INDEX <%= dimension.name %>_dimension_end_at_index ON <%= dimension.name %>_dimension (end_at);
