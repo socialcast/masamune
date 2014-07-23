@@ -6,6 +6,7 @@ module Masamune::Schema
     attr_accessor :columns
     attr_accessor :values
 
+    # TODO access columns like hash
     def initialize(name: name, type: :two, references: [], columns: [], values: [])
       @name       = name.to_sym
       @type       = type
