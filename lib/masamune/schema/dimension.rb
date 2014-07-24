@@ -18,11 +18,12 @@ module Masamune::Schema
       end
 
       @columns = {}
-      initialize_head_columns!
+      initialize_primary_key_column! unless columns.any? { |column| column.primary_key }
+      initialize_foreign_key_columns!
       columns.each do |column|
         @columns[column.name] = column
       end
-      initialize_tail_columns!
+      initialize_dimension_columns!
 
       @functions = {}
     end
@@ -81,19 +82,25 @@ module Masamune::Schema
 
     private
 
-    def initialize_head_columns!
+    def initialize_primary_key_column!
       case type
       when :mini
         @columns[:id] = Masamune::Schema::Column.new(name: 'id', type: :integer, primary_key: true)
       when :two
         @columns[:uuid] = Masamune::Schema::Column.new(name: 'uuid', type: :uuid, primary_key: true)
+      end
+    end
+
+    def initialize_foreign_key_columns!
+      case type
+      when :two
         foreign_key_columns.each do |column|
           @columns[column.name] = column
         end
       end
     end
 
-    def initialize_tail_columns!
+    def initialize_dimension_columns!
       case type
       when :two
         @columns[:start_at] = Masamune::Schema::Column.new(name: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true)

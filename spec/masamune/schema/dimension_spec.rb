@@ -35,6 +35,26 @@ describe Masamune::Schema::Dimension do
       end
     end
 
+    context 'with primary_key columns override' do
+      let(:dimension) do
+        described_class.new name: 'user_account_state', type: :mini,
+          columns: [
+            Masamune::Schema::Column.new(name: 'uuid', type: :uuid, primary_key: true),
+            Masamune::Schema::Column.new(name: 'name', type: :string)
+          ]
+      end
+
+      it 'should eq dimension template' do
+        is_expected.to eq <<-EOS.strip_heredoc
+          CREATE TABLE IF NOT EXISTS user_account_state_type
+          (
+            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            name VARCHAR NOT NULL
+          );
+        EOS
+      end
+    end
+
     context 'with referenced dimensions' do
       let(:mini_dimension) do
         described_class.new name: 'user_account_state',
