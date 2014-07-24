@@ -46,6 +46,7 @@ module Masamune::Schema
     end
 
     def sql_value(value)
+      return value if sql_function?(value)
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
@@ -54,6 +55,10 @@ module Masamune::Schema
       else
         value
       end
+    end
+
+    def sql_function?(value)
+      value =~ /\(\)\Z/
     end
 
     private

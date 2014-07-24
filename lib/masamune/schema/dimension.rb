@@ -75,7 +75,7 @@ module Masamune::Schema
       values.each do |record|
         unique_values = record.slice(*unique_columns.keys)
         next if unique_values.empty?
-        unique_constraints = unique_values.map { |key, value| "#{key} = '#{value}'" }.compact
+        unique_constraints = unique_values.map { |key, value| "#{key} = #{columns[key].sql_value(value)}" }.compact
         insert_values = record.map { |key, value| columns[key].sql_value(value) }
         yield record.keys, insert_values, unique_constraints
       end

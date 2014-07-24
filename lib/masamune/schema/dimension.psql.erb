@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
 <% dimension.insert_values do |columns, values, constraints| %>
 INSERT INTO <%= dimension.table_name %> (<%= columns.join(', ') %>)
 SELECT <%= values.join(', ') %>
-WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= constraints.join('AND') %>);
+WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= constraints.join(' AND ') %>);
 <%- end -%>
 
 <%- dimension.index_columns.each do |name, _| -%>
