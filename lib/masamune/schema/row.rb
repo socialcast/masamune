@@ -8,14 +8,12 @@ module Masamune::Schema
       @values  = values
       @default = default
       @name    = name
+      @name  ||= 'default' if default
     end
 
     def name
-      if default
-        dimension.default_foreign_key_row
-      else
-        @name
-      end
+      return unless @name
+      "#{@name}_#{dimension.table_name}_#{dimension.primary_key.name}()"
     end
 
     def unique_constraints

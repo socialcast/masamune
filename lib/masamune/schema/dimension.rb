@@ -51,10 +51,6 @@ module Masamune::Schema
       columns.select { |_, column| column.unique }
     end
 
-    def default_row?
-      rows.any? { |row| row.default }
-    end
-
     def foreign_key_columns
       references.map do |_, dimension|
         name = "#{dimension.table_name}_#{dimension.primary_key.name}"
@@ -64,8 +60,7 @@ module Masamune::Schema
     end
 
     def default_foreign_key_row
-      return unless default_row?
-      "default_#{table_name}_#{primary_key.name}()"
+      rows.select { |row| row.default }.first.try(:name)
     end
 
     def insert_rows

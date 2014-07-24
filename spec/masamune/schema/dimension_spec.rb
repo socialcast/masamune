@@ -113,7 +113,7 @@ describe Masamune::Schema::Dimension do
       end
     end
 
-    context 'with multiple unique columns' do
+    context 'with multiple default and named rows' do
       let(:dimension) do
         described_class.new name: 'user', type: :mini,
           columns: [
@@ -124,7 +124,11 @@ describe Masamune::Schema::Dimension do
             Masamune::Schema::Row.new(values: {
               tenant_id: 'default_tenant_id()',
               user_id: -1,
-            }, default: true)
+            }, default: true),
+            Masamune::Schema::Row.new(values: {
+              tenant_id: 'default_tenant_id()',
+              user_id: -2,
+            }, name: 'unknown')
           ]
       end
 
@@ -142,9 +146,18 @@ describe Masamune::Schema::Dimension do
           SELECT default_tenant_id(), -1
           WHERE NOT EXISTS (SELECT 1 FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -1);
 
+          INSERT INTO user_type (tenant_id, user_id)
+          SELECT default_tenant_id(), -2
+          WHERE NOT EXISTS (SELECT 1 FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -2);
+
           CREATE OR REPLACE FUNCTION default_user_type_id()
           RETURNS INTEGER IMMUTABLE AS $$
             SELECT id FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -1;
+          $$ LANGUAGE SQL;
+
+          CREATE OR REPLACE FUNCTION unknown_user_type_id()
+          RETURNS INTEGER IMMUTABLE AS $$
+            SELECT id FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -2;
           $$ LANGUAGE SQL;
         EOS
       end
