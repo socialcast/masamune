@@ -74,7 +74,7 @@ describe Masamune::Schema::Dimension do
       it { expect { subject }.to raise_error ArgumentError, /contains undefined columns/ }
     end
 
-    context 'with parital values' do
+    context 'with partial values' do
       let(:dimension) do
         described_class.new name: 'user_account_state', type: :mini,
           columns: [
@@ -113,6 +113,38 @@ describe Masamune::Schema::Dimension do
       end
     end
 
+    context 'with default_record values' do
+      let(:dimension) do
+        described_class.new name: 'user_account_state', type: :mini,
+          columns: [
+            Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
+            Masamune::Schema::Column.new(name: 'description', type: :string)
+          ],
+          values: [
+            {
+              name: 'active',
+              default_record: true
+            }
+          ]
+      end
+
+      it 'should eq dimension template' do
+        is_expected.to eq <<-EOS.strip_heredoc
+          CREATE TABLE IF NOT EXISTS user_account_state_type
+          (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR NOT NULL,
+            description VARCHAR NOT NULL,
+            default_record BOOLEAN DEFAULT FALSE,
+            UNIQUE(name)
+          );
+
+          INSERT INTO user_account_state_type (name, default_record)
+          SELECT 'active', TRUE
+          WHERE NOT EXISTS (SELECT 1 FROM user_account_state_type WHERE name = 'active');
+        EOS
+      end
+    end
 
     context 'with referenced dimensions' do
       let(:mini_dimension) do
@@ -152,7 +184,7 @@ describe Masamune::Schema::Dimension do
             id SERIAL PRIMARY KEY,
             name VARCHAR NOT NULL,
             description VARCHAR NOT NULL,
-            default_record BOOLEAN NOT NULL DEFAULT FALSE,
+            default_record BOOLEAN DEFAULT FALSE,
             UNIQUE(name)
           );
 

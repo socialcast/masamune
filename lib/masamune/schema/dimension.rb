@@ -1,3 +1,4 @@
+# TODO check for reserved column names
 module Masamune::Schema
   class Dimension
     attr_accessor :name
@@ -112,6 +113,8 @@ module Masamune::Schema
     end
 
     def initialize_dimension_columns!
+      @columns[:default_record] = Masamune::Schema::Column.new(name: 'default_record', type: :boolean, default: false) if values.any? { |record| record.key?(:default_record) }
+
       case type
       when :two
         @columns[:start_at] = Masamune::Schema::Column.new(name: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true)

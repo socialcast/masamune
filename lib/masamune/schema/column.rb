@@ -60,7 +60,7 @@ module Masamune::Schema
 
     def sql_constraints
       [].tap do |constraints|
-        constraints << 'NOT NULL' unless null || primary_key || default
+        constraints << 'NOT NULL' unless null || primary_key || !default.nil?
         constraints << 'PRIMARY KEY' if primary_key
       end
     end
