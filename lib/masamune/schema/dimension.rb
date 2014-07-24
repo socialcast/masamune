@@ -4,14 +4,13 @@ module Masamune::Schema
     attr_accessor :name
     attr_accessor :type
     attr_accessor :references
-    attr_accessor :functions
     attr_accessor :columns
-    attr_accessor :values
+    attr_accessor :rows
 
-    def initialize(name: name, type: :two, references: [], columns: [], values: [])
+    def initialize(name: name, type: :two, references: [], columns: [], rows: [])
       @name       = name.to_sym
       @type       = type
-      @values     = values
+      @rows       = rows
 
       @references = {}
       references.each do |reference|
@@ -25,10 +24,8 @@ module Masamune::Schema
         @columns[column.name] = column
       end
       initialize_dimension_columns!
-      validate_values!
 
-      @functions = {}
-      initialize_default_foreign_key_functions!
+      @rows.each { |row| row.dimension = self }
     end
 
     def table_name
@@ -54,31 +51,29 @@ module Masamune::Schema
       columns.select { |_, column| column.unique }
     end
 
-    def default_record?
-      columns.any? { |_, column| column.name == :default_record }
+    def default_row?
+      rows.any? { |row| row.default }
     end
 
     def foreign_key_columns
       references.map do |_, dimension|
         name = "#{dimension.table_name}_#{dimension.primary_key.name}"
         type = dimension.primary_key.type
-        Masamune::Schema::Column.new(name: name, type: type, reference: dimension, default: dimension.default_foreign_key_record)
+        Masamune::Schema::Column.new(name: name, type: type, reference: dimension, default: dimension.default_foreign_key_row)
       end
     end
 
-    def default_foreign_key_record
-      return unless default_record?
+    def default_foreign_key_row
+      return unless default_row?
       "default_#{table_name}_#{primary_key.name}()"
     end
 
-    def insert_values(&block)
-      values.each do |record|
-        unique_values = record.slice(*unique_columns.keys)
-        next if unique_values.empty?
-        unique_constraints = unique_values.map { |key, value| "#{key} = #{columns[key].sql_value(value)}" }.compact
-        insert_values = record.map { |key, value| columns[key].sql_value(value) }
-        yield record.keys, insert_values, unique_constraints
-      end
+    def insert_rows
+      rows.select { |row| row.insert_values.any? }
+    end
+
+    def aliased_rows
+      rows.select { |row| row.name }
     end
 
     def to_s
@@ -106,31 +101,12 @@ module Masamune::Schema
     end
 
     def initialize_dimension_columns!
-      @columns[:default_record] = Masamune::Schema::Column.new(name: 'default_record', type: :boolean, default: false) if values.any? { |record| record.key?(:default_record) }
-
       case type
       when :two
         @columns[:start_at] = Masamune::Schema::Column.new(name: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true)
         @columns[:end_at]  = Masamune::Schema::Column.new(name: 'end_at', type: :timestamp, null: true, index: true)
         @columns[:version] = Masamune::Schema::Column.new(name: 'version', type: :integer, default: 1)
         @columns[:last_modified_at] = Masamune::Schema::Column.new(name: 'last_modified_at', type: :timestamp, default: 'NOW()')
-      end
-    end
-
-    def initialize_default_foreign_key_functions!
-      return unless default_foreign_key_record
-      @functions[default_foreign_key_record] = <<-EOS.strip_heredoc
-      CREATE OR REPLACE FUNCTION #{default_foreign_key_record}
-      RETURNS #{primary_key.sql_type} IMMUTABLE AS $$
-        SELECT #{primary_key.name} FROM #{table_name} WHERE default_record = TRUE;
-      $$ LANGUAGE SQL;
-      EOS
-    end
-
-    def validate_values!
-      values.each do |record|
-        undefined_columns = record.keys - columns.keys
-        raise ArgumentError, "#{record} contains undefined columns #{undefined_columns}" if undefined_columns.any?
       end
     end
 

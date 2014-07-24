@@ -62,12 +62,12 @@ describe Masamune::Schema::Dimension do
             Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
             Masamune::Schema::Column.new(name: 'description', type: :string)
           ],
-          values: [
-            {
+          rows: [
+            Masamune::Schema::Row.new(values: {
               name: 'active',
               description: 'Active',
               missing_column: true
-            }
+            })
           ]
       end
 
@@ -81,14 +81,14 @@ describe Masamune::Schema::Dimension do
             Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
             Masamune::Schema::Column.new(name: 'description', type: :string)
           ],
-          values: [
-            {
+          rows: [
+            Masamune::Schema::Row.new(values: {
               name: 'registered',
               description: 'Registered'
-            },
-            {
+            }),
+            Masamune::Schema::Row.new(values: {
               name: 'active'
-            }
+            })
           ]
       end
 
@@ -120,12 +120,11 @@ describe Masamune::Schema::Dimension do
             Masamune::Schema::Column.new(name: 'tenant_id', type: :integer, unique: true),
             Masamune::Schema::Column.new(name: 'user_id', type: :integer, unique: true)
           ],
-          values: [
-            {
+          rows: [
+            Masamune::Schema::Row.new(values: {
               tenant_id: 'default_tenant_id()',
               user_id: -1,
-              default_record: true
-            }
+            }, default: true)
           ]
       end
 
@@ -136,72 +135,16 @@ describe Masamune::Schema::Dimension do
             id SERIAL PRIMARY KEY,
             tenant_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
-            default_record BOOLEAN DEFAULT FALSE,
             UNIQUE(tenant_id, user_id)
           );
 
-          INSERT INTO user_type (tenant_id, user_id, default_record)
-          SELECT default_tenant_id(), -1, TRUE
+          INSERT INTO user_type (tenant_id, user_id)
+          SELECT default_tenant_id(), -1
           WHERE NOT EXISTS (SELECT 1 FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -1);
 
           CREATE OR REPLACE FUNCTION default_user_type_id()
           RETURNS INTEGER IMMUTABLE AS $$
-            SELECT id FROM user_type WHERE default_record = TRUE;
-          $$ LANGUAGE SQL;
-        EOS
-      end
-    end
-
-    context 'with default_record values' do
-      let(:dimension) do
-        described_class.new name: 'user_account_state', type: :mini,
-          columns: [
-            Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-            Masamune::Schema::Column.new(name: 'description', type: :string)
-          ],
-          values: [
-            {
-              name: 'registered',
-              description: 'Registered'
-            },
-            {
-              name: 'active',
-              description: 'Active',
-              default_record: true
-            },
-            {
-              name: 'inactive',
-              description: 'Inactive'
-            }
-          ]
-      end
-
-      it 'should eq dimension template' do
-        is_expected.to eq <<-EOS.strip_heredoc
-          CREATE TABLE IF NOT EXISTS user_account_state_type
-          (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR NOT NULL,
-            description VARCHAR NOT NULL,
-            default_record BOOLEAN DEFAULT FALSE,
-            UNIQUE(name)
-          );
-
-          INSERT INTO user_account_state_type (name, description)
-          SELECT 'registered', 'Registered'
-          WHERE NOT EXISTS (SELECT 1 FROM user_account_state_type WHERE name = 'registered');
-
-          INSERT INTO user_account_state_type (name, description, default_record)
-          SELECT 'active', 'Active', TRUE
-          WHERE NOT EXISTS (SELECT 1 FROM user_account_state_type WHERE name = 'active');
-
-          INSERT INTO user_account_state_type (name, description)
-          SELECT 'inactive', 'Inactive'
-          WHERE NOT EXISTS (SELECT 1 FROM user_account_state_type WHERE name = 'inactive');
-
-          CREATE OR REPLACE FUNCTION default_user_account_state_type_id()
-          RETURNS INTEGER IMMUTABLE AS $$
-            SELECT id FROM user_account_state_type WHERE default_record = TRUE;
+            SELECT id FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -1;
           $$ LANGUAGE SQL;
         EOS
       end
@@ -214,20 +157,19 @@ describe Masamune::Schema::Dimension do
             Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
             Masamune::Schema::Column.new(name: 'description', type: :string)
           ],
-          values: [
-            {
+          rows: [
+            Masamune::Schema::Row.new(values: {
               name: 'registered',
               description: 'Registered'
-            },
-            {
+            }),
+            Masamune::Schema::Row.new(values: {
               name: 'active',
               description: 'Active',
-              default_record: true
-            },
-            {
+            }, default: true),
+            Masamune::Schema::Row.new(values: {
               name: 'inactive',
               description: 'Inactive'
-            }
+            })
           ]
       end
 

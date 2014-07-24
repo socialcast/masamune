@@ -27,8 +27,10 @@ module Masamune::Schema
       @options[:references] << dimensions[a.to_sym]
     end
 
-    def value(a)
-      @options[:values] << a
+    def row(a)
+      attributes = a.delete(:attributes) || {}
+      attributes[:values] = a
+      @options[:rows] << Masamune::Schema::Row.new(attributes)
     end
 
     def load(file)

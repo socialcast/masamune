@@ -47,22 +47,22 @@ describe Masamune::Schema::Registry do
       it { expect(table_two_columns).to include :column_four }
     end
 
-    context 'when schema contains columns and values' do
+    context 'when schema contains columns and rows' do
       before do
         instance.schema do
           dimension name: 'table_one' do
             column name: 'column_one', type: :integer
             column name: 'column_two', type: :string
-            value column_one: 1, column_two: 'a'
-            value column_one: 2, column_two: 'b'
+            row column_one: 1, column_two: 'a'
+            row column_one: 2, column_two: 'b'
           end
         end
       end
 
-      subject { instance.dimensions[:table_one].values }
+      let(:table_one_rows) { instance.dimensions[:table_one].rows }
 
-      it { is_expected.to include(column_one: 1, column_two: 'a') }
-      it { is_expected.to include(column_one: 2, column_two: 'b') }
+      it { expect(table_one_rows[0].values).to include(column_one: 1, column_two: 'a') }
+      it { expect(table_one_rows[1].values).to include(column_one: 2, column_two: 'b') }
     end
 
     context 'when schema contains references' do
@@ -91,7 +91,7 @@ describe Masamune::Schema::Registry do
             column name: 'name', type: :string, unique: true
             column name: 'description', type: :string
 
-            value name: 'current_database()', default_record: true
+            row name: 'current_database()', attributes: {default: true}
           end
         end
       end
@@ -99,7 +99,6 @@ describe Masamune::Schema::Registry do
       subject { instance.dimensions[:cluster].columns }
 
       it { is_expected.to include :uuid }
-      it { is_expected.to include :default_record }
       it { is_expected.to_not include :id }
     end
   end
