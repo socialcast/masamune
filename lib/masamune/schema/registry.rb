@@ -12,7 +12,7 @@ module Masamune::Schema
     end
 
     def dimension(a, &block)
-      prev_options = @options
+      prev_options = @options.dup
       yield if block_given?
       self.dimensions[a[:name].to_sym] ||= Masamune::Schema::Dimension.new(a.merge(@options))
     ensure

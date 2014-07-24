@@ -22,17 +22,29 @@ describe Masamune::Schema::Registry do
     context 'when schema contains columns' do
       before do
         instance.schema do
-          dimension name: 'foo' do
-            column name: 'bar'
-            column name: 'baz'
+          dimension name: 'table_one' do
+            column name: 'column_one'
+            column name: 'column_two'
+          end
+
+          dimension name: 'table_two' do
+            column name: 'column_three'
+            column name: 'column_four'
           end
         end
       end
 
-      subject { instance.dimensions[:foo].columns }
+      let(:table_one_columns) { instance.dimensions[:table_one].columns }
+      let(:table_two_columns) { instance.dimensions[:table_two].columns }
 
-      it { is_expected.to include :bar }
-      it { is_expected.to include :baz }
+      it { expect(table_one_columns).to include :column_one }
+      it { expect(table_one_columns).to include :column_two }
+      it { expect(table_one_columns).to_not include :column_three }
+      it { expect(table_one_columns).to_not include :column_four }
+      it { expect(table_two_columns).to_not include :column_one }
+      it { expect(table_two_columns).to_not include :column_two }
+      it { expect(table_two_columns).to include :column_three }
+      it { expect(table_two_columns).to include :column_four }
     end
 
     context 'when schema contains columns and values' do
