@@ -55,6 +55,65 @@ describe Masamune::Schema::Dimension do
       end
     end
 
+    context 'with invalid values' do
+      let(:dimension) do
+        described_class.new name: 'user_account_state', type: :mini,
+          columns: [
+            Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
+            Masamune::Schema::Column.new(name: 'description', type: :string)
+          ],
+          values: [
+            {
+              name: 'active',
+              description: 'Active',
+              missing_column: true
+            }
+          ]
+      end
+
+      it { expect { subject }.to raise_error ArgumentError, /contains undefined columns/ }
+    end
+
+    context 'with parital values' do
+      let(:dimension) do
+        described_class.new name: 'user_account_state', type: :mini,
+          columns: [
+            Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
+            Masamune::Schema::Column.new(name: 'description', type: :string)
+          ],
+          values: [
+            {
+              name: 'registered',
+              description: 'Registered'
+            },
+            {
+              name: 'active'
+            }
+          ]
+      end
+
+      it 'should eq dimension template' do
+        is_expected.to eq <<-EOS.strip_heredoc
+          CREATE TABLE IF NOT EXISTS user_account_state_type
+          (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR NOT NULL,
+            description VARCHAR NOT NULL,
+            UNIQUE(name)
+          );
+
+          INSERT INTO user_account_state_type (name, description)
+          SELECT 'registered', 'Registered'
+          WHERE NOT EXISTS (SELECT 1 FROM user_account_state_type WHERE name = 'registered');
+
+          INSERT INTO user_account_state_type (name)
+          SELECT 'active'
+          WHERE NOT EXISTS (SELECT 1 FROM user_account_state_type WHERE name = 'active');
+        EOS
+      end
+    end
+
+
     context 'with referenced dimensions' do
       let(:mini_dimension) do
         described_class.new name: 'user_account_state',

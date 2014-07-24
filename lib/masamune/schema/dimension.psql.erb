@@ -14,16 +14,10 @@ CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
   <%- end -%>
 );
 
-<%
-dimension.values.each do |record|
-  unique_values = record.slice(*dimension.unique_columns.keys)
-  next if unique_values.empty?
-  unique_constraints = unique_values.map { |key, value| "#{key} = '#{value}'" }.compact
-  sql_values = record.map { |key, value| dimension.columns[key].sql_value(value) }
-%>
-INSERT INTO <%= dimension.table_name %> (<%= record.keys.join(', ') %>)
-SELECT <%= sql_values.join(', ') %>
-WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= unique_constraints.join('AND') %>);
+<% dimension.insert_values do |columns, values, constraints| %>
+INSERT INTO <%= dimension.table_name %> (<%= columns.join(', ') %>)
+SELECT <%= values.join(', ') %>
+WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= constraints.join('AND') %>);
 <%- end -%>
 
 <%- dimension.index_columns.each do |name, _| -%>

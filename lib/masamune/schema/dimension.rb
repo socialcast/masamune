@@ -24,6 +24,7 @@ module Masamune::Schema
         @columns[column.name] = column
       end
       initialize_dimension_columns!
+      validate_values!
 
       @functions = {}
     end
@@ -76,6 +77,16 @@ module Masamune::Schema
       default_record_id
     end
 
+    def insert_values(&block)
+      values.each do |record|
+        unique_values = record.slice(*unique_columns.keys)
+        next if unique_values.empty?
+        unique_constraints = unique_values.map { |key, value| "#{key} = '#{value}'" }.compact
+        insert_values = record.map { |key, value| columns[key].sql_value(value) }
+        yield record.keys, insert_values, unique_constraints
+      end
+    end
+
     def to_s
       Masamune::Template.render_to_string(dimension_template, dimension: self)
     end
@@ -107,6 +118,13 @@ module Masamune::Schema
         @columns[:end_at]  = Masamune::Schema::Column.new(name: 'end_at', type: :timestamp, null: true, index: true)
         @columns[:version] = Masamune::Schema::Column.new(name: 'version', type: :integer, default: 1)
         @columns[:last_modified_at] = Masamune::Schema::Column.new(name: 'last_modified_at', type: :timestamp, default: 'NOW()')
+      end
+    end
+
+    def validate_values!
+      values.each do |record|
+        undefined_columns = record.keys - columns.keys
+        raise ArgumentError, "#{record} contains undefined columns #{undefined_columns}" if undefined_columns.any?
       end
     end
 
