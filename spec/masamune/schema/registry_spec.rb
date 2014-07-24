@@ -13,7 +13,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject { instance.dimensions.keys }
+      subject { instance.dimensions }
 
       it { is_expected.to include :foo }
       it { is_expected.to include :bar }
@@ -29,7 +29,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject { instance.dimensions[:foo].columns.keys }
+      subject { instance.dimensions[:foo].columns }
 
       it { is_expected.to include :bar }
       it { is_expected.to include :baz }
@@ -65,10 +65,30 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject { instance.dimensions[:baz].references.keys }
+      subject { instance.dimensions[:baz].references }
 
       it { is_expected.to include :foo }
       it { is_expected.to include :bar }
+    end
+
+    context 'when schema contains overrides' do
+      before do
+        instance.schema do
+          dimension name: 'cluster', type: :mini do
+            column name: 'uuid', type: :uuid, primary_key: true
+            column name: 'name', type: :string, unique: true
+            column name: 'description', type: :string
+
+            value name: 'current_database()', default_record: true
+          end
+        end
+      end
+
+      subject { instance.dimensions[:cluster].columns }
+
+      it { is_expected.to include :uuid }
+      it { is_expected.to include :default_record }
+      it { is_expected.to_not include :id }
     end
   end
 end

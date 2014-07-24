@@ -4,7 +4,7 @@ module Masamune::Schema
 
     def initialize
       @dimensions = {}
-      @current_dimension = nil
+      @options = Hash.new { |h,k| h[k] = [] }
     end
 
     def schema(&block)
@@ -12,25 +12,23 @@ module Masamune::Schema
     end
 
     def dimension(a, &block)
-      previous_dimension = @current_dimension
-      self.dimensions[a[:name].to_sym] ||= Masamune::Schema::Dimension.new(a)
-      @current_dimension = self.dimensions[a[:name].to_sym]
+      prev_options = @options
       yield if block_given?
+      self.dimensions[a[:name].to_sym] ||= Masamune::Schema::Dimension.new(a.merge(@options))
     ensure
-      @current_dimension = previous_dimension
+      @options = prev_options
     end
 
     def column(a)
-      @current_dimension.columns[a[:name].to_sym] = Masamune::Schema::Column.new(a)
+      @options[:columns] << Masamune::Schema::Column.new(a)
     end
 
     def references(a)
-      reference = dimensions[a.to_sym]
-      @current_dimension.references[a.to_sym] = reference
+      @options[:references] << dimensions[a.to_sym]
     end
 
     def value(a)
-      @current_dimension.values << a
+      @options[:values] << a
     end
 
     def load(file)
