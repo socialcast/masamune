@@ -23,7 +23,18 @@ module Masamune::Schema
     end
 
     def to_s
-      [sql_name, sql_type, *sql_constraints, sql_default, sql_reference].compact.join(' ')
+      [sql_name, sql_type, *sql_constraints, sql_reference, sql_default].compact.join(' ')
+    end
+
+    def sql_value(value)
+      case type
+      when :boolean
+        value ? 'TRUE' : 'FALSE'
+      when :string
+        "'#{value}'"
+      else
+        value
+      end
     end
 
     private
@@ -42,6 +53,8 @@ module Masamune::Schema
         'UUID'
       when :timestamp
         'TIMESTAMP'
+      when :boolean
+        'BOOLEAN'
       end
     end
 
@@ -53,7 +66,7 @@ module Masamune::Schema
     end
 
     def sql_default
-      "DEFAULT #{default}" if default
+      "DEFAULT #{sql_value(default)}" unless default.nil?
     end
 
     def sql_reference

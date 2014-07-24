@@ -29,7 +29,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject { instance.dimensions[:foo].columns.map(&:name) }
+      subject { instance.dimensions[:foo].columns.keys }
 
       it { is_expected.to include :bar }
       it { is_expected.to include :baz }
@@ -65,7 +65,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject { instance.dimensions[:baz].references.map(&:name) }
+      subject { instance.dimensions[:baz].references.keys }
 
       it { is_expected.to include :foo }
       it { is_expected.to include :bar }

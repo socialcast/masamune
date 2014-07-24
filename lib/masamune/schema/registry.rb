@@ -21,12 +21,12 @@ module Masamune::Schema
     end
 
     def column(a)
-      @current_dimension.columns << Masamune::Schema::Column.new(a)
+      @current_dimension.columns[a[:name].to_sym] = Masamune::Schema::Column.new(a)
     end
 
     def references(a)
       reference = dimensions[a.to_sym]
-      @current_dimension.references << reference
+      @current_dimension.references[a.to_sym] = reference
     end
 
     def value(a)
