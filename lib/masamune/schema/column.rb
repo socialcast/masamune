@@ -23,7 +23,26 @@ module Masamune::Schema
     end
 
     def to_s
-      [sql_name, sql_type, *sql_constraints, sql_reference, sql_default].compact.join(' ')
+      [sql_name, sql_type(primary_key), *sql_constraints, sql_reference, sql_default].compact.join(' ')
+    end
+
+    def sql_name
+      name
+    end
+
+    def sql_type(for_primary_key = false)
+      case type
+      when :integer
+        for_primary_key ? 'SERIAL' : 'INTEGER'
+      when :string
+        'VARCHAR'
+      when :uuid
+        'UUID'
+      when :timestamp
+        'TIMESTAMP'
+      when :boolean
+        'BOOLEAN'
+      end
     end
 
     def sql_value(value)
@@ -38,25 +57,6 @@ module Masamune::Schema
     end
 
     private
-
-    def sql_name
-      name
-    end
-
-    def sql_type
-      case type
-      when :integer
-        primary_key ? 'SERIAL' : 'INTEGER'
-      when :string
-        'VARCHAR'
-      when :uuid
-        'UUID'
-      when :timestamp
-        'TIMESTAMP'
-      when :boolean
-        'BOOLEAN'
-      end
-    end
 
     def sql_constraints
       [].tap do |constraints|

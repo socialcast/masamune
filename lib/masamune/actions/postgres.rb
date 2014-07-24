@@ -46,6 +46,7 @@ module Masamune::Actions
 
     def load_schema_registry
       return if registry.empty?
+      logger.error(registry.to_s)
       postgres(file: registry.to_file)
     rescue
       logger.error("Could not load schema from registry")

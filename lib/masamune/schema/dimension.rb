@@ -28,6 +28,7 @@ module Masamune::Schema
       validate_values!
 
       @functions = {}
+      initialize_default_foreign_key_functions!
     end
 
     def table_name
@@ -67,15 +68,7 @@ module Masamune::Schema
 
     def default_foreign_key_record
       return unless default_record?
-
-      default_record_id = "default_#{table_name}_#{primary_key.name}()"
-      @functions[default_record_id] = <<-EOS.strip_heredoc
-      CREATE OR REPLACE FUNCTION #{default_record_id}
-      RETURNS INTEGER IMMUTABLE AS $$
-        SELECT #{primary_key.name} FROM #{table_name} WHERE default_record = TRUE;
-      $$ LANGUAGE SQL;
-      EOS
-      default_record_id
+      "default_#{table_name}_#{primary_key.name}()"
     end
 
     def insert_values(&block)
@@ -122,6 +115,16 @@ module Masamune::Schema
         @columns[:version] = Masamune::Schema::Column.new(name: 'version', type: :integer, default: 1)
         @columns[:last_modified_at] = Masamune::Schema::Column.new(name: 'last_modified_at', type: :timestamp, default: 'NOW()')
       end
+    end
+
+    def initialize_default_foreign_key_functions!
+      return unless default_foreign_key_record
+      @functions[default_foreign_key_record] = <<-EOS.strip_heredoc
+      CREATE OR REPLACE FUNCTION #{default_foreign_key_record}
+      RETURNS #{primary_key.sql_type} IMMUTABLE AS $$
+        SELECT #{primary_key.name} FROM #{table_name} WHERE default_record = TRUE;
+      $$ LANGUAGE SQL;
+      EOS
     end
 
     def validate_values!

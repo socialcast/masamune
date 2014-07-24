@@ -122,42 +122,6 @@ describe Masamune::Schema::Dimension do
           ],
           values: [
             {
-              name: 'active',
-              default_record: true
-            }
-          ]
-      end
-
-      it 'should eq dimension template' do
-        is_expected.to eq <<-EOS.strip_heredoc
-          CREATE TABLE IF NOT EXISTS user_account_state_type
-          (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR NOT NULL,
-            description VARCHAR NOT NULL,
-            default_record BOOLEAN DEFAULT FALSE,
-            UNIQUE(name)
-          );
-
-          INSERT INTO user_account_state_type (name, default_record)
-          SELECT 'active', TRUE
-          WHERE NOT EXISTS (SELECT 1 FROM user_account_state_type WHERE name = 'active');
-        EOS
-      end
-    end
-
-    context 'with referenced dimensions' do
-      let(:mini_dimension) do
-        described_class.new name: 'user_account_state',
-          type: :mini,
-          columns: [
-            Masamune::Schema::Column.new(name: 'id', type: :integer, primary_key: true),
-            Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-            Masamune::Schema::Column.new(name: 'description', type: :string),
-            Masamune::Schema::Column.new(name: 'default_record', type: :boolean, default: false)
-          ],
-          values: [
-            {
               name: 'registered',
               description: 'Registered'
             },
@@ -171,10 +135,6 @@ describe Masamune::Schema::Dimension do
               description: 'Inactive'
             }
           ]
-      end
-
-      let(:dimension) do
-        described_class.new name: 'user', references: [mini_dimension]
       end
 
       it 'should eq dimension template' do
@@ -204,7 +164,40 @@ describe Masamune::Schema::Dimension do
           RETURNS INTEGER IMMUTABLE AS $$
             SELECT id FROM user_account_state_type WHERE default_record = TRUE;
           $$ LANGUAGE SQL;
+        EOS
+      end
+    end
 
+    context 'with referenced dimensions' do
+      let(:mini_dimension) do
+        described_class.new name: 'user_account_state', type: :mini,
+          columns: [
+            Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
+            Masamune::Schema::Column.new(name: 'description', type: :string)
+          ],
+          values: [
+            {
+              name: 'registered',
+              description: 'Registered'
+            },
+            {
+              name: 'active',
+              description: 'Active',
+              default_record: true
+            },
+            {
+              name: 'inactive',
+              description: 'Inactive'
+            }
+          ]
+      end
+
+      let(:dimension) do
+        described_class.new name: 'user', references: [mini_dimension]
+      end
+
+      it 'should eq dimension template' do
+        is_expected.to eq <<-EOS.strip_heredoc
           CREATE TABLE IF NOT EXISTS user_dimension
           (
             uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
