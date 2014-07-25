@@ -104,7 +104,7 @@ describe Masamune::Schema::Dimension do
 
           INSERT INTO user_account_state_type (name, description)
           SELECT 'registered', 'Registered'
-          WHERE NOT EXISTS (SELECT 1 FROM user_account_state_type WHERE name = 'registered');
+          WHERE NOT EXISTS (SELECT 1 FROM user_account_state_type WHERE name = 'registered' AND description = 'Registered');
 
           INSERT INTO user_account_state_type (name)
           SELECT 'active'

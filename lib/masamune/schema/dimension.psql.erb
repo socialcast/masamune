@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
 <% dimension.insert_rows.each do |row| %>
 INSERT INTO <%= dimension.table_name %> (<%= row.insert_columns.join(', ') %>)
 SELECT <%= row.insert_values.join(', ') %>
-WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= row.unique_constraints.join(' AND ') %>);
+WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
 <%- end -%>
 
 <%- dimension.index_columns.each do |column_names, unique| -%>
@@ -25,6 +25,6 @@ CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= dimension.table_name %>_<%= 
 <% dimension.aliased_rows.each do |row| %>
 CREATE OR REPLACE FUNCTION <%= row.name %>
 RETURNS <%= dimension.primary_key.sql_type %> IMMUTABLE AS $$
-  SELECT <%= dimension.primary_key.name %> FROM <%= dimension.table_name %> WHERE <%= row.unique_constraints.join(' AND ') %>;
+  SELECT <%= dimension.primary_key.name %> FROM <%= dimension.table_name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
 $$ LANGUAGE SQL;
 <%- end -%>

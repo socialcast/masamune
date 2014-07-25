@@ -16,9 +16,8 @@ module Masamune::Schema
       "#{@name}_#{dimension.table_name}_#{dimension.primary_key.name}()"
     end
 
-    def unique_constraints
-      unique_values = values.key?(dimension.primary_key) ? values.slice(dimension.primary_key) : values.slice(*dimension.unique_columns.keys)
-      unique_values.map { |key, value| "#{key} = #{dimension.columns[key].sql_value(value)}" }.compact
+    def insert_constraints
+      values.map { |key, value| "#{key} = #{dimension.columns[key].sql_value(value)}" }.compact
     end
 
     def insert_columns
