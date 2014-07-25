@@ -49,10 +49,6 @@ module Masamune::Schema
       end.path
     end
 
-    def empty?
-      dimensions.empty?
-    end
-
     def to_s
       # TODO construct a partial ordering of dimensions by reference
       (dimensions.values.map(&:to_s) + @extra).join("\n")
