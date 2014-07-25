@@ -207,5 +207,53 @@ describe Masamune::Schema::Dimension do
         EOS
       end
     end
+
+    context 'for type :two_with_ledger dimension' do
+      let(:dimension) do
+        described_class.new name: 'user', type: :two, ledger: true,
+          columns: [
+            Masamune::Schema::Column.new(name: 'tenant_id', index: true),
+            Masamune::Schema::Column.new(name: 'user_id', index: true)
+          ]
+      end
+
+      it 'should eq dimension template' do
+        is_expected.to eq <<-EOS.strip_heredoc
+          CREATE TABLE IF NOT EXISTS user_dimension_ledger
+          (
+            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            tenant_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            source_kind VARCHAR,
+            source_uuid VARCHAR,
+            start_at TIMESTAMP NOT NULL,
+            last_modified_at TIMESTAMP DEFAULT NOW(),
+            delta INTEGER NOT NULL
+          );
+
+          CREATE INDEX user_dimension_ledger_tenant_id_index ON user_dimension_ledger (tenant_id);
+          CREATE INDEX user_dimension_ledger_user_id_index ON user_dimension_ledger (user_id);
+          CREATE INDEX user_dimension_ledger_start_at_index ON user_dimension_ledger (start_at);
+
+          CREATE TABLE IF NOT EXISTS user_dimension
+          (
+            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            tenant_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            parent_uuid UUID REFERENCES user_dimension_ledger(uuid),
+            record_uuid UUID REFERENCES user_dimension_ledger(uuid),
+            start_at TIMESTAMP DEFAULT TO_TIMESTAMP(0),
+            end_at TIMESTAMP,
+            version INTEGER DEFAULT 1,
+            last_modified_at TIMESTAMP DEFAULT NOW()
+          );
+
+          CREATE INDEX user_dimension_tenant_id_index ON user_dimension (tenant_id);
+          CREATE INDEX user_dimension_user_id_index ON user_dimension (user_id);
+          CREATE INDEX user_dimension_start_at_index ON user_dimension (start_at);
+          CREATE INDEX user_dimension_end_at_index ON user_dimension (end_at);
+        EOS
+      end
+    end
   end
 end

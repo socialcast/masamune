@@ -1,3 +1,5 @@
+<%= dimension.ledger_table %>
+
 CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
 (
   <%- dimension.columns.each_with_index do |(name, column), i|
