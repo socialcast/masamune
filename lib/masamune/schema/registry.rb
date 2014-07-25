@@ -5,6 +5,7 @@ module Masamune::Schema
     def initialize
       @dimensions = {}
       @options = Hash.new { |h,k| h[k] = [] }
+      @extra = []
     end
 
     def schema(&block)
@@ -34,7 +35,11 @@ module Masamune::Schema
     end
 
     def load(file)
-      instance_eval(File.read(file))
+      if file =~ /\.rb\Z/
+        instance_eval(File.read(file))
+      else
+        @extra << File.read(file)
+      end
     end
 
     def to_file
@@ -49,7 +54,8 @@ module Masamune::Schema
     end
 
     def to_s
-      dimensions.values.map(&:to_s).join("\n")
+      # TODO construct a partial ordering of dimensions by reference
+      (dimensions.values.map(&:to_s) + @extra).join("\n")
     end
   end
 end

@@ -34,11 +34,7 @@ module Masamune::Actions
       configuration.postgres[:schema_files].each do |path|
         filesystem.glob_sort(path, order: :basename).each do |file|
           configuration.with_quiet do
-            if file =~ /\.rb\Z/
-              registry.load(file)
-            else
-              postgres(file: file)
-            end
+            registry.load(file)
           end
         end
       end if configuration.postgres.has_key?(:schema_files)
@@ -46,8 +42,6 @@ module Masamune::Actions
 
     def load_schema_registry
       return if registry.empty?
-      # XXX
-      logger.error(registry.to_s)
       postgres(file: registry.to_file)
     rescue
       logger.error("Could not load schema from registry")
