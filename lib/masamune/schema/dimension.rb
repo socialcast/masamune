@@ -50,7 +50,10 @@ module Masamune::Schema
     end
 
     def index_columns
-      columns.select { |_, column| column.index }
+      indices = columns.select { |_, column| column.index }.group_by { |_, column| column.index == true ? column.name : column.index }
+      indices.map { |_, index_and_columns| index_and_columns.map(&:last) }.map do |columns|
+        [columns.map(&:name), columns.all? { |column| column.unique }]
+      end
     end
 
     def unique_columns

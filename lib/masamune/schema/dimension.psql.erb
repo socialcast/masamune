@@ -18,8 +18,8 @@ SELECT <%= row.insert_values.join(', ') %>
 WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= row.unique_constraints.join(' AND ') %>);
 <%- end -%>
 
-<%- dimension.index_columns.each do |name, _| -%>
-CREATE INDEX <%= dimension.table_name %>_<%= name %>_index ON <%= dimension.table_name %> (<%= name %>);
+<%- dimension.index_columns.each do |column_names, unique| -%>
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= dimension.table_name %>_<%= column_names.join('_') %>_index ON <%= dimension.table_name %> (<%= column_names.join(', ') %>);
 <%- end -%>
 
 <% dimension.aliased_rows.each do |row| %>

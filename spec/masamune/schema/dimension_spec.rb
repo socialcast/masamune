@@ -113,6 +113,30 @@ describe Masamune::Schema::Dimension do
       end
     end
 
+    context 'with shared index' do
+      let(:dimension) do
+        described_class.new name: 'user', type: :mini,
+          columns: [
+            Masamune::Schema::Column.new(name: 'tenant_id', type: :integer, unique: true, index: 'tenant_and_user'),
+            Masamune::Schema::Column.new(name: 'user_id', type: :integer, unique: true, index: 'tenant_and_user')
+          ]
+      end
+
+      it 'should eq dimension template' do
+        is_expected.to eq <<-EOS.strip_heredoc
+          CREATE TABLE IF NOT EXISTS user_type
+          (
+            id SERIAL PRIMARY KEY,
+            tenant_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            UNIQUE(tenant_id, user_id)
+          );
+
+          CREATE UNIQUE INDEX user_type_tenant_id_user_id_index ON user_type (tenant_id, user_id);
+        EOS
+      end
+    end
+
     context 'with multiple default and named rows' do
       let(:dimension) do
         described_class.new name: 'user', type: :mini,
