@@ -17,7 +17,7 @@ module Masamune::Schema
     end
 
     def unique_constraints
-      unique_values = values.slice(*dimension.unique_columns.keys)
+      unique_values = values.key?(dimension.primary_key) ? values.slice(dimension.primary_key) : values.slice(*dimension.unique_columns.keys)
       unique_values.map { |key, value| "#{key} = #{dimension.columns[key].sql_value(value)}" }.compact
     end
 
