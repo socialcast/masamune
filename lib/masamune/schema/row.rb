@@ -16,6 +16,11 @@ module Masamune::Schema
       "#{@name}_#{dimension.table_name}_#{dimension.primary_key.name}()"
     end
 
+    def surrogate_name
+      return unless dimension.surrogate_key && @name
+      "#{@name}_#{dimension.surrogate_key.name}()"
+    end
+
     def insert_constraints
       values.map { |key, value| "#{key} = #{dimension.columns[key].sql_value(value)}" }.compact
     end

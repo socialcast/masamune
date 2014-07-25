@@ -141,8 +141,9 @@ describe Masamune::Schema::Dimension do
       let(:dimension) do
         described_class.new name: 'user', type: :mini,
           columns: [
+            Masamune::Schema::Column.new(name: 'uuid', type: :uuid, primary_key: true),
             Masamune::Schema::Column.new(name: 'tenant_id', type: :integer, unique: true),
-            Masamune::Schema::Column.new(name: 'user_id', type: :integer, unique: true)
+            Masamune::Schema::Column.new(name: 'user_id', type: :integer, unique: true, surrogate_key: true)
           ],
           rows: [
             Masamune::Schema::Row.new(values: {
@@ -160,7 +161,7 @@ describe Masamune::Schema::Dimension do
         is_expected.to eq <<-EOS.strip_heredoc
           CREATE TABLE IF NOT EXISTS user_type
           (
-            id SERIAL PRIMARY KEY,
+            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             tenant_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
             UNIQUE(tenant_id, user_id)
@@ -174,14 +175,24 @@ describe Masamune::Schema::Dimension do
           SELECT default_tenant_id(), -2
           WHERE NOT EXISTS (SELECT 1 FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -2);
 
-          CREATE OR REPLACE FUNCTION default_user_type_id()
+          CREATE OR REPLACE FUNCTION default_user_id()
           RETURNS INTEGER IMMUTABLE AS $$
-            SELECT id FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -1;
+            SELECT -1;
           $$ LANGUAGE SQL;
 
-          CREATE OR REPLACE FUNCTION unknown_user_type_id()
+          CREATE OR REPLACE FUNCTION default_user_type_uuid()
+          RETURNS UUID IMMUTABLE AS $$
+            SELECT uuid FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -1;
+          $$ LANGUAGE SQL;
+
+          CREATE OR REPLACE FUNCTION unknown_user_id()
           RETURNS INTEGER IMMUTABLE AS $$
-            SELECT id FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -2;
+            SELECT -2;
+          $$ LANGUAGE SQL;
+
+          CREATE OR REPLACE FUNCTION unknown_user_type_uuid()
+          RETURNS UUID IMMUTABLE AS $$
+            SELECT uuid FROM user_type WHERE tenant_id = default_tenant_id() AND user_id = -2;
           $$ LANGUAGE SQL;
         EOS
       end

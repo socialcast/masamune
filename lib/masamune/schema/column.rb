@@ -7,17 +7,19 @@ module Masamune::Schema
     attr_accessor :index
     attr_accessor :unique
     attr_accessor :primary_key
+    attr_accessor :surrogate_key
     attr_accessor :reference
 
-    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, reference: nil)
-      @name        = name.to_sym
-      @type        = type
-      @null        = null
-      @default     = default
-      @index       = index
-      @unique      = unique
-      @primary_key = primary_key
-      @reference   = reference
+    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil)
+      @name          = name.to_sym
+      @type          = type
+      @null          = null
+      @default       = default
+      @index         = index
+      @unique        = unique
+      @primary_key   = primary_key
+      @surrogate_key = surrogate_key
+      @reference     = reference
 
       initialize_default_attributes!
     end

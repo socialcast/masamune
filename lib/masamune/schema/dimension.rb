@@ -47,6 +47,14 @@ module Masamune::Schema
       columns.each do |_, column|
         return column if column.primary_key
       end
+      nil
+    end
+
+    def surrogate_key
+      columns.each do |_, column|
+        return column if column.surrogate_key
+      end
+      nil
     end
 
     def index_columns
