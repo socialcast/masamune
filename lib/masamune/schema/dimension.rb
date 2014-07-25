@@ -90,9 +90,21 @@ module Masamune::Schema
 
     private
 
+    def ledger_table_columns
+      defined_columns.map do |column|
+        if column.type == :key_value
+          column_now, column_was = column.dup, column.dup
+          column_now.name, column_was.name = "#{column.name}_now", "#{column.name}_was"
+          [column_now, column_was]
+        else
+          column
+        end
+      end.flatten
+    end
+
     def initialize_ledger_table!
       return unless ledger
-      @ledger_table = Masamune::Schema::Dimension.new(name: name, type: :ledger, columns: defined_columns)
+      @ledger_table = Masamune::Schema::Dimension.new(name: name, type: :ledger, columns: ledger_table_columns)
       @columns[:parent_uuid] = Masamune::Schema::Column.new(name: 'parent_uuid', type: :uuid, null: true, reference: @ledger_table)
       @columns[:record_uuid] = Masamune::Schema::Column.new(name: 'record_uuid', type: :uuid, null: true, reference: @ledger_table)
     end

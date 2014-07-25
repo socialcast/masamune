@@ -232,12 +232,13 @@ describe Masamune::Schema::Dimension do
       end
     end
 
-    context 'for type :two_with_ledger dimension' do
+    context 'for type :two dimension with :ledger' do
       let(:dimension) do
         described_class.new name: 'user', type: :two, ledger: true,
           columns: [
             Masamune::Schema::Column.new(name: 'tenant_id', index: true),
-            Masamune::Schema::Column.new(name: 'user_id', index: true)
+            Masamune::Schema::Column.new(name: 'user_id', index: true),
+            Masamune::Schema::Column.new(name: 'preferences', type: :key_value, null: true)
           ]
       end
 
@@ -248,6 +249,8 @@ describe Masamune::Schema::Dimension do
             uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             tenant_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
+            preferences_now HSTORE,
+            preferences_was HSTORE,
             source_kind VARCHAR,
             source_uuid VARCHAR,
             start_at TIMESTAMP NOT NULL,
@@ -264,6 +267,7 @@ describe Masamune::Schema::Dimension do
             uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             tenant_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
+            preferences HSTORE,
             parent_uuid UUID REFERENCES user_dimension_ledger(uuid),
             record_uuid UUID REFERENCES user_dimension_ledger(uuid),
             start_at TIMESTAMP DEFAULT TO_TIMESTAMP(0),

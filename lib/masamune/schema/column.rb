@@ -42,6 +42,8 @@ module Masamune::Schema
         'TIMESTAMP'
       when :boolean
         'BOOLEAN'
+      when :key_value
+        'HSTORE'
       end
     end
 
