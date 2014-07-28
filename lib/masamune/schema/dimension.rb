@@ -44,17 +44,11 @@ module Masamune::Schema
     end
 
     def primary_key
-      columns.each do |_, column|
-        return column if column.primary_key
-      end
-      nil
+      columns.values.detect  {|column| column.primary_key }
     end
 
     def surrogate_key
-      columns.each do |_, column|
-        return column if column.surrogate_key
-      end
-      nil
+      columns.values.detect  {|column| column.surrogate_key }
     end
 
     def index_columns
