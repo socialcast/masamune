@@ -25,6 +25,13 @@ describe Masamune::Template do
       it { is_expected.to eq("SELECT * FROM zombo;\n") }
     end
 
+    context 'with template with unnecessary whitespace' do
+      let(:template) { File.expand_path('../../fixtures/whitespace.sql.erb', __FILE__) }
+      let(:parameters) { {table: 'zombo'} }
+
+      it { is_expected.to eq("SELECT 1;\n\nSELECT 2;\n") }
+    end
+
     context 'with aggregate template' do
       let(:template) { File.expand_path('../../fixtures/aggregate.sql.erb', __FILE__) }
 
