@@ -27,7 +27,6 @@ describe Masamune::Template do
 
     context 'with template with unnecessary whitespace' do
       let(:template) { File.expand_path('../../fixtures/whitespace.sql.erb', __FILE__) }
-      let(:parameters) { {table: 'zombo'} }
 
       it { is_expected.to eq("SELECT 1;\n\nSELECT 2;\n") }
     end
