@@ -9,8 +9,9 @@ module Masamune::Schema
     attr_accessor :primary_key
     attr_accessor :surrogate_key
     attr_accessor :reference
+    attr_accessor :transform
 
-    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil)
+    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, transform: nil)
       @name          = name.to_sym
       @type          = type
       @null          = null
@@ -20,6 +21,7 @@ module Masamune::Schema
       @primary_key   = primary_key
       @surrogate_key = surrogate_key
       @reference     = reference
+      @transform     = transform
 
       initialize_default_attributes!
     end

@@ -3,10 +3,12 @@ module Masamune::Schema
     include Masamune::HasEnvironment
 
     attr_accessor :dimensions
+    attr_accessor :csv_files
 
     def initialize(environment)
       self.environment = environment
       @dimensions = {}
+      @csv_files = {}
       @options = Hash.new { |h,k| h[k] = [] }
       @extra = []
     end
@@ -35,6 +37,14 @@ module Masamune::Schema
       attributes = a.delete(:attributes) || {}
       attributes[:values] = a
       @options[:rows] << Masamune::Schema::Row.new(attributes)
+    end
+
+    def csv(a, &block)
+      prev_options = @options.dup
+      yield if block_given?
+      self.csv_files[a[:name].to_sym] ||= Masamune::Schema::CSVFile.new(a.merge(@options))
+    ensure
+      @options = prev_options
     end
 
     def load(file)
