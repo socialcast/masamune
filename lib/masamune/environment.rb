@@ -110,7 +110,7 @@ module Masamune
     end
 
     def registry
-      @registry ||= Masamune::Schema::Registry.new
+      @registry ||= Masamune::Schema::Registry.new(self)
     end
 
     def postgres_helper

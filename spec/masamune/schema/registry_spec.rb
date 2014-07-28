@@ -2,7 +2,8 @@ require 'spec_helper'
 require 'active_support/core_ext/string/strip'
 
 describe Masamune::Schema::Registry do
-  let(:instance) { described_class.new }
+  let(:environment) { double }
+  let(:instance) { described_class.new(environment) }
 
   describe '#schema' do
     context 'when schema contains dimensions' do

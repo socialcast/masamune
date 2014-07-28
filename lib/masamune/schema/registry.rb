@@ -1,8 +1,11 @@
 module Masamune::Schema
   class Registry
+    include Masamune::HasEnvironment
+
     attr_accessor :dimensions
 
-    def initialize
+    def initialize(environment)
+      self.environment = environment
       @dimensions = {}
       @options = Hash.new { |h,k| h[k] = [] }
       @extra = []
