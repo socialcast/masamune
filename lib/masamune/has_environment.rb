@@ -13,6 +13,6 @@ module Masamune
       @environment = environment
     end
 
-    def_delegators :environment, :configure, :configuration, :with_exclusive_lock, :logger, :log_file_name, :filesystem, :filesystem=, :trace, :console, :postgres_helper
+    def_delegators :environment, :configure, :configuration, :with_exclusive_lock, :logger, :log_file_name, :filesystem, :filesystem=, :registry, :trace, :console, :postgres_helper
   end
 end

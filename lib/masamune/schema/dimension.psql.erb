@@ -1,0 +1,37 @@
+<%= dimension.ledger_table %>
+
+CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
+(
+  <%- dimension.columns.each_with_index do |(name, column), i|
+  last_column = dimension.unique_columns.any? ? false : (i >= dimension.columns.length - 1)
+  -%>
+  <%= column %><%= ',' unless last_column %>
+  <%- end -%>
+  <%- if dimension.unique_columns.any? -%>
+  UNIQUE(<%= dimension.unique_columns.keys.join(', ') %>)
+  <%- end -%>
+);
+
+<% dimension.insert_rows.each do |row| %>
+INSERT INTO <%= dimension.table_name %> (<%= row.insert_columns.join(', ') %>)
+SELECT <%= row.insert_values.join(', ') %>
+WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
+<%- end -%>
+
+<%- dimension.index_columns.each do |column_names, unique| -%>
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= dimension.table_name %>_<%= column_names.join('_') %>_index ON <%= dimension.table_name %> (<%= column_names.join(', ') %>);
+<%- end -%>
+
+<% dimension.aliased_rows.each do |row| %>
+<% if dimension.surrogate_key %>
+CREATE OR REPLACE FUNCTION <%= row.surrogate_name %>
+RETURNS <%= dimension.surrogate_key.sql_type %> IMMUTABLE AS $$
+  SELECT <%= row.values[dimension.surrogate_key.name] %>;
+$$ LANGUAGE SQL;
+<%- end -%>
+
+CREATE OR REPLACE FUNCTION <%= row.name %>
+RETURNS <%= dimension.primary_key.sql_type %> IMMUTABLE AS $$
+  SELECT <%= dimension.primary_key.name %> FROM <%= dimension.table_name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
+$$ LANGUAGE SQL;
+<%- end -%>

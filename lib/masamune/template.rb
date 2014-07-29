@@ -8,7 +8,7 @@ module Masamune
 
     def render(template, parameters = {})
       resolved_template = resolve_file(template)
-      Tilt.new(resolved_template).render(self, parameters)
+      Tilt.new(resolved_template, nil, trim: '->').render(self, parameters)
     end
 
     private
@@ -26,11 +26,16 @@ module Masamune
     class << self
       def render_to_file(template, parameters = {})
         raise IOError, "File not found: #{template}" unless File.exists?(template)
-        instance = Template.new(File.dirname(template))
         Tempfile.new('masamune').tap do |file|
-          file.write(instance.render(template, parameters))
+          file.write(render_to_string(template, parameters))
           file.close
         end.path
+      end
+
+      def render_to_string(template, parameters = {})
+        raise IOError, "File not found: #{template}" unless File.exists?(template)
+        instance = Template.new(File.dirname(template))
+        instance.render(template, parameters).gsub(/^\n+/, "\n").strip + "\n"
       end
     end
   end

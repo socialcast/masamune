@@ -9,6 +9,7 @@ module Masamune
   class Environment
     attr_accessor :parent
     attr_accessor :filesystem
+    attr_accessor :registry
 
     def initialize(parent = nil)
       self.parent = parent
@@ -106,6 +107,10 @@ module Masamune
         filesystem = Masamune::MethodLogger.new(filesystem, :copy_file_to_file, :copy_file_to_dir, :remove_dir, :move_file_to_file, :move_file_to_dir, :move_dir)
         Masamune::CachedFilesystem.new(filesystem)
       end
+    end
+
+    def registry
+      @registry ||= Masamune::Schema::Registry.new
     end
 
     def postgres_helper
