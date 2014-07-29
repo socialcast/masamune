@@ -1,6 +1,5 @@
 module Masamune::Schema
   class Column
-    attr_accessor :name
     attr_accessor :type
     attr_accessor :null
     attr_accessor :default
@@ -27,11 +26,23 @@ module Masamune::Schema
     end
 
     def to_s
-      [sql_name, sql_type(primary_key), *sql_constraints, sql_reference, sql_default].compact.join(' ')
+      [name, sql_type(primary_key), *sql_constraints, sql_reference, sql_default].compact.join(' ')
     end
 
-    def sql_name
-      name
+    def name=(name)
+      @name = name
+    end
+
+    def name
+      if reference && reference.columns.include?(@name)
+        "#{reference.table_name}_#{@name}"
+      else
+        @name
+      end
+    end
+
+    def foreign_key_name
+      "#{reference.table_name}.#{@name}" if reference
     end
 
     def sql_type(for_primary_key = false)
@@ -81,7 +92,9 @@ module Masamune::Schema
     end
 
     def sql_reference
-      "REFERENCES #{reference.table_name}(#{reference.primary_key.name})" if reference
+      if reference && reference.primary_key.type == type
+        "REFERENCES #{reference.table_name}(#{reference.primary_key.name})"
+      end
     end
 
     def initialize_default_attributes!

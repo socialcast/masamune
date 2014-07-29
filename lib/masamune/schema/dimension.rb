@@ -1,6 +1,8 @@
 # TODO prevent reserved_column_name collision
 module Masamune::Schema
   class Dimension
+    include Masamune::LastElement
+
     attr_accessor :name
     attr_accessor :type
     attr_accessor :ledger
@@ -44,11 +46,15 @@ module Masamune::Schema
     end
 
     def primary_key
-      columns.values.detect  {|column| column.primary_key }
+      columns.values.detect { |column| column.primary_key }
     end
 
     def surrogate_key
-      columns.values.detect  {|column| column.surrogate_key }
+      columns.values.detect { |column| column.surrogate_key }
+    end
+
+    def foreign_key_name
+      "#{table_name}_#{primary_key.name}"
     end
 
     def index_columns
@@ -66,11 +72,26 @@ module Masamune::Schema
 
     def foreign_key_columns
       references.map do |_, dimension|
-        name = "#{dimension.table_name}_#{dimension.primary_key.name}"
+        name = dimension.primary_key.name
         type = dimension.primary_key.type
         Masamune::Schema::Column.new(name: name, type: type, reference: dimension, default: dimension.default_foreign_key_row)
       end
     end
+
+    def upsert_update_columns
+      columns.values.reject { |column| reserved_column_names.include?(column.name) || column.primary_key || column.surrogate_key }
+    end
+    method_with_last_element :upsert_update_columns
+
+    def upsert_insert_columns
+      columns.values.reject { |column| column.primary_key }
+    end
+    method_with_last_element :upsert_insert_columns
+
+    def upsert_unique_columns
+      columns.values.select { |column| [:source_kind, :source_uuid, :start_at].include?(column.name) || column.surrogate_key }
+    end
+    method_with_last_element :upsert_unique_columns
 
     def default_foreign_key_row
       rows.select { |row| row.default }.first.try(:name)
@@ -84,12 +105,25 @@ module Masamune::Schema
       rows.select { |row| row.name }
     end
 
+    def defined_columns
+      columns.values.reject { |column| reserved_column_names.include?(column.name) }
+    end
+
+    def stage_table
+      self.dup.tap { |dimension| dimension.name = "#{dimension.name}_stage" }
+    end
+
+    # TODO rename to schema
     def to_s
       Masamune::Template.render_to_string(dimension_template, dimension: self)
     end
 
-    def defined_columns
-      columns.values.reject { |column| reserved_column_names.include?(column.name) }
+    def load(input, file = false)
+      if file
+        Masamune::Template.render_to_file(load_dimension_template, dimension: self, input: input)
+      else
+        Masamune::Template.render_to_string(load_dimension_template, dimension: self, input: input)
+      end
     end
 
     private
@@ -108,7 +142,7 @@ module Masamune::Schema
 
     def initialize_ledger_table!
       return unless ledger
-      @ledger_table = Masamune::Schema::Dimension.new(name: name, type: :ledger, columns: ledger_table_columns)
+      @ledger_table = Masamune::Schema::Dimension.new(name: name, type: :ledger, columns: ledger_table_columns, references: references.values)
       @columns[:parent_uuid] = Masamune::Schema::Column.new(name: 'parent_uuid', type: :uuid, null: true, reference: @ledger_table)
       @columns[:record_uuid] = Masamune::Schema::Column.new(name: 'record_uuid', type: :uuid, null: true, reference: @ledger_table)
     end
@@ -159,6 +193,10 @@ module Masamune::Schema
 
     def dimension_template
       @dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'dimension.psql.erb'))
+    end
+
+    def load_dimension_template
+      @load_dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'load_dimension.psql.erb'))
     end
   end
 end

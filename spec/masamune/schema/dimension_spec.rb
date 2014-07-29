@@ -295,4 +295,125 @@ describe Masamune::Schema::Dimension do
       end
     end
   end
+
+  describe '#load' do
+    let(:environment) { double }
+
+    let(:mini_dimension) do
+      described_class.new name: 'user_account_state', type: :mini,
+        columns: [
+          Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(name: 'description', type: :string)
+        ]
+    end
+
+    let(:input) do
+      Masamune::Schema::CSVFile.new environment, name: 'user',
+        columns: [
+          Masamune::Schema::Column.new(name: 'user_id', type: :integer),
+          Masamune::Schema::Column.new(name: 'tenant_id', type: :integer),
+          Masamune::Schema::Column.new(reference: mini_dimension, name: 'name', type: :string),
+          Masamune::Schema::Column.new(name: 'start_at', type: :timestamp)
+        ],
+        constants: {
+          source_kind: 'latest/users',
+          delta: 0
+        }
+    end
+
+    let(:dimension) do
+      described_class.new name: 'user', ledger: true,
+        references: [mini_dimension],
+        columns: [
+          Masamune::Schema::Column.new(name: 'tenant_id', index: true, surrogate_key: true),
+          Masamune::Schema::Column.new(name: 'user_id', index: true, surrogate_key: true)
+        ]
+    end
+
+    # FIXME rename user_stage_dimension_ledger to user_dimension_ledger_stage
+    context 'with input data' do
+      before do
+        allow(input).to receive(:transform) { double(path: 'output.csv') }
+      end
+
+      subject(:result) { dimension.ledger_table.load(input) }
+
+      it 'should eq render load template' do
+        is_expected.to eq <<-EOS.strip_heredoc
+          CREATE TEMPORARY TABLE IF NOT EXISTS user_stage
+          (
+            user_id INTEGER NOT NULL,
+            tenant_id INTEGER NOT NULL,
+            user_account_state_type_name VARCHAR NOT NULL,
+            start_at TIMESTAMP NOT NULL
+          );
+
+          COPY user_stage FROM 'output.csv' WITH (FORMAT 'csv');
+
+          CREATE TEMPORARY TABLE IF NOT EXISTS user_stage_dimension_ledger (LIKE user_dimension_ledger INCLUDING ALL);
+
+          INSERT INTO
+            user_stage_dimension_ledger (user_id, tenant_id, user_account_state_type_id, start_at, source_kind, delta)
+          SELECT
+            user_id,
+            tenant_id,
+            (SELECT id FROM user_account_state_type WHERE user_account_state_type.name = user_account_state_type_name),
+            start_at,
+            'latest/users',
+            0
+          FROM
+            user_stage
+          ;
+
+          BEGIN;
+          LOCK TABLE user_dimension_ledger IN EXCLUSIVE MODE;
+
+          UPDATE
+            user_dimension_ledger
+          SET
+            user_account_state_type_id = user_stage_dimension_ledger.user_account_state_type_id
+          FROM
+            user_stage_dimension_ledger
+          WHERE
+            user_dimension_ledger.tenant_id = user_stage_dimension_ledger.tenant_id AND
+            user_dimension_ledger.user_id = user_stage_dimension_ledger.user_id AND
+            user_dimension_ledger.source_kind = user_stage_dimension_ledger.source_kind AND
+            user_dimension_ledger.source_uuid = user_stage_dimension_ledger.source_uuid AND
+            user_dimension_ledger.start_at = user_stage_dimension_ledger.start_at
+          ;
+
+          INSERT INTO
+            user_dimension_ledger (user_account_state_type_id,tenant_id,user_id,source_kind,source_uuid,start_at,last_modified_at,delta)
+          SELECT
+            user_stage_dimension_ledger.user_account_state_type_id,
+            user_stage_dimension_ledger.tenant_id,
+            user_stage_dimension_ledger.user_id,
+            user_stage_dimension_ledger.source_kind,
+            user_stage_dimension_ledger.source_uuid,
+            user_stage_dimension_ledger.start_at,
+            user_stage_dimension_ledger.last_modified_at,
+            user_stage_dimension_ledger.delta
+          FROM
+            user_stage_dimension_ledger
+          LEFT OUTER JOIN
+            user_dimension_ledger
+          ON
+            user_dimension_ledger.tenant_id = user_stage_dimension_ledger.tenant_id AND
+            user_dimension_ledger.user_id = user_stage_dimension_ledger.user_id AND
+            user_dimension_ledger.source_kind = user_stage_dimension_ledger.source_kind AND
+            user_dimension_ledger.source_uuid = user_stage_dimension_ledger.source_uuid AND
+            user_dimension_ledger.start_at = user_stage_dimension_ledger.start_at
+          WHERE
+            user_dimension_ledger.tenant_id IS NULL AND
+            user_dimension_ledger.user_id IS NULL AND
+            user_dimension_ledger.source_kind IS NULL AND
+            user_dimension_ledger.source_uuid IS NULL AND
+            user_dimension_ledger.start_at IS NULL
+          ;
+
+          COMMIT;
+       EOS
+      end
+    end
+  end
 end

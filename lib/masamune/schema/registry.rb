@@ -8,7 +8,7 @@ module Masamune::Schema
     def initialize(environment)
       self.environment = environment
       @dimensions = {}
-      @csv_files = {}
+      @csv_files = Hash.new { |h,k| h[k] = [] }
       @options = Hash.new { |h,k| h[k] = [] }
       @extra = []
     end
@@ -25,7 +25,13 @@ module Masamune::Schema
       @options = prev_options
     end
 
-    def column(a)
+    def column(a, &block)
+      if a[:name] =~ /\./
+        reference, name = a[:name].split('.')
+        a[:reference] = @dimensions[reference.to_sym]
+        a[:name] = name
+      end
+      a[:transform] = block.to_proc if block_given?
       @options[:columns] << Masamune::Schema::Column.new(a)
     end
 
@@ -42,7 +48,11 @@ module Masamune::Schema
     def csv(a, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.csv_files[a[:name].to_sym] ||= Masamune::Schema::CSVFile.new(a.merge(@options))
+      csv_files = a.delete(:files)
+      filesystem.glob(csv_files) do |file|
+        constants = { delta: 0, source_kind: file }
+        self.csv_files[a[:name].to_sym] << Masamune::Schema::CSVFile.new(self.environment, a.merge(@options).merge(file: file, constants: constants))
+      end
     ensure
       @options = prev_options
     end
