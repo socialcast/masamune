@@ -1,6 +1,10 @@
 <%= dimension.ledger_table %>
 
+<%- if dimension.temporary? -%>
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= dimension.table_name %>
+<%- else -%>
 CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
+<%- end -%>
 (
   <%- dimension.defined_columns.each do |column, last| -%>
   <%= column %><%= ',' unless last && dimension.unique_columns.none? %>

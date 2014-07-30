@@ -27,7 +27,7 @@ module Masamune::Commands
       :buffer         => nil,
       :delimiter      => "\001",
       :csv            => false,
-      :template_debug => false
+      :debug          => false
     }
 
     def initialize(delegate, attrs = {})
@@ -122,6 +122,7 @@ module Masamune::Commands
     end
 
     def command_args_for_simple_file
+      logger.debug("#{@file}:\n" + File.read(@file)) if @debug
       ['-f', @file].tap do |args|
         @variables.each do |key, val|
           args << ['-d', "#{key.to_s}=#{val.to_s}"]
@@ -131,7 +132,7 @@ module Masamune::Commands
 
     def command_args_for_template
       rendered_file = Masamune::Template.render_to_file(@file, @variables)
-      logger.debug("#{@file}:\n" + File.read(rendered_file)) if @template_debug
+      logger.debug("#{@file}:\n" + File.read(rendered_file)) if @debug
       filesystem.copy_file_to_dir(rendered_file, filesystem.get_path(:tmp_dir))
       ['-f', filesystem.get_path(:tmp_dir, File.basename(rendered_file))]
     end

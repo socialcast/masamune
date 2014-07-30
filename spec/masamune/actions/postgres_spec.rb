@@ -22,7 +22,7 @@ describe Masamune::Actions::Postgres do
     allow(instance).to receive(:postgres_helper) { postgres_helper }
     allow(instance).to receive_message_chain(:configuration, :postgres).and_return(configuration)
     allow(instance).to receive_message_chain(:configuration, :with_quiet).and_yield
-    allow(registry).to receive(:to_file) { 'registry.psql' }
+    allow(registry).to receive(:to_psql_file) { 'registry.psql' }
   end
 
   describe '.postgres' do

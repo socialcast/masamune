@@ -8,9 +8,9 @@ module Masamune::Schema
     attr_accessor :primary_key
     attr_accessor :surrogate_key
     attr_accessor :reference
-    attr_accessor :transform
+    attr_accessor :debug
 
-    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, transform: nil)
+    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, debug: false)
       @name          = name.to_sym
       @type          = type
       @null          = null
@@ -20,7 +20,7 @@ module Masamune::Schema
       @primary_key   = primary_key
       @surrogate_key = surrogate_key
       @reference     = reference
-      @transform     = transform
+      @debug         = debug
 
       initialize_default_attributes!
     end
@@ -30,19 +30,27 @@ module Masamune::Schema
     end
 
     def name=(name)
-      @name = name
+      @name = name.to_sym
     end
 
     def name
       if reference && reference.columns.include?(@name)
-        "#{reference.table_name}_#{@name}"
+        "#{reference.table_name}_#{@name}".to_sym
       else
         @name
       end
     end
 
     def foreign_key_name
-      "#{reference.table_name}.#{@name}" if reference
+      "#{reference.table_name}.#{@name}".to_sym if reference
+    end
+
+    def compact_name
+      if reference
+        "#{reference.name}.#{@name}".to_sym
+      else
+        @name
+      end
     end
 
     def sql_type(for_primary_key = false)
@@ -69,6 +77,33 @@ module Masamune::Schema
         value ? 'TRUE' : 'FALSE'
       when :string
         "'#{value}'"
+      else
+        value
+      end
+    end
+
+    def csv_value(value)
+      return value if sql_function?(value)
+      case type
+      when :boolean
+        value ? 'TRUE' : 'FALSE'
+      else
+        value
+      end
+    end
+
+    def ruby_value(value)
+      return value if sql_function?(value)
+      case type
+      when :boolean
+        case value
+        when false, 0, '0', "'0'", 'FALSE'
+          false
+        when true, 1, '1', "'1'", 'TRUE'
+          true
+        end
+      when :integer
+        value.to_i
       else
         value
       end

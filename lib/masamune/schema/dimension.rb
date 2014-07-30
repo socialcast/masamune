@@ -10,12 +10,14 @@ module Masamune::Schema
     attr_accessor :columns
     attr_accessor :rows
     attr_accessor :ledger_table
+    attr_accessor :debug
 
-    def initialize(name: name, type: :two, ledger: false, references: [], columns: [], rows: [])
+    def initialize(name: name, type: :two, ledger: false, references: [], columns: [], rows: [], debug: false)
       @name       = name.to_sym
       @type       = type
       @ledger     = ledger
       @rows       = rows
+      @debug      = debug
 
       @references = {}
       references.each do |reference|
@@ -34,10 +36,16 @@ module Masamune::Schema
       @rows.each { |row| row.dimension = self }
     end
 
+    def temporary?
+      type == :stage
+    end
+
     def table_name
       case type
       when :mini
         "#{name}_type"
+      when :stage
+        "#{name}_stage"
       when :two
         "#{name}_dimension"
       when :ledger
@@ -63,6 +71,7 @@ module Masamune::Schema
     method_with_last_element :defined_columns
 
     def index_columns
+      return [] if temporary?
       indices = columns.select { |_, column| column.index }.lazy
       indices = indices.group_by { |_, column| column.index == true ? column.name : column.index }.lazy
       indices = indices.map { |_, index_and_columns| index_and_columns.map(&:last) }.lazy
@@ -72,7 +81,8 @@ module Masamune::Schema
     end
 
     def unique_columns
-      columns.select { |_, column| column.unique }
+      return {} if temporary?
+      columns.select { |_, column| column.unique } || {}
     end
 
     def foreign_key_columns
@@ -80,6 +90,16 @@ module Masamune::Schema
         name = dimension.primary_key.name
         type = dimension.primary_key.type
         Masamune::Schema::Column.new(name: name, type: type, reference: dimension, default: dimension.default_foreign_key_row)
+      end
+    end
+
+    def insert_columns
+      columns.map do |_, column|
+        if reference = column.reference
+          reference.foreign_key_name
+        else
+          column.name
+        end
       end
     end
 
@@ -106,10 +126,22 @@ module Masamune::Schema
       rows.select { |row| row.insert_values.any? }
     end
 
+    def insert_values
+      columns.map do |_, column|
+        if reference = column.reference
+          "(SELECT #{reference.primary_key.name} FROM #{reference.table_name} WHERE #{column.foreign_key_name} = #{column.name})"
+        else
+          column.name.to_s
+        end
+      end
+    end
+    method_with_last_element :insert_values
+
     def aliased_rows
       rows.select { |row| row.name }
     end
 
+    # TODO create stage table similar to ledger table
     def stage_table
       self.dup.tap { |dimension| dimension.name = "#{dimension.name}_stage" }
     end
@@ -119,12 +151,23 @@ module Masamune::Schema
       Masamune::Template.render_to_string(dimension_template, dimension: self)
     end
 
-    def load(input, file = false)
-      if file
-        Masamune::Template.render_to_file(load_dimension_template, dimension: self, input: input)
-      else
-        Masamune::Template.render_to_string(load_dimension_template, dimension: self, input: input)
+    def as_file(selected_columns)
+      file_columns = []
+      selected_columns.each do |name|
+        if name =~ /\./
+          reference_name, column_name = name.to_s.split('.')
+          if reference = references[reference_name.to_sym]
+            column = reference.columns[column_name.to_sym].dup
+            column.reference = reference
+            file_columns << column
+          end
+        elsif columns[name.to_sym]
+          file_columns << columns[name.to_sym]
+        else
+          # TODO
+        end
       end
+      Masamune::Schema::File.new name: "#{name}_file", columns: file_columns
     end
 
     private
@@ -194,11 +237,7 @@ module Masamune::Schema
     end
 
     def dimension_template
-      @dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'dimension.psql.erb'))
-    end
-
-    def load_dimension_template
-      @load_dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'load_dimension.psql.erb'))
+      @dimension_template ||= ::File.expand_path(::File.join(__FILE__, '..', 'dimension.psql.erb'))
     end
   end
 end

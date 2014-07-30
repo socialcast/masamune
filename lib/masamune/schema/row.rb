@@ -3,11 +3,16 @@ module Masamune::Schema
     attr_accessor :dimension
     attr_accessor :values
     attr_accessor :default
+    attr_accessor :strict
+    attr_accessor :debug
 
-    def initialize(values: [], default: false, name: nil)
-      @values  = values
+    def initialize(values: {}, default: false, name: nil, strict: true, debug: false)
+      @values  = values.symbolize_keys
       @default = default
       @name    = name
+      @strict  = strict
+      @debug   = debug
+
       @name  ||= 'default' if default
     end
 
@@ -33,18 +38,44 @@ module Masamune::Schema
       values.map { |key, value| dimension.columns[key].sql_value(value) }
     end
 
+    def to_hash
+      {}.tap do |result|
+        dimension.columns.each do |_, column|
+          result[column.name] = column.ruby_value(values[column.name])
+        end
+      end.with_indifferent_access
+    end
+
+    def to_csv
+      {}.tap do |result|
+        dimension.columns.each do |_, column|
+          result[column.name] = column.csv_value(values[column.name])
+        end
+      end.values.to_csv
+    end
+
+    # FIXME rename to table, allow initialization via constructor
     def dimension=(dimension)
       @dimension = dimension
-      validate_values!
+      normalize_values!
     end
 
     private
 
-    def validate_values!
-      values.each do |record|
-        undefined_columns = insert_columns - dimension.columns.keys
-        raise ArgumentError, "#{insert_columns} contains undefined columns #{undefined_columns}" if undefined_columns.any?
+    def normalize_values!
+      result = {}
+      dimension.columns.each do |name, column|
+        if @values.key?(column.compact_name)
+          value = @values[column.compact_name]
+          result[name] = column.ruby_value(value)
+        end
       end
+
+      if strict && @values.length > result.length
+        raise ArgumentError, "#{@values} contains undefined columns"
+      end
+
+      @values = result
     end
   end
 end

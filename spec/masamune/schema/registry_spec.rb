@@ -112,10 +112,6 @@ describe Masamune::Schema::Registry do
       before do
         filesystem.touch!('users_1.csv', 'users_2.csv', 'users_3.csv', 'groups_1.csv')
         instance.schema do
-          dimension name: 'user_account', type: :mini do
-            column name: 'name', type: :string
-          end
-
           csv name: 'users', files: 'users_*.csv' do
             column name: 'user_account_type.name', type: :string
           end
@@ -126,15 +122,38 @@ describe Masamune::Schema::Registry do
 
       it 'should expand :files glob argument' do
         expect(csv_files[0].file).to eq('users_1.csv')
-        expect(csv_files[0].environment).to eq(environment)
         expect(csv_files[1].file).to eq('users_2.csv')
-        expect(csv_files[1].environment).to eq(environment)
         expect(csv_files[2].file).to eq('users_3.csv')
-        expect(csv_files[2].environment).to eq(environment)
       end
 
       it 'should expect dot notation column names to references' do
-        expect(csv_files[0].columns).to include :name
+        expect(csv_files[0].columns).to include :'user_account_type.name'
+      end
+    end
+
+    context 'when schema contains map' do
+      before do
+        instance.schema do
+          map :user_csv_to_dimension do
+            field 'tenant_id'
+            field 'user_id', 'id'
+            field 'user_account_state.name' do |row|
+              row[:deleted_at] ? 'deleted' : 'active'
+            end
+            field 'start_at', 'updated_at'
+            field 'delta', 0
+          end
+        end
+      end
+
+      subject(:fields) { instance.maps[:user_csv_to_dimension].fields }
+
+      it 'constructs map' do
+        expect(fields[:tenant_id]).to eq('tenant_id')
+        expect(fields[:user_id]).to eq('id')
+        expect(fields[:'user_account_state.name']).to be_a(Proc)
+        expect(fields[:start_at]).to eq('updated_at')
+        expect(fields[:delta]).to eq(0)
       end
     end
   end

@@ -4,6 +4,7 @@ module Masamune
     require 'masamune/schema/dimension'
     require 'masamune/schema/column'
     require 'masamune/schema/row'
-    require 'masamune/schema/csv_file'
+    require 'masamune/schema/file'
+    require 'masamune/schema/map'
   end
 end

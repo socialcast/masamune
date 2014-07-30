@@ -22,6 +22,7 @@ module Masamune
   require 'masamune/proxy_delegate'
   require 'masamune/after_initialize_callbacks'
   require 'masamune/schema'
+  require 'masamune/transform'
 
   extend self
   extend Masamune::HasEnvironment

@@ -11,5 +11,6 @@ module Masamune
     require 'masamune/actions/data_flow'
     require 'masamune/actions/elastic_mapreduce'
     require 'masamune/actions/execute'
+    require 'masamune/actions/transform'
   end
 end

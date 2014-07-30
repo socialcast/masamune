@@ -1,8 +1,0 @@
-CREATE TEMPORARY TABLE IF NOT EXISTS <%= stage.table_name %>
-(
-  <%- stage.defined_columns.each do |column, last| -%>
-  <%= column %><%= ',' unless last %>
-  <%- end -%>
-);
-
-COPY <%= stage.table_name %> FROM '<%= output.path %>' WITH (FORMAT 'csv');
