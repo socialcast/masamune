@@ -57,6 +57,11 @@ module Masamune::Schema
       "#{table_name}_#{primary_key.name}"
     end
 
+    def defined_columns
+      columns.values
+    end
+    method_with_last_element :defined_columns
+
     def index_columns
       indices = columns.select { |_, column| column.index }.lazy
       indices = indices.group_by { |_, column| column.index == true ? column.name : column.index }.lazy
@@ -105,10 +110,6 @@ module Masamune::Schema
       rows.select { |row| row.name }
     end
 
-    def defined_columns
-      columns.values.reject { |column| reserved_column_names.include?(column.name) }
-    end
-
     def stage_table
       self.dup.tap { |dimension| dimension.name = "#{dimension.name}_stage" }
     end
@@ -129,7 +130,8 @@ module Masamune::Schema
     private
 
     def ledger_table_columns
-      defined_columns.map do |column|
+      columns.values.map do |column|
+        next if reserved_column_names.include?(column.name)
         if column.type == :key_value
           column_now, column_was = column.dup, column.dup
           column_now.name, column_was.name = "#{column.name}_now", "#{column.name}_was"

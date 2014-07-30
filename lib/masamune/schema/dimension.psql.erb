@@ -2,10 +2,8 @@
 
 CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
 (
-  <%- dimension.columns.each_with_index do |(name, column), i|
-  last_column = dimension.unique_columns.any? ? false : (i >= dimension.columns.length - 1)
-  -%>
-  <%= column %><%= ',' unless last_column %>
+  <%- dimension.defined_columns.each do |column, last| -%>
+  <%= column %><%= ',' unless last && dimension.unique_columns.none? %>
   <%- end -%>
   <%- if dimension.unique_columns.any? -%>
   UNIQUE(<%= dimension.unique_columns.keys.join(', ') %>)
