@@ -54,6 +54,18 @@ describe Masamune::Schema::Dimension do
     end
   end
 
+  context 'with invalid columns' do
+    let(:dimension) do
+      described_class.new name: 'user_account_state', type: :two,
+        columns: [
+          Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(name: 'parent_uuid', type: :string)
+        ]
+    end
+
+    it { expect { subject }.to raise_error ArgumentError, /contains reserved columns/ }
+  end
+
   context 'with invalid values' do
     let(:dimension) do
       described_class.new name: 'user_account_state', type: :mini,

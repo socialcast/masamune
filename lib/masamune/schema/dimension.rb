@@ -1,4 +1,3 @@
-# TODO prevent reserved_column_name collision
 module Masamune::Schema
   class Dimension
     include Masamune::LastElement
@@ -23,6 +22,8 @@ module Masamune::Schema
       references.each do |reference|
         @references[reference.name] = reference
       end
+
+      raise ArgumentError, "dimension #{name} contains reserved columns" if columns.any? { |column| reserved_column_names.include?(column.name) }
 
       @columns = {}
       initialize_primary_key_column! unless columns.any? { |column| column.primary_key }
@@ -233,6 +234,8 @@ module Masamune::Schema
         [:parent_uuid, :record_uuid, :start_at, :end_at, :version, :last_modified_at]
       when :ledger
         [:source_kind, :source_uuid, :start_at, :last_modified_at, :delta]
+      else
+        []
       end
     end
 
