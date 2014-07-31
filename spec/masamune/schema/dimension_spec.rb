@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'active_support/core_ext/string/strip'
 
 describe Masamune::Schema::Dimension do
-  subject { dimension.to_s }
+  subject { dimension.as_psql }
 
   context 'with simple columns' do
     let(:dimension) do

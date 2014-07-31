@@ -2,7 +2,7 @@
   target_stage = target.stage_table
 %>
 
-<%= source %>
+<%= source.as_psql %>
 
 COPY <%= source.table_name %> FROM '<%= source_file %>' WITH (FORMAT 'csv');
 

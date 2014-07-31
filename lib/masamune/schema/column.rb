@@ -25,7 +25,7 @@ module Masamune::Schema
       initialize_default_attributes!
     end
 
-    def to_s
+    def as_psql
       [name, sql_type(primary_key), *sql_constraints, sql_reference, sql_default].compact.join(' ')
     end
 

@@ -147,8 +147,7 @@ module Masamune::Schema
       self.dup.tap { |dimension| dimension.name = "#{dimension.name}_stage" }
     end
 
-    # TODO rename to schema
-    def to_s
+    def as_psql
       Masamune::Template.render_to_string(dimension_template, dimension: self)
     end
 

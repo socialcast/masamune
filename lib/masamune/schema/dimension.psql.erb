@@ -1,4 +1,6 @@
-<%= dimension.ledger_table %>
+<%- if dimension.ledger -%>
+<%= dimension.ledger_table.as_psql %>
+<%- end -%>
 
 <%- if dimension.temporary? -%>
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= dimension.table_name %>
@@ -7,7 +9,7 @@ CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
 <%- end -%>
 (
   <%- dimension.defined_columns.each do |column, last| -%>
-  <%= column %><%= ',' unless last && dimension.unique_columns.none? %>
+  <%= column.as_psql %><%= ',' unless last && dimension.unique_columns.none? %>
   <%- end -%>
   <%- if dimension.unique_columns.any? -%>
   UNIQUE(<%= dimension.unique_columns.keys.join(', ') %>)

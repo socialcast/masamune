@@ -84,8 +84,8 @@ module Masamune::Schema
     def as_psql
       output = []
       dimensions.each do |name, dimension|
-        logger.debug("#{name}\n" + dimension.to_s) if dimension.debug
-        output << dimension.to_s
+        logger.debug("#{name}\n" + dimension.as_psql) if dimension.debug
+        output << dimension.as_psql
       end
       @extra.each do |extra|
         output << extra
