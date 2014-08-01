@@ -51,6 +51,8 @@ module Masamune::Schema
         "#{name}_dimension"
       when :ledger
         "#{name}_dimension_ledger"
+      when :ledger_stage
+        "#{name}_dimension_ledger_stage"
       end
     end
 
@@ -142,9 +144,15 @@ module Masamune::Schema
       rows.select { |row| row.name }
     end
 
-    # TODO create stage table similar to ledger table
     def stage_table
-      self.dup.tap { |dimension| dimension.name = "#{dimension.name}_stage" }
+      self.dup.tap do |dimension|
+        case type
+        when :two
+          dimension.type = :stage
+        when :ledger
+          dimension.type = :ledger_stage
+        end
+      end
     end
 
     def as_psql

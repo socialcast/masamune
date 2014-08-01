@@ -65,10 +65,10 @@ describe Masamune::Transform::LoadDimension do
 
           COPY user_file_stage FROM 'output.csv' WITH (FORMAT 'csv');
 
-          CREATE TEMPORARY TABLE IF NOT EXISTS user_stage_dimension_ledger (LIKE user_dimension_ledger INCLUDING ALL);
+          CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage (LIKE user_dimension_ledger INCLUDING ALL);
 
           INSERT INTO
-            user_stage_dimension_ledger (tenant_id, user_id, user_account_state_type_id, start_at, source_kind, delta)
+            user_dimension_ledger_stage (tenant_id, user_id, user_account_state_type_id, start_at, source_kind, delta)
           SELECT
             tenant_id,
             user_id,
@@ -86,38 +86,38 @@ describe Masamune::Transform::LoadDimension do
           UPDATE
             user_dimension_ledger
           SET
-            user_account_state_type_id = user_stage_dimension_ledger.user_account_state_type_id
+            user_account_state_type_id = user_dimension_ledger_stage.user_account_state_type_id
           FROM
-            user_stage_dimension_ledger
+            user_dimension_ledger_stage
           WHERE
-            user_dimension_ledger.tenant_id = user_stage_dimension_ledger.tenant_id AND
-            user_dimension_ledger.user_id = user_stage_dimension_ledger.user_id AND
-            user_dimension_ledger.source_kind = user_stage_dimension_ledger.source_kind AND
-            user_dimension_ledger.source_uuid = user_stage_dimension_ledger.source_uuid AND
-            user_dimension_ledger.start_at = user_stage_dimension_ledger.start_at
+            user_dimension_ledger.tenant_id = user_dimension_ledger_stage.tenant_id AND
+            user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
+            user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
+            user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
+            user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
           ;
 
           INSERT INTO
             user_dimension_ledger (user_account_state_type_id,tenant_id,user_id,source_kind,source_uuid,start_at,last_modified_at,delta)
           SELECT
-            user_stage_dimension_ledger.user_account_state_type_id,
-            user_stage_dimension_ledger.tenant_id,
-            user_stage_dimension_ledger.user_id,
-            user_stage_dimension_ledger.source_kind,
-            user_stage_dimension_ledger.source_uuid,
-            user_stage_dimension_ledger.start_at,
-            user_stage_dimension_ledger.last_modified_at,
-            user_stage_dimension_ledger.delta
+            user_dimension_ledger_stage.user_account_state_type_id,
+            user_dimension_ledger_stage.tenant_id,
+            user_dimension_ledger_stage.user_id,
+            user_dimension_ledger_stage.source_kind,
+            user_dimension_ledger_stage.source_uuid,
+            user_dimension_ledger_stage.start_at,
+            user_dimension_ledger_stage.last_modified_at,
+            user_dimension_ledger_stage.delta
           FROM
-            user_stage_dimension_ledger
+            user_dimension_ledger_stage
           LEFT OUTER JOIN
             user_dimension_ledger
           ON
-            user_dimension_ledger.tenant_id = user_stage_dimension_ledger.tenant_id AND
-            user_dimension_ledger.user_id = user_stage_dimension_ledger.user_id AND
-            user_dimension_ledger.source_kind = user_stage_dimension_ledger.source_kind AND
-            user_dimension_ledger.source_uuid = user_stage_dimension_ledger.source_uuid AND
-            user_dimension_ledger.start_at = user_stage_dimension_ledger.start_at
+            user_dimension_ledger.tenant_id = user_dimension_ledger_stage.tenant_id AND
+            user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
+            user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
+            user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
+            user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
           WHERE
             user_dimension_ledger.tenant_id IS NULL AND
             user_dimension_ledger.user_id IS NULL AND
