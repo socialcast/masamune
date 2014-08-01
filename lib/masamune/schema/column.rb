@@ -113,6 +113,17 @@ module Masamune::Schema
       value =~ /\(\)\Z/
     end
 
+    class << self
+      def dereference_column_name(name)
+        if name =~ /\./
+          reference_name, column_name = name.to_s.split('.')
+          [reference_name.to_sym, column_name.to_sym]
+        else
+          [nil, name.to_sym]
+        end
+      end
+    end
+
     private
 
     def sql_constraints

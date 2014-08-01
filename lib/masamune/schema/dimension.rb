@@ -162,17 +162,11 @@ module Masamune::Schema
     def as_file(selected_columns)
       file_columns = []
       selected_columns.each do |name|
-        if name =~ /\./
-          reference_name, column_name = name.to_s.split('.')
-          if reference = references[reference_name.to_sym]
-            column = reference.columns[column_name.to_sym].dup
-            column.reference = reference
-            file_columns << column
-          end
-        elsif columns[name.to_sym]
-          file_columns << columns[name.to_sym]
-        else
-          # TODO
+        reference_name, column_name = Column::dereference_column_name(name)
+        if reference = references[reference_name]
+          file_columns << reference.columns[column_name].dup.tap { |column| column.reference = reference }
+        elsif columns[column_name]
+          file_columns << columns[column_name]
         end
       end
       Masamune::Schema::File.new name: "#{name}_file", columns: file_columns
