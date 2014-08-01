@@ -50,7 +50,9 @@ describe Masamune::Transform::LoadDimension do
         allow_any_instance_of(Masamune::Schema::File).to receive(:path) { 'output.csv' }
       end
 
-      let(:transform) { described_class.new file, dimension, map }
+      let(:data) { StringIO.new }
+
+      let(:transform) { described_class.new data, file, dimension, map }
 
       before do
         transform.run

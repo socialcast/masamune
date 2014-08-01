@@ -36,6 +36,7 @@ module Masamune::Schema
         end
         target.append output
       end
+      target.flush
       target
     end
   end

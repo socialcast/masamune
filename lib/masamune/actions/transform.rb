@@ -10,8 +10,8 @@ module Masamune::Actions
 
     def_delegators :registry, :dimensions, :maps, :files
 
-    def load_dimension(source, target, map)
-      transform = Masamune::Transform::LoadDimension.new(source, target, map)
+    def load_dimension(file, source, target, map)
+      transform = Masamune::Transform::LoadDimension.new(file, source, target, map)
       transform.run
       logger.debug(transform.output.to_s) if map.debug
       postgres file: transform.to_psql_file, debug: map.debug

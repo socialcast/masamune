@@ -13,7 +13,7 @@ describe Masamune::Schema::Map do
   end
 
   let(:source) do
-    Masamune::Schema::File.new name: 'source_user', buffer: StringIO.new(source_data),
+    Masamune::Schema::File.new name: 'source_user',
       format: :csv,
       columns: [
         Masamune::Schema::Column.new(name: 'id', type: :integer),
@@ -71,10 +71,11 @@ describe Masamune::Schema::Map do
     end
 
     before do
+      source.bind(source_data)
       map.apply(source, target)
     end
 
-    subject { target.buffer.string }
+    subject { File.read(target.path) }
 
     it 'should match target data' do
       is_expected.to eq(target_data)

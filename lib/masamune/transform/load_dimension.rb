@@ -2,15 +2,14 @@ module Masamune::Transform
   class LoadDimension
     attr_accessor :output
 
-    def initialize(source, target, map)
-      @source = source
+    def initialize(file, source, target, map)
+      @source = source.bind(File.open(file))
       @target = target.ledger ? target.ledger_table : target
       @map    = map
     end
 
     def run
       @output = @target.as_file(@map.columns)
-      @output.buffer = Tempfile.new('masamune')
       @map.apply(@source, @output)
     end
 
