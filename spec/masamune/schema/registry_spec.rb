@@ -14,8 +14,8 @@ describe Masamune::Schema::Registry do
     context 'when schema contains dimensions' do
       before do
         instance.schema do
-          dimension name: 'foo'
-          dimension name: 'bar'
+          dimension 'foo'
+          dimension 'bar'
         end
       end
 
@@ -28,14 +28,14 @@ describe Masamune::Schema::Registry do
     context 'when schema contains columns' do
       before do
         instance.schema do
-          dimension name: 'table_one' do
-            column name: 'column_one'
-            column name: 'column_two'
+          dimension 'table_one' do
+            column 'column_one'
+            column 'column_two'
           end
 
-          dimension name: 'table_two' do
-            column name: 'column_three'
-            column name: 'column_four'
+          dimension 'table_two' do
+            column 'column_three'
+            column 'column_four'
           end
         end
       end
@@ -56,9 +56,9 @@ describe Masamune::Schema::Registry do
     context 'when schema contains columns and rows' do
       before do
         instance.schema do
-          dimension name: 'table_one' do
-            column name: 'column_one', type: :integer
-            column name: 'column_two', type: :string
+          dimension 'table_one' do
+            column 'column_one', type: :integer
+            column 'column_two', type: :string
             row column_one: 1, column_two: 'a'
             row column_one: 2, column_two: 'b'
           end
@@ -74,9 +74,9 @@ describe Masamune::Schema::Registry do
     context 'when schema contains references' do
       before do
         instance.schema do
-          dimension name: 'foo'
-          dimension name: 'bar'
-          dimension name: 'baz' do
+          dimension 'foo'
+          dimension 'bar'
+          dimension 'baz' do
             references :foo
             references :bar
           end
@@ -92,10 +92,10 @@ describe Masamune::Schema::Registry do
     context 'when schema contains overrides' do
       before do
         instance.schema do
-          dimension name: 'cluster', type: :mini do
-            column name: 'uuid', type: :uuid, primary_key: true
-            column name: 'name', type: :string, unique: true
-            column name: 'description', type: :string
+          dimension 'cluster', type: :mini do
+            column 'uuid', type: :uuid, primary_key: true
+            column 'name', type: :string, unique: true
+            column 'description', type: :string
 
             row name: 'current_database()', attributes: {default: true}
           end
@@ -112,8 +112,8 @@ describe Masamune::Schema::Registry do
       before do
         filesystem.touch!('users_1.csv', 'users_2.csv', 'users_3.csv', 'groups_1.csv')
         instance.schema do
-          csv name: 'users', files: 'users_*.csv' do
-            column name: 'user_account_type.name', type: :string
+          csv 'users', files: 'users_*.csv' do
+            column 'user_account_type.name', type: :string
           end
         end
       end
@@ -146,14 +146,15 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject(:fields) { instance.maps[:user_csv_to_dimension].fields }
+      subject(:map) { instance.maps[:user_csv_to_dimension] }
 
       it 'constructs map' do
-        expect(fields[:tenant_id]).to eq('tenant_id')
-        expect(fields[:user_id]).to eq('id')
-        expect(fields[:'user_account_state.name']).to be_a(Proc)
-        expect(fields[:start_at]).to eq('updated_at')
-        expect(fields[:delta]).to eq(0)
+        expect(map.name).to eq(:user_csv_to_dimension)
+        expect(map.fields[:tenant_id]).to eq('tenant_id')
+        expect(map.fields[:user_id]).to eq('id')
+        expect(map.fields[:'user_account_state.name']).to be_a(Proc)
+        expect(map.fields[:start_at]).to eq('updated_at')
+        expect(map.fields[:delta]).to eq(0)
       end
     end
   end

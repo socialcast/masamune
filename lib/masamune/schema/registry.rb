@@ -1,6 +1,4 @@
-# TODO consider if name should specified as option
 # TODO consider if csv should just be files
-# TODO consider if map should use named parameters
 module Masamune::Schema
   class Registry
     include Masamune::HasEnvironment
@@ -23,16 +21,16 @@ module Masamune::Schema
       instance_eval &block
     end
 
-    def dimension(options = {}, &block)
+    def dimension(name, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.dimensions[options[:name].to_sym] ||= Masamune::Schema::Dimension.new(options.merge(@options))
+      self.dimensions[name.to_sym] ||= Masamune::Schema::Dimension.new(options.merge(@options).merge(name: name))
     ensure
       @options = prev_options
     end
 
-    def column(options = {}, &block)
-      @options[:columns] << Masamune::Schema::Column.new(options)
+    def column(name, options = {}, &block)
+      @options[:columns] << Masamune::Schema::Column.new(options.merge(name: name))
     end
 
     def references(name)
@@ -45,13 +43,13 @@ module Masamune::Schema
       @options[:rows] << Masamune::Schema::Row.new(attributes)
     end
 
-    def csv(options, &block)
+    def csv(name, options, &block)
       prev_options = @options.dup
       yield if block_given?
       csv_files = options.delete(:files)
       filesystem.glob(csv_files) do |file|
         # TODO get local copy of file if remote
-        self.csv_files[options[:name].to_sym] << Masamune::Schema::File.new(options.merge(@options).merge(file: file))
+        self.csv_files[name.to_sym] << Masamune::Schema::File.new(options.merge(@options).merge(name: name, file: file))
       end
     ensure
       @options = prev_options
@@ -61,15 +59,15 @@ module Masamune::Schema
       prev_options = @options.dup
       @options[:fields] = {}
       yield if block_given?
-      self.maps[name.to_sym] ||= Masamune::Schema::Map.new(options.merge(@options))
+      self.maps[name.to_sym] ||= Masamune::Schema::Map.new(options.merge(@options).merge(name: name))
     ensure
       @options = prev_options
     end
 
-    def field(key, value = nil, &block)
-      @options[:fields][key.to_sym] = value
-      @options[:fields][key.to_sym] ||= block.to_proc if block_given?
-      @options[:fields][key.to_sym] ||= key
+    def field(name, value = nil, &block)
+      @options[:fields][name.to_sym] = value
+      @options[:fields][name.to_sym] ||= block.to_proc if block_given?
+      @options[:fields][name.to_sym] ||= name
     end
 
     def load(file)
