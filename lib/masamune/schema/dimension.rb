@@ -143,6 +143,34 @@ module Masamune::Schema
     end
     method_with_last_element :insert_values
 
+    def consolidated_window(*extra)
+      columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra
+    end
+
+    def consolidated_columns
+      columns.reject { |_, column| [:end_at, :version, :last_modified_at].include?(column.name) || column.primary_key }
+    end
+    method_with_last_element :consolidated_columns
+
+    def consolidated_values(window: nil)
+      x = consolidated_columns.reject { |name, _| [:parent_uuid, :record_uuid].include?(name) }.map do |name, column, _|
+        if column.surrogate_key || column.name == :start_at
+          [name, column.name]
+        # FIXME stage is cast to json unnecessarily
+        elsif column.type == :key_value || column.type == :json
+          [name, "hstore_merge(#{column.name}_now) OVER #{window} - hstore_merge(#{column.name}_was) OVER #{window}"]
+        else
+          [name, "COALESCE(#{column.name}, FIRST_VALUE(#{column.name}) OVER #{window})"]
+        end
+      end
+      Hash[x]
+    end
+    method_with_last_element :consolidated_values
+
+    def consolidated_constraints
+      consolidated_columns.reject { |name, column| [:parent_uuid, :record_uuid, :start_at].include?(name) || column.null }
+    end
+
     def aliased_rows
       rows.select { |row| row.name }
     end
