@@ -1,16 +1,15 @@
-# TODO consider if csv should just be files
 module Masamune::Schema
   class Registry
     include Masamune::HasEnvironment
 
     attr_accessor :dimensions
-    attr_accessor :csv_files
+    attr_accessor :files
     attr_accessor :maps
 
     def initialize(environment)
       self.environment = environment
       @dimensions = {}
-      @csv_files = Hash.new { |h,k| h[k] = [] }
+      @files = Hash.new { |h,k| h[k] = [] }
       @maps = {}
       @options = Hash.new { |h,k| h[k] = [] }
       @extra = []
@@ -43,13 +42,13 @@ module Masamune::Schema
       @options[:rows] << Masamune::Schema::Row.new(attributes)
     end
 
-    def csv(name, options, &block)
+    def file(name, options, &block)
       prev_options = @options.dup
       yield if block_given?
-      csv_files = options.delete(:files)
-      filesystem.glob(csv_files) do |file|
+      files = options.delete(:files)
+      filesystem.glob(files) do |file|
         # TODO get local copy of file if remote
-        self.csv_files[name.to_sym] << Masamune::Schema::File.new(options.merge(@options).merge(name: name, file: file))
+        self.files[name.to_sym] << Masamune::Schema::File.new(options.merge(@options).merge(name: name, file: file))
       end
     ensure
       @options = prev_options

@@ -8,7 +8,7 @@ module Masamune::Actions
 
     include Masamune::Actions::Postgres
 
-    def_delegators :registry, :dimensions, :maps, :csv_files
+    def_delegators :registry, :dimensions, :maps, :files
 
     def load_dimension(source, target, map)
       transform = Masamune::Transform::LoadDimension.new(source, target, map)

@@ -112,22 +112,22 @@ describe Masamune::Schema::Registry do
       before do
         filesystem.touch!('users_1.csv', 'users_2.csv', 'users_3.csv', 'groups_1.csv')
         instance.schema do
-          csv 'users', files: 'users_*.csv' do
+          file 'users', files: 'users_*.csv' do
             column 'user_account_type.name', type: :string
           end
         end
       end
 
-      subject(:csv_files) { instance.csv_files[:users] }
+      subject(:files) { instance.files[:users] }
 
       it 'should expand :files glob argument' do
-        expect(csv_files[0].file).to eq('users_1.csv')
-        expect(csv_files[1].file).to eq('users_2.csv')
-        expect(csv_files[2].file).to eq('users_3.csv')
+        expect(files[0].file).to eq('users_1.csv')
+        expect(files[1].file).to eq('users_2.csv')
+        expect(files[2].file).to eq('users_3.csv')
       end
 
       it 'should expect dot notation column names to references' do
-        expect(csv_files[0].columns).to include :'user_account_type.name'
+        expect(files[0].columns).to include :'user_account_type.name'
       end
     end
 
