@@ -127,7 +127,7 @@ describe Masamune::Transform::LoadDimension do
           ;
 
           COMMIT;
-       EOS
+        EOS
       end
     end
   end
