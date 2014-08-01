@@ -1,6 +1,7 @@
-# TODO prevent reserved_column_name collision
 module Masamune::Schema
   class Dimension
+    include Masamune::LastElement
+
     attr_accessor :name
     attr_accessor :type
     attr_accessor :ledger
@@ -8,17 +9,21 @@ module Masamune::Schema
     attr_accessor :columns
     attr_accessor :rows
     attr_accessor :ledger_table
+    attr_accessor :debug
 
-    def initialize(name: name, type: :two, ledger: false, references: [], columns: [], rows: [])
+    def initialize(name: name, type: :two, ledger: false, references: [], columns: [], rows: [], debug: false)
       @name       = name.to_sym
       @type       = type
       @ledger     = ledger
       @rows       = rows
+      @debug      = debug
 
       @references = {}
       references.each do |reference|
         @references[reference.name] = reference
       end
+
+      raise ArgumentError, "dimension #{name} contains reserved columns" if columns.any? { |column| reserved_column_names.include?(column.name) }
 
       @columns = {}
       initialize_primary_key_column! unless columns.any? { |column| column.primary_key }
@@ -29,29 +34,47 @@ module Masamune::Schema
       initialize_ledger_table!
       initialize_dimension_columns!
 
-      @rows.each { |row| row.dimension = self }
+      @rows.each { |row| row.reference = self }
+    end
+
+    def temporary?
+      type == :stage
     end
 
     def table_name
       case type
       when :mini
         "#{name}_type"
+      when :stage
+        "#{name}_stage"
       when :two
         "#{name}_dimension"
       when :ledger
         "#{name}_dimension_ledger"
+      when :ledger_stage
+        "#{name}_dimension_ledger_stage"
       end
     end
 
     def primary_key
-      columns.values.detect  {|column| column.primary_key }
+      columns.values.detect { |column| column.primary_key }
     end
 
     def surrogate_key
-      columns.values.detect  {|column| column.surrogate_key }
+      columns.values.detect { |column| column.surrogate_key }
     end
 
+    def foreign_key_name
+      "#{table_name}_#{primary_key.name}"
+    end
+
+    def defined_columns
+      columns.values
+    end
+    method_with_last_element :defined_columns
+
     def index_columns
+      return [] if temporary?
       indices = columns.select { |_, column| column.index }.lazy
       indices = indices.group_by { |_, column| column.index == true ? column.name : column.index }.lazy
       indices = indices.map { |_, index_and_columns| index_and_columns.map(&:last) }.lazy
@@ -61,16 +84,42 @@ module Masamune::Schema
     end
 
     def unique_columns
-      columns.select { |_, column| column.unique }
+      return {} if temporary?
+      columns.select { |_, column| column.unique } || {}
     end
 
     def foreign_key_columns
       references.map do |_, dimension|
-        name = "#{dimension.table_name}_#{dimension.primary_key.name}"
+        name = dimension.primary_key.name
         type = dimension.primary_key.type
         Masamune::Schema::Column.new(name: name, type: type, reference: dimension, default: dimension.default_foreign_key_row)
       end
     end
+
+    def insert_columns
+      columns.map do |_, column|
+        if reference = column.reference
+          reference.foreign_key_name
+        else
+          column.name
+        end
+      end
+    end
+
+    def upsert_update_columns
+      columns.values.reject { |column| reserved_column_names.include?(column.name) || column.primary_key || column.surrogate_key }
+    end
+    method_with_last_element :upsert_update_columns
+
+    def upsert_insert_columns
+      columns.values.reject { |column| column.primary_key }
+    end
+    method_with_last_element :upsert_insert_columns
+
+    def upsert_unique_columns
+      columns.values.select { |column| [:source_kind, :source_uuid, :start_at].include?(column.name) || column.surrogate_key }
+    end
+    method_with_last_element :upsert_unique_columns
 
     def default_foreign_key_row
       rows.select { |row| row.default }.first.try(:name)
@@ -80,22 +129,54 @@ module Masamune::Schema
       rows.select { |row| row.insert_values.any? }
     end
 
+    def insert_values
+      columns.map do |_, column|
+        if reference = column.reference
+          "(SELECT #{reference.primary_key.name} FROM #{reference.table_name} WHERE #{column.foreign_key_name} = #{column.name})"
+        else
+          column.name.to_s
+        end
+      end
+    end
+    method_with_last_element :insert_values
+
     def aliased_rows
       rows.select { |row| row.name }
     end
 
-    def to_s
+    def stage_table
+      self.dup.tap do |dimension|
+        case type
+        when :two
+          dimension.type = :stage
+        when :ledger
+          dimension.type = :ledger_stage
+        end
+      end
+    end
+
+    def as_psql
       Masamune::Template.render_to_string(dimension_template, dimension: self)
     end
 
-    def defined_columns
-      columns.values.reject { |column| reserved_column_names.include?(column.name) }
+    def as_file(selected_columns)
+      file_columns = []
+      selected_columns.each do |name|
+        reference_name, column_name = Column::dereference_column_name(name)
+        if reference = references[reference_name]
+          file_columns << reference.columns[column_name].dup.tap { |column| column.reference = reference }
+        elsif columns[column_name]
+          file_columns << columns[column_name]
+        end
+      end
+      Masamune::Schema::File.new name: "#{name}_file", columns: file_columns
     end
 
     private
 
     def ledger_table_columns
-      defined_columns.map do |column|
+      columns.values.map do |column|
+        next if reserved_column_names.include?(column.name)
         if column.type == :key_value
           column_now, column_was = column.dup, column.dup
           column_now.name, column_was.name = "#{column.name}_now", "#{column.name}_was"
@@ -108,7 +189,7 @@ module Masamune::Schema
 
     def initialize_ledger_table!
       return unless ledger
-      @ledger_table = Masamune::Schema::Dimension.new(name: name, type: :ledger, columns: ledger_table_columns)
+      @ledger_table = Masamune::Schema::Dimension.new(name: name, type: :ledger, columns: ledger_table_columns, references: references.values)
       @columns[:parent_uuid] = Masamune::Schema::Column.new(name: 'parent_uuid', type: :uuid, null: true, reference: @ledger_table)
       @columns[:record_uuid] = Masamune::Schema::Column.new(name: 'record_uuid', type: :uuid, null: true, reference: @ledger_table)
     end
@@ -154,11 +235,13 @@ module Masamune::Schema
         [:parent_uuid, :record_uuid, :start_at, :end_at, :version, :last_modified_at]
       when :ledger
         [:source_kind, :source_uuid, :start_at, :last_modified_at, :delta]
+      else
+        []
       end
     end
 
     def dimension_template
-      @dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'dimension.psql.erb'))
+      @dimension_template ||= ::File.expand_path(::File.join(__FILE__, '..', 'dimension.psql.erb'))
     end
   end
 end

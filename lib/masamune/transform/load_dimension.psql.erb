@@ -1,0 +1,21 @@
+<%
+  target_stage = target.stage_table
+%>
+
+<%= source.as_psql %>
+
+COPY <%= source.table_name %> FROM '<%= source_file %>' WITH (FORMAT 'csv');
+
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= target_stage.table_name %> (LIKE <%= target.table_name %> INCLUDING ALL);
+
+INSERT INTO
+  <%= target_stage.table_name %> (<%= source.insert_columns.join(', ') %>)
+SELECT
+  <%- source.insert_values.each do |value, last| -%>
+  <%= value %><%= ',' unless last %>
+  <%- end -%>
+FROM
+  <%= source.table_name %>
+;
+
+<%= render 'bulk_upsert.psql.erb', target: target, source: target_stage %>

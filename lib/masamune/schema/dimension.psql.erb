@@ -1,11 +1,15 @@
-<%= dimension.ledger_table %>
+<%- if dimension.ledger -%>
+<%= dimension.ledger_table.as_psql %>
+<%- end -%>
 
+<%- if dimension.temporary? -%>
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= dimension.table_name %>
+<%- else -%>
 CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
+<%- end -%>
 (
-  <%- dimension.columns.each_with_index do |(name, column), i|
-  last_column = dimension.unique_columns.any? ? false : (i >= dimension.columns.length - 1)
-  -%>
-  <%= column %><%= ',' unless last_column %>
+  <%- dimension.defined_columns.each do |column, last| -%>
+  <%= column.as_psql %><%= ',' unless last && dimension.unique_columns.none? %>
   <%- end -%>
   <%- if dimension.unique_columns.any? -%>
   UNIQUE(<%= dimension.unique_columns.keys.join(', ') %>)

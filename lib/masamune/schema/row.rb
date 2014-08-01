@@ -1,28 +1,39 @@
 module Masamune::Schema
   class Row
-    attr_accessor :dimension
+    attr_accessor :reference
     attr_accessor :values
     attr_accessor :default
+    attr_accessor :strict
+    attr_accessor :debug
 
-    def initialize(values: [], default: false, name: nil)
-      @values  = values
+    def initialize(reference: nil, values: {}, default: false, name: nil, strict: true, debug: false)
+      @values  = values.symbolize_keys
       @default = default
       @name    = name
+      @strict  = strict
+      @debug   = debug
+
       @name  ||= 'default' if default
+      self.reference = reference
+    end
+
+    def reference=(reference)
+      @reference = reference
+      normalize_values! if @reference
     end
 
     def name
       return unless @name
-      "#{@name}_#{dimension.table_name}_#{dimension.primary_key.name}()"
+      "#{@name}_#{reference.table_name}_#{reference.primary_key.name}()"
     end
 
     def surrogate_name
-      return unless dimension.surrogate_key && @name
-      "#{@name}_#{dimension.surrogate_key.name}()"
+      return unless reference.surrogate_key && @name
+      "#{@name}_#{reference.surrogate_key.name}()"
     end
 
     def insert_constraints
-      values.map { |key, value| "#{key} = #{dimension.columns[key].sql_value(value)}" }.compact
+      values.map { |key, value| "#{key} = #{reference.columns[key].sql_value(value)}" }.compact
     end
 
     def insert_columns
@@ -30,21 +41,37 @@ module Masamune::Schema
     end
 
     def insert_values
-      values.map { |key, value| dimension.columns[key].sql_value(value) }
+      values.map { |key, value| reference.columns[key].sql_value(value) }
     end
 
-    def dimension=(dimension)
-      @dimension = dimension
-      validate_values!
+    def to_hash
+      values.with_indifferent_access
+    end
+
+    def to_csv
+      [].tap do |result|
+        reference.columns.each do |_, column|
+          result << column.csv_value(values[column.name])
+        end
+      end.to_csv
     end
 
     private
 
-    def validate_values!
-      values.each do |record|
-        undefined_columns = insert_columns - dimension.columns.keys
-        raise ArgumentError, "#{insert_columns} contains undefined columns #{undefined_columns}" if undefined_columns.any?
+    def normalize_values!
+      result = {}
+      reference.columns.each do |name, column|
+        if @values.key?(column.compact_name)
+          value = @values[column.compact_name]
+          result[name] = column.ruby_value(value)
+        end
       end
+
+      if strict && @values.length > result.length
+        raise ArgumentError, "#{@values} contains undefined columns"
+      end
+
+      @values = result
     end
   end
 end

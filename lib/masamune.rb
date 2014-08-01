@@ -5,6 +5,7 @@ module Masamune
   require 'masamune/template'
   require 'masamune/commands'
   require 'masamune/accumulate'
+  require 'masamune/last_element'
   require 'masamune/actions'
   require 'masamune/helpers'
   require 'masamune/configuration'
@@ -21,6 +22,7 @@ module Masamune
   require 'masamune/proxy_delegate'
   require 'masamune/after_initialize_callbacks'
   require 'masamune/schema'
+  require 'masamune/transform'
 
   extend self
   extend Masamune::HasEnvironment

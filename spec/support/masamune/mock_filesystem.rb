@@ -40,6 +40,14 @@ class Masamune::MockFilesystem < Delegator
   end
   method_accumulate :stat
 
+  def write(data, file)
+    @files[file] = OpenStruct.new(name: file, data: data)
+  end
+
+  def cat(file)
+    @files[file].data
+  end
+
   def clear!
   end
 
