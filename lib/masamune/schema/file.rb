@@ -1,17 +1,21 @@
 module Masamune::Schema
   class File
+    extend Forwardable
+
     attr_accessor :name
     attr_accessor :format
     attr_accessor :headers
     attr_accessor :columns
     attr_accessor :debug
 
+    def_delegators :@io, :flush, :path
+
     def initialize(name: nil, format: :csv, headers: false, columns: {}, debug: false)
       @name    = name
       @format  = format
       @headers = headers
       @debug   = debug
-      @io      = nil
+      @io      = ::File.open(::File::NULL, "w")
 
       @columns  = {}
       columns.each do |column|
@@ -42,14 +46,6 @@ module Masamune::Schema
     def append(data)
       append_with_format(columns.keys) if headers && @total_lines < 1
       append_with_format(Masamune::Schema::Row.new(reference: self, values: data))
-    end
-
-    def flush
-      @io.flush
-    end
-
-    def path
-      @io.path
     end
 
     def to_s

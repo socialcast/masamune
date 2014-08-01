@@ -3,14 +3,14 @@ module Masamune::Transform
     attr_accessor :output
 
     def initialize(file, source, target, map)
-      @source = source.bind(File.open(file))
+      @source = source.bind(file)
       @target = target.ledger ? target.ledger_table : target
       @map    = map
     end
 
     def run
       @output = @target.as_file(@map.columns)
-      @map.apply(@source, @output)
+      @map.apply(@source, @output.bind(Tempfile.new('masamune')))
     end
 
     def as_psql

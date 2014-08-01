@@ -70,12 +70,14 @@ describe Masamune::Schema::Map do
       EOS
     end
 
+    let(:input) { StringIO.new(source_data) }
+    let(:output) { StringIO.new }
+
     before do
-      source.bind(source_data)
-      map.apply(source, target)
+      map.apply(source.bind(input), target.bind(output))
     end
 
-    subject { File.read(target.path) }
+    subject { output.string }
 
     it 'should match target data' do
       is_expected.to eq(target_data)
