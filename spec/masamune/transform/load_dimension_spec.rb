@@ -17,6 +17,7 @@ describe Masamune::Transform::LoadDimension do
           Masamune::Schema::Column.new(name: 'id', type: :integer),
           Masamune::Schema::Column.new(name: 'tenant_id', type: :integer),
           Masamune::Schema::Column.new(name: 'admin', type: :boolean),
+          Masamune::Schema::Column.new(name: 'preferences', type: :yaml),
           Masamune::Schema::Column.new(name: 'updated_at', type: :timestamp),
           Masamune::Schema::Column.new(name: 'deleted_at', type: :timestamp)
         ]
@@ -27,7 +28,8 @@ describe Masamune::Transform::LoadDimension do
         references: [mini_dimension],
         columns: [
           Masamune::Schema::Column.new(name: 'tenant_id', index: true, surrogate_key: true),
-          Masamune::Schema::Column.new(name: 'user_id', index: true, surrogate_key: true)
+          Masamune::Schema::Column.new(name: 'user_id', index: true, surrogate_key: true),
+          Masamune::Schema::Column.new(name: 'preferences', type: :key_value, null: true)
         ]
     end
 
@@ -37,6 +39,7 @@ describe Masamune::Transform::LoadDimension do
           'tenant_id'               => 'tenant_id',
           'user_id'                 => 'id',
           'user_account_state.name' => ->(row) { row[:deleted_at] ? 'deleted' : 'active' },
+          'preferences_now'         => 'preferences',
           'start_at'                => 'updated_at',
           'source_kind'             => 'groups',
           'delta'                   => 1})
@@ -49,6 +52,10 @@ describe Masamune::Transform::LoadDimension do
 
       let(:transform) { described_class.new file, dimension, map }
 
+      before do
+        transform.run
+      end
+
       subject(:result) { transform.as_psql }
 
       it 'should eq render load_dimension template' do
@@ -58,6 +65,7 @@ describe Masamune::Transform::LoadDimension do
             tenant_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
             user_account_state_type_name VARCHAR NOT NULL,
+            preferences_now JSON,
             start_at TIMESTAMP NOT NULL,
             source_kind VARCHAR,
             delta INTEGER NOT NULL
@@ -68,11 +76,12 @@ describe Masamune::Transform::LoadDimension do
           CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage (LIKE user_dimension_ledger INCLUDING ALL);
 
           INSERT INTO
-            user_dimension_ledger_stage (tenant_id, user_id, user_account_state_type_id, start_at, source_kind, delta)
+            user_dimension_ledger_stage (tenant_id, user_id, user_account_state_type_id, preferences_now, start_at, source_kind, delta)
           SELECT
             tenant_id,
             user_id,
             (SELECT id FROM user_account_state_type WHERE user_account_state_type.name = user_account_state_type_name),
+            json_to_hstore(preferences_now),
             start_at,
             source_kind,
             delta
@@ -86,23 +95,26 @@ describe Masamune::Transform::LoadDimension do
           UPDATE
             user_dimension_ledger
           SET
-            user_account_state_type_id = user_dimension_ledger_stage.user_account_state_type_id
+            user_account_state_type_id = user_dimension_ledger_stage.user_account_state_type_id,
+            preferences_now = user_dimension_ledger_stage.preferences_now,
+            preferences_was = user_dimension_ledger_stage.preferences_was
           FROM
             user_dimension_ledger_stage
           WHERE
             user_dimension_ledger.tenant_id = user_dimension_ledger_stage.tenant_id AND
             user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
             user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
-            user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
             user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
           ;
 
           INSERT INTO
-            user_dimension_ledger (user_account_state_type_id,tenant_id,user_id,source_kind,source_uuid,start_at,last_modified_at,delta)
+            user_dimension_ledger (user_account_state_type_id,tenant_id,user_id,preferences_now,preferences_was,source_kind,source_uuid,start_at,last_modified_at,delta)
           SELECT
             user_dimension_ledger_stage.user_account_state_type_id,
             user_dimension_ledger_stage.tenant_id,
             user_dimension_ledger_stage.user_id,
+            user_dimension_ledger_stage.preferences_now,
+            user_dimension_ledger_stage.preferences_was,
             user_dimension_ledger_stage.source_kind,
             user_dimension_ledger_stage.source_uuid,
             user_dimension_ledger_stage.start_at,
@@ -116,13 +128,11 @@ describe Masamune::Transform::LoadDimension do
             user_dimension_ledger.tenant_id = user_dimension_ledger_stage.tenant_id AND
             user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
             user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
-            user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
             user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
           WHERE
             user_dimension_ledger.tenant_id IS NULL AND
             user_dimension_ledger.user_id IS NULL AND
             user_dimension_ledger.source_kind IS NULL AND
-            user_dimension_ledger.source_uuid IS NULL AND
             user_dimension_ledger.start_at IS NULL
           ;
 

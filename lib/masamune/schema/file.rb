@@ -54,6 +54,10 @@ module Masamune::Schema
       @buffer.path
     end
 
+    def to_s
+      [path, ::File.read(path)].join("\n")
+    end
+
     def as_table
       Masamune::Schema::Dimension.new name: name, type: :stage, columns: columns.values
     end

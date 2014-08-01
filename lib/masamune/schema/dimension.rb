@@ -116,8 +116,9 @@ module Masamune::Schema
     end
     method_with_last_element :upsert_insert_columns
 
+    # TODO optionally enable source_uuid
     def upsert_unique_columns
-      columns.values.select { |column| [:source_kind, :source_uuid, :start_at].include?(column.name) || column.surrogate_key }
+      columns.values.select { |column| [:source_kind, :start_at].include?(column.name) || column.surrogate_key }
     end
     method_with_last_element :upsert_unique_columns
 
@@ -133,6 +134,8 @@ module Masamune::Schema
       columns.map do |_, column|
         if reference = column.reference
           "(SELECT #{reference.primary_key.name} FROM #{reference.table_name} WHERE #{column.foreign_key_name} = #{column.name})"
+        elsif column.type == :json
+          "json_to_hstore(#{column.name})"
         else
           column.name.to_s
         end
@@ -151,6 +154,9 @@ module Masamune::Schema
           dimension.type = :stage
         when :ledger
           dimension.type = :ledger_stage
+        end
+        dimension.columns.each do |name, column|
+          column.type = :json if column.type == :key_value
         end
       end
     end

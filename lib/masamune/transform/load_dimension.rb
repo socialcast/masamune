@@ -1,16 +1,21 @@
 module Masamune::Transform
   class LoadDimension
+    attr_accessor :output
+
     def initialize(source, target, map)
       @source = source
       @target = target.ledger ? target.ledger_table : target
       @map    = map
     end
 
+    def run
+      @output = @target.as_file(@map.columns)
+      @output.buffer = Tempfile.new('masamune')
+      @map.apply(@source, @output)
+    end
+
     def as_psql
-      tmp = @target.as_file(@map.columns)
-      tmp.buffer = Tempfile.new('masamune')
-      @map.apply(@source, tmp)
-      Masamune::Template.render_to_string(load_dimension_template, source: tmp.as_table, source_file: tmp.path, target: @target)
+      Masamune::Template.render_to_string(load_dimension_template, source: @output.as_table, source_file: @output.path, target: @target)
     end
 
     def to_psql_file

@@ -1,3 +1,5 @@
+require 'json'
+
 module Masamune::Schema
   class Column
     attr_accessor :type
@@ -67,6 +69,8 @@ module Masamune::Schema
         'BOOLEAN'
       when :key_value
         'HSTORE'
+      when :json, :yaml
+        'JSON'
       end
     end
 
@@ -87,6 +91,8 @@ module Masamune::Schema
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
+      when :json, :yaml, :key_value
+        value.to_json
       else
         value
       end
@@ -104,6 +110,8 @@ module Masamune::Schema
         end
       when :integer
         value.to_i
+      when :yaml
+        value.nil? ? {} : Hash[YAML.load(value).map { |key, value| [key, ruby_yaml_value(value)] }]
       else
         value
       end
@@ -145,6 +153,18 @@ module Masamune::Schema
 
     def initialize_default_attributes!
       self.default = 'uuid_generate_v4()' if primary_key && type == :uuid
+    end
+
+    # FIXME not sure if this is necessary
+    def ruby_yaml_value(value)
+      case value
+      when true, '1'
+        true
+      when false, '0'
+        false
+      else
+        value
+      end
     end
   end
 end
