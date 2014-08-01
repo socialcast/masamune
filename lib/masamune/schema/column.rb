@@ -93,6 +93,7 @@ module Masamune::Schema
     end
 
     def ruby_value(value)
+      return unless value
       return value if sql_function?(value)
       case type
       when :boolean
@@ -105,7 +106,7 @@ module Masamune::Schema
       when :integer
         value.to_i
       else
-        value
+        value.to_s
       end
     end
 
