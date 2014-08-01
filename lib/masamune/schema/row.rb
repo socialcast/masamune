@@ -49,11 +49,11 @@ module Masamune::Schema
     end
 
     def to_csv
-      {}.tap do |result|
+      [].tap do |result|
         reference.columns.each do |_, column|
-          result[column.name] = column.csv_value(values[column.name])
+          result << column.csv_value(values[column.name])
         end
-      end.values.to_csv
+      end.to_csv
     end
 
     private

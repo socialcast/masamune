@@ -99,6 +99,7 @@ module Masamune::Schema
     end
 
     def ruby_value(value)
+      return unless value
       return value if sql_function?(value)
       case type
       when :boolean
@@ -113,7 +114,7 @@ module Masamune::Schema
       when :yaml
         value.nil? ? {} : Hash[YAML.load(value).map { |key, value| [key, ruby_yaml_value(value)] }]
       else
-        value
+        value.to_s
       end
     end
 
