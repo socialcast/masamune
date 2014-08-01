@@ -38,24 +38,14 @@ module Masamune::Schema
 
     def each(&block)
       ::CSV.parse(buffer, headers: true) do |data|
-        row = Masamune::Schema::Row.new(values: data.to_hash, strict: false)
-        row.dimension = self
+        row = Masamune::Schema::Row.new(reference: self, values: data.to_hash, strict: false)
         yield row.to_hash
       end
     end
 
     def append(data)
-      if headers && @total_lines < 1
-        formatted_headers = columns.keys.to_csv
-        @total_lines += 1
-        buffer << formatted_headers
-      end
-
-      row = Masamune::Schema::Row.new(values: data)
-      row.dimension = self
-      formatted_row = row.to_csv
-      @total_lines += 1
-      buffer << formatted_row
+      append_with_format(columns.keys) if headers && @total_lines < 1
+      append_with_format(Masamune::Schema::Row.new(reference: self, values: data))
     end
 
     # TODO create temporary file if buffer is not a file
@@ -66,6 +56,13 @@ module Masamune::Schema
 
     def as_table
       Masamune::Schema::Dimension.new name: name, type: :stage, columns: columns.values
+    end
+
+    private
+
+    def append_with_format(data)
+      @total_lines += 1
+      buffer << data.to_csv
     end
   end
 end

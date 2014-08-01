@@ -34,7 +34,7 @@ module Masamune::Schema
       initialize_ledger_table!
       initialize_dimension_columns!
 
-      @rows.each { |row| row.dimension = self }
+      @rows.each { |row| row.reference = self }
     end
 
     def temporary?
