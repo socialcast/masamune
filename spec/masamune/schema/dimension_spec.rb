@@ -26,10 +26,25 @@ describe Masamune::Schema::Dimension do
           last_modified_at TIMESTAMP DEFAULT NOW()
         );
 
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_tenant_id_index') THEN
         CREATE INDEX user_dimension_tenant_id_index ON user_dimension (tenant_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_user_id_index') THEN
         CREATE INDEX user_dimension_user_id_index ON user_dimension (user_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_start_at_index') THEN
         CREATE INDEX user_dimension_start_at_index ON user_dimension (start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_end_at_index') THEN
         CREATE INDEX user_dimension_end_at_index ON user_dimension (end_at);
+        END IF; END $$;
       EOS
     end
   end
@@ -143,7 +158,10 @@ describe Masamune::Schema::Dimension do
           UNIQUE(tenant_id, user_id)
         );
 
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_type_tenant_id_user_id_index') THEN
         CREATE UNIQUE INDEX user_type_tenant_id_user_id_index ON user_type (tenant_id, user_id);
+        END IF; END $$;
       EOS
     end
   end
@@ -248,8 +266,15 @@ describe Masamune::Schema::Dimension do
           last_modified_at TIMESTAMP DEFAULT NOW()
         );
 
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_start_at_index') THEN
         CREATE INDEX user_dimension_start_at_index ON user_dimension (start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_end_at_index') THEN
         CREATE INDEX user_dimension_end_at_index ON user_dimension (end_at);
+        END IF; END $$;
       EOS
     end
 
@@ -293,9 +318,20 @@ describe Masamune::Schema::Dimension do
           delta INTEGER NOT NULL
         );
 
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_tenant_id_index') THEN
         CREATE INDEX user_dimension_ledger_tenant_id_index ON user_dimension_ledger (tenant_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_user_id_index') THEN
         CREATE INDEX user_dimension_ledger_user_id_index ON user_dimension_ledger (user_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_start_at_index') THEN
         CREATE INDEX user_dimension_ledger_start_at_index ON user_dimension_ledger (start_at);
+        END IF; END $$;
 
         CREATE TABLE IF NOT EXISTS user_dimension
         (
@@ -311,10 +347,25 @@ describe Masamune::Schema::Dimension do
           last_modified_at TIMESTAMP DEFAULT NOW()
         );
 
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_tenant_id_index') THEN
         CREATE INDEX user_dimension_tenant_id_index ON user_dimension (tenant_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_user_id_index') THEN
         CREATE INDEX user_dimension_user_id_index ON user_dimension (user_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_start_at_index') THEN
         CREATE INDEX user_dimension_start_at_index ON user_dimension (start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_end_at_index') THEN
         CREATE INDEX user_dimension_end_at_index ON user_dimension (end_at);
+        END IF; END $$;
       EOS
     end
   end
