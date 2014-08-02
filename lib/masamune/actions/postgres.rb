@@ -42,7 +42,7 @@ module Masamune::Actions
 
     def load_schema_registry
       postgres(file: registry.to_psql_file)
-    rescue
+    rescue => e
       logger.error(e)
       logger.error("Could not load schema from registry")
       logger.error("\n" + registry.to_s)
