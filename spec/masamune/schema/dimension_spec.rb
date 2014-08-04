@@ -171,7 +171,7 @@ describe Masamune::Schema::Dimension do
       described_class.new name: 'user', type: :mini,
         columns: [
           Masamune::Schema::Column.new(name: 'uuid', type: :uuid, primary_key: true),
-          Masamune::Schema::Column.new(name: 'tenant_id', type: :integer, unique: true),
+          Masamune::Schema::Column.new(name: 'tenant_id', type: :integer, unique: true, surrogate_key: true),
           Masamune::Schema::Column.new(name: 'user_id', type: :integer, unique: true, surrogate_key: true)
         ],
         rows: [

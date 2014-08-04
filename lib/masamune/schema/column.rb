@@ -10,9 +10,10 @@ module Masamune::Schema
     attr_accessor :primary_key
     attr_accessor :surrogate_key
     attr_accessor :reference
+    attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, debug: false)
+    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, parent: nil, debug: false)
       @name          = name.to_sym
       @type          = type
       @null          = null
@@ -22,6 +23,7 @@ module Masamune::Schema
       @primary_key   = primary_key
       @surrogate_key = surrogate_key
       @reference     = reference
+      @parent        = parent
       @debug         = debug
 
       initialize_default_attributes!
@@ -41,6 +43,10 @@ module Masamune::Schema
       else
         @name
       end
+    end
+
+    def real_name
+      @name.to_sym
     end
 
     def foreign_key_name
@@ -68,7 +74,7 @@ module Masamune::Schema
       when :boolean
         'BOOLEAN'
       when :key_value
-        'HSTORE'
+        parent.type == :stage ? 'JSON' : 'HSTORE'
       when :json, :yaml
         'JSON'
       end
@@ -109,7 +115,7 @@ module Masamune::Schema
           true
         end
       when :integer
-        value.to_i
+        value.nil? ? nil : value.to_i
       when :yaml
         value.nil? ? {} : Hash[YAML.load(value).map { |key, value| [key, ruby_yaml_value(value)] }]
       else
@@ -136,7 +142,7 @@ module Masamune::Schema
 
     def sql_constraints
       [].tap do |constraints|
-        constraints << 'NOT NULL' unless null || primary_key || !default.nil?
+        constraints << 'NOT NULL' unless null || primary_key || !default.nil? || (parent.type == :stage)
         constraints << 'PRIMARY KEY' if primary_key
       end
     end

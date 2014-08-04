@@ -8,15 +8,17 @@ module Masamune::Schema
     attr_accessor :references
     attr_accessor :columns
     attr_accessor :rows
+    attr_accessor :insert
     attr_accessor :ledger_table
     attr_accessor :debug
 
-    def initialize(name: name, type: :two, ledger: false, references: [], columns: [], rows: [], debug: false)
-      @name       = name.to_sym
-      @type       = type
-      @ledger     = ledger
-      @rows       = rows
-      @debug      = debug
+    def initialize(name: name, type: :two, ledger: false, references: [], columns: [], rows: [], insert: false, debug: false)
+      @name   = name.to_sym
+      @type   = type
+      @ledger = ledger
+      @rows   = rows
+      @insert = insert
+      @debug  = debug
 
       @references = {}
       references.each do |reference|
@@ -30,6 +32,7 @@ module Masamune::Schema
       initialize_foreign_key_columns!
       columns.each do |column|
         @columns[column.name] = column
+        @columns[column.name].parent = self
       end
       initialize_ledger_table!
       initialize_dimension_columns!
@@ -60,8 +63,8 @@ module Masamune::Schema
       columns.values.detect { |column| column.primary_key }
     end
 
-    def surrogate_key
-      columns.values.detect { |column| column.surrogate_key }
+    def surrogate_keys
+      columns.values.select { |column| column.surrogate_key }
     end
 
     def foreign_key_name
@@ -133,7 +136,12 @@ module Masamune::Schema
     def insert_values
       columns.map do |_, column|
         if reference = column.reference
-          "(SELECT #{reference.primary_key.name} FROM #{reference.table_name} WHERE #{column.foreign_key_name} = #{column.name})"
+          select = "(SELECT #{reference.primary_key.name} FROM #{reference.table_name} WHERE #{column.foreign_key_name} = #{column.name})"
+          if reference.default_value
+            "COALESCE(#{select}, #{reference.default_value})"
+          else
+            select
+          end
         elsif column.type == :json
           "json_to_hstore(#{column.name})"
         else
@@ -142,6 +150,10 @@ module Masamune::Schema
       end
     end
     method_with_last_element :insert_values
+
+    def default_value
+      rows.detect { |row| row.default }.try(:name)
+    end
 
     def consolidated_window(*extra)
       columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra
@@ -175,10 +187,14 @@ module Masamune::Schema
       rows.select { |row| row.name }
     end
 
+    def insert_references
+      references.select { |name, reference| reference.insert }
+    end
+
     def stage_table
       self.dup.tap do |dimension|
         case type
-        when :two
+        when :mini, :two
           dimension.type = :stage
         when :ledger
           dimension.type = :ledger_stage
@@ -187,6 +203,18 @@ module Masamune::Schema
           column.type = :json if column.type == :key_value
         end
       end
+    end
+
+    def shared_columns(other)
+      x = []
+      columns.each do |_, column|
+        other.columns.each do |_, other_column|
+          if column.real_name == other_column.real_name && column.type == other_column.type
+            x << [other_column, column]
+          end
+        end
+      end
+      x
     end
 
     def as_psql
@@ -224,16 +252,16 @@ module Masamune::Schema
     def initialize_ledger_table!
       return unless ledger
       @ledger_table = Masamune::Schema::Dimension.new(name: name, type: :ledger, columns: ledger_table_columns, references: references.values)
-      @columns[:parent_uuid] = Masamune::Schema::Column.new(name: 'parent_uuid', type: :uuid, null: true, reference: @ledger_table)
-      @columns[:record_uuid] = Masamune::Schema::Column.new(name: 'record_uuid', type: :uuid, null: true, reference: @ledger_table)
+      @columns[:parent_uuid] = Masamune::Schema::Column.new(name: 'parent_uuid', type: :uuid, null: true, reference: @ledger_table, parent: self)
+      @columns[:record_uuid] = Masamune::Schema::Column.new(name: 'record_uuid', type: :uuid, null: true, reference: @ledger_table, parent: self)
     end
 
     def initialize_primary_key_column!
       case type
       when :mini
-        @columns[:id] = Masamune::Schema::Column.new(name: 'id', type: :integer, primary_key: true)
+        @columns[:id] = Masamune::Schema::Column.new(name: 'id', type: :integer, primary_key: true, parent: self)
       when :two, :ledger
-        @columns[:uuid] = Masamune::Schema::Column.new(name: 'uuid', type: :uuid, primary_key: true)
+        @columns[:uuid] = Masamune::Schema::Column.new(name: 'uuid', type: :uuid, primary_key: true, parent: self)
       end
     end
 
@@ -249,16 +277,16 @@ module Masamune::Schema
     def initialize_dimension_columns!
       case type
       when :two
-        @columns[:start_at] = Masamune::Schema::Column.new(name: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true)
-        @columns[:end_at]  = Masamune::Schema::Column.new(name: 'end_at', type: :timestamp, null: true, index: true)
-        @columns[:version] = Masamune::Schema::Column.new(name: 'version', type: :integer, default: 1)
-        @columns[:last_modified_at] = Masamune::Schema::Column.new(name: 'last_modified_at', type: :timestamp, default: 'NOW()')
+        @columns[:start_at] = Masamune::Schema::Column.new(name: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, parent: self)
+        @columns[:end_at]  = Masamune::Schema::Column.new(name: 'end_at', type: :timestamp, null: true, index: true, parent: self)
+        @columns[:version] = Masamune::Schema::Column.new(name: 'version', type: :integer, default: 1, parent: self)
+        @columns[:last_modified_at] = Masamune::Schema::Column.new(name: 'last_modified_at', type: :timestamp, default: 'NOW()', parent: self)
       when :ledger
-        @columns[:source_kind] = Masamune::Schema::Column.new(name: 'source_kind', type: :string, null: true)
-        @columns[:source_uuid] = Masamune::Schema::Column.new(name: 'source_uuid', type: :string, null: true)
-        @columns[:start_at] = Masamune::Schema::Column.new(name: 'start_at', type: :timestamp, index: true)
-        @columns[:last_modified_at] = Masamune::Schema::Column.new(name: 'last_modified_at', type: :timestamp, default: 'NOW()')
-        @columns[:delta] = Masamune::Schema::Column.new(name: 'delta', type: :integer)
+        @columns[:source_kind] = Masamune::Schema::Column.new(name: 'source_kind', type: :string, null: true, parent: self)
+        @columns[:source_uuid] = Masamune::Schema::Column.new(name: 'source_uuid', type: :string, null: true, parent: self)
+        @columns[:start_at] = Masamune::Schema::Column.new(name: 'start_at', type: :timestamp, index: true, parent: self)
+        @columns[:last_modified_at] = Masamune::Schema::Column.new(name: 'last_modified_at', type: :timestamp, default: 'NOW()', parent: self)
+        @columns[:delta] = Masamune::Schema::Column.new(name: 'delta', type: :integer, parent: self)
       end
     end
 

@@ -13,8 +13,23 @@ module Masamune::Transform
       @map.apply(@source, @output.bind(Tempfile.new('masamune')))
     end
 
+    def stage_dimension_as_psql
+      Masamune::Template.render_to_string(stage_dimension_template, source: output.as_table, source_file: output.path)
+    end
+
+    def insert_reference_values_as_psql
+      Masamune::Template.render_to_string(insert_reference_values_template, source: output.as_table, target: @target)
+    end
+
+    def load_dimension_as_psql
+      Masamune::Template.render_to_string(load_dimension_template, source: output.as_table, target: @target)
+    end
+
     def as_psql
-      Masamune::Template.render_to_string(load_dimension_template, source: @output.as_table, source_file: @output.path, target: @target)
+      Masamune::Template.combine \
+        stage_dimension_as_psql,
+        insert_reference_values_as_psql,
+        load_dimension_as_psql
     end
 
     def to_psql_file
@@ -25,6 +40,14 @@ module Masamune::Transform
     end
 
     private
+
+    def stage_dimension_template
+      @stage_dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'stage_dimension.psql.erb'))
+    end
+
+    def insert_reference_values_template
+      @insert_reference_values_template ||= File.expand_path(File.join(__FILE__, '..', 'insert_reference_values.psql.erb'))
+    end
 
     def load_dimension_template
       @load_dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'load_dimension.psql.erb'))

@@ -31,10 +31,10 @@ END IF; END $$;
 <%- end -%>
 
 <% dimension.aliased_rows.each do |row| %>
-<% if dimension.surrogate_key %>
-CREATE OR REPLACE FUNCTION <%= row.surrogate_name %>
-RETURNS <%= dimension.surrogate_key.sql_type %> IMMUTABLE AS $$
-  SELECT <%= row.values[dimension.surrogate_key.name] %>;
+<%- row.surrogate_keys.each do |column| -%>
+CREATE OR REPLACE FUNCTION <%= row.name(column) %>
+RETURNS <%= column.sql_type %> IMMUTABLE AS $$
+  SELECT <%= row.values[column.name] %>;
 $$ LANGUAGE SQL;
 <%- end -%>
 

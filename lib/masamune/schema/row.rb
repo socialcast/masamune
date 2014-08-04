@@ -22,14 +22,19 @@ module Masamune::Schema
       normalize_values! if @reference
     end
 
-    def name
+    def name(column = nil)
       return unless @name
-      "#{@name}_#{reference.table_name}_#{reference.primary_key.name}()"
+      if column
+        "#{@name}_#{column.name}()"
+      else
+        "#{@name}_#{reference.table_name}_#{reference.primary_key.name}()"
+      end
     end
 
-    def surrogate_name
-      return unless reference.surrogate_key && @name
-      "#{@name}_#{reference.surrogate_key.name}()"
+    def surrogate_keys
+      reference.surrogate_keys.select do |column|
+        values.keys.include?(column.name) && !column.sql_function?(values[column.name])
+      end
     end
 
     def insert_constraints
