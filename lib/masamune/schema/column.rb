@@ -45,10 +45,6 @@ module Masamune::Schema
       end
     end
 
-    def real_name
-      @name.to_sym
-    end
-
     def foreign_key_name
       "#{reference.table_name}.#{@name}".to_sym if reference
     end
@@ -59,6 +55,10 @@ module Masamune::Schema
       else
         @name
       end
+    end
+
+    def id_name
+      @name.to_sym
     end
 
     def sql_type(for_primary_key = false)
@@ -161,7 +161,6 @@ module Masamune::Schema
       self.default = 'uuid_generate_v4()' if primary_key && type == :uuid
     end
 
-    # FIXME not sure if this is necessary
     def ruby_yaml_value(value)
       case value
       when true, '1'

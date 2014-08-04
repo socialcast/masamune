@@ -26,8 +26,8 @@ FROM (
     FIRST_VALUE(uuid) OVER w AS parent_uuid,
     FIRST_VALUE(start_at) OVER w AS parent_start_at,
     uuid AS record_uuid,
-    <%- source.consolidated_values(window: 'w').each do |name, value, last| -%>
-    <%= value %> AS <%= name %><%= ',' unless last %>
+    <%- source.consolidated_values(window: 'w').each do |value, last| -%>
+    <%= value %><%= ',' unless last %>
     <%- end -%>
   FROM
     windows
