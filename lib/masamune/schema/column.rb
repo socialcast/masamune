@@ -4,6 +4,7 @@ module Masamune::Schema
   class Column
     attr_accessor :type
     attr_accessor :null
+    attr_accessor :strict
     attr_accessor :default
     attr_accessor :index
     attr_accessor :unique
@@ -13,10 +14,11 @@ module Masamune::Schema
     attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, parent: nil, debug: false)
+    def initialize(name: name, type: :integer, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, parent: nil, debug: false)
       @name          = name.to_sym
       @type          = type
       @null          = null
+      @strict        = strict
       @default       = default
       @index         = index
       @unique        = unique
@@ -142,7 +144,7 @@ module Masamune::Schema
 
     def sql_constraints
       [].tap do |constraints|
-        constraints << 'NOT NULL' unless null || primary_key || !default.nil? || (parent.type == :stage)
+        constraints << 'NOT NULL' unless null || primary_key || (parent.type == :stage) || !strict
         constraints << 'PRIMARY KEY' if primary_key
       end
     end

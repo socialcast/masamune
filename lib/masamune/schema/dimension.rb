@@ -229,9 +229,12 @@ module Masamune::Schema
         if column.type == :key_value
           column_now, column_was = column.dup, column.dup
           column_now.name, column_was.name = "#{column.name}_now", "#{column.name}_was"
+          column_now.strict, column_was.strict = false, false
           [column_now, column_was]
         else
-          column
+          column.dup.tap do |column_copy|
+            column_copy.strict = false unless column.primary_key || column.surrogate_key
+          end
         end
       end.flatten
     end
@@ -266,7 +269,7 @@ module Masamune::Schema
       when :two
         initialize_column! name: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true
         initialize_column! name: 'end_at', type: :timestamp, null: true, index: true
-        initialize_column! name: 'version', type: :integer, default: 1
+        initialize_column! name: 'version', type: :integer, default: 1, null: true
         initialize_column! name: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :ledger
         initialize_column! name: 'source_kind', type: :string, null: true
