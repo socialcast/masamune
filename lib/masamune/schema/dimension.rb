@@ -148,7 +148,7 @@ module Masamune::Schema
     end
 
     def consolidated_window(*extra)
-      columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra
+      (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra).uniq
     end
 
     def consolidated_columns
