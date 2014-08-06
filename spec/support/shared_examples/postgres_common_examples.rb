@@ -1,11 +1,11 @@
 shared_examples_for Masamune::Commands::PostgresCommon do
   describe '#command_env' do
-    subject do
+    subject(:env) do
       instance.command_env
     end
 
     context 'by default' do
-      it { is_expected.to eq({}) }
+      it { expect(env['PGOPTIONS']).to eq('--client-min-messages=warning') }
     end
 
     context 'with pgpass_file' do
@@ -15,7 +15,7 @@ shared_examples_for Masamune::Commands::PostgresCommon do
         allow(File).to receive(:readable?) { true }
       end
 
-      it { is_expected.to eq({'PGPASSFILE' => 'pgpass_file'}) }
+      it { expect(env['PGPASSFILE']).to eq('pgpass_file') }
     end
 
     context 'with pgpass_file that is not readable' do
@@ -25,7 +25,7 @@ shared_examples_for Masamune::Commands::PostgresCommon do
         allow(File).to receive(:readable?) { false }
       end
 
-      it { is_expected.to eq({}) }
+      it { expect(env).to_not include 'PGPASSFILE' }
     end
   end
 end

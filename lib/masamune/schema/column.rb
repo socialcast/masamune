@@ -1,25 +1,31 @@
+require 'json'
+
 module Masamune::Schema
   class Column
     attr_accessor :type
     attr_accessor :null
+    attr_accessor :strict
     attr_accessor :default
     attr_accessor :index
     attr_accessor :unique
     attr_accessor :primary_key
     attr_accessor :surrogate_key
     attr_accessor :reference
+    attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(name: name, type: :integer, null: false, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, debug: false)
+    def initialize(name: name, type: :integer, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, parent: nil, debug: false)
       @name          = name.to_sym
       @type          = type
       @null          = null
+      @strict        = strict
       @default       = default
       @index         = index
       @unique        = unique
       @primary_key   = primary_key
       @surrogate_key = surrogate_key
       @reference     = reference
+      @parent        = parent
       @debug         = debug
 
       initialize_default_attributes!
@@ -53,6 +59,10 @@ module Masamune::Schema
       end
     end
 
+    def id_name
+      @name.to_sym
+    end
+
     def sql_type(for_primary_key = false)
       case type
       when :integer
@@ -66,7 +76,9 @@ module Masamune::Schema
       when :boolean
         'BOOLEAN'
       when :key_value
-        'HSTORE'
+        parent.type == :stage ? 'JSON' : 'HSTORE'
+      when :json, :yaml
+        'JSON'
       end
     end
 
@@ -87,13 +99,14 @@ module Masamune::Schema
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
+      when :json, :yaml, :key_value
+        value.to_json
       else
         value
       end
     end
 
     def ruby_value(value)
-      return unless value
       return value if sql_function?(value)
       case type
       when :boolean
@@ -104,9 +117,11 @@ module Masamune::Schema
           true
         end
       when :integer
-        value.to_i
+        value.nil? ? nil : value.to_i
+      when :yaml
+        value.nil? ? {} : Hash[YAML.load(value).map { |key, value| [key, ruby_yaml_value(value)] }]
       else
-        value.to_s
+        value
       end
     end
 
@@ -129,7 +144,7 @@ module Masamune::Schema
 
     def sql_constraints
       [].tap do |constraints|
-        constraints << 'NOT NULL' unless null || primary_key || !default.nil?
+        constraints << 'NOT NULL' unless null || primary_key || (parent.type == :stage) || !strict
         constraints << 'PRIMARY KEY' if primary_key
       end
     end
@@ -146,6 +161,17 @@ module Masamune::Schema
 
     def initialize_default_attributes!
       self.default = 'uuid_generate_v4()' if primary_key && type == :uuid
+    end
+
+    def ruby_yaml_value(value)
+      case value
+      when true, '1'
+        true
+      when false, '0'
+        false
+      else
+        value
+      end
     end
   end
 end

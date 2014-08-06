@@ -4,11 +4,6 @@ require 'active_support/core_ext/string/strip'
 describe Masamune::Schema::Registry do
   let(:environment) { double }
   let(:instance) { described_class.new(environment) }
-  let(:filesystem) { Masamune::MockFilesystem.new }
-
-  before do
-    allow(instance).to receive(:filesystem) { filesystem }
-  end
 
   describe '#schema' do
     context 'when schema contains dimensions' do
@@ -110,24 +105,17 @@ describe Masamune::Schema::Registry do
 
     context 'when schema contains csv files' do
       before do
-        filesystem.touch!('users_1.csv', 'users_2.csv', 'users_3.csv', 'groups_1.csv')
         instance.schema do
-          file 'users', files: 'users_*.csv' do
+          file 'users' do
             column 'user_account_type.name', type: :string
           end
         end
       end
 
-      subject(:files) { instance.files[:users] }
-
-      it 'should expand :files glob argument' do
-        expect(files[0].file).to eq('users_1.csv')
-        expect(files[1].file).to eq('users_2.csv')
-        expect(files[2].file).to eq('users_3.csv')
-      end
+      subject(:file) { instance.files[:users] }
 
       it 'should expect dot notation column names to references' do
-        expect(files[0].columns).to include :'user_account_type.name'
+        expect(file.columns).to include :'user_account_type.name'
       end
     end
 

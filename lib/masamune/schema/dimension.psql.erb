@@ -22,15 +22,19 @@ SELECT <%= row.insert_values.join(', ') %>
 WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
 <%- end -%>
 
-<%- dimension.index_columns.each do |column_names, unique| -%>
-CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= dimension.table_name %>_<%= column_names.join('_') %>_index ON <%= dimension.table_name %> (<%= column_names.join(', ') %>);
+<%- dimension.index_columns.each do |column_names, unique| %>
+<%- index_name = "#{dimension.table_name}_#{column_names.join('_')}_index" -%>
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= index_name %>') THEN
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= dimension.table_name %> (<%= column_names.join(', ') %>);
+END IF; END $$;
 <%- end -%>
 
 <% dimension.aliased_rows.each do |row| %>
-<% if dimension.surrogate_key %>
-CREATE OR REPLACE FUNCTION <%= row.surrogate_name %>
-RETURNS <%= dimension.surrogate_key.sql_type %> IMMUTABLE AS $$
-  SELECT <%= row.values[dimension.surrogate_key.name] %>;
+<%- row.surrogate_keys.each do |column| -%>
+CREATE OR REPLACE FUNCTION <%= row.name(column) %>
+RETURNS <%= column.sql_type %> IMMUTABLE AS $$
+  SELECT <%= row.values[column.name] %>;
 $$ LANGUAGE SQL;
 <%- end -%>
 

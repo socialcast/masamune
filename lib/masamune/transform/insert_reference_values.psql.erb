@@ -1,0 +1,18 @@
+<%- target.insert_references.each do |_, reference| -%>
+<%-
+  reference_stage = reference.stage_table
+  shared_columns = reference_stage.shared_columns(source)
+%>
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= reference_stage.table_name %> (LIKE <%= reference.table_name %> INCLUDING ALL);
+
+INSERT INTO <%= reference_stage.table_name %>(<%= shared_columns.map { |source, target| target.name}.join(', ') %>)
+SELECT DISTINCT
+  <%= shared_columns.map { |source, target| source.name}.join(', ') %>
+FROM
+  <%= source.table_name %>
+WHERE
+  <%= shared_columns.map { |source, target| "#{source.name} IS NOT NULL"}.join(' AND ') %>
+;
+
+<%= render 'bulk_upsert.psql.erb', target: reference, source: reference_stage %>
+<%- end -%>

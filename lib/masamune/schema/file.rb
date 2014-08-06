@@ -1,20 +1,21 @@
 module Masamune::Schema
   class File
+    extend Forwardable
+
     attr_accessor :name
     attr_accessor :format
     attr_accessor :headers
-    attr_accessor :file
-    attr_accessor :buffer
     attr_accessor :columns
     attr_accessor :debug
 
-    def initialize(name: nil, format: :csv, headers: false, file: nil, buffer: nil, columns: {}, debug: false)
+    def_delegators :@io, :flush, :path
+
+    def initialize(name: nil, format: :csv, headers: false, columns: {}, debug: false)
       @name    = name
       @format  = format
       @headers = headers
-      @file    = file
-      @buffer  = buffer
       @debug   = debug
+      @io      = ::File.open(::File::NULL, "w")
 
       @columns  = {}
       columns.each do |column|
@@ -30,14 +31,13 @@ module Masamune::Schema
       end
     end
 
-    def buffer
-      return @buffer if @buffer
-      @buffer ||= ::File.open(file) if file
-      @buffer ||= StringIO.new
+    def bind(input)
+      @io = input
+      dup
     end
 
     def each(&block)
-      ::CSV.parse(buffer, headers: true) do |data|
+      ::CSV.parse(@io, headers: true) do |data|
         row = Masamune::Schema::Row.new(reference: self, values: data.to_hash, strict: false)
         yield row.to_hash
       end
@@ -48,10 +48,8 @@ module Masamune::Schema
       append_with_format(Masamune::Schema::Row.new(reference: self, values: data))
     end
 
-    # TODO create temporary file if buffer is not a file
-    def path
-      @buffer.flush
-      @buffer.path
+    def to_s
+      [path, ::File.read(path)].join("\n")
     end
 
     def as_table
@@ -61,8 +59,9 @@ module Masamune::Schema
     private
 
     def append_with_format(data)
+      @io ||= Tempfile.new('masamune')
       @total_lines += 1
-      buffer << data.to_csv
+      @io << data.to_csv
     end
   end
 end

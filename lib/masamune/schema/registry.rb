@@ -9,7 +9,7 @@ module Masamune::Schema
     def initialize(environment)
       self.environment = environment
       @dimensions = {}
-      @files = Hash.new { |h,k| h[k] = [] }
+      @files = {}
       @maps = {}
       @options = Hash.new { |h,k| h[k] = [] }
       @extra = []
@@ -42,14 +42,10 @@ module Masamune::Schema
       @options[:rows] << Masamune::Schema::Row.new(attributes)
     end
 
-    def file(name, options, &block)
+    def file(name, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      files = options.delete(:files)
-      filesystem.glob(files) do |file|
-        # TODO get local copy of file if remote
-        self.files[name.to_sym] << Masamune::Schema::File.new(options.merge(@options).merge(name: name, file: file))
-      end
+      self.files[name.to_sym] = Masamune::Schema::File.new(options.merge(@options).merge(name: name))
     ensure
       @options = prev_options
     end

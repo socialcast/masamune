@@ -37,6 +37,10 @@ module Masamune
         instance = Template.new(File.dirname(template))
         instance.render(template, parameters).gsub(/^\n+/, "\n").strip + "\n"
       end
+
+      def combine(*a)
+        a.join("\n").gsub(/^\n+/, "\n").strip + "\n"
+      end
     end
   end
 end

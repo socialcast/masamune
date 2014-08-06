@@ -4,19 +4,22 @@ require 'active_support/core_ext/string/strip'
 describe Masamune::Schema::Map do
   let(:source_data) do
     <<-EOS.strip_heredoc
-      id,tenant_id,junk_id,deleted_at,admin
-      1,30,X,,0
-      2,40,Y,2014-02-26 18:15:51 UTC,1
+      id,tenant_id,junk_id,deleted_at,admin,preferences
+      1,30,X,,0,,
+      2,40,Y,2014-02-26 18:15:51 UTC,1,"---
+      :enabled: true
+      "
     EOS
   end
 
   let(:source) do
-    Masamune::Schema::File.new name: 'source_user', buffer: StringIO.new(source_data),
+    Masamune::Schema::File.new name: 'source_user',
       format: :csv,
       columns: [
         Masamune::Schema::Column.new(name: 'id', type: :integer),
         Masamune::Schema::Column.new(name: 'tenant_id', type: :integer),
         Masamune::Schema::Column.new(name: 'admin', type: :boolean),
+        Masamune::Schema::Column.new(name: 'preferences', type: :yaml),
         Masamune::Schema::Column.new(name: 'deleted_at', type: :timestamp)
       ]
   end
@@ -35,7 +38,9 @@ describe Masamune::Schema::Map do
         Masamune::Schema::Column.new(name: 'cluster_id', type: :integer),
         Masamune::Schema::Column.new(name: 'user_id', type: :integer),
         Masamune::Schema::Column.new(name: 'tenant_id', type: :integer),
-        Masamune::Schema::Column.new(name: 'admin', type: :boolean)
+        Masamune::Schema::Column.new(name: 'preferences', type: :key_value),
+        Masamune::Schema::Column.new(name: 'admin', type: :boolean),
+        Masamune::Schema::Column.new(name: 'source', type: :string)
       ]
   end
 
@@ -48,6 +53,8 @@ describe Masamune::Schema::Map do
           'user_id'                 => 'id',
           'user_account_state.name' => ->(row) { row[:deleted_at] ? 'deleted' : 'active' },
           'admin'                   => ->(row) { row[:admin] },
+          'preferences'             => 'preferences',
+          'source'                  => 'users_file',
           'cluster_id'              => 100 })
     end
 
@@ -57,17 +64,20 @@ describe Masamune::Schema::Map do
 
     let(:target_data) do
       <<-EOS.strip_heredoc
-        tenant_id,user_id,user_account_state_type_name,admin,cluster_id
-        30,1,active,FALSE,100
-        40,2,deleted,TRUE,100
+        tenant_id,user_id,user_account_state_type_name,admin,preferences,source,cluster_id
+        30,1,active,FALSE,{},users_file,100
+        40,2,deleted,TRUE,"{""enabled"":true}",users_file,100
       EOS
     end
 
+    let(:input) { StringIO.new(source_data) }
+    let(:output) { StringIO.new }
+
     before do
-      map.apply(source, target)
+      map.apply(source.bind(input), target.bind(output))
     end
 
-    subject { target.buffer.string }
+    subject { output.string }
 
     it 'should match target data' do
       is_expected.to eq(target_data)

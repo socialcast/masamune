@@ -20,18 +20,23 @@ module Masamune::Schema
       target.headers = headers
       source.each do |input|
         output = {}
-        fields.each do |field, function|
-          case function
+        fields.each do |field, value|
+          case value
           when String, Symbol
-            output[field] = input[function]
+            if input.key?(value)
+              output[field] = input[value]
+            else
+              output[field] = value
+            end
           when Proc
-            output[field] = function.call(input)
+            output[field] = value.call(input)
           else
-            output[field] = function
+            output[field] = value
           end
         end
         target.append output
       end
+      target.flush
       target
     end
   end
