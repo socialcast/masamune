@@ -81,7 +81,7 @@ module Masamune::Schema
 
     def initialize_foreign_key_columns!
       references.map do |_, dimension|
-        initialize_column! name: dimension.primary_key.name, type: dimension.primary_key.type, reference: dimension, default: dimension.default_foreign_key_row, index: true
+        initialize_column! name: dimension.foreign_key_name, type: dimension.primary_key.type, reference: dimension, default: dimension.default_foreign_key_row, index: true
       end
     end
 
