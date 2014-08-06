@@ -4,7 +4,7 @@ require 'active_support/core_ext/string/strip'
 describe Masamune::Schema::Dimension do
   subject { dimension.as_psql }
 
-  context 'with type one dimension' do
+  context 'for type :one' do
     let(:dimension) do
       described_class.new name: 'user', type: :one,
         columns: [
@@ -25,7 +25,8 @@ describe Masamune::Schema::Dimension do
       EOS
     end
   end
-  context 'with index columns' do
+
+  context 'for type :two with index columns' do
     let(:dimension) do
       described_class.new name: 'user',
         columns: [
@@ -310,6 +311,31 @@ describe Masamune::Schema::Dimension do
       it 'should reference mini_dimension' do
         expect(file.columns[:user_account_state_type_name].reference).to eq(mini_dimension)
       end
+    end
+  end
+
+  context 'with labeled referenced dimension' do
+    let(:mini_dimension) do
+      described_class.new name: 'user_account_state', type: :mini, label: 'actor',
+        columns: [
+          Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(name: 'description', type: :string)
+        ]
+    end
+
+    let(:dimension) do
+      described_class.new name: 'user', type: :one, references: [mini_dimension]
+    end
+
+    it 'should eq dimension template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_dimension
+        (
+          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          actor_user_account_state_type_id INTEGER NOT NULL REFERENCES user_account_state_type(id),
+          last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      EOS
     end
   end
 

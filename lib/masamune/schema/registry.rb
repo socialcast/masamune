@@ -34,8 +34,10 @@ module Masamune::Schema
       @options[:columns] << Masamune::Schema::Column.new(options.merge(name: name))
     end
 
-    def references(name)
-      @options[:references] << dimensions[name.to_sym]
+    def references(name, options = {})
+      @options[:references] << dimensions[name.to_sym].dup.tap do |dimension|
+        dimension.label = options[:label]
+      end
     end
 
     def row(options)

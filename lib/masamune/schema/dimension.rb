@@ -4,6 +4,7 @@ module Masamune::Schema
 
     attr_accessor :name
     attr_accessor :type
+    attr_accessor :label
     attr_accessor :ledger
     attr_accessor :references
     attr_accessor :columns
@@ -12,9 +13,10 @@ module Masamune::Schema
     attr_accessor :ledger_table
     attr_accessor :debug
 
-    def initialize(name: name, type: :two, ledger: false, references: [], columns: [], rows: [], insert: false, debug: false)
+    def initialize(name: name, type: :two, label: nil, ledger: false, references: [], columns: [], rows: [], insert: false, debug: false)
       @name   = name.to_sym
       @type   = type
+      @label  = label
       @ledger = ledger
       @rows   = rows
       @insert = insert
@@ -68,7 +70,7 @@ module Masamune::Schema
     end
 
     def foreign_key_name
-      "#{table_name}_#{primary_key.name}"
+      [label, table_name, primary_key.name].compact.join('_')
     end
 
     def defined_columns
@@ -257,9 +259,9 @@ module Masamune::Schema
 
     def initialize_foreign_key_columns!
       case type
-      when :two
+      when :one, :two
         references.map do |_, dimension|
-          initialize_column! name: dimension.primary_key.name, type: dimension.primary_key.type, reference: dimension, default: dimension.default_foreign_key_row
+          initialize_column! name: dimension.foreign_key_name, type: dimension.primary_key.type, reference: dimension, default: dimension.default_foreign_key_row
         end
       end
     end
@@ -290,6 +292,8 @@ module Masamune::Schema
     def reserved_column_names
       @reserved_column_names ||=
       case type
+      when :one
+        [:last_modified_at]
       when :two
         [:parent_uuid, :record_uuid, :start_at, :end_at, :version, :last_modified_at]
       when :ledger
