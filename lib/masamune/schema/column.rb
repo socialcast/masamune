@@ -10,23 +10,25 @@ module Masamune::Schema
     attr_accessor :unique
     attr_accessor :primary_key
     attr_accessor :surrogate_key
+    attr_accessor :degenerate_key
     attr_accessor :reference
     attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(name: name, type: :integer, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, reference: nil, parent: nil, debug: false)
-      @name          = name.to_sym
-      @type          = type
-      @null          = null
-      @strict        = strict
-      @default       = default
-      @index         = index
-      @unique        = unique
-      @primary_key   = primary_key
-      @surrogate_key = surrogate_key
-      @reference     = reference
-      @parent        = parent
-      @debug         = debug
+    def initialize(name: name, type: :integer, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
+      @name           = name.to_sym
+      @type           = type
+      @null           = null
+      @strict         = strict
+      @default        = default
+      @index          = index
+      @unique         = unique
+      @primary_key    = primary_key
+      @surrogate_key  = surrogate_key
+      @degenerate_key = degenerate_key
+      @reference      = reference
+      @parent         = parent
+      @debug          = debug
 
       initialize_default_attributes!
     end
