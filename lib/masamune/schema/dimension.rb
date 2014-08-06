@@ -50,7 +50,7 @@ module Masamune::Schema
         "#{name}_type"
       when :stage
         "#{name}_stage"
-      when :two
+      when :one, :two
         "#{name}_dimension"
       when :ledger
         "#{name}_dimension_ledger"
@@ -184,7 +184,7 @@ module Masamune::Schema
     def stage_table
       self.dup.tap do |dimension|
         case type
-        when :mini, :two
+        when :mini, :one, :two
           dimension.type = :stage
         when :ledger
           dimension.type = :ledger_stage
@@ -250,7 +250,7 @@ module Masamune::Schema
       case type
       when :mini
         initialize_column! name: 'id', type: :integer, primary_key: true
-      when :two, :ledger
+      when :one, :two, :ledger
         initialize_column! name: 'uuid', type: :uuid, primary_key: true
       end
     end
@@ -266,6 +266,8 @@ module Masamune::Schema
 
     def initialize_dimension_columns!
       case type
+      when :one
+        initialize_column! name: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :two
         initialize_column! name: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true
         initialize_column! name: 'end_at', type: :timestamp, null: true, index: true
