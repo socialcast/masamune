@@ -103,6 +103,33 @@ describe Masamune::Schema::Registry do
       it { is_expected.to_not include :id }
     end
 
+    context 'when schema contains facts' do
+      before do
+        instance.schema do
+          dimension 'dimension_one' do
+            column 'column_one'
+            column 'column_two'
+          end
+
+          fact 'fact_one' do
+            references :dimension_one
+            measure 'measure_one'
+          end
+
+          fact 'fact_two' do
+            references :dimension_one
+            measure 'measure_two'
+          end
+        end
+      end
+
+      let(:fact_one) { instance.facts[:fact_one] }
+      let(:fact_two) { instance.facts[:fact_two] }
+
+      it { expect(fact_one.references).to include :dimension_one}
+      it { expect(fact_one.measures).to include :measure_one }
+    end
+
     context 'when schema contains csv files' do
       before do
         instance.schema do

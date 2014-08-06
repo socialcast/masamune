@@ -3,12 +3,14 @@ module Masamune::Schema
     include Masamune::HasEnvironment
 
     attr_accessor :dimensions
+    attr_accessor :facts
     attr_accessor :files
     attr_accessor :maps
 
     def initialize(environment)
       self.environment = environment
       @dimensions = {}
+      @facts = {}
       @files = {}
       @maps = {}
       @options = Hash.new { |h,k| h[k] = [] }
@@ -40,6 +42,18 @@ module Masamune::Schema
       attributes = options.delete(:attributes) || {}
       attributes[:values] = options
       @options[:rows] << Masamune::Schema::Row.new(attributes)
+    end
+
+    def fact(name, options = {}, &block)
+      prev_options = @options.dup
+      yield if block_given?
+      self.facts[name.to_sym] ||= Masamune::Schema::Fact.new(options.merge(@options).merge(name: name))
+    ensure
+      @options = prev_options
+    end
+
+    def measure(name, options = {}, &block)
+      @options[:columns] << Masamune::Schema::Column.new(options.merge(name: name))
     end
 
     def file(name, options = {}, &block)
@@ -79,6 +93,10 @@ module Masamune::Schema
       dimensions.each do |name, dimension|
         logger.debug("#{name}\n" + dimension.as_psql) if dimension.debug
         output << dimension.as_psql
+      end
+      facts.each do |name, fact|
+        logger.debug("#{name}\n" + fact.as_psql) if fact.debug
+        output << fact.as_psql
       end
       @extra.each do |extra|
         output << extra

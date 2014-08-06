@@ -16,18 +16,18 @@ CREATE TABLE IF NOT EXISTS <%= dimension.table_name %>
   <%- end -%>
 );
 
-<% dimension.insert_rows.each do |row| %>
-INSERT INTO <%= dimension.table_name %> (<%= row.insert_columns.join(', ') %>)
-SELECT <%= row.insert_values.join(', ') %>
-WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
-<%- end -%>
-
 <%- dimension.index_columns.each do |column_names, unique| %>
 <%- index_name = "#{dimension.table_name}_#{column_names.join('_')}_index" -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= index_name %>') THEN
 CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= dimension.table_name %> (<%= column_names.join(', ') %>);
 END IF; END $$;
+<%- end -%>
+
+<% dimension.insert_rows.each do |row| %>
+INSERT INTO <%= dimension.table_name %> (<%= row.insert_columns.join(', ') %>)
+SELECT <%= row.insert_values.join(', ') %>
+WHERE NOT EXISTS (SELECT 1 FROM <%= dimension.table_name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
 <%- end -%>
 
 <% dimension.aliased_rows.each do |row| %>
