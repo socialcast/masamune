@@ -3,6 +3,7 @@ require 'json'
 module Masamune::Schema
   class Column
     attr_accessor :type
+    attr_accessor :sub_type
     attr_accessor :null
     attr_accessor :strict
     attr_accessor :default
@@ -15,20 +16,21 @@ module Masamune::Schema
     attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(name: name, type: :integer, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
-      @name           = name.to_sym
-      @type           = type
-      @null           = null
-      @strict         = strict
-      @default        = default
-      @index          = index
-      @unique         = unique
-      @primary_key    = primary_key
-      @surrogate_key  = surrogate_key
+    def initialize(name: name, type: :integer, sub_type: nil, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
+      @name          = name.to_sym
+      @type          = type
+      @sub_type      = sub_type
+      @null          = null
+      @strict        = strict
+      @default       = default
+      @index         = index
+      @unique        = unique
+      @primary_key   = primary_key
+      @surrogate_key = surrogate_key
       @degenerate_key = degenerate_key
-      @reference      = reference
-      @parent         = parent
-      @debug          = debug
+      @reference     = reference
+      @parent        = parent
+      @debug         = debug
 
       initialize_default_attributes!
     end
@@ -121,7 +123,7 @@ module Masamune::Schema
       when :integer
         value.nil? ? nil : value.to_i
       when :yaml
-        value.nil? ? {} : Hash[YAML.load(value).map { |key, value| [key, ruby_yaml_value(value)] }]
+        value.nil? ? {} : ruby_key_value(YAML.load(value))
       else
         value
       end
@@ -165,14 +167,21 @@ module Masamune::Schema
       self.default = 'uuid_generate_v4()' if primary_key && type == :uuid
     end
 
-    def ruby_yaml_value(value)
-      case value
-      when true, '1'
-        true
-      when false, '0'
-        false
+    def ruby_key_value(hash)
+      case sub_type
+      when :boolean
+        Hash[hash.map { |key, value| ruby_boolean_key_value(key, value) }]
       else
-        value
+        hash
+      end
+    end
+
+    def ruby_boolean_key_value(key, value)
+      case value
+      when true, '1', 1
+        [key, true]
+      when false, '0', 0
+        [key, false]
       end
     end
   end
