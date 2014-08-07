@@ -170,7 +170,7 @@ module Masamune::Schema
     def ruby_key_value(hash)
       case sub_type
       when :boolean
-        Hash[hash.map { |key, value| ruby_boolean_key_value(key, value) }]
+        Hash[hash.map { |key, value| ruby_boolean_key_value(key, value) }.compact]
       else
         hash
       end
