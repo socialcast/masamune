@@ -14,6 +14,8 @@ module Masamune::Transform
     end
 
     def stage_dimension_as_psql
+      # FIXME move map.apply out of transformation
+      FileUtils.chmod(0777 - File.umask, output.path) if File.exists?(output.path)
       Masamune::Template.render_to_string(stage_dimension_template, source: output.as_table, source_file: output.path)
     end
 
