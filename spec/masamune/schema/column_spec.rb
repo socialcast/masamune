@@ -4,8 +4,8 @@ describe Masamune::Schema::Column do
   describe '#ruby_value' do
     subject(:result) { column.ruby_value(value) }
 
-    context 'with :yaml type' do
-      let(:column) { described_class.new(name: 'yaml', type: :yaml) }
+    context 'with type :yaml and sub_type :boolean' do
+      let(:column) { described_class.new(name: 'yaml', type: :yaml, sub_type: :boolean) }
       let(:value) do
         {
           'true'         => true,
@@ -23,9 +23,9 @@ describe Masamune::Schema::Column do
         expect(result['false']).to eq(false)
         expect(result['one']).to eq(true)
         expect(result['zero']).to eq(false)
-        expect(result['string']).to eq('string')
-        expect(result['one_integer']).to eq(1)
-        expect(result['zero_integer']).to eq(0)
+        expect(result['one_integer']).to eq(true)
+        expect(result['zero_integer']).to eq(false)
+        expect(result.key?('string')).to eq(false)
       end
     end
   end
