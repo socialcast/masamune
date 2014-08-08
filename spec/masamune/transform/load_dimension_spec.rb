@@ -48,7 +48,7 @@ describe Masamune::Transform::LoadDimension do
   end
 
   let(:user_dimension) do
-    Masamune::Schema::Dimension.new name: 'user', ledger: true,
+    Masamune::Schema::Dimension.new name: 'user', type: :four,
       references: [department_dimension, user_account_state_type],
       columns: [
         Masamune::Schema::Column.new(name: 'tenant_id', index: true, surrogate_key: true),
@@ -183,9 +183,9 @@ describe Masamune::Transform::LoadDimension do
 
     it 'should eq render template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS department_stage (LIKE department_type INCLUDING ALL);
+        CREATE TEMPORARY TABLE IF NOT EXISTS department_type_stage (LIKE department_type INCLUDING ALL);
 
-        INSERT INTO department_stage(tenant_id, department_id)
+        INSERT INTO department_type_stage(tenant_id, department_id)
         SELECT DISTINCT
           tenant_id, department_type_department_id
         FROM
@@ -200,15 +200,15 @@ describe Masamune::Transform::LoadDimension do
         INSERT INTO
           department_type (tenant_id,department_id)
         SELECT
-          department_stage.tenant_id,
-          department_stage.department_id
+          department_type_stage.tenant_id,
+          department_type_stage.department_id
         FROM
-          department_stage
+          department_type_stage
         LEFT OUTER JOIN
           department_type
         ON
-          department_type.tenant_id = department_stage.tenant_id AND
-          department_type.department_id = department_stage.department_id
+          department_type.tenant_id = department_type_stage.tenant_id AND
+          department_type.department_id = department_type_stage.department_id
         WHERE
           department_type.tenant_id IS NULL AND
           department_type.department_id IS NULL

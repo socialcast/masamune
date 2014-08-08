@@ -9,8 +9,8 @@ describe Masamune::Schema::Registry do
     context 'when schema contains dimensions' do
       before do
         instance.schema do
-          dimension 'foo'
-          dimension 'bar'
+          dimension 'foo', type: :two
+          dimension 'bar', type: :two
         end
       end
 
@@ -23,12 +23,12 @@ describe Masamune::Schema::Registry do
     context 'when schema contains columns' do
       before do
         instance.schema do
-          dimension 'table_one' do
+          dimension 'table_one', type: :two do
             column 'column_one'
             column 'column_two'
           end
 
-          dimension 'table_two' do
+          dimension 'table_two', type: :two do
             column 'column_three'
             column 'column_four'
           end
@@ -51,7 +51,7 @@ describe Masamune::Schema::Registry do
     context 'when schema contains columns and rows' do
       before do
         instance.schema do
-          dimension 'table_one' do
+          dimension 'table_one', type: :two do
             column 'column_one', type: :integer
             column 'column_two', type: :string
             row column_one: 1, column_two: 'a'
@@ -69,9 +69,9 @@ describe Masamune::Schema::Registry do
     context 'when schema contains references' do
       before do
         instance.schema do
-          dimension 'foo'
-          dimension 'bar'
-          dimension 'baz' do
+          dimension 'foo', type: :one
+          dimension 'bar', type: :one
+          dimension 'baz', type: :two do
             references :foo
             references :bar, label: :quux
           end
@@ -108,7 +108,7 @@ describe Masamune::Schema::Registry do
     context 'when schema contains facts' do
       before do
         instance.schema do
-          dimension 'dimension_one' do
+          dimension 'dimension_one', type: :two do
             column 'column_one'
             column 'column_two'
           end

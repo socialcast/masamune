@@ -4,7 +4,7 @@ module Masamune::Transform
 
     def initialize(file, source, target, map)
       @source = source.bind(file)
-      @target = target.ledger ? target.ledger_table : target
+      @target = target.type == :four ? target.ledger_table : target
       @map    = map
     end
 
