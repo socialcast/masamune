@@ -135,12 +135,9 @@ module Masamune::Schema
       columns.values.select { | column| column.reference }
     end
 
-    # FIXME
-    # TODO optionally enable source_uuid
     def upsert_unique_columns
-      columns.values.select { |column| [:source_kind, :start_at].include?(column.id) || column.surrogate_key }
+      columns.values.select { |column| column.surrogate_key }
     end
-    method_with_last_element :upsert_unique_columns
 
     def default_foreign_key_name
       rows.detect { |row| row.default }.try(:name)

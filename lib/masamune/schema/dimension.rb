@@ -18,6 +18,12 @@ module Masamune::Schema
       end
     end
 
+    # TODO optionally enable source_uuid
+    def upsert_unique_columns
+      columns.values.select { |column| [:source_kind, :start_at].include?(column.id) || column.surrogate_key }
+    end
+    method_with_last_element :upsert_unique_columns
+
     def consolidated_window(*extra)
       (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra).uniq
     end
