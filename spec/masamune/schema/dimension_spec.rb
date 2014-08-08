@@ -6,10 +6,10 @@ describe Masamune::Schema::Dimension do
 
   context 'for type :one' do
     let(:dimension) do
-      described_class.new name: 'user', type: :one,
+      described_class.new id: 'user', type: :one,
         columns: [
-          Masamune::Schema::Column.new(name: 'tenant_id'),
-          Masamune::Schema::Column.new(name: 'user_id')
+          Masamune::Schema::Column.new(id: 'tenant_id'),
+          Masamune::Schema::Column.new(id: 'user_id')
         ]
     end
 
@@ -28,10 +28,10 @@ describe Masamune::Schema::Dimension do
 
   context 'for type :two' do
     let(:dimension) do
-      described_class.new name: 'user', type: :two,
+      described_class.new id: 'user', type: :two,
         columns: [
-          Masamune::Schema::Column.new(name: 'tenant_id', index: true),
-          Masamune::Schema::Column.new(name: 'user_id', index: true)
+          Masamune::Schema::Column.new(id: 'tenant_id', index: true),
+          Masamune::Schema::Column.new(id: 'user_id', index: true)
         ]
     end
 
@@ -73,10 +73,10 @@ describe Masamune::Schema::Dimension do
 
   context 'with invalid values' do
     let(:dimension) do
-      described_class.new name: 'user_account_state', type: :mini,
+      described_class.new id: 'user_account_state', type: :mini,
         columns: [
-          Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(name: 'description', type: :string)
+          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(id: 'description', type: :string)
         ],
         rows: [
           Masamune::Schema::Row.new(values: {
@@ -92,10 +92,10 @@ describe Masamune::Schema::Dimension do
 
   context 'for type :four' do
     let(:mini_dimension) do
-      described_class.new name: 'user_account_state', type: :mini,
+      described_class.new id: 'user_account_state', type: :mini,
         columns: [
-          Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(name: 'description', type: :string)
+          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(id: 'description', type: :string)
         ],
         rows: [
           Masamune::Schema::Row.new(values: {
@@ -106,11 +106,11 @@ describe Masamune::Schema::Dimension do
     end
 
     let(:dimension) do
-      described_class.new name: 'user', type: :four, references: [mini_dimension],
+      described_class.new id: 'user', type: :four, references: [mini_dimension],
         columns: [
-          Masamune::Schema::Column.new(name: 'tenant_id', index: true, surrogate_key: true),
-          Masamune::Schema::Column.new(name: 'user_id', index: true, surrogate_key: true),
-          Masamune::Schema::Column.new(name: 'preferences', type: :key_value, null: true)
+          Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
+          Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true),
+          Masamune::Schema::Column.new(id: 'preferences', type: :key_value, null: true)
         ]
     end
 

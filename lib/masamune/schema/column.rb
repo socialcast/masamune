@@ -2,6 +2,7 @@ require 'json'
 
 module Masamune::Schema
   class Column
+    attr_accessor :id
     attr_accessor :type
     attr_accessor :sub_type
     attr_accessor :null
@@ -16,55 +17,47 @@ module Masamune::Schema
     attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(name: name, type: :integer, sub_type: nil, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
-      @name          = name.to_sym
-      @type          = type
-      @sub_type      = sub_type
-      @null          = null
-      @strict        = strict
-      @default       = default
-      @index         = index
-      @unique        = unique
-      @primary_key   = primary_key
-      @surrogate_key = surrogate_key
+    def initialize(id: id, type: :integer, sub_type: nil, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
+      self.id         = id
+      @type           = type
+      @sub_type       = sub_type
+      @null           = null
+      @strict         = strict
+      @default        = default
+      @index          = index
+      @unique         = unique
+      @primary_key    = primary_key
+      @surrogate_key  = surrogate_key
       @degenerate_key = degenerate_key
-      @reference     = reference
-      @parent        = parent
-      @debug         = debug
+      @reference      = reference
+      @parent         = parent
+      @debug          = debug
 
       initialize_default_attributes!
     end
 
-    def as_psql
-      [name, sql_type(primary_key), *sql_constraints, sql_reference, sql_default].compact.join(' ')
-    end
-
-    def name=(name)
-      @name = name.to_sym
+    def id=(id)
+      @id = id.to_sym
     end
 
     def name
-      if reference && reference.columns.include?(@name)
-        "#{reference.table_name}_#{@name}".to_sym
+      if reference && reference.columns.include?(@id)
+        "#{reference.name}_#{@id}".to_sym
       else
-        @name
+        @id
       end
     end
 
     def foreign_key_name
-      "#{reference.table_name}.#{@name}".to_sym if reference
+      "#{reference.name}.#{@id}".to_sym if reference
     end
 
     def compact_name
       if reference
-        "#{reference.name}.#{@name}".to_sym
+        "#{reference.id}.#{@id}".to_sym
       else
-        @name
+        @id
       end
-    end
-
-    def id_name
-      @name.to_sym
     end
 
     def sql_type(for_primary_key = false)
@@ -133,6 +126,10 @@ module Masamune::Schema
       value =~ /\(\)\Z/
     end
 
+    def as_psql
+      [name, sql_type(primary_key), *sql_constraints, sql_reference, sql_default].compact.join(' ')
+    end
+
     class << self
       def dereference_column_name(name)
         if name =~ /\./
@@ -148,7 +145,7 @@ module Masamune::Schema
 
     def sql_constraints
       [].tap do |constraints|
-        constraints << 'NOT NULL' unless null || primary_key || (parent.type == :stage) || !strict
+        constraints << 'NOT NULL' unless null || primary_key || !strict || parent.temporary?
         constraints << 'PRIMARY KEY' if primary_key
       end
     end
@@ -158,8 +155,9 @@ module Masamune::Schema
     end
 
     def sql_reference
+      return if parent.temporary?
       if reference && reference.primary_key.type == type
-        "REFERENCES #{reference.table_name}(#{reference.primary_key.name})"
+        "REFERENCES #{reference.name}(#{reference.primary_key.name})"
       end
     end
 

@@ -6,10 +6,10 @@ describe Masamune::Schema::Table do
 
   context 'with columns' do
     let(:table) do
-      described_class.new name: 'user',
+      described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(name: 'tenant_id'),
-          Masamune::Schema::Column.new(name: 'user_id')
+          Masamune::Schema::Column.new(id: 'tenant_id'),
+          Masamune::Schema::Column.new(id: 'user_id')
         ]
     end
 
@@ -27,10 +27,10 @@ describe Masamune::Schema::Table do
 
   context 'with index columns' do
     let(:table) do
-      described_class.new name: 'user',
+      described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(name: 'tenant_id', index: true),
-          Masamune::Schema::Column.new(name: 'user_id', index: true)
+          Masamune::Schema::Column.new(id: 'tenant_id', index: true),
+          Masamune::Schema::Column.new(id: 'user_id', index: true)
         ]
     end
 
@@ -58,10 +58,10 @@ describe Masamune::Schema::Table do
 
   context 'with primary_key columns override' do
     let(:table) do
-      described_class.new name: 'user',
+      described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(name: 'identifier', type: :uuid, primary_key: true),
-          Masamune::Schema::Column.new(name: 'name', type: :string)
+          Masamune::Schema::Column.new(id: 'identifier', type: :uuid, primary_key: true),
+          Masamune::Schema::Column.new(id: 'name', type: :string)
         ]
     end
 
@@ -78,10 +78,10 @@ describe Masamune::Schema::Table do
 
   context 'with invalid values' do
     let(:table) do
-      described_class.new name: 'user',
+      described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(name: 'description', type: :string)
+          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(id: 'description', type: :string)
         ],
         rows: [
           Masamune::Schema::Row.new(values: {
@@ -97,10 +97,10 @@ describe Masamune::Schema::Table do
 
   context 'with partial values' do
     let(:table) do
-      described_class.new name: 'user',
+      described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(name: 'name', type: :string),
-          Masamune::Schema::Column.new(name: 'description', type: :string)
+          Masamune::Schema::Column.new(id: 'name', type: :string),
+          Masamune::Schema::Column.new(id: 'description', type: :string)
         ],
         rows: [
           Masamune::Schema::Row.new(values: {
@@ -135,10 +135,10 @@ describe Masamune::Schema::Table do
 
   context 'with shared unique index' do
     let(:table) do
-      described_class.new name: 'user',
+      described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(name: 'tenant_id', type: :integer, unique: true, index: 'tenant_and_user'),
-          Masamune::Schema::Column.new(name: 'user_id', type: :integer, unique: true, index: 'tenant_and_user')
+          Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, unique: true, index: 'tenant_and_user'),
+          Masamune::Schema::Column.new(id: 'user_id', type: :integer, unique: true, index: 'tenant_and_user')
         ]
     end
 
@@ -162,11 +162,11 @@ describe Masamune::Schema::Table do
 
   context 'with multiple default and named rows' do
     let(:table) do
-      described_class.new name: 'user',
+      described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(name: 'uuid', type: :uuid, primary_key: true),
-          Masamune::Schema::Column.new(name: 'tenant_id', type: :integer, surrogate_key: true),
-          Masamune::Schema::Column.new(name: 'user_id', type: :integer, surrogate_key: true)
+          Masamune::Schema::Column.new(id: 'uuid', type: :uuid, primary_key: true),
+          Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, surrogate_key: true),
+          Masamune::Schema::Column.new(id: 'user_id', type: :integer, surrogate_key: true)
         ],
         rows: [
           Masamune::Schema::Row.new(values: {
@@ -176,7 +176,7 @@ describe Masamune::Schema::Table do
           Masamune::Schema::Row.new(values: {
             tenant_id: 'default_tenant_id()',
             user_id: -2,
-          }, name: 'unknown')
+          }, id: 'unknown')
         ]
     end
 
@@ -222,10 +222,10 @@ describe Masamune::Schema::Table do
 
   context 'with referenced tables' do
     let(:mini_table) do
-      described_class.new name: 'user_account_state',
+      described_class.new id: 'user_account_state',
         columns: [
-          Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(name: 'description', type: :string)
+          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(id: 'description', type: :string)
         ],
         rows: [
           Masamune::Schema::Row.new(values: {
@@ -244,9 +244,9 @@ describe Masamune::Schema::Table do
     end
 
     let(:table) do
-      described_class.new name: 'user', references: [mini_table],
+      described_class.new id: 'user', references: [mini_table],
         columns: [
-          Masamune::Schema::Column.new(name: 'name', type: :string)
+          Masamune::Schema::Column.new(id: 'name', type: :string)
         ]
     end
 
@@ -277,17 +277,17 @@ describe Masamune::Schema::Table do
 
   context 'with labeled referenced table' do
     let(:mini_table) do
-      described_class.new name: 'user_account_state', label: 'actor',
+      described_class.new id: 'user_account_state', label: 'actor',
         columns: [
-          Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(name: 'description', type: :string)
+          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(id: 'description', type: :string)
         ]
     end
 
     let(:table) do
-      described_class.new name: 'user', references: [mini_table],
+      described_class.new id: 'user', references: [mini_table],
         columns: [
-          Masamune::Schema::Column.new(name: 'name', type: :string)
+          Masamune::Schema::Column.new(id: 'name', type: :string)
         ]
     end
 
@@ -298,6 +298,36 @@ describe Masamune::Schema::Table do
           uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
           actor_user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid),
           name VARCHAR NOT NULL
+        );
+      EOS
+    end
+  end
+
+  context 'stage table' do
+    let(:mini_table) do
+      described_class.new id: 'user_account_state',
+        columns: [
+          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(id: 'description', type: :string)
+        ]
+    end
+
+    let(:table) do
+      described_class.new id: 'user', references: [mini_table],
+        columns: [
+          Masamune::Schema::Column.new(id: 'name', type: :string)
+        ]
+    end
+
+    subject { table.stage_table.as_psql }
+
+    it 'should eq table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
+        (
+          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          user_account_state_table_uuid UUID,
+          name VARCHAR
         );
       EOS
     end

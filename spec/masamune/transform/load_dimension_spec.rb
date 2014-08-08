@@ -5,23 +5,23 @@ describe Masamune::Transform::LoadDimension do
   let(:mock_data) { StringIO.new }
 
   let(:user_file) do
-    Masamune::Schema::File.new name: 'user',
+    Masamune::Schema::File.new id: 'user',
       columns: [
-        Masamune::Schema::Column.new(name: 'id', type: :integer),
-        Masamune::Schema::Column.new(name: 'tenant_id', type: :integer),
-        Masamune::Schema::Column.new(name: 'department_id', type: :integer),
-        Masamune::Schema::Column.new(name: 'admin', type: :boolean),
-        Masamune::Schema::Column.new(name: 'preferences', type: :yaml),
-        Masamune::Schema::Column.new(name: 'updated_at', type: :timestamp),
-        Masamune::Schema::Column.new(name: 'deleted_at', type: :timestamp)
+        Masamune::Schema::Column.new(id: 'id', type: :integer),
+        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer),
+        Masamune::Schema::Column.new(id: 'department_id', type: :integer),
+        Masamune::Schema::Column.new(id: 'admin', type: :boolean),
+        Masamune::Schema::Column.new(id: 'preferences', type: :yaml),
+        Masamune::Schema::Column.new(id: 'updated_at', type: :timestamp),
+        Masamune::Schema::Column.new(id: 'deleted_at', type: :timestamp)
       ]
   end
 
   let(:user_account_state_type) do
-    Masamune::Schema::Dimension.new name: 'user_account_state', type: :mini,
+    Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
       columns: [
-        Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-        Masamune::Schema::Column.new(name: 'description', type: :string)
+        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+        Masamune::Schema::Column.new(id: 'description', type: :string)
       ], rows: [
         Masamune::Schema::Row.new(values: {
           name: 'registered',
@@ -39,21 +39,21 @@ describe Masamune::Transform::LoadDimension do
   end
 
   let(:department_dimension) do
-    Masamune::Schema::Dimension.new name: 'department', type: :mini, insert: true,
+    Masamune::Schema::Dimension.new id: 'department', type: :mini, insert: true,
       columns: [
-        Masamune::Schema::Column.new(name: 'uuid', type: :uuid, primary_key: true),
-        Masamune::Schema::Column.new(name: 'tenant_id', type: :integer, unique: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'department_id', type: :integer, unique: true, surrogate_key: true)
+        Masamune::Schema::Column.new(id: 'uuid', type: :uuid, primary_key: true),
+        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, unique: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'department_id', type: :integer, unique: true, surrogate_key: true)
       ]
   end
 
   let(:user_dimension) do
-    Masamune::Schema::Dimension.new name: 'user', type: :four,
+    Masamune::Schema::Dimension.new id: 'user', type: :four,
       references: [department_dimension, user_account_state_type],
       columns: [
-        Masamune::Schema::Column.new(name: 'tenant_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'user_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'preferences', type: :key_value, null: true)
+        Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'preferences', type: :key_value, null: true)
       ]
   end
 
@@ -85,7 +85,7 @@ describe Masamune::Transform::LoadDimension do
 
     it 'should eq render load_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_file_stage
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_stage
         (
           tenant_id INTEGER,
           user_id INTEGER,
@@ -97,7 +97,7 @@ describe Masamune::Transform::LoadDimension do
           delta INTEGER
         );
 
-        COPY user_file_stage FROM 'output.csv' WITH (FORMAT 'csv');
+        COPY user_stage FROM 'output.csv' WITH (FORMAT 'csv');
       EOS
     end
   end
@@ -121,7 +121,7 @@ describe Masamune::Transform::LoadDimension do
           source_kind,
           delta
         FROM
-          user_file_stage
+          user_stage
         ;
 
         BEGIN;
@@ -189,7 +189,7 @@ describe Masamune::Transform::LoadDimension do
         SELECT DISTINCT
           tenant_id, department_type_department_id
         FROM
-          user_file_stage
+          user_stage
         WHERE
           tenant_id IS NOT NULL AND department_type_department_id IS NOT NULL
         ;

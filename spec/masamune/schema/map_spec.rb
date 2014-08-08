@@ -13,34 +13,34 @@ describe Masamune::Schema::Map do
   end
 
   let(:source) do
-    Masamune::Schema::File.new name: 'source_user',
+    Masamune::Schema::File.new id: 'source_user',
       format: :csv,
       columns: [
-        Masamune::Schema::Column.new(name: 'id', type: :integer),
-        Masamune::Schema::Column.new(name: 'tenant_id', type: :integer),
-        Masamune::Schema::Column.new(name: 'admin', type: :boolean),
-        Masamune::Schema::Column.new(name: 'preferences', type: :yaml),
-        Masamune::Schema::Column.new(name: 'deleted_at', type: :timestamp)
+        Masamune::Schema::Column.new(id: 'id', type: :integer),
+        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer),
+        Masamune::Schema::Column.new(id: 'admin', type: :boolean),
+        Masamune::Schema::Column.new(id: 'preferences', type: :yaml),
+        Masamune::Schema::Column.new(id: 'deleted_at', type: :timestamp)
       ]
   end
 
   let(:mini_dimension) do
-    Masamune::Schema::Dimension.new name: 'user_account_state', type: :mini,
+    Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
       columns: [
-        Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-        Masamune::Schema::Column.new(name: 'description', type: :string)
+        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+        Masamune::Schema::Column.new(id: 'description', type: :string)
       ]
   end
 
   let(:dimension) do
-    Masamune::Schema::Dimension.new name: 'user', references: [mini_dimension],
+    Masamune::Schema::Dimension.new id: 'user', references: [mini_dimension],
       columns: [
-        Masamune::Schema::Column.new(name: 'cluster_id', type: :integer),
-        Masamune::Schema::Column.new(name: 'user_id', type: :integer),
-        Masamune::Schema::Column.new(name: 'tenant_id', type: :integer),
-        Masamune::Schema::Column.new(name: 'preferences', type: :key_value),
-        Masamune::Schema::Column.new(name: 'admin', type: :boolean),
-        Masamune::Schema::Column.new(name: 'source', type: :string)
+        Masamune::Schema::Column.new(id: 'cluster_id', type: :integer),
+        Masamune::Schema::Column.new(id: 'user_id', type: :integer),
+        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer),
+        Masamune::Schema::Column.new(id: 'preferences', type: :key_value),
+        Masamune::Schema::Column.new(id: 'admin', type: :boolean),
+        Masamune::Schema::Column.new(id: 'source', type: :string)
       ]
   end
 

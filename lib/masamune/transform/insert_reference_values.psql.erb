@@ -3,13 +3,13 @@
   reference_stage = reference.stage_table
   shared_columns = reference_stage.shared_columns(source)
 %>
-CREATE TEMPORARY TABLE IF NOT EXISTS <%= reference_stage.table_name %> (LIKE <%= reference.table_name %> INCLUDING ALL);
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= reference_stage.name %> (LIKE <%= reference.name %> INCLUDING ALL);
 
-INSERT INTO <%= reference_stage.table_name %>(<%= shared_columns.map { |source, target| target.name}.join(', ') %>)
+INSERT INTO <%= reference_stage.name %>(<%= shared_columns.map { |source, target| target.name}.join(', ') %>)
 SELECT DISTINCT
   <%= shared_columns.map { |source, target| source.name}.join(', ') %>
 FROM
-  <%= source.table_name %>
+  <%= source.name %>
 WHERE
   <%= shared_columns.map { |source, target| "#{source.name} IS NOT NULL"}.join(' AND ') %>
 ;

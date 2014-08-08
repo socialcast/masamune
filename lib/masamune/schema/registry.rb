@@ -22,20 +22,20 @@ module Masamune::Schema
       instance_eval &block
     end
 
-    def dimension(name, options = {}, &block)
+    def dimension(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.dimensions[name.to_sym] ||= Masamune::Schema::Dimension.new(options.merge(@options).merge(name: name))
+      self.dimensions[id.to_sym] ||= Masamune::Schema::Dimension.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end
 
-    def column(name, options = {}, &block)
-      @options[:columns] << Masamune::Schema::Column.new(options.merge(name: name))
+    def column(id, options = {}, &block)
+      @options[:columns] << Masamune::Schema::Column.new(options.merge(id: id))
     end
 
-    def references(name, options = {})
-      @options[:references] << dimensions[name.to_sym].dup.tap do |dimension|
+    def references(id, options = {})
+      @options[:references] << dimensions[id.to_sym].dup.tap do |dimension|
         dimension.label = options[:label]
       end
     end
@@ -46,39 +46,39 @@ module Masamune::Schema
       @options[:rows] << Masamune::Schema::Row.new(attributes)
     end
 
-    def fact(name, options = {}, &block)
+    def fact(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.facts[name.to_sym] ||= Masamune::Schema::Fact.new(options.merge(@options).merge(name: name))
+      self.facts[id.to_sym] ||= Masamune::Schema::Fact.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end
 
-    def measure(name, options = {}, &block)
-      @options[:columns] << Masamune::Schema::Column.new(options.merge(name: name))
+    def measure(id, options = {}, &block)
+      @options[:columns] << Masamune::Schema::Column.new(options.merge(id: id))
     end
 
-    def file(name, options = {}, &block)
+    def file(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.files[name.to_sym] = Masamune::Schema::File.new(options.merge(@options).merge(name: name))
+      self.files[id.to_sym] = Masamune::Schema::File.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end
 
-    def map(name, options = {}, &block)
+    def map(id, options = {}, &block)
       prev_options = @options.dup
       @options[:fields] = {}
       yield if block_given?
-      self.maps[name.to_sym] ||= Masamune::Schema::Map.new(options.merge(@options).merge(name: name))
+      self.maps[id.to_sym] ||= Masamune::Schema::Map.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end
 
-    def field(name, value = nil, &block)
-      @options[:fields][name.to_sym] = value
-      @options[:fields][name.to_sym] ||= block.to_proc if block_given?
-      @options[:fields][name.to_sym] ||= name
+    def field(id, value = nil, &block)
+      @options[:fields][id.to_sym] = value
+      @options[:fields][id.to_sym] ||= block.to_proc if block_given?
+      @options[:fields][id.to_sym] ||= id
     end
 
     def load(file)
@@ -92,12 +92,12 @@ module Masamune::Schema
      # TODO construct a partial ordering of dimensions by reference
     def as_psql
       output = []
-      dimensions.each do |name, dimension|
-        logger.debug("#{name}\n" + dimension.as_psql) if dimension.debug
+      dimensions.each do |id, dimension|
+        logger.debug("#{id}\n" + dimension.as_psql) if dimension.debug
         output << dimension.as_psql
       end
-      facts.each do |name, fact|
-        logger.debug("#{name}\n" + fact.as_psql) if fact.debug
+      facts.each do |id, fact|
+        logger.debug("#{id}\n" + fact.as_psql) if fact.debug
         output << fact.as_psql
       end
       @extra.each do |extra|

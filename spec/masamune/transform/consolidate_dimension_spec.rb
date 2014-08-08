@@ -3,20 +3,20 @@ require 'active_support/core_ext/string/strip'
 
 describe Masamune::Transform::ConsolidateDimension do
   let(:mini_dimension) do
-    Masamune::Schema::Dimension.new name: 'user_account_state', type: :mini,
+    Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
       columns: [
-        Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-        Masamune::Schema::Column.new(name: 'description', type: :string)
+        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+        Masamune::Schema::Column.new(id: 'description', type: :string)
       ]
   end
 
   let(:dimension) do
-    Masamune::Schema::Dimension.new name: 'user', type: :four,
+    Masamune::Schema::Dimension.new id: 'user', type: :four,
       references: [mini_dimension],
       columns: [
-        Masamune::Schema::Column.new(name: 'tenant_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'user_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'preferences', type: :key_value, null: true)
+        Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'preferences', type: :key_value, null: true)
       ]
   end
 

@@ -2,7 +2,7 @@ module Masamune::Schema
   class File
     extend Forwardable
 
-    attr_accessor :name
+    attr_accessor :id
     attr_accessor :format
     attr_accessor :headers
     attr_accessor :columns
@@ -10,8 +10,8 @@ module Masamune::Schema
 
     def_delegators :@io, :flush, :path
 
-    def initialize(name: nil, format: :csv, headers: false, columns: {}, debug: false)
-      @name    = name
+    def initialize(id: nil, format: :csv, headers: false, columns: {}, debug: false)
+      @id      = id
       @format  = format
       @headers = headers
       @debug   = debug
@@ -38,14 +38,14 @@ module Masamune::Schema
 
     def each(&block)
       ::CSV.parse(@io, headers: true) do |data|
-        row = Masamune::Schema::Row.new(reference: self, values: data.to_hash, strict: false)
+        row = Masamune::Schema::Row.new(parent: self, values: data.to_hash, strict: false)
         yield row.to_hash
       end
     end
 
     def append(data)
       append_with_format(columns.keys) if headers && @total_lines < 1
-      append_with_format(Masamune::Schema::Row.new(reference: self, values: data))
+      append_with_format(Masamune::Schema::Row.new(parent: self, values: data))
     end
 
     def to_s
@@ -53,7 +53,7 @@ module Masamune::Schema
     end
 
     def as_table
-      Masamune::Schema::Dimension.new name: name, type: :stage, columns: columns.values
+      Masamune::Schema::Table.new id: id, type: :stage, columns: columns.values
     end
 
     private

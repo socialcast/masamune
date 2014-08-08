@@ -3,9 +3,9 @@
 <%- end -%>
 
 <%- if table.temporary? -%>
-CREATE TEMPORARY TABLE IF NOT EXISTS <%= table.table_name %>
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= table.name %>
 <%- else -%>
-CREATE TABLE IF NOT EXISTS <%= table.table_name %>
+CREATE TABLE IF NOT EXISTS <%= table.name %>
 <%- end -%>
 (
   <%- table.defined_columns.each do |column, last| -%>
@@ -17,17 +17,17 @@ CREATE TABLE IF NOT EXISTS <%= table.table_name %>
 );
 
 <%- table.index_columns.each do |column_names, unique| %>
-<%- index_name = "#{table.table_name}_#{column_names.join('_')}_index" -%>
+<%- index_name = "#{table.name}_#{column_names.join('_')}_index" -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= index_name %>') THEN
-CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= table.table_name %> (<%= column_names.join(', ') %>);
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= table.name %> (<%= column_names.join(', ') %>);
 END IF; END $$;
 <%- end -%>
 
 <% table.insert_rows.each do |row| %>
-INSERT INTO <%= table.table_name %> (<%= row.insert_columns.join(', ') %>)
+INSERT INTO <%= table.name %> (<%= row.insert_columns.join(', ') %>)
 SELECT <%= row.insert_values.join(', ') %>
-WHERE NOT EXISTS (SELECT 1 FROM <%= table.table_name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
+WHERE NOT EXISTS (SELECT 1 FROM <%= table.name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
 <%- end -%>
 
 <% table.aliased_rows.each do |row| %>
@@ -40,6 +40,6 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION <%= row.name %>
 RETURNS <%= table.primary_key.sql_type %> IMMUTABLE AS $$
-  SELECT <%= table.primary_key.name %> FROM <%= table.table_name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
+  SELECT <%= table.primary_key.name %> FROM <%= table.name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
 $$ LANGUAGE SQL;
 <%- end -%>

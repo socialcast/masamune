@@ -5,7 +5,7 @@ describe Masamune::Schema::Column do
     subject(:result) { column.ruby_value(value) }
 
     context 'with type :yaml and sub_type :boolean' do
-      let(:column) { described_class.new(name: 'yaml', type: :yaml, sub_type: :boolean) }
+      let(:column) { described_class.new(id: 'yaml', type: :yaml, sub_type: :boolean) }
       let(:value) do
         {
           'true'         => true,

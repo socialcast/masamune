@@ -8,15 +8,15 @@ module Masamune::Schema
       end
     end
 
-    alias measures columns
+    def name
+      "#{id}_fact"
+    end
 
     def type
       :fact
     end
 
-    def table_name
-      "#{name}_fact"
-    end
+    alias measures columns
 
     private
 
@@ -24,7 +24,7 @@ module Masamune::Schema
     end
 
     def initialize_fact_columns!
-      initialize_column! name: 'last_modified_at', type: :timestamp, default: 'NOW()'
+      initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
     end
   end
 end

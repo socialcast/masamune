@@ -6,18 +6,18 @@ describe Masamune::Schema::Fact do
 
   context 'with columns' do
     let(:dimension) do
-      Masamune::Schema::Dimension.new name: 'user', type: :two,
+      Masamune::Schema::Dimension.new id: 'user', type: :two,
         columns: [
-          Masamune::Schema::Column.new(name: 'tenant_id', index: true),
-          Masamune::Schema::Column.new(name: 'user_id', index: true)
+          Masamune::Schema::Column.new(id: 'tenant_id', index: true),
+          Masamune::Schema::Column.new(id: 'user_id', index: true)
         ]
     end
 
     let(:fact) do
-      described_class.new name: 'visits',
+      described_class.new id: 'visits',
         references: [dimension],
         columns: [
-          Masamune::Schema::Column.new(name: 'total', type: :integer)
+          Masamune::Schema::Column.new(id: 'total', type: :integer)
         ]
     end
 

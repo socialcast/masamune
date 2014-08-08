@@ -166,7 +166,7 @@ describe Masamune::Schema::Registry do
       subject(:map) { instance.maps[:user_csv_to_dimension] }
 
       it 'constructs map' do
-        expect(map.name).to eq(:user_csv_to_dimension)
+        expect(map.id).to eq(:user_csv_to_dimension)
         expect(map.fields[:tenant_id]).to eq('tenant_id')
         expect(map.fields[:user_id]).to eq('id')
         expect(map.fields[:'user_account_state.name']).to be_a(Proc)

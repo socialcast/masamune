@@ -1,12 +1,12 @@
 module Masamune::Schema
   class Map
-    attr_accessor :name
+    attr_accessor :id
     attr_accessor :fields
     attr_accessor :headers
     attr_accessor :debug
 
-    def initialize(name: name, fields: {}, headers: false, debug: false)
-      @name     = name
+    def initialize(id: id, fields: {}, headers: false, debug: false)
+      @id       = id
       @fields   = fields
       @debug    = debug
       @headers  = headers

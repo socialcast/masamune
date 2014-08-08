@@ -5,16 +5,16 @@ module Masamune::Schema
       initialize_dimension_columns!
     end
 
-    def table_name
+    def name
       case type
       when :mini
-        "#{name}_type"
+        "#{id}_type"
       when :stage
-        parent ? "#{parent.table_name}_stage" : "#{name}_stage"
+        parent ? "#{parent.name}_stage" : "#{id}_stage"
       when :one, :two, :four
-        "#{name}_dimension"
+        "#{id}_dimension"
       when :ledger
-        parent ? "#{parent.table_name}_ledger" : "#{name}_ledger"
+        parent ? "#{parent.name}_ledger" : "#{id}_ledger"
       end
     end
 
@@ -23,12 +23,12 @@ module Masamune::Schema
     end
 
     def consolidated_columns
-      columns.reject { |_, column| [:end_at, :version, :last_modified_at].include?(column.name) || column.primary_key }
+      columns.reject { |_, column| [:end_at, :version, :last_modified_at].include?(column.id) || column.primary_key }
     end
     method_with_last_element :consolidated_columns
 
     def consolidated_values(window: nil)
-      consolidated_columns.reject { |name, _| [:parent_uuid, :record_uuid].include?(name) }.map do |_, column, _|
+      consolidated_columns.reject { |id, _| [:parent_uuid, :record_uuid].include?(id) }.map do |_, column, _|
         if column.surrogate_key || column.name == :start_at
           "#{column.name} AS #{column.name}"
         elsif column.type == :key_value
@@ -41,11 +41,11 @@ module Masamune::Schema
     method_with_last_element :consolidated_values
 
     def consolidated_constraints
-      consolidated_columns.reject { |name, column| [:parent_uuid, :record_uuid, :start_at].include?(name) || column.null }
+      consolidated_columns.reject { |id, column| [:parent_uuid, :record_uuid, :start_at].include?(id) || column.null }
     end
 
     def ledger_table
-      @ledger_table ||= self.class.new(name: name, type: :ledger, columns: ledger_table_columns, references: references.values, parent: self)
+      @ledger_table ||= self.class.new(id: id, type: :ledger, columns: ledger_table_columns, references: references.values, parent: self)
     end
 
     private
@@ -53,11 +53,11 @@ module Masamune::Schema
     def ledger_table_columns
       columns.values.map do |column|
         next if column.primary_key
-        next if reserved_column_names.include?(column.name)
+        next if reserved_column_ids.include?(column.id)
 
         if column.type == :key_value
           column_now, column_was = column.dup, column.dup
-          column_now.name, column_was.name = "#{column.name}_now", "#{column.name}_was"
+          column_now.id, column_was.id = "#{column.id}_now", "#{column.id}_was"
           column_now.strict, column_was.strict = false, false
           [column_now, column_was]
         else
@@ -71,40 +71,40 @@ module Masamune::Schema
     def initialize_primary_key_column!
       case type
       when :mini
-        initialize_column! name: 'id', type: :integer, primary_key: true
+        initialize_column! id: 'id', type: :integer, primary_key: true
       when :one, :two, :four, :ledger
-        initialize_column! name: 'uuid', type: :uuid, primary_key: true
+        initialize_column! id: 'uuid', type: :uuid, primary_key: true
       end
     end
 
     def initialize_dimension_columns!
       case type
       when :one
-        initialize_column! name: 'last_modified_at', type: :timestamp, default: 'NOW()'
+        initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :two
-        initialize_column! name: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true
-        initialize_column! name: 'end_at', type: :timestamp, null: true, index: true
-        initialize_column! name: 'version', type: :integer, default: 1, null: true
-        initialize_column! name: 'last_modified_at', type: :timestamp, default: 'NOW()'
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true
+        initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
+        initialize_column! id: 'version', type: :integer, default: 1, null: true
+        initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :four
         children << ledger_table
-        initialize_column! name: 'parent_uuid', type: :uuid, null: true, reference: ledger_table
-        initialize_column! name: 'record_uuid', type: :uuid, null: true, reference: ledger_table
-        initialize_column! name: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true
-        initialize_column! name: 'end_at', type: :timestamp, null: true, index: true
-        initialize_column! name: 'version', type: :integer, default: 1, null: true
-        initialize_column! name: 'last_modified_at', type: :timestamp, default: 'NOW()'
+        initialize_column! id: 'parent_uuid', type: :uuid, null: true, reference: ledger_table
+        initialize_column! id: 'record_uuid', type: :uuid, null: true, reference: ledger_table
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true
+        initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
+        initialize_column! id: 'version', type: :integer, default: 1, null: true
+        initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :ledger
-        initialize_column! name: 'source_kind', type: :string, null: true
-        initialize_column! name: 'source_uuid', type: :string, null: true
-        initialize_column! name: 'start_at', type: :timestamp, index: true
-        initialize_column! name: 'last_modified_at', type: :timestamp, default: 'NOW()'
-        initialize_column! name: 'delta', type: :integer
+        initialize_column! id: 'source_kind', type: :string, null: true
+        initialize_column! id: 'source_uuid', type: :string, null: true
+        initialize_column! id: 'start_at', type: :timestamp, index: true
+        initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
+        initialize_column! id: 'delta', type: :integer
       end
     end
 
-    def reserved_column_names
-      @reserved_column_names ||=
+    def reserved_column_ids
+      @reserved_column_ids ||=
       case type
       when :one
         [:last_modified_at]
