@@ -1,3 +1,1 @@
-<%= source.as_psql %>
-
-COPY <%= source.name %> FROM '<%= source_file %>' WITH (FORMAT 'csv');
+<%= source.as_psql(source_files: [source_file]) %>

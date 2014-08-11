@@ -1,5 +1,7 @@
 module Masamune::Schema
   class Table
+    ALL_COLUMNS = :all_columns
+
     include Masamune::LastElement
 
     attr_accessor :id
@@ -46,22 +48,6 @@ module Masamune::Schema
       end
     end
 
-    def initialize_copy(other)
-      other.columns.each do |_, other_column|
-        next unless other_column
-        column = other_column.dup
-        column.parent = self
-        @columns[column.name.to_sym] = column
-      end
-
-      other.rows.each do |_, other_row|
-        next unless other_row
-        row = other_row.dup
-        row.parent = self
-        @rows << row
-      end
-    end
-
     def id=(id)
       @id = id.to_sym
     end
@@ -72,6 +58,8 @@ module Masamune::Schema
         parent ? "#{parent.name}_stage" : "#{@id}_stage"
       when :table
         "#{@id}_table"
+      else
+        "#{@id}_#{@type}"
       end
     end
 
@@ -97,7 +85,6 @@ module Masamune::Schema
     method_with_last_element :defined_columns
 
     def index_columns
-      return [] if temporary?
       indices = columns.select { |_, column| column.index }.lazy
       indices = indices.group_by { |_, column| column.index == true ? column.name : column.index }.lazy
       indices = indices.map { |_, index_and_columns| index_and_columns.map(&:last) }.lazy
@@ -173,14 +160,8 @@ module Masamune::Schema
       references.select { |_, reference| reference.insert }
     end
 
-    def stage_table
-      @stage_table ||= self.dup.tap do |table|
-        table.parent = self
-        table.type = :stage
-        table.columns.each do |_, column|
-          column.strict = false
-        end
-      end
+    def stage_table(selected_columns = ALL_COLUMNS)
+      @stage_table ||= self.class.new id: id, type: :stage, columns: select_columns(selected_columns), parent: self
     end
 
     def shared_columns(other)
@@ -195,12 +176,12 @@ module Masamune::Schema
       end
     end
 
-    def as_psql
-      Masamune::Template.render_to_string(table_template, table: self)
+    def as_psql(extra = {})
+      Masamune::Template.render_to_string(table_template, extra.merge(table: self))
     end
 
-    def as_file(a = [])
-      Masamune::Schema::File.new id: id, columns: select_columns(a)
+    def as_file(selected_columns = ALL_COLUMNS)
+      Masamune::Schema::File.new id: id, columns: select_columns(selected_columns)
     end
 
     private
@@ -223,9 +204,10 @@ module Masamune::Schema
       @columns[column.name.to_sym] = column
     end
 
-    def select_columns(a = [])
+    def select_columns(selected_columns = ALL_COLUMNS)
+      return columns.values if selected_columns == ALL_COLUMNS
       [].tap do |result|
-        a.each do |name|
+        selected_columns.each do |name|
           reference_name, column_name = Column::dereference_column_name(name)
           if reference = references[reference_name]
             result << reference.columns[column_name].dup.tap { |column| column.reference = reference }

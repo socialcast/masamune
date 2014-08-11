@@ -1,3 +1,5 @@
+<% source_files ||= [] %>
+
 <%- table.children.each do |child| -%>
 <%= child.as_psql %>
 <%- end -%>
@@ -16,12 +18,21 @@ CREATE TABLE IF NOT EXISTS <%= table.name %>
   <%- end -%>
 );
 
-<%- table.index_columns.each do |column_names, unique| %>
+<%- source_files.each do |source_file| -%>
+COPY <%= table.name %> FROM '<%= source_file %>' WITH (FORMAT 'csv');
+<%- end -%>
+
+<%- table.index_columns.each do |column_names, unique| -%>
 <%- index_name = "#{table.name}_#{column_names.join('_')}_index" -%>
+<%- unless table.temporary? -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= index_name %>') THEN
+<%- end -%>
 CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= table.name %> (<%= column_names.join(', ') %>);
+<%- unless table.temporary? -%>
 END IF; END $$;
+
+<%- end -%>
 <%- end -%>
 
 <% table.insert_rows.each do |row| %>

@@ -43,7 +43,7 @@ describe Masamune::Transform::LoadDimension do
   end
 
   let(:target) { user_dimension.ledger_table }
-  let(:source) { user_dimension.ledger_table.as_file(%w(tenant_id user_id department.department_id user_account_state.name preferences_now start_at source_kind delta)).as_table }
+  let(:source) { user_dimension.ledger_table.stage_table(%w(tenant_id user_id department.department_id user_account_state.name preferences_now start_at source_kind delta)) }
 
   let(:transform) { described_class.new 'output.csv', source, target }
 
@@ -52,7 +52,7 @@ describe Masamune::Transform::LoadDimension do
 
     it 'should eq render load_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_stage
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage
         (
           tenant_id INTEGER,
           user_id INTEGER,
@@ -64,7 +64,11 @@ describe Masamune::Transform::LoadDimension do
           delta INTEGER
         );
 
-        COPY user_stage FROM 'output.csv' WITH (FORMAT 'csv');
+        COPY user_dimension_ledger_stage FROM 'output.csv' WITH (FORMAT 'csv');
+
+        CREATE INDEX user_dimension_ledger_stage_tenant_id_index ON user_dimension_ledger_stage (tenant_id);
+        CREATE INDEX user_dimension_ledger_stage_user_id_index ON user_dimension_ledger_stage (user_id);
+        CREATE INDEX user_dimension_ledger_stage_start_at_index ON user_dimension_ledger_stage (start_at);
       EOS
     end
   end
@@ -88,7 +92,7 @@ describe Masamune::Transform::LoadDimension do
           source_kind,
           delta
         FROM
-          user_stage
+          user_dimension_ledger_stage
         ;
 
         BEGIN;
@@ -156,7 +160,7 @@ describe Masamune::Transform::LoadDimension do
         SELECT DISTINCT
           tenant_id, department_type_department_id
         FROM
-          user_stage
+          user_dimension_ledger_stage
         WHERE
           tenant_id IS NOT NULL AND department_type_department_id IS NOT NULL
         ;

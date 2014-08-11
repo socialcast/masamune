@@ -37,5 +37,23 @@ module Masamune::Actions
       transform = Masamune::Transform::ConsolidateDimension.new(target_table)
       postgres file: transform.to_psql_file, debug: target_table.debug
     end
+
+    def load_fact(files, source_file, target_table, map)
+      input = File.open(file)
+      output = Tempfile.new('masamune')
+      FileUtils.chmod(FILE_MODE, output.path)
+
+      target = target_table.type == :four ? target_table.ledger_table : target_table
+      intermediate  = target.as_file(map.columns)
+
+      source_file.bind(input)
+      intermediate.bind(output)
+
+      map.apply(source_file, intermediate)
+
+      transform = Masamune::Transform::LoadFact.new(intermediate.path, intermediate.as_table, target)
+      logger.debug(transform.output.to_s) if (source_file.debug || map.debug)
+      postgres file: transform.to_psql_file, debug: (source_file.debug || target_table.debug || map.debug)
+    end
   end
 end
