@@ -13,7 +13,7 @@ module Masamune::Schema
     attr_accessor :children
     attr_accessor :debug
 
-    def initialize(id: id, type: :table, label: nil, references: [], columns: [], rows: [], insert: false, parent: nil, debug: false)
+    def initialize(id:, type: :table, label: nil, references: [], columns: [], rows: [], insert: false, parent: nil, debug: false)
       self.id = id
       @type   = type
       @label  = label

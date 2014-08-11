@@ -5,7 +5,7 @@ module Masamune::Schema
     attr_accessor :headers
     attr_accessor :debug
 
-    def initialize(id: id, fields: {}, headers: false, debug: false)
+    def initialize(id: nil, fields: {}, headers: false, debug: false)
       @id       = id
       @fields   = fields
       @debug    = debug

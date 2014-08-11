@@ -17,7 +17,7 @@ module Masamune::Schema
     attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(id: id, type: :integer, sub_type: nil, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
+    def initialize(id:, type: :integer, sub_type: nil, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
       self.id         = id
       @type           = type
       @sub_type       = sub_type
