@@ -199,17 +199,8 @@ module Masamune::Schema
       Masamune::Template.render_to_string(table_template, table: self)
     end
 
-    def as_file(selected_columns)
-      file_columns = []
-      selected_columns.each do |name|
-        reference_name, column_name = Column::dereference_column_name(name)
-        if reference = references[reference_name]
-          file_columns << reference.columns[column_name].dup.tap { |column| column.reference = reference }
-        elsif columns[column_name]
-          file_columns << columns[column_name]
-        end
-      end
-      Masamune::Schema::File.new id: id, columns: file_columns
+    def as_file(a = [])
+      Masamune::Schema::File.new id: id, columns: select_columns(a)
     end
 
     private
@@ -230,6 +221,19 @@ module Masamune::Schema
     def initialize_column!(options = {})
       column = Masamune::Schema::Column.new(options.merge(parent: self))
       @columns[column.name.to_sym] = column
+    end
+
+    def select_columns(a = [])
+      [].tap do |result|
+        a.each do |name|
+          reference_name, column_name = Column::dereference_column_name(name)
+          if reference = references[reference_name]
+            result << reference.columns[column_name].dup.tap { |column| column.reference = reference }
+          elsif columns[column_name]
+            result << columns[column_name]
+          end
+        end
+      end
     end
 
     def reserved_column_ids

@@ -2,21 +2,6 @@ require 'spec_helper'
 require 'active_support/core_ext/string/strip'
 
 describe Masamune::Transform::LoadDimension do
-  let(:mock_data) { StringIO.new }
-
-  let(:user_file) do
-    Masamune::Schema::File.new id: 'user',
-      columns: [
-        Masamune::Schema::Column.new(id: 'id', type: :integer),
-        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer),
-        Masamune::Schema::Column.new(id: 'department_id', type: :integer),
-        Masamune::Schema::Column.new(id: 'admin', type: :boolean),
-        Masamune::Schema::Column.new(id: 'preferences', type: :yaml),
-        Masamune::Schema::Column.new(id: 'updated_at', type: :timestamp),
-        Masamune::Schema::Column.new(id: 'deleted_at', type: :timestamp)
-      ]
-  end
-
   let(:user_account_state_type) do
     Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
       columns: [
@@ -57,30 +42,12 @@ describe Masamune::Transform::LoadDimension do
       ]
   end
 
-  let(:map) do
-    Masamune::Schema::Map.new(
-      fields: {
-        'tenant_id'                => 'tenant_id',
-        'user_id'                  => 'id',
-        'department.department_id' => 'department_id',
-        'user_account_state.name'  => ->(row) { row[:deleted_at] ? 'deleted' : 'active' },
-        'preferences_now'          => 'preferences',
-        'start_at'                 => 'updated_at',
-        'source_kind'              => 'groups',
-        'delta'                    => 1})
-  end
+  let(:target) { user_dimension.ledger_table }
+  let(:source) { user_dimension.ledger_table.as_file(%w(tenant_id user_id department.department_id user_account_state.name preferences_now start_at source_kind delta)).as_table }
 
-  let(:transform) { described_class.new mock_data, user_file, user_dimension, map }
-
-  before do
-    transform.run
-  end
+  let(:transform) { described_class.new 'output.csv', source, target }
 
   describe '#stage_dimension_as_psql' do
-    before do
-      allow_any_instance_of(Masamune::Schema::File).to receive(:path) { 'output.csv' }
-    end
-
     subject(:result) { transform.stage_dimension_as_psql }
 
     it 'should eq render load_dimension template' do
