@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS <%= table.name %>
 );
 
 <%- source_files.each do |source_file| -%>
-COPY <%= table.name %> FROM '<%= source_file %>' WITH (FORMAT 'csv');
+COPY <%= table.name %> FROM '<%= source_file.path %>' WITH (FORMAT 'csv');
 <%- end -%>
 
 <%- table.index_columns.each do |column_names, unique| -%>

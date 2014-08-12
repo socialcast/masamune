@@ -17,6 +17,7 @@ WHERE
 ;
 <%- end -%>
 
+<%- if target.upsert_unique_columns.any? -%>
 INSERT INTO
   <%= target.name %> (<%= target.upsert_insert_columns.map { |column,_| column.name }.join(',') %>)
 SELECT
@@ -36,5 +37,6 @@ WHERE
   <%= target.name %>.<%= column.name %> IS NULL<%= ' AND' unless last %>
   <%- end -%>
 ;
+<%- end -%>
 
 COMMIT;

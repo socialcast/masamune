@@ -1,9 +1,10 @@
 module Masamune::Transform
   class LoadFact
-    def initialize(source_files, source, target)
+    def initialize(source_files, source, target, date)
       @source_files = source_files
       @source = source
       @target = target
+      @date   = date
     end
 
     def stage_fact_as_psql
@@ -15,13 +16,14 @@ module Masamune::Transform
     end
 
     def load_fact_as_psql
-      Masamune::Template.render_to_string(load_fact_template, source: @source, target: @target)
+      Masamune::Template.render_to_string(load_fact_template, source: @source, target: @target, date: @date)
     end
 
     def as_psql
       Masamune::Template.combine \
         stage_fact_as_psql,
-        insert_reference_values_as_psql
+        insert_reference_values_as_psql,
+        load_fact_as_psql
     end
 
     def to_psql_file

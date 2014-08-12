@@ -18,9 +18,16 @@ module Masamune::Schema
       end
     end
 
-    # TODO optionally enable source_uuid
+    def start_key
+      columns.values.detect { |column| column.id == :start_at }
+    end
+
+    def end_key
+      columns.values.detect { |column| column.id == :end_at }
+    end
+
     def upsert_unique_columns
-      columns.values.select { |column| [:source_kind, :start_at].include?(column.id) || column.surrogate_key }
+      columns.values.select { |column| [:source_kind, :start_at].include?(column.id) || column.surrogate_key || column.unique }
     end
     method_with_last_element :upsert_unique_columns
 

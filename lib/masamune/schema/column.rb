@@ -52,6 +52,7 @@ module Masamune::Schema
       "#{reference.name}.#{@id}".to_sym if reference
     end
 
+    # FIXME similar as above
     def compact_name
       if reference
         "#{reference.id}.#{@id}".to_sym
@@ -131,7 +132,14 @@ module Masamune::Schema
     end
 
     def as_psql
-      [name, sql_type(primary_key), *sql_constraints, sql_reference, sql_default].compact.join(' ')
+      [name, sql_type(primary_key), *sql_constraints, reference_constraint, sql_default].compact.join(' ')
+    end
+
+    def reference_constraint
+      return if parent.temporary?
+      if reference && reference.primary_key.type == type
+        "REFERENCES #{reference.name}(#{reference.primary_key.name})"
+      end
     end
 
     class << self
@@ -145,6 +153,24 @@ module Masamune::Schema
       end
     end
 
+    def ==(other)
+      id == other.id &&
+      type == other.type &&
+      (
+        parent.try(:id) == other.parent.try(:id) ||
+        parent.try(:id) == other.reference.try(:id) ||
+        reference.try(:id) == other.parent.try(:id)
+      )
+    end
+
+    def eql?(other)
+      self == other
+    end
+
+    def hash
+      [id, type].hash
+    end
+
     private
 
     def sql_constraints
@@ -156,13 +182,6 @@ module Masamune::Schema
 
     def sql_default
       "DEFAULT #{sql_value(default)}" unless default.nil?
-    end
-
-    def sql_reference
-      return if parent.temporary?
-      if reference && reference.primary_key.type == type
-        "REFERENCES #{reference.name}(#{reference.primary_key.name})"
-      end
     end
 
     def initialize_default_attributes!

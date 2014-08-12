@@ -30,6 +30,14 @@ describe Masamune::Actions::Transform do
         'delta'                    => 1})
   end
 
+  let(:visit_fact) do
+    Masamune::Schema::Fact.new id: 'visits', partition: 'y%Ym%m',
+      references: [user_dimension],
+      columns: [
+        Masamune::Schema::Column.new(id: 'total', type: :integer)
+      ]
+  end
+
   let(:klass) do
     Class.new do
       include Masamune::HasEnvironment
@@ -49,6 +57,19 @@ describe Masamune::Actions::Transform do
     end
 
     subject { instance.load_dimension(source_file, user_file, user_dimension, map) }
+
+    it { is_expected.to be_success }
+  end
+
+  describe '.load_fact' do
+    let(:date) { DateTime.civil(2014, 8) }
+    let(:data) { Masamune::DataPlanSet.new(source_file) }
+
+    before do
+      mock_command(/\Apsql/, mock_success)
+    end
+
+    subject { instance.load_fact(data, visit_fact.as_file.as_table, visit_fact, date) }
 
     it { is_expected.to be_success }
   end

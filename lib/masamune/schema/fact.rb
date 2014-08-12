@@ -1,6 +1,9 @@
 module Masamune::Schema
   class Fact < Table
-    def initialize(o)
+    attr_accessor :partition
+
+    def initialize(o = {})
+      @partition = o.delete(:partition)
       super o.reverse_merge(type: :fact)
       initialize_fact_columns!
       foreign_key_columns.each do |column|
@@ -9,6 +12,10 @@ module Masamune::Schema
     end
 
     alias measures columns
+
+    def time_key
+      columns.values.detect { |column| column.id == :time_key }
+    end
 
     def insert_columns(source)
       left_shared_columns(source).map do |column|
@@ -40,7 +47,7 @@ module Masamune::Schema
           "#{column.foreign_key_name} = #{column.qualified_name}"
         end
         if reference.type == :two
-          conditions << "TO_TIMESTAMP(#{source.name}.time_unix)::DATE BETWEEN #{reference.name}.start_at::DATE AND COALESCE(#{reference.name}.end_at::DATE, 'INFINITY')"
+          conditions << "TO_TIMESTAMP(#{source.time_key.qualified_name}) BETWEEN #{reference.start_key.qualified_name} AND COALESCE(#{reference.end_key.qualified_name}, 'INFINITY')"
         end
         [reference.name, conditions]
       end
@@ -54,6 +61,18 @@ module Masamune::Schema
       end
     end
 
+    def partition_table_name(date)
+      partition_rule.bind_date(date).table
+    end
+
+    def partition_table_constraints(date)
+      "CHECK (time_key >= #{partition_rule.bind_date(date).start_time.to_i} AND time_key < #{partition_rule.bind_date(date).stop_time.to_i})"
+    end
+
+    def partition_rule
+      @partition_rule = Masamune::DataPlanRule.new(nil, :tmp, :target, table: name, partition: @partition)
+    end
+
     private
 
     def initialize_primary_key_column!
@@ -62,6 +81,7 @@ module Masamune::Schema
     def initialize_fact_columns!
       case type
       when :fact
+        initialize_column! id: 'time_key', type: :integer, index: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       end
     end

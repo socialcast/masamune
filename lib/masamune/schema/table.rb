@@ -109,7 +109,7 @@ module Masamune::Schema
     end
 
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique }
     end
     method_with_last_element :upsert_update_columns
 
@@ -123,8 +123,9 @@ module Masamune::Schema
     end
 
     def upsert_unique_columns
-      columns.values.select { |column| column.surrogate_key }
+      columns.values.select { |column| column.surrogate_key || column.unique }
     end
+    method_with_last_element :upsert_unique_columns
 
     def default_foreign_key_name
       rows.detect { |row| row.default }.try(:name)
@@ -168,7 +169,7 @@ module Masamune::Schema
       Set.new.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            shared << column if (column.id == other_column.id && column.type == other_column.type) || (column.name == other_column.reference.try(:foreign_key_name))
+            shared << column if column == other_column
           end
         end
       end
@@ -178,7 +179,7 @@ module Masamune::Schema
       Set.new.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            shared << other_column if (column.id == other_column.id && column.type == other_column.type) || (column.name == other_column.reference.try(:foreign_key_name))
+            shared << other_column if column == other_column
           end
         end
       end
@@ -188,8 +189,7 @@ module Masamune::Schema
       Set.new.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            next unless (column.id == other_column.id && column.type == other_column.type)
-            shared << [other_column, column]
+            shared << [other_column, column] if column == other_column
           end
         end
       end
@@ -229,7 +229,11 @@ module Masamune::Schema
         selected_columns.each do |name|
           reference_name, column_name = Column::dereference_column_name(name)
           if reference = references[reference_name]
-            result << reference.columns[column_name].dup.tap { |column| column.reference = reference }
+            if reference.columns[column_name]
+              result << reference.columns[column_name].dup.tap { |column| column.reference = reference }
+            else
+              raise "wtf #{column_name}"
+            end
           elsif columns[column_name]
             result << columns[column_name]
           end

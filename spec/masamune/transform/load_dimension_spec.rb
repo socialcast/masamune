@@ -42,10 +42,11 @@ describe Masamune::Transform::LoadDimension do
       ]
   end
 
+  let(:data) { double(path: 'output.csv') }
   let(:target) { user_dimension.ledger_table }
   let(:source) { user_dimension.ledger_table.stage_table(%w(tenant_id user_id department.department_id user_account_state.name preferences_now start_at source_kind delta)) }
 
-  let(:transform) { described_class.new 'output.csv', source, target }
+  let(:transform) { described_class.new data, source, target }
 
   describe '#stage_dimension_as_psql' do
     subject(:result) { transform.stage_dimension_as_psql }
