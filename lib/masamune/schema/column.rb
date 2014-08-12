@@ -60,6 +60,10 @@ module Masamune::Schema
       end
     end
 
+    def qualified_name
+      parent ? "#{parent.name}.#{name}" : name
+    end
+
     def sql_type(for_primary_key = false)
       case type
       when :integer

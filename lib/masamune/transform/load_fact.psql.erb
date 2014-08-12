@@ -1,0 +1,15 @@
+INSERT INTO
+  <%= target.name %> (<%= target.insert_columns(source).join(', ') %>)
+SELECT
+  <%- target.insert_values(source).each do |value, last| -%>
+  <%= value %><%= ',' unless last %>
+  <%- end -%>
+FROM
+  <%= source.name %>
+<%- target.join_conditions(source).each do |table, conditions| -%>
+JOIN
+  <%= table %>
+ON
+  <%= conditions.join(" AND\n  ") %>
+<%- end -%>
+;

@@ -76,7 +76,7 @@ module Masamune::Schema
     end
 
     def foreign_key_name
-      [label, name, primary_key.try(:name)].compact.join('_')
+      [label, name, primary_key.try(:name)].compact.join('_').to_sym
     end
 
     def defined_columns
@@ -164,12 +164,31 @@ module Masamune::Schema
       @stage_table ||= self.class.new id: id, type: :stage, columns: select_columns(selected_columns), parent: self
     end
 
-    def shared_columns(other)
-      [].tap do |shared|
+    def left_shared_columns(other)
+      Set.new.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            next unless column.id == other_column.id
-            next unless column.type == other_column.type
+            shared << column if (column.id == other_column.id && column.type == other_column.type) || (column.name == other_column.reference.try(:foreign_key_name))
+          end
+        end
+      end
+    end
+
+    def right_shared_columns(other)
+      Set.new.tap do |shared|
+        columns.each do |_, column|
+          other.columns.each do |_, other_column|
+            shared << other_column if (column.id == other_column.id && column.type == other_column.type) || (column.name == other_column.reference.try(:foreign_key_name))
+          end
+        end
+      end
+    end
+
+    def shared_columns(other)
+      Set.new.tap do |shared|
+        columns.each do |_, column|
+          other.columns.each do |_, other_column|
+            next unless (column.id == other_column.id && column.type == other_column.type)
             shared << [other_column, column]
           end
         end
