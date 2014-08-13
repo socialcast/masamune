@@ -7,6 +7,12 @@ describe Masamune::Transform::LoadDimension do
 
   before do
     registry.schema do
+      dimension 'cluster', type: :mini do
+        column 'id', type: :integer, primary_key: true, auto: true
+        column 'name', type: :string, unique: true
+        row name: 'default', attributes: {default: true}
+      end
+
       dimension 'user_account_state', type: :mini do
         column 'name', type: :string, unique: true
         column 'description', type: :string
@@ -16,12 +22,14 @@ describe Masamune::Transform::LoadDimension do
       end
 
       dimension 'department', type: :mini, insert: true do
+        references :cluster
         column 'uuid', type: :uuid, primary_key: true
         column 'tenant_id', type: :integer, unique: true, surrogate_key: true
         column 'department_id', type: :integer, unique: true, surrogate_key: true
       end
 
       dimension 'user', type: :four do
+        references :cluster
         references :department
         references :user_account_state
         column 'tenant_id', index: true, surrogate_key: true

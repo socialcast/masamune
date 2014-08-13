@@ -110,12 +110,12 @@ module Masamune::Schema
     end
 
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique || column.auto_reference }
     end
     method_with_last_element :upsert_update_columns
 
     def upsert_insert_columns
-      columns.values.reject { |column| column.primary_key }
+      columns.values.reject { |column| column.primary_key || column.auto_reference }
     end
     method_with_last_element :upsert_insert_columns
 
@@ -180,7 +180,7 @@ module Masamune::Schema
       Set.new.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            shared << column if column == other_column || column.references(other_column)
+            shared << column if column == other_column || other_column.references(column)
           end
         end
       end
