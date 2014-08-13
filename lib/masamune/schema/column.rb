@@ -65,6 +65,9 @@ module Masamune::Schema
       parent ? "#{parent.name}.#{name}" : name
     end
 
+    def reference_name
+      parent ? "#{parent.name}_#{name}".to_sym : name
+    end
     def sql_type(for_primary_key = false)
       case type
       when :integer
@@ -154,9 +157,12 @@ module Masamune::Schema
     end
 
     def ==(other)
+      return true if reference && reference.surrogate_keys.include?(other)
+      return true if other.reference && other.reference.primary_key.reference_name == name
       id == other.id &&
       type == other.type &&
       (
+        surrogate_key && other.surrogate_key ||
         parent.try(:id) == other.parent.try(:id) ||
         parent.try(:id) == other.reference.try(:id) ||
         reference.try(:id) == other.parent.try(:id)
@@ -168,7 +174,7 @@ module Masamune::Schema
     end
 
     def hash
-      [id, type].hash
+      [id, type, primary_key, parent.try(:id), reference.try(:id)].hash
     end
 
     private
