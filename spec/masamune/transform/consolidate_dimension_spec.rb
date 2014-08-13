@@ -2,25 +2,27 @@ require 'spec_helper'
 require 'active_support/core_ext/string/strip'
 
 describe Masamune::Transform::ConsolidateDimension do
-  let(:mini_dimension) do
-    Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
-      columns: [
-        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
-        Masamune::Schema::Column.new(id: 'description', type: :string)
-      ]
+  let(:environment) { double }
+  let(:registry) { Masamune::Schema::Registry.new(environment) }
+
+  before do
+    registry.schema do
+      dimension 'user_account_state', type: :mini do
+        column 'name', type: :string, unique: true
+        column 'description', type: :string
+      end
+
+      dimension 'user', type: :four do
+        references :user_account_state
+        column 'tenant_id', index: true, surrogate_key: true
+        column 'user_id', index: true, surrogate_key: true
+        column 'preferences', type: :key_value, null: true
+      end
+    end
   end
 
-  let(:dimension) do
-    Masamune::Schema::Dimension.new id: 'user', type: :four,
-      references: [mini_dimension],
-      columns: [
-        Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(id: 'preferences', type: :key_value, null: true)
-      ]
-  end
-
-  let(:transform) { described_class.new dimension }
+  let(:target) { registry.dimensions[:user] }
+  let(:transform) { described_class.new target }
 
   describe '#consolidate_dimension_as_psql' do
     subject(:result) { transform.consolidate_dimension_as_psql }

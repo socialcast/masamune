@@ -9,6 +9,7 @@ module Masamune::Schema
       foreign_key_columns.each do |column|
         column.index ||= true
       end
+      time_key.index ||= true
     end
 
     alias measures columns
@@ -18,23 +19,27 @@ module Masamune::Schema
     end
 
     def insert_columns(source)
-      left_shared_columns(source).map do |column|
+      references = Set.new
+      right_shared_columns(source).map do |column|
         if reference = column.reference
+          next unless references.add?(reference)
           reference.foreign_key_name
         else
           column.name
         end
-      end
+      end.compact
     end
 
     def insert_values(source)
-      left_shared_columns(source).map do |column|
+      references = Set.new
+      right_shared_columns(source).map do |column|
         if reference = column.reference
+          next unless references.add?(reference)
           reference.primary_key.qualified_name
         else
           column.qualified_name
         end
-      end
+      end.compact
     end
     method_with_last_element :insert_values
 

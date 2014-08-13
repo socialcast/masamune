@@ -15,7 +15,7 @@ module Masamune::Schema
     attr_accessor :children
     attr_accessor :debug
 
-    def initialize(id:, type: :table, label: nil, references: [], columns: [], rows: [], insert: false, parent: nil, debug: false)
+    def initialize(id:, type: :table, label: nil, references: [], columns: [], rows: [], insert: false, parent: nil, inherit: false, debug: false)
       self.id = id
       @type   = type
       @label  = label
@@ -40,6 +40,7 @@ module Masamune::Schema
         column.parent = self
         @columns[column.name.to_sym] = column
       end
+      inherit_column_attributes! if inherit
 
       @rows = []
       rows.each do |row|
@@ -144,7 +145,7 @@ module Masamune::Schema
           else
             select
           end
-        elsif column.type == :key_value
+        elsif column.type == :json || column.type == :yaml || column.type == :key_value
           "json_to_hstore(#{column.name})"
         else
           column.name.to_s
@@ -165,31 +166,21 @@ module Masamune::Schema
       @stage_table ||= self.class.new id: id, type: :stage, columns: select_columns(selected_columns), parent: self
     end
 
-    def left_shared_columns(other)
-      Set.new.tap do |shared|
-        columns.each do |_, column|
-          other.columns.each do |_, other_column|
-            shared << column if column == other_column
-          end
-        end
-      end
-    end
-
     def right_shared_columns(other)
       Set.new.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            shared << other_column if column == other_column
+            shared << other_column if column == other_column || column.references(other_column)
           end
         end
       end
     end
 
-    def shared_columns(other)
+    def left_shared_columns(other)
       Set.new.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            shared << [other_column, column] if column == other_column
+            shared << column if column == other_column || column.references(other_column)
           end
         end
       end
@@ -221,6 +212,15 @@ module Masamune::Schema
     def initialize_column!(options = {})
       column = Masamune::Schema::Column.new(options.merge(parent: self))
       @columns[column.name.to_sym] = column
+    end
+
+    def inherit_column_attributes!
+      return unless parent
+      columns.each do |_, column|
+        parent.columns.each do |_, parent_column|
+          column.index = parent_column.index if column == parent_column
+        end
+      end
     end
 
     def select_columns(selected_columns = ALL_COLUMNS)

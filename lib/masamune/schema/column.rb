@@ -68,6 +68,7 @@ module Masamune::Schema
     def reference_name
       parent ? "#{parent.name}_#{name}".to_sym : name
     end
+
     def sql_type(for_primary_key = false)
       case type
       when :integer
@@ -157,16 +158,11 @@ module Masamune::Schema
     end
 
     def ==(other)
-      return true if reference && reference.surrogate_keys.include?(other)
-      return true if other.reference && other.reference.primary_key.reference_name == name
+      return false unless other
       id == other.id &&
       type == other.type &&
-      (
-        surrogate_key && other.surrogate_key ||
-        parent.try(:id) == other.parent.try(:id) ||
-        parent.try(:id) == other.reference.try(:id) ||
-        reference.try(:id) == other.parent.try(:id)
-      )
+      (parent ? other.parent && parent.id == other.parent.id : other.parent.nil?) &&
+      (reference ? other.reference && reference.id == other.reference.id : other.reference.nil?)
     end
 
     def eql?(other)
@@ -175,6 +171,15 @@ module Masamune::Schema
 
     def hash
       [id, type, primary_key, parent.try(:id), reference.try(:id)].hash
+    end
+
+    def references(other)
+      return true if (self.id == other.id && self.type == other.type && (surrogate_key || other.surrogate_key))
+      return false if (parent.nil? || reference.nil?) && (other.parent.nil? || other.reference.nil?)
+      return false if other.primary_key && other.parent.temporary?
+      parent.try(:id) == other.reference.try(:id) ||
+      reference.try(:id) == other.parent.try(:id) ||
+      reference.try(:id) == other.reference.try(:id)
     end
 
     private

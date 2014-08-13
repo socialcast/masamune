@@ -31,7 +31,8 @@ module Masamune::Schema
     end
 
     def column(id, options = {}, &block)
-      @options[:columns] << Masamune::Schema::Column.new(options.merge(id: id))
+      column_id, column_reference = dereference_column(id)
+      @options[:columns] << Masamune::Schema::Column.new(options.merge(id: column_id, reference: column_reference))
     end
 
     def references(id, options = {})
@@ -111,6 +112,21 @@ module Masamune::Schema
         file.write(as_psql)
         file.close
       end.path
+    end
+
+    private
+
+    def dereference_column(id)
+      if id =~ /\./
+        reference_id, column_id = id.to_s.split('.')
+        if dimension = dimensions[reference_id.to_sym]
+          [column_id.to_sym, dimension]
+        else
+          raise ArgumentError, "dimension #{reference_id} not defined"
+        end
+      else
+        [id.to_sym, nil]
+      end
     end
   end
 end

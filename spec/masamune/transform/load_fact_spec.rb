@@ -2,48 +2,54 @@ require 'spec_helper'
 require 'active_support/core_ext/string/strip'
 
 describe Masamune::Transform::LoadFact do
-  let(:date_dimension) do
-    Masamune::Schema::Dimension.new id: 'date', type: :one,
-      columns: [
-        Masamune::Schema::Column.new(id: 'date_id', type: :integer, unique: true, index: true, surrogate_key: true)
-      ]
-  end
+  let(:environment) { double }
+  let(:registry) { Masamune::Schema::Registry.new(environment) }
 
-  let(:user_agent_type) do
-    Masamune::Schema::Dimension.new id: 'user_agent', type: :mini, insert: true,
-      columns: [
-        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true, index: 'shared'),
-        Masamune::Schema::Column.new(id: 'version', type: :string, unique: true, index: 'shared')
-      ]
-  end
+  before do
+    registry.schema do
+      dimension 'date', type: :one do
+        column 'date_id', type: :integer, unique: true, index: true, surrogate_key: true
+      end
 
-  let(:feature_type) do
-    Masamune::Schema::Dimension.new id: 'feature', type: :mini, insert: true,
-      columns: [
-        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true, index: true)
-      ]
-  end
+      dimension 'user_agent', type: :mini, insert: true do
+        column 'name', type: :string, unique: true, index: 'shared'
+        column 'version', type: :string, unique: true, index: 'shared'
+      end
 
-  let(:user_dimension) do
-    Masamune::Schema::Dimension.new id: 'user', type: :two,
-      columns: [
-        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(id: 'user_id', type: :integer, index: true, surrogate_key: true)
-      ]
-  end
+      dimension  'feature', type: :mini, insert: true do
+        column  'name', type: :string, unique: true, index: true
+      end
 
-  let(:visit_fact) do
-    Masamune::Schema::Fact.new id: 'visits', partition: 'y%Ym%m',
-      references: [date_dimension, user_dimension, user_agent_type, feature_type],
-      columns: [
-        Masamune::Schema::Column.new(id: 'total', type: :integer)
-      ]
+      dimension  'user', type: :two do
+        column  'tenant_id', type: :integer, index: true, surrogate_key: true
+        column  'user_id', type: :integer, index: true, surrogate_key: true
+      end
+
+      fact  'visits', partition: 'y%Ym%m' do
+        references :date
+        references :user
+        references :user_agent
+        references :feature
+        measure 'total', type: :integer
+      end
+
+      file  'visits' do
+        column  'date.date_id', type: :integer
+        column  'user.tenant_id', type: :integer
+        column  'user.user_id', type: :integer
+        column  'user_agent.name', type: :string
+        column  'user_agent.version', type: :string
+        column  'feature.name', type: :string
+        column  'time_key', type: :integer
+        column  'total', type: :integer
+      end
+    end
   end
 
   let(:data) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
   let(:date) { DateTime.civil(2014,8) }
-  let(:target) { visit_fact }
-  let(:source) { visit_fact.stage_table(%w(date.date_id user.tenant_id user.user_id user_agent.name user_agent.version feature.name total time_key)) }
+  let(:target) { registry.facts[:visits] }
+  let(:source) { registry.files[:visits].as_table(target) }
 
   let(:transform) { described_class.new data, source, target, date }
 
@@ -60,8 +66,8 @@ describe Masamune::Transform::LoadFact do
           user_agent_type_name VARCHAR,
           user_agent_type_version VARCHAR,
           feature_type_name VARCHAR,
-          total INTEGER,
-          time_key INTEGER
+          time_key INTEGER,
+          total INTEGER
         );
 
         COPY visits_fact_stage FROM 'output_1.csv' WITH (FORMAT 'csv');
@@ -71,7 +77,8 @@ describe Masamune::Transform::LoadFact do
         CREATE INDEX visits_fact_stage_date_dimension_date_id_index ON visits_fact_stage (date_dimension_date_id);
         CREATE INDEX visits_fact_stage_user_dimension_tenant_id_index ON visits_fact_stage (user_dimension_tenant_id);
         CREATE INDEX visits_fact_stage_user_dimension_user_id_index ON visits_fact_stage (user_dimension_user_id);
-        CREATE INDEX visits_fact_stage_user_agent_type_name_user_agent_type_version_index ON visits_fact_stage (user_agent_type_name, user_agent_type_version);
+        CREATE INDEX visits_fact_stage_user_agent_type_name_index ON visits_fact_stage (user_agent_type_name);
+        CREATE INDEX visits_fact_stage_user_agent_type_version_index ON visits_fact_stage (user_agent_type_version);
         CREATE INDEX visits_fact_stage_feature_type_name_index ON visits_fact_stage (feature_type_name);
         CREATE INDEX visits_fact_stage_time_key_index ON visits_fact_stage (time_key);
       EOS

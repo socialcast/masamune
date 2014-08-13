@@ -52,8 +52,12 @@ module Masamune::Schema
       [path, ::File.read(path)].join("\n")
     end
 
-    def as_table
-      Masamune::Schema::Table.new id: id, type: :stage, columns: columns.values
+    def as_table(parent = nil)
+      if parent
+        parent.class.new(id: id, type: :stage, columns: columns.values, parent: parent, inherit: true)
+      else
+        Masamune::Schema::Table.new id: id, type: :stage, columns: columns.values
+      end
     end
 
     private
