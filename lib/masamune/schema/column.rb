@@ -11,6 +11,7 @@ module Masamune::Schema
     attr_accessor :auto
     attr_accessor :index
     attr_accessor :unique
+    attr_accessor :ignore
     attr_accessor :primary_key
     attr_accessor :surrogate_key
     attr_accessor :degenerate_key
@@ -18,7 +19,7 @@ module Masamune::Schema
     attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(id:, type: :integer, sub_type: nil, null: false, strict: true, default: nil, auto: false, index: false, unique: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
+    def initialize(id:, type: :integer, sub_type: nil, null: false, strict: true, default: nil, auto: false, index: false, unique: false, ignore: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
       self.id         = id
       @type           = type
       @sub_type       = sub_type
@@ -28,6 +29,7 @@ module Masamune::Schema
       @auto           = auto
       @index          = index
       @unique         = unique
+      @ignore         = ignore
       @primary_key    = primary_key
       @surrogate_key  = surrogate_key
       @degenerate_key = degenerate_key
@@ -183,7 +185,7 @@ module Masamune::Schema
       return true if (self.id == other.id && self.type == other.type && (surrogate_key || other.surrogate_key))
       return false if (parent.nil? || reference.nil?) && (other.parent.nil? || other.reference.nil?)
       return false if other.primary_key && other.parent.temporary?
-      return false if other.auto_reference
+      return false if other.auto_reference || other.ignore
       parent.try(:id) == other.reference.try(:id) ||
       reference.try(:id) == other.parent.try(:id) ||
       reference.try(:id) == other.reference.try(:id)

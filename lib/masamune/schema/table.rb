@@ -110,12 +110,12 @@ module Masamune::Schema
     end
 
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique || column.auto_reference }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_update_columns
 
     def upsert_insert_columns
-      columns.values.reject { |column| column.primary_key || column.auto_reference }
+      columns.values.reject { |column| column.primary_key || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_insert_columns
 

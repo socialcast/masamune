@@ -14,6 +14,7 @@ describe Masamune::Transform::LoadFact do
       dimension 'user_agent', type: :mini, insert: true do
         column 'name', type: :string, unique: true, index: 'shared'
         column 'version', type: :string, unique: true, index: 'shared', default: 'Unknown'
+        column 'description', type: :string, null: true, ignore: true
       end
 
       dimension  'feature', type: :mini, insert: true do
