@@ -164,9 +164,7 @@ module Masamune::Schema
     def ==(other)
       return false unless other
       id == other.id &&
-      type == other.type &&
-      (parent ? other.parent && parent.id == other.parent.id : other.parent.nil?) &&
-      (reference ? other.reference && reference.id == other.reference.id : other.reference.nil?)
+      type == other.type
     end
 
     def eql?(other)
@@ -174,7 +172,7 @@ module Masamune::Schema
     end
 
     def hash
-      [id, type, primary_key, parent.try(:id), reference.try(:id)].hash
+      [id, type].hash
     end
 
     def auto_reference
@@ -182,13 +180,17 @@ module Masamune::Schema
     end
 
     def references(other)
-      return true if (self.id == other.id && self.type == other.type && (surrogate_key || other.surrogate_key))
-      return false if (parent.nil? || reference.nil?) && (other.parent.nil? || other.reference.nil?)
-      return false if other.primary_key && other.parent.temporary?
-      return false if other.auto_reference || other.ignore
-      parent.try(:id) == other.reference.try(:id) ||
-      reference.try(:id) == other.parent.try(:id) ||
-      reference.try(:id) == other.reference.try(:id)
+      if reference && other.reference && reference.id == other.reference.id
+        true
+      elsif parent && other.parent && parent.id == other.parent.id
+        self == other
+      elsif reference && other.parent && reference.id == other.parent.id
+        self == other
+      elsif surrogate_key || other.surrogate_key
+        self == other
+      else
+        false
+      end
     end
 
     def adjacent

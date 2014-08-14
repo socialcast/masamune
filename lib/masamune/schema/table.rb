@@ -166,21 +166,11 @@ module Masamune::Schema
       @stage_table ||= self.class.new id: id, type: :stage, columns: select_columns(selected_columns), parent: self
     end
 
-    def right_shared_columns(other)
-      Set.new.tap do |shared|
+    def shared_columns(other)
+      Hash.new { |h,k| h[k] = [] }.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            shared << other_column if column == other_column || column.references(other_column)
-          end
-        end
-      end
-    end
-
-    def left_shared_columns(other)
-      Set.new.tap do |shared|
-        columns.each do |_, column|
-          other.columns.each do |_, other_column|
-            shared << column if column == other_column || other_column.references(column)
+            shared[column] << other_column if column.references(other_column)
           end
         end
       end

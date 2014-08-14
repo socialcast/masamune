@@ -1,7 +1,7 @@
 <%- target.insert_references.each do |_, reference|
   reference_stage = reference.stage_table
-  insert_columns = source.right_shared_columns(reference_stage).map(&:name)
-  insert_values  = source.left_shared_columns(reference_stage)
+  insert_columns = source.shared_columns(reference_stage).values.map { |columns| columns.first.name }
+  insert_values  = source.shared_columns(reference_stage).keys
 -%>
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= reference_stage.name %> (LIKE <%= reference.name %> INCLUDING ALL);
 

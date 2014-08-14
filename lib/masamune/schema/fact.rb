@@ -19,32 +19,30 @@ module Masamune::Schema
     end
 
     def insert_columns(source)
-      references = Set.new
-      right_shared_columns(source).map do |column|
+      shared_columns(source).values.map do |columns|
+        column = columns.first
         if reference = column.reference
-          next unless references.add?(reference)
           reference.foreign_key_name
         else
           column.name
         end
-      end.compact
+      end
     end
 
     def insert_values(source)
-      references = Set.new
-      right_shared_columns(source).map do |column|
+      shared_columns(source).values.map do |columns|
+        column = columns.first
         if reference = column.reference
-          next unless references.add?(reference)
           reference.primary_key.qualified_name
         else
           column.qualified_name
         end
-      end.compact
+      end
     end
     method_with_last_element :insert_values
 
     def join_conditions(source)
-      join_columns = right_shared_columns(source).lazy
+      join_columns = shared_columns(source).values.flatten.lazy
       join_columns = join_columns.select { |column| column.reference }.lazy
       join_columns = join_columns.group_by { |column| column.reference }.lazy
       join_columns.map do |reference, columns|
