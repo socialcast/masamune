@@ -39,7 +39,7 @@ module Masamune::Actions
     end
 
     def load_fact(source_files, source, target_table, date)
-      transform = Masamune::Transform::LoadFact.new(source_files, source, target_table, date)
+      transform = Masamune::Transform::LoadFact.new(source_files, source.as_table(target_table), target_table, date)
       postgres file: transform.to_psql_file, debug: (source.debug || target_table.debug)
     end
   end
