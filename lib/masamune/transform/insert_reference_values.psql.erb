@@ -12,7 +12,7 @@ FROM
   <%= source.name %>
 <%- if insert_values -%>
 WHERE
-  <%= insert_values.reject { |column| column.null || column.default }.map { |column| "#{column.name} IS NOT NULL"}.join(" AND\n  ") %>
+  <%= insert_values.reject { |column| column.null || column.default || column.adjacent.try(:default) }.map { |column| "#{column.name} IS NOT NULL"}.join(" AND\n  ") %>
 <%- end -%>
 ;
 

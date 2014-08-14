@@ -49,9 +49,13 @@ module Masamune::Schema
       join_columns = join_columns.group_by { |column| column.reference }.lazy
       join_columns.map do |reference, columns|
         conditions = columns.map do |column|
-          "#{column.foreign_key_name} = #{column.qualified_name}"
+          if column.adjacent.try(:default)
+            "#{column.foreign_key_name} = COALESCE(#{column.qualified_name}, #{column.adjacent.sql_value(column.adjacent.try(:default))})"
+          else
+            "#{column.foreign_key_name} = #{column.qualified_name}"
+          end
         end
-        if reference.type == :two
+        if reference.type == :two || reference.type == :four
           conditions << "TO_TIMESTAMP(#{source.time_key.qualified_name}) BETWEEN #{reference.start_key.qualified_name} AND COALESCE(#{reference.end_key.qualified_name}, 'INFINITY')"
         end
         [reference.name, conditions]

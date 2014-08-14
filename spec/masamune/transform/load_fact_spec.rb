@@ -125,7 +125,7 @@ describe Masamune::Transform::LoadFact do
           user_agent_type
         ON
           user_agent_type.name = visits_fact_stage.user_agent_type_name AND
-          user_agent_type.version = visits_fact_stage.user_agent_type_version
+          user_agent_type.version = COALESCE(visits_fact_stage.user_agent_type_version, 'Unknown')
         JOIN
           feature_type
         ON
@@ -149,8 +149,7 @@ describe Masamune::Transform::LoadFact do
         FROM
           visits_fact_stage
         WHERE
-          user_agent_type_name IS NOT NULL AND
-          user_agent_type_version IS NOT NULL
+          user_agent_type_name IS NOT NULL
         ;
 
         BEGIN;
