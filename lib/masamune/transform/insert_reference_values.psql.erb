@@ -7,11 +7,13 @@ CREATE TEMPORARY TABLE IF NOT EXISTS <%= reference_stage.name %> (LIKE <%= refer
 
 INSERT INTO <%= reference_stage.name %>(<%= insert_columns.join(', ') %>)
 SELECT DISTINCT
-  <%= insert_values.map { |column| column.default ? "COALESCE(#{column.name}, #{column.sql_value(column.default)})" : column.name}.join(",\n  ") %>
+  <%= insert_values.map { |column| column.adjacent.try(:default) ? "COALESCE(#{column.name}, #{column.adjacent.sql_value(column.adjacent.default)})" : column.name}.join(",\n  ") %>
 FROM
   <%= source.name %>
+<%- if insert_values -%>
 WHERE
   <%= insert_values.reject { |column| column.null || column.default }.map { |column| "#{column.name} IS NOT NULL"}.join(" AND\n  ") %>
+<%- end -%>
 ;
 
 <%= render 'bulk_upsert.psql.erb', target: reference, source: reference_stage %>

@@ -189,6 +189,11 @@ module Masamune::Schema
       reference.try(:id) == other.reference.try(:id)
     end
 
+    def adjacent
+      return unless reference
+      reference.columns[id]
+    end
+
     private
 
     def sql_constraints

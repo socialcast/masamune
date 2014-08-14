@@ -13,7 +13,7 @@ describe Masamune::Transform::LoadFact do
 
       dimension 'user_agent', type: :mini, insert: true do
         column 'name', type: :string, unique: true, index: 'shared'
-        column 'version', type: :string, unique: true, index: 'shared'
+        column 'version', type: :string, unique: true, index: 'shared', default: 'Unknown'
       end
 
       dimension  'feature', type: :mini, insert: true do
@@ -144,7 +144,7 @@ describe Masamune::Transform::LoadFact do
         INSERT INTO user_agent_type_stage(name, version)
         SELECT DISTINCT
           user_agent_type_name,
-          user_agent_type_version
+          COALESCE(user_agent_type_version, 'Unknown')
         FROM
           visits_fact_stage
         WHERE
