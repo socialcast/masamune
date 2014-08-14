@@ -143,11 +143,13 @@ describe Masamune::Transform::LoadFact do
 
         INSERT INTO user_agent_type_stage(name, version)
         SELECT DISTINCT
-          user_agent_type_name, user_agent_type_version
+          user_agent_type_name,
+          user_agent_type_version
         FROM
           visits_fact_stage
         WHERE
-          user_agent_type_name IS NOT NULL AND user_agent_type_version IS NOT NULL
+          user_agent_type_name IS NOT NULL AND
+          user_agent_type_version IS NOT NULL
         ;
 
         BEGIN;

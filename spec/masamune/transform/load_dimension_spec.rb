@@ -167,11 +167,13 @@ describe Masamune::Transform::LoadDimension do
 
         INSERT INTO department_type_stage(tenant_id, department_id)
         SELECT DISTINCT
-          tenant_id, department_type_department_id
+          tenant_id,
+          department_type_department_id
         FROM
           user_dimension_ledger_stage
         WHERE
-          tenant_id IS NOT NULL AND department_type_department_id IS NOT NULL
+          tenant_id IS NOT NULL AND
+          department_type_department_id IS NOT NULL
         ;
 
         BEGIN;
