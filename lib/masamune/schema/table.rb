@@ -163,7 +163,7 @@ module Masamune::Schema
     end
 
     def stage_table
-      @stage_table ||= self.class.new id: id, type: :stage, columns: columns.values, parent: self
+      @stage_table ||= self.class.new id: id, type: :stage, columns: columns.values.map(&:dup), parent: self
     end
 
     def shared_columns(other)
