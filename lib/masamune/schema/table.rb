@@ -96,7 +96,7 @@ module Masamune::Schema
 
     def unique_columns
       return {} if temporary?
-      columns.select { |_, column| column.unique } || {}
+      columns.select { |_, column| column.unique }
     end
 
     def insert_columns
