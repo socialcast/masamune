@@ -23,6 +23,7 @@ module Masamune
   require 'masamune/after_initialize_callbacks'
   require 'masamune/schema'
   require 'masamune/transform'
+  require 'masamune/topological_hash'
 
   extend self
   extend Masamune::HasEnvironment

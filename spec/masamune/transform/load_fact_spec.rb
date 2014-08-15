@@ -21,6 +21,10 @@ describe Masamune::Transform::LoadFact do
         column  'name', type: :string, unique: true, index: true
       end
 
+      dimension  'tenant', type: :two do
+        column  'tenant_id', type: :integer, index: true, surrogate_key: true
+      end
+
       dimension  'user', type: :two do
         column  'tenant_id', type: :integer, index: true, surrogate_key: true
         column  'user_id', type: :integer, index: true, surrogate_key: true
@@ -28,6 +32,7 @@ describe Masamune::Transform::LoadFact do
 
       fact  'visits', partition: 'y%Ym%m' do
         references :date
+        references :tenant
         references :user
         references :user_agent
         references :feature
@@ -36,7 +41,7 @@ describe Masamune::Transform::LoadFact do
 
       file  'visits' do
         column  'date.date_id', type: :integer
-        column  'user.tenant_id', type: :integer
+        column  'tenant.tenant_id', type: :integer
         column  'user.user_id', type: :integer
         column  'user_agent.name', type: :string
         column  'user_agent.version', type: :string
@@ -62,7 +67,7 @@ describe Masamune::Transform::LoadFact do
         CREATE TEMPORARY TABLE IF NOT EXISTS visits_fact_stage
         (
           date_dimension_date_id INTEGER,
-          user_dimension_tenant_id INTEGER,
+          tenant_dimension_tenant_id INTEGER,
           user_dimension_user_id INTEGER,
           user_agent_type_name VARCHAR,
           user_agent_type_version VARCHAR,
@@ -76,7 +81,7 @@ describe Masamune::Transform::LoadFact do
         COPY visits_fact_stage FROM 'output_3.csv' WITH (FORMAT 'csv');
 
         CREATE INDEX visits_fact_stage_date_dimension_date_id_index ON visits_fact_stage (date_dimension_date_id);
-        CREATE INDEX visits_fact_stage_user_dimension_tenant_id_index ON visits_fact_stage (user_dimension_tenant_id);
+        CREATE INDEX visits_fact_stage_tenant_dimension_tenant_id_index ON visits_fact_stage (tenant_dimension_tenant_id);
         CREATE INDEX visits_fact_stage_user_dimension_user_id_index ON visits_fact_stage (user_dimension_user_id);
         CREATE INDEX visits_fact_stage_user_agent_type_name_index ON visits_fact_stage (user_agent_type_name);
         CREATE INDEX visits_fact_stage_user_agent_type_version_index ON visits_fact_stage (user_agent_type_version);
@@ -96,14 +101,16 @@ describe Masamune::Transform::LoadFact do
         ) INHERITS (visits_fact);
 
         ALTER TABLE visits_fact_y2014m08 ADD CONSTRAINT visits_fact_y2014m08_date_dimension_uuid_fkey FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid);
+        ALTER TABLE visits_fact_y2014m08 ADD CONSTRAINT visits_fact_y2014m08_tenant_dimension_uuid_fkey FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid);
         ALTER TABLE visits_fact_y2014m08 ADD CONSTRAINT visits_fact_y2014m08_user_dimension_uuid_fkey FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid);
         ALTER TABLE visits_fact_y2014m08 ADD CONSTRAINT visits_fact_y2014m08_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id);
         ALTER TABLE visits_fact_y2014m08 ADD CONSTRAINT visits_fact_y2014m08_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
 
         INSERT INTO
-          visits_fact_y2014m08 (date_dimension_uuid, user_dimension_uuid, user_agent_type_id, feature_type_id, total, time_key)
+          visits_fact_y2014m08 (date_dimension_uuid, tenant_dimension_uuid, user_dimension_uuid, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
           date_dimension.uuid,
+          tenant_dimension.uuid,
           user_dimension.uuid,
           user_agent_type.id,
           feature_type.id,
@@ -118,9 +125,13 @@ describe Masamune::Transform::LoadFact do
         JOIN
           user_dimension
         ON
-          user_dimension.tenant_id = visits_fact_stage.user_dimension_tenant_id AND
           user_dimension.user_id = visits_fact_stage.user_dimension_user_id AND
           TO_TIMESTAMP(visits_fact_stage.time_key) BETWEEN user_dimension.start_at AND COALESCE(user_dimension.end_at, 'INFINITY')
+        JOIN
+          tenant_dimension
+        ON
+          tenant_dimension.tenant_id = COALESCE(visits_fact_stage.tenant_dimension_tenant_id, user_dimension.tenant_id) AND
+          TO_TIMESTAMP(visits_fact_stage.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')
         JOIN
           user_agent_type
         ON
