@@ -162,8 +162,8 @@ module Masamune::Schema
       references.select { |_, reference| reference.insert }
     end
 
-    def stage_table(selected_columns = ALL_COLUMNS)
-      @stage_table ||= self.class.new id: id, type: :stage, columns: select_columns(selected_columns), parent: self
+    def stage_table
+      @stage_table ||= self.class.new id: id, type: :stage, columns: columns.values, parent: self
     end
 
     def shared_columns(other)
