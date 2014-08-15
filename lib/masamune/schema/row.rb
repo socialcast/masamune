@@ -1,44 +1,47 @@
 module Masamune::Schema
   class Row
-    attr_accessor :reference
+    attr_accessor :id
+    attr_accessor :parent
     attr_accessor :values
     attr_accessor :default
     attr_accessor :strict
     attr_accessor :debug
 
-    def initialize(reference: nil, values: {}, default: false, name: nil, strict: true, debug: false)
-      @values  = values.symbolize_keys
-      @default = default
-      @name    = name
-      @strict  = strict
-      @debug   = debug
-
-      @name  ||= 'default' if default
-      self.reference = reference
+    def initialize(id: nil, parent: nil, values: {}, default: false, strict: true, debug: false)
+      self.id     = id || (:default if default)
+      @values     = values.symbolize_keys
+      @default    = default
+      @strict     = strict
+      @debug      = debug
+      self.parent = parent
     end
 
-    def reference=(reference)
-      @reference = reference
-      normalize_values! if @reference
+    def id=(id)
+      @id = id.to_sym if id
+    end
+
+    def parent=(parent)
+      @parent = parent
+      normalize_values! if @parent
     end
 
     def name(column = nil)
-      return unless @name
+      return unless @id
       if column
-        "#{@name}_#{column.name}()"
+        "#{@id}_#{column.name}()"
       else
-        "#{@name}_#{reference.table_name}_#{reference.primary_key.name}()"
+        "#{@id}_#{parent.name}_#{parent.primary_key.name}()"
       end
     end
 
     def surrogate_keys
-      reference.surrogate_keys.select do |column|
+      parent.surrogate_keys.select do |column|
         values.keys.include?(column.name) && !column.sql_function?(values[column.name])
       end
     end
 
     def insert_constraints
-      values.map { |key, value| "#{key} = #{reference.columns[key].sql_value(value)}" }.compact
+      values.map { |key, value| "#{key} = #{parent.columns[key].sql_value(value)}" }.compact
     end
 
     def insert_columns
@@ -46,7 +49,7 @@ module Masamune::Schema
     end
 
     def insert_values
-      values.map { |key, value| reference.columns[key].sql_value(value) }
+      values.map { |key, value| parent.columns[key].sql_value(value) }
     end
 
     def to_hash
@@ -55,7 +58,7 @@ module Masamune::Schema
 
     def to_csv
       [].tap do |result|
-        reference.columns.each do |_, column|
+        parent.columns.each do |_, column|
           result << column.csv_value(values[column.name])
         end
       end.to_csv
@@ -65,10 +68,10 @@ module Masamune::Schema
 
     def normalize_values!
       result = {}
-      reference.columns.each do |name, column|
+      parent.columns.each do |_, column|
         if @values.key?(column.compact_name)
           value = @values[column.compact_name]
-          result[name] = column.ruby_value(value)
+          result[column.name] = column.ruby_value(value)
         end
       end
 

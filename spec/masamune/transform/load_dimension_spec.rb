@@ -2,26 +2,11 @@ require 'spec_helper'
 require 'active_support/core_ext/string/strip'
 
 describe Masamune::Transform::LoadDimension do
-  let(:mock_data) { StringIO.new }
-
-  let(:user_file) do
-    Masamune::Schema::File.new name: 'user',
-      columns: [
-        Masamune::Schema::Column.new(name: 'id', type: :integer),
-        Masamune::Schema::Column.new(name: 'tenant_id', type: :integer),
-        Masamune::Schema::Column.new(name: 'department_id', type: :integer),
-        Masamune::Schema::Column.new(name: 'admin', type: :boolean),
-        Masamune::Schema::Column.new(name: 'preferences', type: :yaml),
-        Masamune::Schema::Column.new(name: 'updated_at', type: :timestamp),
-        Masamune::Schema::Column.new(name: 'deleted_at', type: :timestamp)
-      ]
-  end
-
   let(:user_account_state_type) do
-    Masamune::Schema::Dimension.new name: 'user_account_state', type: :mini,
+    Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
       columns: [
-        Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-        Masamune::Schema::Column.new(name: 'description', type: :string)
+        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+        Masamune::Schema::Column.new(id: 'description', type: :string)
       ], rows: [
         Masamune::Schema::Row.new(values: {
           name: 'registered',
@@ -39,53 +24,35 @@ describe Masamune::Transform::LoadDimension do
   end
 
   let(:department_dimension) do
-    Masamune::Schema::Dimension.new name: 'department', type: :mini, insert: true,
+    Masamune::Schema::Dimension.new id: 'department', type: :mini, insert: true,
       columns: [
-        Masamune::Schema::Column.new(name: 'uuid', type: :uuid, primary_key: true),
-        Masamune::Schema::Column.new(name: 'tenant_id', type: :integer, unique: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'department_id', type: :integer, unique: true, surrogate_key: true)
+        Masamune::Schema::Column.new(id: 'uuid', type: :uuid, primary_key: true),
+        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, unique: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'department_id', type: :integer, unique: true, surrogate_key: true)
       ]
   end
 
   let(:user_dimension) do
-    Masamune::Schema::Dimension.new name: 'user', ledger: true,
+    Masamune::Schema::Dimension.new id: 'user', type: :four,
       references: [department_dimension, user_account_state_type],
       columns: [
-        Masamune::Schema::Column.new(name: 'tenant_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'user_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'preferences', type: :key_value, null: true)
+        Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'preferences', type: :key_value, null: true)
       ]
   end
 
-  let(:map) do
-    Masamune::Schema::Map.new(
-      fields: {
-        'tenant_id'                => 'tenant_id',
-        'user_id'                  => 'id',
-        'department.department_id' => 'department_id',
-        'user_account_state.name'  => ->(row) { row[:deleted_at] ? 'deleted' : 'active' },
-        'preferences_now'          => 'preferences',
-        'start_at'                 => 'updated_at',
-        'source_kind'              => 'groups',
-        'delta'                    => 1})
-  end
+  let(:target) { user_dimension.ledger_table }
+  let(:source) { user_dimension.ledger_table.as_file(%w(tenant_id user_id department.department_id user_account_state.name preferences_now start_at source_kind delta)).as_table }
 
-  let(:transform) { described_class.new mock_data, user_file, user_dimension, map }
-
-  before do
-    transform.run
-  end
+  let(:transform) { described_class.new 'output.csv', source, target }
 
   describe '#stage_dimension_as_psql' do
-    before do
-      allow_any_instance_of(Masamune::Schema::File).to receive(:path) { 'output.csv' }
-    end
-
     subject(:result) { transform.stage_dimension_as_psql }
 
     it 'should eq render load_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_file_stage
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_stage
         (
           tenant_id INTEGER,
           user_id INTEGER,
@@ -97,7 +64,7 @@ describe Masamune::Transform::LoadDimension do
           delta INTEGER
         );
 
-        COPY user_file_stage FROM 'output.csv' WITH (FORMAT 'csv');
+        COPY user_stage FROM 'output.csv' WITH (FORMAT 'csv');
       EOS
     end
   end
@@ -121,7 +88,7 @@ describe Masamune::Transform::LoadDimension do
           source_kind,
           delta
         FROM
-          user_file_stage
+          user_stage
         ;
 
         BEGIN;
@@ -183,13 +150,13 @@ describe Masamune::Transform::LoadDimension do
 
     it 'should eq render template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS department_stage (LIKE department_type INCLUDING ALL);
+        CREATE TEMPORARY TABLE IF NOT EXISTS department_type_stage (LIKE department_type INCLUDING ALL);
 
-        INSERT INTO department_stage(tenant_id, department_id)
+        INSERT INTO department_type_stage(tenant_id, department_id)
         SELECT DISTINCT
           tenant_id, department_type_department_id
         FROM
-          user_file_stage
+          user_stage
         WHERE
           tenant_id IS NOT NULL AND department_type_department_id IS NOT NULL
         ;
@@ -200,15 +167,15 @@ describe Masamune::Transform::LoadDimension do
         INSERT INTO
           department_type (tenant_id,department_id)
         SELECT
-          department_stage.tenant_id,
-          department_stage.department_id
+          department_type_stage.tenant_id,
+          department_type_stage.department_id
         FROM
-          department_stage
+          department_type_stage
         LEFT OUTER JOIN
           department_type
         ON
-          department_type.tenant_id = department_stage.tenant_id AND
-          department_type.department_id = department_stage.department_id
+          department_type.tenant_id = department_type_stage.tenant_id AND
+          department_type.department_id = department_type_stage.department_id
         WHERE
           department_type.tenant_id IS NULL AND
           department_type.department_id IS NULL

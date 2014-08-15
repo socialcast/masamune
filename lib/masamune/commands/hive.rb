@@ -122,7 +122,6 @@ module Masamune::Commands
     end
 
     def command_args_for_simple_file
-      logger.debug("#{@file}:\n" + File.read(@file)) if @debug
       ['-f', @file].tap do |args|
         @variables.each do |key, val|
           args << ['-d', "#{key.to_s}=#{val.to_s}"]

@@ -1,4 +1,4 @@
-CREATE TEMPORARY TABLE IF NOT EXISTS <%= source.table_name %> (LIKE <%= target.table_name %> INCLUDING ALL);
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= source.name %> (LIKE <%= target.name %> INCLUDING ALL);
 
 <%#
 Consolidate complete events from partial events
@@ -9,14 +9,14 @@ WITH ranges AS (
   SELECT *,
   CASE WHEN delta = 0
   THEN 1 ELSE NULL END r
-  FROM <%= target.ledger_table.table_name %>
+  FROM <%= target.ledger_table.name %>
 ), windows AS (
   SELECT *,
   SUM(r) OVER (ORDER BY <%= source.consolidated_window('start_at').join(', ') %>) window_id
   FROM ranges
 )
 INSERT INTO
-  <%= source.table_name %> (<%= source.consolidated_columns.map { |_, column, _| column.name }.join(',') %>)
+  <%= source.name %> (<%= source.consolidated_columns.map { |_, column, _| column.name }.join(',') %>)
 SELECT
   <%- source.consolidated_columns.each do |_, column, last| -%>
   consolidated.<%= column.name %><%= ',' unless last %>
@@ -34,7 +34,7 @@ FROM (
   WINDOW w AS (PARTITION BY <%= source.consolidated_window('window_id').join(', ') %> ORDER BY start_at)
 ) consolidated
 WHERE
-  <%- source.consolidated_constraints.each do |name, column| -%>
+  <%- source.consolidated_constraints.each do |_, column| -%>
   consolidated.<%= column.name %> IS NOT NULL AND
   <%- end -%>
   <%-# Do not consider partial events that occur simultaneously with complete parent event -%>

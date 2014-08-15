@@ -1,11 +1,11 @@
 BEGIN;
-LOCK TABLE <%= target.table_name %> IN EXCLUSIVE MODE;
+LOCK TABLE <%= target.name %> IN EXCLUSIVE MODE;
 
 <%-# Relabel version column -%>
-UPDATE <%= target.table_name %> SET version = NULL;
+UPDATE <%= target.name %> SET version = NULL;
 
 UPDATE
-  <%= target.table_name %>
+  <%= target.name %>
 SET
   version = tmp.version
 FROM
@@ -18,19 +18,19 @@ FROM
       start_at,
       rank() OVER (PARTITION BY <%= target.consolidated_window.join(', ') %> ORDER BY start_at) AS version
     FROM
-      <%= target.table_name %>
+      <%= target.name %>
     GROUP BY
       <%= target.consolidated_window(:uuid, :start_at).join(', ') %>
    ) AS tmp
 WHERE
-  <%= target.table_name %>.uuid = tmp.uuid
+  <%= target.name %>.uuid = tmp.uuid
 ;
 
 <%-# Relabel end_at column -%>
-UPDATE <%= target.table_name %> SET end_at = NULL;
+UPDATE <%= target.name %> SET end_at = NULL;
 
 UPDATE
-  <%= target.table_name %>
+  <%= target.name %>
 SET
   end_at = tmp.end_at
 FROM
@@ -43,12 +43,12 @@ FROM
       <%- end -%>
       LEAD(start_at, 1) OVER (PARTITION BY <%= target.consolidated_window.join(', ') %> ORDER BY start_at) AS end_at
     FROM
-      <%= target.table_name %>
+      <%= target.name %>
     GROUP BY
       <%= target.consolidated_window(:uuid, :start_at).join(', ') %>
    ) AS tmp
 WHERE
-  <%= target.table_name %>.uuid = tmp.uuid
+  <%= target.name %>.uuid = tmp.uuid
 ;
 
 COMMIT;

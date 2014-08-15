@@ -3,20 +3,20 @@ require 'active_support/core_ext/string/strip'
 
 describe Masamune::Transform::ConsolidateDimension do
   let(:mini_dimension) do
-    Masamune::Schema::Dimension.new name: 'user_account_state', type: :mini,
+    Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
       columns: [
-        Masamune::Schema::Column.new(name: 'name', type: :string, unique: true),
-        Masamune::Schema::Column.new(name: 'description', type: :string)
+        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+        Masamune::Schema::Column.new(id: 'description', type: :string)
       ]
   end
 
   let(:dimension) do
-    Masamune::Schema::Dimension.new name: 'user', ledger: true,
+    Masamune::Schema::Dimension.new id: 'user', type: :four,
       references: [mini_dimension],
       columns: [
-        Masamune::Schema::Column.new(name: 'tenant_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'user_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(name: 'preferences', type: :key_value, null: true)
+        Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true),
+        Masamune::Schema::Column.new(id: 'preferences', type: :key_value, null: true)
       ]
   end
 
@@ -27,7 +27,7 @@ describe Masamune::Transform::ConsolidateDimension do
 
     it 'should eq render consolidate_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_stage (LIKE user_dimension INCLUDING ALL);
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_stage (LIKE user_dimension INCLUDING ALL);
 
         WITH ranges AS (
           SELECT *,
@@ -40,7 +40,7 @@ describe Masamune::Transform::ConsolidateDimension do
           FROM ranges
         )
         INSERT INTO
-          user_stage (user_account_state_type_id,tenant_id,user_id,preferences,parent_uuid,record_uuid,start_at)
+          user_dimension_stage (user_account_state_type_id,tenant_id,user_id,preferences,parent_uuid,record_uuid,start_at)
         SELECT
           consolidated.user_account_state_type_id,
           consolidated.tenant_id,

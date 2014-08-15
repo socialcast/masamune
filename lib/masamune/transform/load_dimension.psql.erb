@@ -1,13 +1,13 @@
-CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.table_name %> (LIKE <%= target.table_name %> INCLUDING ALL);
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
 
 INSERT INTO
-  <%= target.stage_table.table_name %> (<%= source.insert_columns.join(', ') %>)
+  <%= target.stage_table.name %> (<%= source.insert_columns.join(', ') %>)
 SELECT
   <%- source.insert_values.each do |value, last| -%>
   <%= value %><%= ',' unless last %>
   <%- end -%>
 FROM
-  <%= source.table_name %>
+  <%= source.name %>
 ;
 
 <%= render 'bulk_upsert.psql.erb', target: target, source: target.stage_table %>

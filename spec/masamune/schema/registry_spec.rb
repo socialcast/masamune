@@ -9,8 +9,8 @@ describe Masamune::Schema::Registry do
     context 'when schema contains dimensions' do
       before do
         instance.schema do
-          dimension 'foo'
-          dimension 'bar'
+          dimension 'foo', type: :two
+          dimension 'bar', type: :two
         end
       end
 
@@ -23,12 +23,12 @@ describe Masamune::Schema::Registry do
     context 'when schema contains columns' do
       before do
         instance.schema do
-          dimension 'table_one' do
+          dimension 'table_one', type: :two do
             column 'column_one'
             column 'column_two'
           end
 
-          dimension 'table_two' do
+          dimension 'table_two', type: :two do
             column 'column_three'
             column 'column_four'
           end
@@ -51,7 +51,7 @@ describe Masamune::Schema::Registry do
     context 'when schema contains columns and rows' do
       before do
         instance.schema do
-          dimension 'table_one' do
+          dimension 'table_one', type: :two do
             column 'column_one', type: :integer
             column 'column_two', type: :string
             row column_one: 1, column_two: 'a'
@@ -69,19 +69,21 @@ describe Masamune::Schema::Registry do
     context 'when schema contains references' do
       before do
         instance.schema do
-          dimension 'foo'
-          dimension 'bar'
-          dimension 'baz' do
+          dimension 'foo', type: :one
+          dimension 'bar', type: :one
+          dimension 'baz', type: :two do
             references :foo
-            references :bar
+            references :bar, label: :quux
           end
         end
       end
 
-      subject { instance.dimensions[:baz].references }
+      subject(:references) { instance.dimensions[:baz].references }
 
       it { is_expected.to include :foo }
       it { is_expected.to include :bar }
+      it { expect(references[:foo].label).to be_nil }
+      it { expect(references[:bar].label).to eq(:quux) }
     end
 
     context 'when schema contains overrides' do
@@ -101,6 +103,33 @@ describe Masamune::Schema::Registry do
 
       it { is_expected.to include :uuid }
       it { is_expected.to_not include :id }
+    end
+
+    context 'when schema contains facts' do
+      before do
+        instance.schema do
+          dimension 'dimension_one', type: :two do
+            column 'column_one'
+            column 'column_two'
+          end
+
+          fact 'fact_one' do
+            references :dimension_one
+            measure 'measure_one'
+          end
+
+          fact 'fact_two' do
+            references :dimension_one
+            measure 'measure_two'
+          end
+        end
+      end
+
+      let(:fact_one) { instance.facts[:fact_one] }
+      let(:fact_two) { instance.facts[:fact_two] }
+
+      it { expect(fact_one.references).to include :dimension_one}
+      it { expect(fact_one.measures).to include :measure_one }
     end
 
     context 'when schema contains csv files' do
@@ -137,7 +166,7 @@ describe Masamune::Schema::Registry do
       subject(:map) { instance.maps[:user_csv_to_dimension] }
 
       it 'constructs map' do
-        expect(map.name).to eq(:user_csv_to_dimension)
+        expect(map.id).to eq(:user_csv_to_dimension)
         expect(map.fields[:tenant_id]).to eq('tenant_id')
         expect(map.fields[:user_id]).to eq('id')
         expect(map.fields[:'user_account_state.name']).to be_a(Proc)
