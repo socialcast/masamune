@@ -26,7 +26,7 @@ module Masamune::Actions
       map.apply(source_file, intermediate)
 
       transform = Masamune::Transform::LoadDimension.new(intermediate, intermediate.as_table, target)
-      logger.debug(transform.output.to_s) if (source_file.debug || map.debug)
+      logger.debug(File.read(output)) if (source_file.debug || map.debug)
       postgres file: transform.to_psql_file, debug: (source_file.debug || target_table.debug || map.debug)
     ensure
       input.close
