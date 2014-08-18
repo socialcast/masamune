@@ -56,7 +56,6 @@ module Masamune::Schema
       "#{reference.name}.#{@id}".to_sym if reference
     end
 
-    # FIXME similar as above
     def compact_name
       if reference
         "#{reference.id}.#{@id}".to_sym

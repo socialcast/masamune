@@ -175,6 +175,10 @@ describe Masamune::Schema::Registry do
     context 'when schema contains map' do
       before do
         instance.schema do
+          dimension 'user_account_state', type: :mini do
+            column 'name', type: :string
+          end
+
           map :user_csv_to_dimension do
             field 'tenant_id'
             field 'user_id', 'id'
