@@ -1,7 +1,5 @@
 module Masamune::Schema
   class Table
-    ALL_COLUMNS = :all_columns
-
     include Masamune::LastElement
 
     attr_accessor :id
@@ -180,7 +178,7 @@ module Masamune::Schema
       Masamune::Template.render_to_string(table_template, extra.merge(table: self))
     end
 
-    def as_file(selected_columns = ALL_COLUMNS)
+    def as_file(selected_columns)
       Masamune::Schema::File.new id: id, columns: select_columns(selected_columns)
     end
 
@@ -213,16 +211,13 @@ module Masamune::Schema
       end
     end
 
-    def select_columns(selected_columns = ALL_COLUMNS)
-      return columns.values if selected_columns == ALL_COLUMNS
+    def select_columns(selected_columns)
       [].tap do |result|
         selected_columns.each do |name|
           reference_name, column_name = Column::dereference_column_name(name)
           if reference = references[reference_name]
             if reference.columns[column_name]
               result << reference.columns[column_name].dup.tap { |column| column.reference = reference }
-            else
-              raise "wtf #{column_name}"
             end
           elsif columns[column_name]
             result << columns[column_name]
