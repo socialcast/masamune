@@ -25,12 +25,6 @@ module Masamune::Schema
       @total_lines = 0
     end
 
-    def compact_column_names
-      columns.values.map do |column|
-        column.compact_name
-      end
-    end
-
     def bind(input)
       @io = input
       dup
