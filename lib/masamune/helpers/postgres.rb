@@ -27,6 +27,7 @@ module Masamune::Helpers
 
     def drop_table(table)
       return unless table_exists?(table)
+      @cache.delete(table)
       postgres(exec: "DROP TABLE #{table};", fail_fast: true).success?
     end
 
