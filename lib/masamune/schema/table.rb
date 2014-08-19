@@ -168,7 +168,7 @@ module Masamune::Schema
       Hash.new { |h,k| h[k] = [] }.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            shared[column] << other_column if column.references(other_column)
+            shared[column] << other_column if column.references?(other_column)
           end
         end
       end

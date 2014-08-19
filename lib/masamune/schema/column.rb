@@ -65,11 +65,11 @@ module Masamune::Schema
     end
 
     def qualified_name
-      parent ? "#{parent.name}.#{name}" : name
+      (parent ? "#{parent.name}.#{name}" : name).to_sym
     end
 
     def reference_name
-      parent ? "#{parent.name}_#{name}".to_sym : name
+      (parent ? "#{parent.name}_#{name}" : name).to_sym
     end
 
     def sql_type(for_primary_key = false)
@@ -178,7 +178,7 @@ module Masamune::Schema
       reference && reference.primary_key.auto
     end
 
-    def references(other)
+    def references?(other)
       if reference && other.reference && reference.id == other.reference.id
         true
       elsif parent && other.parent && parent.id == other.parent.id
