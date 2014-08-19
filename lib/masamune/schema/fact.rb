@@ -12,7 +12,7 @@ module Masamune::Schema
       time_key.index ||= true
     end
 
-    alias measures columns
+    alias_method :measures, :columns
 
     def time_key
       columns.values.detect { |column| column.id == :time_key }
