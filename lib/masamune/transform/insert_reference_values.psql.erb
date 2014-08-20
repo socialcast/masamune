@@ -1,17 +1,19 @@
-<%- target.insert_references.each do |_, reference| -%>
-<%-
+<%- target.insert_references.each do |_, reference|
   reference_stage = reference.stage_table
-  shared_columns = reference_stage.shared_columns(source)
-%>
+  insert_columns = source.shared_columns(reference_stage).values.map { |columns| columns.first.name }
+  insert_values  = source.shared_columns(reference_stage).keys
+-%>
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= reference_stage.name %> (LIKE <%= reference.name %> INCLUDING ALL);
 
-INSERT INTO <%= reference_stage.name %>(<%= shared_columns.map { |source, target| target.name}.join(', ') %>)
+INSERT INTO <%= reference_stage.name %>(<%= insert_columns.join(', ') %>)
 SELECT DISTINCT
-  <%= shared_columns.map { |source, target| source.name}.join(', ') %>
+  <%= insert_values.map { |column| column.adjacent.try(:default) ? "COALESCE(#{column.name}, #{column.adjacent.sql_value(column.adjacent.default)})" : column.name}.join(",\n  ") %>
 FROM
   <%= source.name %>
+<%- if insert_values -%>
 WHERE
-  <%= shared_columns.map { |source, target| "#{source.name} IS NOT NULL"}.join(' AND ') %>
+  <%= insert_values.reject { |column| column.null || column.default || column.adjacent.try(:default) }.map { |column| "#{column.name} IS NOT NULL"}.join(" AND\n  ") %>
+<%- end -%>
 ;
 
 <%= render 'bulk_upsert.psql.erb', target: reference, source: reference_stage %>

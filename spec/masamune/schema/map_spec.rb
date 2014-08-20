@@ -2,64 +2,71 @@ require 'spec_helper'
 require 'active_support/core_ext/string/strip'
 
 describe Masamune::Schema::Map do
-  let(:source_data) do
-    <<-EOS.strip_heredoc
-      id,tenant_id,junk_id,deleted_at,admin,preferences
-      1,30,X,,0,,
-      2,40,Y,2014-02-26 18:15:51 UTC,1,"---
-      :enabled: true
-      "
-    EOS
+  let(:environment) { double }
+  let(:registry) { Masamune::Schema::Registry.new(environment) }
+
+  before do
+    registry.schema do
+      dimension 'user_account_state', type: :mini do
+        column 'name', type: :string, unique: true
+        column 'description', type: :string, null: true
+      end
+
+      dimension 'user', type: :four do
+        references :user_account_state
+        column 'cluster_id', index: true, surrogate_key: true
+        column 'tenant_id', index: true, surrogate_key: true
+        column 'user_id', index: true, surrogate_key: true
+        column 'preferences', type: :key_value, null: true
+        column 'admin', type: :boolean
+        column 'source', type: :string
+      end
+
+      file 'user', format: :csv do
+        column 'id', type: :integer
+        column 'tenant_id', type: :integer
+        column 'admin', type: :boolean
+        column 'preferences', type: :yaml
+        column 'deleted_at', type: :timestamp
+      end
+
+      map 'user_map', headers: true do
+        field 'tenant_id', 'tenant_id'
+        field 'user_id', 'id'
+        field 'user_account_state.name' do |row|
+          row[:deleted_at] ? 'deleted' : 'active'
+        end
+        field 'admin' do |row|
+          row[:admin]
+        end
+        field 'preferences', 'preferences'
+        field 'source', 'users_file'
+        field 'cluster_id', 100
+      end
+    end
   end
 
-  let(:source) do
-    Masamune::Schema::File.new id: 'source_user',
-      format: :csv,
-      columns: [
-        Masamune::Schema::Column.new(id: 'id', type: :integer),
-        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer),
-        Masamune::Schema::Column.new(id: 'admin', type: :boolean),
-        Masamune::Schema::Column.new(id: 'preferences', type: :yaml),
-        Masamune::Schema::Column.new(id: 'deleted_at', type: :timestamp)
-      ]
-  end
+  describe '#apply' do
+    let(:source) do
+      registry.files[:user]
+    end
 
-  let(:mini_dimension) do
-    Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
-      columns: [
-        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
-        Masamune::Schema::Column.new(id: 'description', type: :string)
-      ]
-  end
-
-  let(:dimension) do
-    Masamune::Schema::Dimension.new id: 'user', references: [mini_dimension],
-      columns: [
-        Masamune::Schema::Column.new(id: 'cluster_id', type: :integer),
-        Masamune::Schema::Column.new(id: 'user_id', type: :integer),
-        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer),
-        Masamune::Schema::Column.new(id: 'preferences', type: :key_value),
-        Masamune::Schema::Column.new(id: 'admin', type: :boolean),
-        Masamune::Schema::Column.new(id: 'source', type: :string)
-      ]
-  end
-
-  context 'with source file and target file' do
     let(:map) do
-      described_class.new(
-        headers: true,
-        fields: {
-          'tenant_id'               => 'tenant_id',
-          'user_id'                 => 'id',
-          'user_account_state.name' => ->(row) { row[:deleted_at] ? 'deleted' : 'active' },
-          'admin'                   => ->(row) { row[:admin] },
-          'preferences'             => 'preferences',
-          'source'                  => 'users_file',
-          'cluster_id'              => 100 })
+      registry.maps[:user_map]
     end
 
     let(:target) do
-      dimension.as_file(map.columns)
+      registry.dimensions[:user].as_file(map.columns)
+    end
+
+    let(:source_data) do
+      <<-EOS.strip_heredoc
+        id,tenant_id,junk_id,deleted_at,admin,preferences
+        1,30,X,,0,,
+        2,40,Y,2014-02-26 18:15:51 UTC,1,"---
+        :enabled: true
+        "
+      EOS
     end
 
     let(:target_data) do

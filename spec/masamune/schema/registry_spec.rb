@@ -132,25 +132,53 @@ describe Masamune::Schema::Registry do
       it { expect(fact_one.measures).to include :measure_one }
     end
 
-    context 'when schema contains csv files' do
+    context 'when schema contains file' do
       before do
         instance.schema do
+          dimension 'user_account', type: :mini do
+            column 'name', type: :string
+          end
+
           file 'users' do
-            column 'user_account_type.name', type: :string
+            column 'user_account.name', type: :string
+            column 'admin', type: :boolean
           end
         end
       end
 
       subject(:file) { instance.files[:users] }
 
-      it 'should expect dot notation column names to references' do
-        expect(file.columns).to include :'user_account_type.name'
+      it 'should expect dot notation column names to reference dimensions' do
+        expect(file.columns).to include :user_account_type_name
+        expect(file.columns).to include :admin
+        expect(file.columns[:user_account_type_name].reference).to eq(instance.dimensions[:user_account])
+        expect(file.columns[:admin].reference).to be_nil
       end
     end
+
+    context 'when schema contains file with invalid reference' do
+      subject(:schema) do
+        instance.schema do
+          file 'users' do
+            column 'user_account.name', type: :string
+            column 'admin', type: :boolean
+          end
+        end
+      end
+
+      it 'should raise an exception' do
+        expect { schema }.to raise_error /dimension user_account not defined/
+      end
+    end
+
 
     context 'when schema contains map' do
       before do
         instance.schema do
+          dimension 'user_account_state', type: :mini do
+            column 'name', type: :string
+          end
+
           map :user_csv_to_dimension do
             field 'tenant_id'
             field 'user_id', 'id'

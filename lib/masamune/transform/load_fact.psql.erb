@@ -1,0 +1,23 @@
+CREATE TABLE <%= target.partition_table_name(date) %> (
+  <%= target.partition_table_constraints(date) %>
+) INHERITS (<%= target.name %>);
+
+<%- target.foreign_key_columns.each do |column| -%>
+ALTER TABLE <%= target.partition_table_name(date) %> ADD CONSTRAINT <%= target.partition_table_name(date) %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %>;
+<%- end -%>
+
+INSERT INTO
+  <%= target.partition_table_name(date) %> (<%= target.insert_columns(source).join(', ') %>)
+SELECT
+  <%- target.insert_values(source).each do |value, last| -%>
+  <%= value %><%= ',' unless last %>
+  <%- end -%>
+FROM
+  <%= source.name %>
+<%- target.join_conditions(source).each do |table, conditions| -%>
+JOIN
+  <%= table %>
+ON
+  <%= conditions.join(" AND\n  ") %>
+<%- end -%>
+;

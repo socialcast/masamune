@@ -319,17 +319,28 @@ describe Masamune::Schema::Table do
         ]
     end
 
-    subject { table.stage_table.as_psql }
+    let!(:stage_table) { table.stage_table }
 
-    it 'should eq table template' do
-      is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
-        (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          user_account_state_table_uuid UUID,
-          name VARCHAR
-        );
-      EOS
+    it 'should duplicate columns' do
+      expect(table.parent).to be_nil
+      expect(table.columns[:name].parent).to eq(table)
+      expect(stage_table.parent).to eq(table)
+      expect(stage_table.columns[:name].parent).to eq(stage_table)
+    end
+
+    describe '#as_psql' do
+      subject { stage_table.as_psql }
+
+      it 'should eq table template' do
+        is_expected.to eq <<-EOS.strip_heredoc
+          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
+          (
+            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            user_account_state_table_uuid UUID,
+            name VARCHAR
+          );
+        EOS
+      end
     end
   end
 end

@@ -1,34 +1,45 @@
 require 'spec_helper'
 
 describe Masamune::Actions::Transform do
+  let(:environment) { double }
+  let(:registry) { Masamune::Schema::Registry.new(environment) }
+
+  before do
+    registry.schema do
+      dimension 'user', type: :four do
+        column 'tenant_id', type: :integer, index: true
+        column 'user_id',   type: :integer, index: true, surrogate_key: true
+      end
+
+      file 'user', format: :csv, headers: true do
+        column 'id', type: :integer
+        column 'tenant_id', type: :integer
+        column 'updated_at', type: :timestamp
+      end
+
+      map 'user' do
+        field 'user_id', 'id'
+        field 'tenant_id'
+        field 'source_kind', 'users'
+        field 'start_at', 'updated_at'
+        field 'delta', 1
+      end
+
+      fact 'visits', partition: 'y%Ym%m' do
+        references :user
+        measure 'total', type: :integer
+      end
+
+      file 'visits' do
+        column 'user.tenant_id', type: :integer
+        column 'user.user_id', type: :integer
+        column 'time_key', type: :integer
+        column 'total', type: :integer
+      end
+    end
+  end
+
   let(:source_file) { Tempfile.new('masamune').path }
-
-  let(:user_file) do
-    Masamune::Schema::File.new id: 'user',
-      columns: [
-        Masamune::Schema::Column.new(id: 'id', type: :integer),
-        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer),
-        Masamune::Schema::Column.new(id: 'updated_at', type: :timestamp),
-      ]
-  end
-
-  let(:user_dimension) do
-    Masamune::Schema::Dimension.new id: 'user', type: :four,
-      columns: [
-        Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true)
-      ]
-  end
-
-  let(:map) do
-    Masamune::Schema::Map.new(
-      fields: {
-        'tenant_id'                => 'tenant_id',
-        'user_id'                  => 'id',
-        'start_at'                 => 'updated_at',
-        'source_kind'              => 'users',
-        'delta'                    => 1})
-  end
 
   let(:klass) do
     Class.new do
@@ -48,7 +59,20 @@ describe Masamune::Actions::Transform do
       mock_command(/\Apsql/, mock_success)
     end
 
-    subject { instance.load_dimension(source_file, user_file, user_dimension, map) }
+    subject { instance.load_dimension(source_file, registry.files[:user], registry.dimensions[:user], registry.maps[:user]) }
+
+    it { is_expected.to be_success }
+  end
+
+  describe '.load_fact' do
+    let(:date) { DateTime.civil(2014, 8) }
+    let(:data) { Masamune::DataPlanSet.new(source_file) }
+
+    before do
+      mock_command(/\Apsql/, mock_success)
+    end
+
+    subject { instance.load_fact(data, registry.files[:visits], registry.facts[:visits], date) }
 
     it { is_expected.to be_success }
   end

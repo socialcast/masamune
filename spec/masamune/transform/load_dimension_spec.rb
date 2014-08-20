@@ -2,57 +2,66 @@ require 'spec_helper'
 require 'active_support/core_ext/string/strip'
 
 describe Masamune::Transform::LoadDimension do
-  let(:user_account_state_type) do
-    Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
-      columns: [
-        Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
-        Masamune::Schema::Column.new(id: 'description', type: :string)
-      ], rows: [
-        Masamune::Schema::Row.new(values: {
-          name: 'registered',
-          description: 'Registered'
-        }),
-        Masamune::Schema::Row.new(values: {
-          name: 'active',
-          description: 'Active',
-        }, default: true),
-        Masamune::Schema::Row.new(values: {
-          name: 'inactive',
-          description: 'Inactive'
-        })
-      ]
+  let(:environment) { double }
+  let(:registry) { Masamune::Schema::Registry.new(environment) }
+
+  before do
+    registry.schema do
+      dimension 'cluster', type: :mini do
+        column 'id', type: :integer, primary_key: true, auto: true
+        column 'name', type: :string, unique: true
+        row name: 'default', attributes: {default: true}
+      end
+
+      dimension 'user_account_state', type: :mini do
+        column 'name', type: :string, unique: true
+        column 'description', type: :string
+        row name: 'registered', description: 'Registered'
+        row name: 'active', description: 'Active', attributes: {default: true}
+        row name: 'inactive', description: 'Inactive'
+      end
+
+      dimension 'department', type: :mini, insert: true do
+        references :cluster
+        column 'uuid', type: :uuid, primary_key: true
+        column 'tenant_id', type: :integer, unique: true, surrogate_key: true
+        column 'department_id', type: :integer, unique: true, surrogate_key: true
+      end
+
+      dimension 'user', type: :four do
+        references :cluster
+        references :department
+        references :user_account_state
+        column 'tenant_id', index: true, surrogate_key: true
+        column 'user_id', index: true, surrogate_key: true
+        column 'preferences', type: :key_value, null: true
+      end
+
+      file 'user' do
+        column  'tenant_id', type: :integer
+        column  'user_id', type: :integer
+        column  'department.department_id', type: :integer
+        column  'user_account_state.name', type: :string
+        column  'preferences_now', type: :json
+        column  'start_at', type: :timestamp
+        column  'source_kind', type: :string
+        column  'delta', type: :integer
+      end
+    end
   end
 
-  let(:department_dimension) do
-    Masamune::Schema::Dimension.new id: 'department', type: :mini, insert: true,
-      columns: [
-        Masamune::Schema::Column.new(id: 'uuid', type: :uuid, primary_key: true),
-        Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, unique: true, surrogate_key: true),
-        Masamune::Schema::Column.new(id: 'department_id', type: :integer, unique: true, surrogate_key: true)
-      ]
-  end
+  let(:data) { double(path: 'output.csv') }
+  let(:target) { registry.dimensions[:user].ledger_table }
+  let(:source) { registry.files[:user].as_table(target) }
 
-  let(:user_dimension) do
-    Masamune::Schema::Dimension.new id: 'user', type: :four,
-      references: [department_dimension, user_account_state_type],
-      columns: [
-        Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true),
-        Masamune::Schema::Column.new(id: 'preferences', type: :key_value, null: true)
-      ]
-  end
-
-  let(:target) { user_dimension.ledger_table }
-  let(:source) { user_dimension.ledger_table.as_file(%w(tenant_id user_id department.department_id user_account_state.name preferences_now start_at source_kind delta)).as_table }
-
-  let(:transform) { described_class.new 'output.csv', source, target }
+  let(:transform) { described_class.new data, source, target }
 
   describe '#stage_dimension_as_psql' do
     subject(:result) { transform.stage_dimension_as_psql }
 
     it 'should eq render load_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_stage
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage
         (
           tenant_id INTEGER,
           user_id INTEGER,
@@ -64,7 +73,11 @@ describe Masamune::Transform::LoadDimension do
           delta INTEGER
         );
 
-        COPY user_stage FROM 'output.csv' WITH (FORMAT 'csv');
+        COPY user_dimension_ledger_stage FROM 'output.csv' WITH (FORMAT 'csv');
+
+        CREATE INDEX user_dimension_ledger_stage_tenant_id_index ON user_dimension_ledger_stage (tenant_id);
+        CREATE INDEX user_dimension_ledger_stage_user_id_index ON user_dimension_ledger_stage (user_id);
+        CREATE INDEX user_dimension_ledger_stage_start_at_index ON user_dimension_ledger_stage (start_at);
       EOS
     end
   end
@@ -88,7 +101,7 @@ describe Masamune::Transform::LoadDimension do
           source_kind,
           delta
         FROM
-          user_stage
+          user_dimension_ledger_stage
         ;
 
         BEGIN;
@@ -154,11 +167,13 @@ describe Masamune::Transform::LoadDimension do
 
         INSERT INTO department_type_stage(tenant_id, department_id)
         SELECT DISTINCT
-          tenant_id, department_type_department_id
+          tenant_id,
+          department_type_department_id
         FROM
-          user_stage
+          user_dimension_ledger_stage
         WHERE
-          tenant_id IS NOT NULL AND department_type_department_id IS NOT NULL
+          tenant_id IS NOT NULL AND
+          department_type_department_id IS NOT NULL
         ;
 
         BEGIN;

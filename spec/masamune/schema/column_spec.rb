@@ -29,4 +29,26 @@ describe Masamune::Schema::Column do
       end
     end
   end
+
+  describe '#==' do
+    subject { column == other }
+
+    context 'when identical reference' do
+      let(:column) { described_class.new id: 'name', type: :string }
+      let(:other) { column }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'when identical value' do
+      let(:column) { described_class.new id: 'name', type: :string }
+      let(:other) { column.dup }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'when different value' do
+      let(:column) { described_class.new id: 'name', type: :string }
+      let(:other) { described_class.new id: 'name', type: :integer }
+      it { is_expected.to eq(false) }
+    end
+  end
 end

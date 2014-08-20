@@ -13,7 +13,7 @@ module Masamune::Schema
     attr_accessor :children
     attr_accessor :debug
 
-    def initialize(id:, type: :table, label: nil, references: [], columns: [], rows: [], insert: false, parent: nil, debug: false)
+    def initialize(id:, type: :table, label: nil, references: [], columns: [], rows: [], insert: false, parent: nil, inherit: false, debug: false)
       self.id = id
       @type   = type
       @label  = label
@@ -38,25 +38,10 @@ module Masamune::Schema
         column.parent = self
         @columns[column.name.to_sym] = column
       end
+      inherit_column_attributes! if inherit
 
       @rows = []
       rows.each do |row|
-        row.parent = self
-        @rows << row
-      end
-    end
-
-    def initialize_copy(other)
-      other.columns.each do |_, other_column|
-        next unless other_column
-        column = other_column.dup
-        column.parent = self
-        @columns[column.name.to_sym] = column
-      end
-
-      other.rows.each do |_, other_row|
-        next unless other_row
-        row = other_row.dup
         row.parent = self
         @rows << row
       end
@@ -72,6 +57,8 @@ module Masamune::Schema
         parent ? "#{parent.name}_stage" : "#{@id}_stage"
       when :table
         "#{@id}_table"
+      else
+        "#{@id}_#{@type}"
       end
     end
 
@@ -88,7 +75,7 @@ module Masamune::Schema
     end
 
     def foreign_key_name
-      [label, name, primary_key.try(:name)].compact.join('_')
+      [label, name, primary_key.try(:name)].compact.join('_').to_sym
     end
 
     def defined_columns
@@ -97,7 +84,6 @@ module Masamune::Schema
     method_with_last_element :defined_columns
 
     def index_columns
-      return [] if temporary?
       indices = columns.select { |_, column| column.index }.lazy
       indices = indices.group_by { |_, column| column.index == true ? column.name : column.index }.lazy
       indices = indices.map { |_, index_and_columns| index_and_columns.map(&:last) }.lazy
@@ -108,7 +94,7 @@ module Masamune::Schema
 
     def unique_columns
       return {} if temporary?
-      columns.select { |_, column| column.unique } || {}
+      columns.select { |_, column| column.unique }
     end
 
     def insert_columns
@@ -122,12 +108,12 @@ module Masamune::Schema
     end
 
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_update_columns
 
     def upsert_insert_columns
-      columns.values.reject { |column| column.primary_key }
+      columns.values.reject { |column| column.primary_key || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_insert_columns
 
@@ -136,8 +122,9 @@ module Masamune::Schema
     end
 
     def upsert_unique_columns
-      columns.values.select { |column| column.surrogate_key }
+      columns.values.select { |column| column.surrogate_key || column.unique }
     end
+    method_with_last_element :upsert_unique_columns
 
     def default_foreign_key_name
       rows.detect { |row| row.default }.try(:name)
@@ -156,7 +143,7 @@ module Masamune::Schema
           else
             select
           end
-        elsif column.type == :key_value
+        elsif column.type == :json || column.type == :yaml || column.type == :key_value
           "json_to_hstore(#{column.name})"
         else
           column.name.to_s
@@ -174,33 +161,25 @@ module Masamune::Schema
     end
 
     def stage_table
-      @stage_table ||= self.dup.tap do |table|
-        table.parent = self
-        table.type = :stage
-        table.columns.each do |_, column|
-          column.strict = false
-        end
-      end
+      @stage_table ||= self.class.new id: id, type: :stage, columns: columns.values.map(&:dup), parent: self
     end
 
     def shared_columns(other)
-      [].tap do |shared|
+      Hash.new { |h,k| h[k] = [] }.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
-            next unless column.id == other_column.id
-            next unless column.type == other_column.type
-            shared << [other_column, column]
+            shared[column] << other_column if column.references?(other_column)
           end
         end
       end
     end
 
-    def as_psql
-      Masamune::Template.render_to_string(table_template, table: self)
+    def as_psql(extra = {})
+      Masamune::Template.render_to_string(table_template, extra.merge(table: self))
     end
 
-    def as_file(a = [])
-      Masamune::Schema::File.new id: id, columns: select_columns(a)
+    def as_file(selected_columns)
+      Masamune::Schema::File.new id: id, columns: select_columns(selected_columns)
     end
 
     private
@@ -223,12 +202,23 @@ module Masamune::Schema
       @columns[column.name.to_sym] = column
     end
 
-    def select_columns(a = [])
+    def inherit_column_attributes!
+      return unless parent
+      columns.each do |_, column|
+        parent.columns.each do |_, parent_column|
+          column.index = parent_column.index if column == parent_column
+        end
+      end
+    end
+
+    def select_columns(selected_columns)
       [].tap do |result|
-        a.each do |name|
+        selected_columns.each do |name|
           reference_name, column_name = Column::dereference_column_name(name)
           if reference = references[reference_name]
-            result << reference.columns[column_name].dup.tap { |column| column.reference = reference }
+            if reference.columns[column_name]
+              result << reference.columns[column_name].dup.tap { |column| column.reference = reference }
+            end
           elsif columns[column_name]
             result << columns[column_name]
           end

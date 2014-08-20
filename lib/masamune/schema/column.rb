@@ -8,8 +8,10 @@ module Masamune::Schema
     attr_accessor :null
     attr_accessor :strict
     attr_accessor :default
+    attr_accessor :auto
     attr_accessor :index
     attr_accessor :unique
+    attr_accessor :ignore
     attr_accessor :primary_key
     attr_accessor :surrogate_key
     attr_accessor :degenerate_key
@@ -17,15 +19,17 @@ module Masamune::Schema
     attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(id:, type: :integer, sub_type: nil, null: false, strict: true, default: nil, index: false, unique: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
+    def initialize(id:, type: :integer, sub_type: nil, null: false, strict: true, default: nil, auto: false, index: false, unique: false, ignore: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
       self.id         = id
       @type           = type
       @sub_type       = sub_type
       @null           = null
       @strict         = strict
       @default        = default
+      @auto           = auto
       @index          = index
       @unique         = unique
+      @ignore         = ignore
       @primary_key    = primary_key
       @surrogate_key  = surrogate_key
       @degenerate_key = degenerate_key
@@ -58,6 +62,14 @@ module Masamune::Schema
       else
         @id
       end
+    end
+
+    def qualified_name
+      (parent ? "#{parent.name}.#{name}" : name).to_sym
+    end
+
+    def reference_name
+      (parent ? "#{parent.name}_#{name}" : name).to_sym
     end
 
     def sql_type(for_primary_key = false)
@@ -127,7 +139,14 @@ module Masamune::Schema
     end
 
     def as_psql
-      [name, sql_type(primary_key), *sql_constraints, sql_reference, sql_default].compact.join(' ')
+      [name, sql_type(primary_key), *sql_constraints, reference_constraint, sql_default].compact.join(' ')
+    end
+
+    def reference_constraint
+      return if parent.temporary?
+      if reference && reference.primary_key.type == type
+        "REFERENCES #{reference.name}(#{reference.primary_key.name})"
+      end
     end
 
     class << self
@@ -141,6 +160,43 @@ module Masamune::Schema
       end
     end
 
+    def ==(other)
+      return false unless other
+      id == other.id &&
+      type == other.type
+    end
+
+    def eql?(other)
+      self == other
+    end
+
+    def hash
+      [id, type].hash
+    end
+
+    def auto_reference
+      reference && reference.primary_key.auto
+    end
+
+    def references?(other)
+      if reference && other.reference && reference.id == other.reference.id
+        true
+      elsif parent && other.parent && parent.id == other.parent.id
+        self == other
+      elsif reference && other.parent && reference.id == other.parent.id
+        self == other
+      elsif surrogate_key || other.surrogate_key
+        self == other
+      else
+        false
+      end
+    end
+
+    def adjacent
+      return unless reference
+      reference.columns[id]
+    end
+
     private
 
     def sql_constraints
@@ -152,13 +208,6 @@ module Masamune::Schema
 
     def sql_default
       "DEFAULT #{sql_value(default)}" unless default.nil?
-    end
-
-    def sql_reference
-      return if parent.temporary?
-      if reference && reference.primary_key.type == type
-        "REFERENCES #{reference.name}(#{reference.primary_key.name})"
-      end
     end
 
     def initialize_default_attributes!

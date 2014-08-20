@@ -25,12 +25,6 @@ module Masamune::Schema
       @total_lines = 0
     end
 
-    def compact_column_names
-      columns.values.map do |column|
-        column.compact_name
-      end
-    end
-
     def bind(input)
       @io = input
       dup
@@ -52,8 +46,12 @@ module Masamune::Schema
       [path, ::File.read(path)].join("\n")
     end
 
-    def as_table
-      Masamune::Schema::Table.new id: id, type: :stage, columns: columns.values
+    def as_table(parent = nil)
+      if parent
+        parent.class.new(id: id, type: :stage, columns: columns.values, parent: parent, inherit: true)
+      else
+        Masamune::Schema::Table.new id: id, type: :stage, columns: columns.values
+      end
     end
 
     private
