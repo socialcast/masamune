@@ -26,6 +26,10 @@ module Masamune::Schema
       columns.values.detect { |column| column.id == :end_at }
     end
 
+    def version_key
+      columns.values.detect { |column| column.id == :version }
+    end
+
     def upsert_unique_columns
       columns.values.select { |column| [:source_kind, :start_at].include?(column.id) || column.surrogate_key || column.unique }
     end
