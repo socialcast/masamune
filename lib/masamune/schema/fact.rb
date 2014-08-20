@@ -68,7 +68,9 @@ module Masamune::Schema
             "#{column.foreign_key_name} = #{column.qualified_name}")
         end
         if reference.type == :two || reference.type == :four
-          conditions[reference.name] << "TO_TIMESTAMP(#{source.time_key.qualified_name}) BETWEEN #{reference.start_key.qualified_name} AND COALESCE(#{reference.end_key.qualified_name}, 'INFINITY')"
+          join_key_a = "TO_TIMESTAMP(#{source.time_key.qualified_name}) BETWEEN #{reference.start_key.qualified_name} AND COALESCE(#{reference.end_key.qualified_name}, 'INFINITY')"
+          join_key_b = "TO_TIMESTAMP(#{source.time_key.qualified_name}) < #{reference.start_key.qualified_name} AND #{reference.version_key.qualified_name} = 1"
+          conditions[reference.name] << "((#{join_key_a}) OR (#{join_key_b}))"
         end
       end
       conditions.slice(*dependencies.tsort)

@@ -126,12 +126,12 @@ describe Masamune::Transform::LoadFact do
           user_dimension
         ON
           user_dimension.user_id = visits_fact_stage.user_dimension_user_id AND
-          TO_TIMESTAMP(visits_fact_stage.time_key) BETWEEN user_dimension.start_at AND COALESCE(user_dimension.end_at, 'INFINITY')
+          ((TO_TIMESTAMP(visits_fact_stage.time_key) BETWEEN user_dimension.start_at AND COALESCE(user_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_fact_stage.time_key) < user_dimension.start_at AND user_dimension.version = 1))
         JOIN
           tenant_dimension
         ON
           tenant_dimension.tenant_id = COALESCE(visits_fact_stage.tenant_dimension_tenant_id, user_dimension.tenant_id) AND
-          TO_TIMESTAMP(visits_fact_stage.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')
+          ((TO_TIMESTAMP(visits_fact_stage.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_fact_stage.time_key) < tenant_dimension.start_at AND tenant_dimension.version = 1))
         JOIN
           user_agent_type
         ON
