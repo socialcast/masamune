@@ -32,6 +32,12 @@ class Masamune::DataPlanElem
     end
   end
 
+  def complete?
+    if rule.for_targets?
+      sources.existing.map(&:start_date).uniq.length == sources.map(&:start_date).uniq.length
+    end
+  end
+
   def last_modified_at
     if rule.for_path?
       rule.plan.filesystem.stat(path).map { |stat| stat.try(:mtime) }.compact.max

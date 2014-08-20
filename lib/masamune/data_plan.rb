@@ -99,6 +99,13 @@ class Masamune::DataPlan
     @sources[rule].merge options.fetch(:sources, [])
 
     dirty = false
+    targets(rule).incomplete do |target|
+      if target.removable?
+        logger.warn("Detected incomplete target #{target.input}, removing")
+        target.remove
+        dirty = true
+      end
+    end
     targets(rule).stale do |target|
       if target.removable?
         logger.warn("Detected stale target #{target.input}, removing")

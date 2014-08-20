@@ -365,4 +365,75 @@ describe Masamune::DataPlanSet do
       it { is_expected.to eq(false)  }
     end
   end
+
+  describe '#incomplete' do
+    let!(:source_rule) { plan.add_source_rule('primary', path: 'log/%Y%m%d.*.log') }
+    let!(:target_rule) { plan.add_target_rule('primary', path: 'table/y=%Y/m=%m') }
+
+    let(:paths) { ['log/20140101.random_1.log', 'log/20140102.random_1.log', 'log/20140201.random_1.log', 'log/20140202.random_1.log'] }
+
+    let(:instance) { Masamune::DataPlanSet.new(source_rule, paths) }
+
+    subject(:incomplete) do
+      instance.targets.incomplete
+    end
+
+    context 'when all incomplete' do
+      it { expect(incomplete.size).to eq(2) }
+      it { expect(incomplete).to include 'table/y=2014/m=01' }
+      it { expect(incomplete).to include 'table/y=2014/m=02' }
+    end
+
+    context 'when some incomplete' do
+      before do
+        (1..31).each do |day|
+          fs.touch!('log/201401%02d.random_1.log' % day)
+        end
+      end
+
+      it { expect(incomplete.size).to eq(1) }
+      it { expect(incomplete).to include 'table/y=2014/m=02' }
+    end
+
+    context 'when none incomplete' do
+      before do
+        (1..31).each do |day|
+          fs.touch!('log/201401%02d.random_1.log' % day)
+          fs.touch!('log/201402%02d.random_1.log' % day)
+        end
+      end
+
+      it { expect(incomplete.size).to eq(0) }
+    end
+  end
+
+  context 'when sets are chained together' do
+    let!(:source_rule) { plan.add_source_rule('primary', path: 'log/%Y%m%d.*.log') }
+    let!(:target_rule) { plan.add_target_rule('primary', path: 'table/y=%Y/m=%m') }
+
+    let(:paths) { ['log/20140101.random_1.log', 'log/20140102.random_1.log', 'log/20140201.random_1.log', 'log/20140202.random_1.log'] }
+
+    let(:instance) { Masamune::DataPlanSet.new(source_rule, paths) }
+
+    context 'when sources are missing' do
+      it 'should chain expectedly' do
+        expect(instance.targets.size).to eq(2)
+        expect(instance.targets.sources.existing.size).to eq(0)
+        expect(instance.targets.sources.existing.targets.size).to eq(0)
+      end
+    end
+
+    context 'when sources are present' do
+      before do
+        fs.touch!(*paths)
+      end
+
+      it 'should chain expectedly' do
+        expect(instance.targets.size).to eq(2)
+        expect(instance.targets.sources.existing.size).to eq(4)
+        expect(instance.targets.sources.existing.targets.size).to eq(2)
+        expect(instance.targets.sources.existing.targets.sources.existing.size).to eq(4)
+      end
+    end
+  end
 end

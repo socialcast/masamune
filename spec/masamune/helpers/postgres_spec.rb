@@ -78,7 +78,6 @@ describe Masamune::Helpers::Postgres do
       instance.drop_table('foo')
     end
 
-
     it 'meets expectations' do; end
   end
 end
