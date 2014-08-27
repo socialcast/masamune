@@ -13,13 +13,17 @@ module Masamune::Schema
     attr_accessor :children
     attr_accessor :debug
 
-    def initialize(id:, type: :table, label: nil, references: [], columns: [], rows: [], insert: false, parent: nil, inherit: false, debug: false)
-      self.id = id
-      @type   = type
-      @label  = label
-      @insert = insert
-      @parent = parent
-      @debug  = debug
+    def initialize(opts = {})
+      self.id     = opts[:id]
+      @type       = opts.fetch(:type, :table)
+      @label      = opts.fetch(:label, nil)
+      references = opts.fetch(:references, [])
+      columns    = opts.fetch(:columns, [])
+      rows       = opts.fetch(:rows, [])
+      @insert     = opts.fetch(:insert, false)
+      @parent     = opts.fetch(:parent, nil)
+      @inherit    = opts.fetch(:inherit, false)
+      @debug      = opts.fetch(:debug, false)
 
       @children = []
 
@@ -38,7 +42,7 @@ module Masamune::Schema
         column.parent = self
         @columns[column.name.to_sym] = column
       end
-      inherit_column_attributes! if inherit
+      inherit_column_attributes! if @inherit
 
       @rows = []
       rows.each do |row|

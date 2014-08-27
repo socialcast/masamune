@@ -7,13 +7,13 @@ module Masamune::Schema
     attr_accessor :strict
     attr_accessor :debug
 
-    def initialize(id: nil, parent: nil, values: {}, default: false, strict: true, debug: false)
-      self.id     = id || (:default if default)
-      @values     = values.symbolize_keys
-      @default    = default
-      @strict     = strict
-      @debug      = debug
-      self.parent = parent
+    def initialize(opts = {})
+      self.id     = opts[:id] || (:default if opts.fetch(:default, false))
+      @values     = opts.fetch(:values, {}).symbolize_keys
+      @default    = opts.fetch(:default, false)
+      @strict     = opts.fetch(:strict, true)
+      @debug      = opts.fetch(:debug, false)
+      self.parent = opts.fetch(:parent, nil)
     end
 
     def id=(id)

@@ -19,23 +19,23 @@ module Masamune::Schema
     attr_accessor :parent
     attr_accessor :debug
 
-    def initialize(id:, type: :integer, sub_type: nil, null: false, strict: true, default: nil, auto: false, index: false, unique: false, ignore: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
-      self.id         = id
-      @type           = type
-      @sub_type       = sub_type
-      @null           = null
-      @strict         = strict
-      @default        = default
-      @auto           = auto
-      @index          = index
-      @unique         = unique
-      @ignore         = ignore
-      @primary_key    = primary_key
-      @surrogate_key  = surrogate_key
-      @degenerate_key = degenerate_key
-      @reference      = reference
-      @parent         = parent
-      @debug          = debug
+    def initialize(opts = {})
+      self.id         = opts[:id]
+      @type           = opts.fetch(:type, :integer)
+      @sub_type       = opts[:sub_type]
+      @null           = opts.fetch(:null, false)
+      @strict         = opts.fetch(:strict, true)
+      @default        = opts.fetch(:default, nil)
+      @auto           = opts.fetch(:auto, false)
+      @index          = opts.fetch(:index, false)
+      @unique         = opts.fetch(:unique, false)
+      @ignore         = opts.fetch(:ignore, false)
+      @primary_key    = opts.fetch(:primary_key, false)
+      @surrogate_key  = opts.fetch(:surrogate_key, false)
+      @degenerate_key = opts.fetch(:degenerate_key, false)
+      @reference      = opts.fetch(:reference, nil)
+      @parent         = opts[:parent]
+      @debug          = opts.fetch(:debug, false)
 
       initialize_default_attributes!
     end

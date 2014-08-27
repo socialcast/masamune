@@ -5,11 +5,11 @@ module Masamune::Schema
     attr_accessor :headers
     attr_accessor :debug
 
-    def initialize(id: nil, fields: {}, headers: false, debug: false)
-      @id       = id
-      @fields   = fields
-      @debug    = debug
-      @headers  = headers
+    def initialize(opts = {})
+      @id      = opts.fetch(:id, nil)
+      @fields  = opts.fetch(:fields, {})
+      @headers = opts.fetch(:headers, false)
+      @debug   = opts.fetch(:debug, false)
     end
 
     def columns

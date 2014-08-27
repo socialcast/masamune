@@ -44,7 +44,8 @@ module Masamune::Schema
     end
     method_with_last_element :consolidated_columns
 
-    def consolidated_values(window: nil)
+    def consolidated_values(opts = {})
+      window = opts[:window]
       consolidated_columns.reject { |id, _| [:parent_uuid, :record_uuid].include?(id) }.map do |_, column, _|
         if column.surrogate_key || column.name == :start_at
           "#{column.name} AS #{column.name}"

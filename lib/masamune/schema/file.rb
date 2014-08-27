@@ -10,11 +10,12 @@ module Masamune::Schema
 
     def_delegators :@io, :flush, :path
 
-    def initialize(id: nil, format: :csv, headers: false, columns: {}, debug: false)
-      @id      = id
-      @format  = format
-      @headers = headers
-      @debug   = debug
+    def initialize(opts = {})
+      @id      = opts.fetch(:id, nil)
+      @format  = opts.fetch(:format, :csv)
+      @headers = opts.fetch(:headers, false)
+      columns  = opts.fetch(:columns, {})
+      @debug   = opts.fetch(:debug, false)
       @io      = ::File.open(::File::NULL, "w")
 
       @columns  = {}
