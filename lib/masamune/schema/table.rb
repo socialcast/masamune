@@ -9,50 +9,61 @@ module Masamune::Schema
     attr_accessor :columns
     attr_accessor :rows
     attr_accessor :insert
+    attr_accessor :inherit
     attr_accessor :parent
     attr_accessor :children
     attr_accessor :debug
 
+    DEFAULT_ATTRIBUTES =
+    {
+      type:            :table,
+      references:      {},
+      columns:         {},
+      rows:            [],
+      insert:          false,
+      inherit:         false,
+      debug:           false
+    }
+
     def initialize(opts = {})
-      self.id     = opts[:id]
-      @type       = opts.fetch(:type, :table)
-      @label      = opts.fetch(:label, nil)
-      references = opts.fetch(:references, [])
-      columns    = opts.fetch(:columns, [])
-      rows       = opts.fetch(:rows, [])
-      @insert     = opts.fetch(:insert, false)
-      @parent     = opts.fetch(:parent, nil)
-      @inherit    = opts.fetch(:inherit, false)
-      @debug      = opts.fetch(:debug, false)
+      DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
+        send("#{name}=", value)
+      end
+      @children = Set.new
+      inherit_column_attributes! if inherit
+    end
 
-      @children = []
+    def id=(id)
+      @id = id.to_sym
+    end
 
+    def references=(instance)
       @references = {}
+      references = (instance.is_a?(Hash) ? instance.values : instance).compact
       references.each do |reference|
         @references[reference.id] = reference
       end
+    end
 
-      columns.compact!
+    def columns=(instance)
+      @columns = {}
+      columns = (instance.is_a?(Hash) ? instance.values : instance).compact
       raise ArgumentError, "table #{name} contains reserved columns" if columns.any? { |column| reserved_column_ids.include?(column.id) }
 
-      @columns = {}
       initialize_primary_key_column! unless columns.any? { |column| column.primary_key }
       initialize_foreign_key_columns!
       columns.each do |column|
         column.parent = self
         @columns[column.name.to_sym] = column
       end
-      inherit_column_attributes! if @inherit
+    end
 
+    def rows=(rows)
       @rows = []
       rows.each do |row|
         row.parent = self
         @rows << row
       end
-    end
-
-    def id=(id)
-      @id = id.to_sym
     end
 
     def name

@@ -10,20 +10,29 @@ module Masamune::Schema
 
     def_delegators :@io, :flush, :path
 
-    def initialize(opts = {})
-      @id      = opts.fetch(:id, nil)
-      @format  = opts.fetch(:format, :csv)
-      @headers = opts.fetch(:headers, false)
-      columns  = opts.fetch(:columns, {})
-      @debug   = opts.fetch(:debug, false)
-      @io      = ::File.open(::File::NULL, "w")
+    DEFAULT_ATTRIBUTES =
+    {
+      format: :csv,
+      headers: false,
+      columns: {},
+      debug:   false
+    }
 
+    def initialize(opts = {})
+      DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
+        send("#{name}=", value)
+      end
+
+      @io = ::File.open(::File::NULL, "w")
+      @total_lines = 0
+    end
+
+    def columns=(instance)
       @columns  = {}
+      columns = (instance.is_a?(Hash) ? instance.values : instance).compact
       columns.each do |column|
         @columns[column.name] = column
       end
-
-      @total_lines = 0
     end
 
     def bind(input)

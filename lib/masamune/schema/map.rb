@@ -5,11 +5,17 @@ module Masamune::Schema
     attr_accessor :headers
     attr_accessor :debug
 
+    DEFAULT_ATTRIBUTES =
+    {
+      fields: {},
+      headers: false,
+      debug:   false
+    }
+
     def initialize(opts = {})
-      @id      = opts.fetch(:id, nil)
-      @fields  = opts.fetch(:fields, {})
-      @headers = opts.fetch(:headers, false)
-      @debug   = opts.fetch(:debug, false)
+      DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
+        send("#{name}=", value)
+      end
     end
 
     def columns

@@ -7,17 +7,27 @@ module Masamune::Schema
     attr_accessor :strict
     attr_accessor :debug
 
+    DEFAULT_ATTRIBUTES =
+    {
+      values:   {},
+      default:  false,
+      strict:   true,
+      debug:    false
+    }
+
     def initialize(opts = {})
-      self.id     = opts[:id] || (:default if opts.fetch(:default, false))
-      @values     = opts.fetch(:values, {}).symbolize_keys
-      @default    = opts.fetch(:default, false)
-      @strict     = opts.fetch(:strict, true)
-      @debug      = opts.fetch(:debug, false)
-      self.parent = opts.fetch(:parent, nil)
+      DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
+        send("#{name}=", value)
+      end
+      self.id ||= :default if default
     end
 
     def id=(id)
       @id = id.to_sym if id
+    end
+
+    def values=(values)
+      @values = values.symbolize_keys
     end
 
     def parent=(parent)
