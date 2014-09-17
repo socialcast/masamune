@@ -12,30 +12,34 @@ WITH ranges AS (
   FROM <%= target.ledger_table.name %>
 ), windows AS (
   SELECT *,
-  SUM(r) OVER (ORDER BY <%= source.consolidated_window('start_at').join(', ') %>) window_id
+  SUM(r) OVER (ORDER BY <%= source.window('start_at').join(', ') %>) window_id
   FROM ranges
 )
 INSERT INTO
-  <%= source.name %> (<%= source.consolidated_columns.map { |_, column, _| column.name }.join(',') %>)
+  <%= source.name %> (<%= source.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
 SELECT
-  <%- source.consolidated_columns.each do |_, column, last| -%>
-  consolidated.<%= column.name %><%= ',' unless last %>
+  <%- source.insert_view_values.each do |value| -%>
+  consolidated.<%= value %><%= ',' %>
   <%- end -%>
+  consolidated.parent_uuid,
+  consolidated.record_uuid,
+  consolidated.start_at
 FROM (
   SELECT
     FIRST_VALUE(uuid) OVER w AS parent_uuid,
     FIRST_VALUE(start_at) OVER w AS parent_start_at,
     uuid AS record_uuid,
-    <%- source.consolidated_values(window: 'w').each do |value, last| -%>
-    <%= value %><%= ',' unless last %>
+    <%- source.insert_values(window: 'w').each do |value, last| -%>
+    <%= value %><%= ',' %>
     <%- end -%>
+    start_at AS start_at
   FROM
     windows
-  WINDOW w AS (PARTITION BY <%= source.consolidated_window('window_id').join(', ') %> ORDER BY start_at)
+  WINDOW w AS (PARTITION BY <%= source.window('window_id').join(', ') %> ORDER BY start_at)
 ) consolidated
 WHERE
-  <%- source.consolidated_constraints.each do |_, column| -%>
-  consolidated.<%= column.name %> IS NOT NULL AND
+  <%- source.insert_view_constraints.each do |constraint| -%>
+  consolidated.<%= constraint %> AND
   <%- end -%>
   <%-# Do not consider partial events that occur simultaneously with complete parent event -%>
   (

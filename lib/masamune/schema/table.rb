@@ -132,14 +132,14 @@ module Masamune::Schema
     end
     method_with_last_element :upsert_insert_columns
 
-    def foreign_key_columns
-      columns.values.select { | column| column.reference }
-    end
-
     def upsert_unique_columns
       columns.values.select { |column| column.surrogate_key || column.unique }
     end
     method_with_last_element :upsert_unique_columns
+
+    def foreign_key_columns
+      columns.values.select { | column| column.reference }
+    end
 
     def default_foreign_key_name
       rows.detect { |row| row.default }.try(:name)

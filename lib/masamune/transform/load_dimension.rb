@@ -32,8 +32,6 @@ module Masamune::Transform
       end.path
     end
 
-    # TOOD move consolidate functions into transform
-
     private
 
     def stage_dimension_template

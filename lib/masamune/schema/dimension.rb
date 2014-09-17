@@ -35,33 +35,6 @@ module Masamune::Schema
     end
     method_with_last_element :upsert_unique_columns
 
-    def consolidated_window(*extra)
-      (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra).uniq
-    end
-
-    def consolidated_columns
-      columns.reject { |_, column| [:end_at, :version, :last_modified_at].include?(column.id) || column.primary_key }
-    end
-    method_with_last_element :consolidated_columns
-
-    def consolidated_values(opts = {})
-      window = opts[:window]
-      consolidated_columns.reject { |id, _| [:parent_uuid, :record_uuid].include?(id) }.map do |_, column, _|
-        if column.surrogate_key || column.name == :start_at
-          "#{column.name} AS #{column.name}"
-        elsif column.type == :key_value
-          "hstore_merge(#{column.name}_now) OVER #{window} - hstore_merge(#{column.name}_was) OVER #{window} AS #{column.name}"
-        else
-          "COALESCE(#{column.name}, FIRST_VALUE(#{column.name}) OVER #{window}) AS #{column.name}"
-        end
-      end
-    end
-    method_with_last_element :consolidated_values
-
-    def consolidated_constraints
-      consolidated_columns.reject { |id, column| [:parent_uuid, :record_uuid, :start_at].include?(id) || column.null }
-    end
-
     def ledger_table
       @ledger_table ||= self.class.new(id: id, type: :ledger, columns: ledger_table_columns, references: references.values, parent: self)
     end
