@@ -136,4 +136,57 @@ describe Masamune::Transform::ConsolidateDimension do
       EOS
     end
   end
+
+  describe '#bulk_upsert_as_psql' do
+    subject(:result) { transform.bulk_upsert_as_psql }
+
+    it 'should eq render bulk_upsert template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        BEGIN;
+        LOCK TABLE user_dimension IN EXCLUSIVE MODE;
+
+        UPDATE
+          user_dimension
+        SET
+          user_account_state_type_id = user_dimension_stage.user_account_state_type_id,
+          preferences = user_dimension_stage.preferences
+        FROM
+          user_dimension_stage
+        WHERE
+          user_dimension.tenant_id = user_dimension_stage.tenant_id AND
+          user_dimension.user_id = user_dimension_stage.user_id AND
+          user_dimension.start_at = user_dimension_stage.start_at
+        ;
+
+        INSERT INTO
+          user_dimension (user_account_state_type_id,tenant_id,user_id,preferences,parent_uuid,record_uuid,start_at,end_at,version,last_modified_at)
+        SELECT
+          user_dimension_stage.user_account_state_type_id,
+          user_dimension_stage.tenant_id,
+          user_dimension_stage.user_id,
+          user_dimension_stage.preferences,
+          user_dimension_stage.parent_uuid,
+          user_dimension_stage.record_uuid,
+          user_dimension_stage.start_at,
+          user_dimension_stage.end_at,
+          user_dimension_stage.version,
+          user_dimension_stage.last_modified_at
+        FROM
+          user_dimension_stage
+        LEFT OUTER JOIN
+          user_dimension
+        ON
+          user_dimension.tenant_id = user_dimension_stage.tenant_id AND
+          user_dimension.user_id = user_dimension_stage.user_id AND
+          user_dimension.start_at = user_dimension_stage.start_at
+        WHERE
+          user_dimension.tenant_id IS NULL AND
+          user_dimension.user_id IS NULL AND
+          user_dimension.start_at IS NULL
+        ;
+
+        COMMIT;
+      EOS
+    end
+  end
 end
