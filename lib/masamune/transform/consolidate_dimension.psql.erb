@@ -1,4 +1,4 @@
-CREATE TEMPORARY TABLE IF NOT EXISTS <%= source.name %> (LIKE <%= target.name %> INCLUDING ALL);
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
 
 <%#
 Consolidate complete events from partial events
@@ -12,13 +12,13 @@ WITH ranges AS (
   FROM <%= target.ledger_table.name %>
 ), windows AS (
   SELECT *,
-  SUM(r) OVER (ORDER BY <%= source.window('start_at').join(', ') %>) window_id
+  SUM(r) OVER (ORDER BY <%= target.window('start_at').join(', ') %>) window_id
   FROM ranges
 )
 INSERT INTO
-  <%= source.name %> (<%= source.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
+  <%= target.stage_table.name %> (<%= target.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
 SELECT
-  <%- source.insert_view_values.each do |value| -%>
+  <%- target.insert_view_values.each do |value| -%>
   consolidated.<%= value %><%= ',' %>
   <%- end -%>
   consolidated.parent_uuid,
@@ -29,16 +29,16 @@ FROM (
     FIRST_VALUE(uuid) OVER w AS parent_uuid,
     FIRST_VALUE(start_at) OVER w AS parent_start_at,
     uuid AS record_uuid,
-    <%- source.insert_values(window: 'w').each do |value, last| -%>
+    <%- target.insert_values(window: 'w').each do |value, last| -%>
     <%= value %><%= ',' %>
     <%- end -%>
     start_at AS start_at
   FROM
     windows
-  WINDOW w AS (PARTITION BY <%= source.window('window_id').join(', ') %> ORDER BY start_at)
+  WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at)
 ) consolidated
 WHERE
-  <%- source.insert_view_constraints.each do |constraint| -%>
+  <%- target.insert_view_constraints.each do |constraint| -%>
   consolidated.<%= constraint %> AND
   <%- end -%>
   <%-# Do not consider partial events that occur simultaneously with complete parent event -%>

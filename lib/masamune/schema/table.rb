@@ -112,16 +112,6 @@ module Masamune::Schema
       columns.select { |_, column| column.unique }
     end
 
-    def insert_columns
-      columns.map do |_, column|
-        if reference = column.reference
-          reference.foreign_key_name
-        else
-          column.name
-        end
-      end
-    end
-
     def upsert_update_columns
       columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique || column.auto_reference || column.ignore }
     end
@@ -149,30 +139,16 @@ module Masamune::Schema
       rows.select { |row| row.insert_values.any? }
     end
 
-    def insert_values
-      columns.map do |_, column|
-        if reference = column.reference
-          select = "(SELECT #{reference.primary_key.name} FROM #{reference.name} WHERE #{column.foreign_key_name} = #{column.name})"
-          if reference.default_foreign_key_name
-            "COALESCE(#{select}, #{reference.default_foreign_key_name})"
-          else
-            select
-          end
-        elsif column.type == :json || column.type == :yaml || column.type == :key_value
-          "json_to_hstore(#{column.name})"
-        else
-          column.name.to_s
-        end
-      end
-    end
-    method_with_last_element :insert_values
-
     def aliased_rows
       rows.select { |row| row.name }
     end
 
     def insert_references
       references.select { |_, reference| reference.insert }
+    end
+
+    def unreserved_columns
+      columns.reject { |_, column| reserved_column_ids.include?(column.id) }
     end
 
     def stage_table

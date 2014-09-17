@@ -82,6 +82,7 @@ describe Masamune::Transform::LoadDimension do
     end
   end
 
+  # XXX spec initialization is causing table aliasing
   describe '#load_dimension_as_psql' do
     subject(:result) { transform.load_dimension_as_psql }
 
