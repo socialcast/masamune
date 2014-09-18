@@ -7,9 +7,9 @@ module Masamune::Schema
       super o.reverse_merge(type: :fact)
       initialize_fact_columns!
       foreign_key_columns.each do |column|
-        column.index ||= true
+        column.index << column.name
       end
-      time_key.index ||= true
+      time_key.index << time_key.name
     end
 
     alias_method :measures, :columns

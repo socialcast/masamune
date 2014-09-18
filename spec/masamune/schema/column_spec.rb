@@ -1,6 +1,79 @@
 require 'spec_helper'
 
 describe Masamune::Schema::Column do
+  describe '.initialize' do
+    subject(:column) { described_class.new(id: 'id') }
+    it { expect(column).to_not be_nil }
+
+    context 'default' do
+      context '#unique' do
+        subject { column.unique }
+        it { is_expected.to be_empty }
+      end
+
+      context '#index' do
+        subject { column.index }
+        it { is_expected.to be_empty }
+      end
+    end
+
+    context 'without id' do
+      subject(:column) { described_class.new }
+      it { expect { column }.to raise_error ArgumentError }
+    end
+
+    context 'with index: false' do
+      subject(:column) { described_class.new(id: 'id', index: false) }
+      context '#index' do
+        subject { column.index }
+        it { is_expected.to be_empty }
+      end
+    end
+
+    context 'with index: []' do
+      subject(:column) { described_class.new(id: 'id', index: []) }
+      context '#index' do
+        subject { column.index }
+        it { is_expected.to be_empty }
+      end
+    end
+
+    context 'with index: true' do
+      subject(:column) { described_class.new(id: 'id', index: true) }
+      context '#index' do
+        subject { column.index }
+        it { is_expected.to include(:id) }
+      end
+    end
+
+    context 'with index: "shared"' do
+      subject(:column) { described_class.new(id: 'id', index: 'shared') }
+      context '#index' do
+        subject { column.index }
+        it { is_expected.to include(:shared) }
+      end
+    end
+
+    context 'with index: ["id", "shared"]' do
+      subject(:column) { described_class.new(id: 'id', index: ['id', 'shared']) }
+      context '#index' do
+        subject { column.index }
+        it { is_expected.to include(:id) }
+        it { is_expected.to include(:shared) }
+      end
+    end
+
+    context 'with index: nil' do
+      subject(:column) { described_class.new(id: 'id', index: nil) }
+      it { expect { column }.to raise_error ArgumentError }
+    end
+
+    context 'with unknown index: type' do
+      subject(:column) { described_class.new(id: 'id', index: 1) }
+      it { expect { column }.to raise_error ArgumentError }
+    end
+  end
+
   describe '#ruby_value' do
     subject(:result) { column.ruby_value(value) }
 

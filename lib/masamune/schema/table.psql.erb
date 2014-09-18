@@ -11,10 +11,7 @@ CREATE TABLE IF NOT EXISTS <%= table.name %>
 <%- end -%>
 (
   <%- table.defined_columns.each do |column, last| -%>
-  <%= column.as_psql %><%= ',' unless last && table.unique_columns.none? %>
-  <%- end -%>
-  <%- if table.unique_columns.any? -%>
-  UNIQUE(<%= table.unique_columns.keys.join(', ') %>)
+  <%= column.as_psql %><%= ',' unless last %>
   <%- end -%>
 );
 
@@ -22,6 +19,7 @@ CREATE TABLE IF NOT EXISTS <%= table.name %>
 COPY <%= table.name %> FROM '<%= source_file.path %>' WITH (FORMAT 'csv');
 <%- end -%>
 
+<%= render 'define_unique.psql.erb', table: table %>
 <%= render 'define_index.psql.erb', table: table %>
 
 <% table.insert_rows.each do |row| %>

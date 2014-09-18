@@ -30,11 +30,6 @@ module Masamune::Schema
       columns.values.detect { |column| column.id == :version }
     end
 
-    def upsert_unique_columns
-      columns.values.select { |column| [:source_kind, :start_at].include?(column.id) || column.surrogate_key || column.unique }
-    end
-    method_with_last_element :upsert_unique_columns
-
     def ledger_table
       @ledger_table ||= self.class.new(id: id, type: :ledger, columns: ledger_table_columns, references: references.values, parent: self)
     end
@@ -81,14 +76,14 @@ module Masamune::Schema
         children << ledger_table
         initialize_column! id: 'parent_uuid', type: :uuid, null: true, reference: ledger_table
         initialize_column! id: 'record_uuid', type: :uuid, null: true, reference: ledger_table
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'surrogate'
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
         initialize_column! id: 'version', type: :integer, default: 1, null: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :ledger
-        initialize_column! id: 'source_kind', type: :string, null: true
-        initialize_column! id: 'source_uuid', type: :string, null: true
-        initialize_column! id: 'start_at', type: :timestamp, index: true
+        initialize_column! id: 'source_kind', type: :string, unique: 'surrogate'
+        initialize_column! id: 'source_uuid', type: :string, null: true, unique: 'surrogate'
+        initialize_column! id: 'start_at', type: :timestamp, index: true, unique: 'surrogate'
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
         initialize_column! id: 'delta', type: :integer
       end

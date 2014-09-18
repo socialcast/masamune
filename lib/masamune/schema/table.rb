@@ -98,12 +98,16 @@ module Masamune::Schema
     end
     method_with_last_element :defined_columns
 
+    def unique_constraints
+      return [] if temporary?
+      unique_constraints_map.map do |_, column_names|
+        column_names
+      end
+    end
+
     def index_columns
-      indices = columns.select { |_, column| column.index }.lazy
-      indices = indices.group_by { |_, column| column.index == true ? column.name : column.index }.lazy
-      indices = indices.map { |_, index_and_columns| index_and_columns.map(&:last) }.lazy
-      indices.map do |columns|
-        [columns.map(&:name), columns.all? { |column| column.unique }]
+      index_column_map.map do |_, column_names|
+        [column_names, reverse_unique_constraints_map.key?(column_names.sort)]
       end
     end
 
@@ -113,7 +117,7 @@ module Masamune::Schema
     end
 
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique || column.auto_reference || column.ignore }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_update_columns
 
@@ -123,7 +127,7 @@ module Masamune::Schema
     method_with_last_element :upsert_insert_columns
 
     def upsert_unique_columns
-      columns.values.select { |column| column.surrogate_key || column.unique }
+      columns.values.select { |column| column.unique.any? && !column.null }
     end
     method_with_last_element :upsert_unique_columns
 
@@ -215,6 +219,30 @@ module Masamune::Schema
           end
         end
       end
+    end
+
+    def index_column_map
+      @index_column_map ||= Hash.new { |h,k| h[k] = [] }.tap do |map|
+        columns.each do |_, column|
+          column.index.each do |index|
+            map[index] << column.name
+          end
+        end
+      end.sort { |a,b| a[1].length <=> b[1].length }.to_h
+    end
+
+    def unique_constraints_map
+      @unique_constraints_map ||= Hash.new { |h,k| h[k] = [] }.tap do |map|
+        columns.each do |_, column|
+          column.unique.each do |unique|
+            map[unique] << column.name
+          end
+        end
+      end.sort { |a,b| a[1].length <=> b[1].length }.to_h
+    end
+
+    def reverse_unique_constraints_map
+      @reverse_unique_constraints_map ||= unique_constraints_map.to_a.map { |k,v| [v.sort, k] }.to_h
     end
 
     def reserved_column_ids

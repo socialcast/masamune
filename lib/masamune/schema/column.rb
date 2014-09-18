@@ -21,12 +21,13 @@ module Masamune::Schema
 
     DEFAULT_ATTRIBUTES =
     {
+      id:                  nil,
       type:                :integer,
       null:                false,
       strict:              true,
       auto:                false,
-      index:               false,
-      unique:              false,
+      index:               Set.new,
+      unique:              Set.new,
       ignore:              false,
       primary_key:         false,
       surrogate_key:       false,
@@ -35,6 +36,7 @@ module Masamune::Schema
     }
 
     def initialize(opts = {})
+      raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         send("#{name}=", value)
       end
@@ -51,6 +53,42 @@ module Masamune::Schema
         "#{reference.name}_#{@id}".to_sym
       else
         @id
+      end
+    end
+
+    def index=(value)
+      @index ||= Set.new
+      @index.clear
+      @index +=
+      case value
+      when true
+        [id]
+      when false
+        []
+      when String, Symbol
+        [value.to_sym]
+      when Array, Set
+        value.map(&:to_sym)
+      else
+        raise ArgumentError
+      end
+    end
+
+    def unique=(value)
+      @unique ||= Set.new
+      @unique.clear
+      @unique +=
+      case value
+      when true
+        [id]
+      when false
+        []
+      when String, Symbol
+        [value.to_sym]
+      when Array, Set
+        value.map(&:to_sym)
+      else
+        raise ArgumentError
       end
     end
 
@@ -214,6 +252,7 @@ module Masamune::Schema
 
     def initialize_default_attributes!
       self.default = 'uuid_generate_v4()' if primary_key && type == :uuid
+      self.unique = 'surrogate' if surrogate_key
     end
 
     def ruby_key_value(hash)

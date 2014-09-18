@@ -124,12 +124,17 @@ describe Masamune::Schema::Dimension do
           user_id INTEGER NOT NULL,
           preferences_now HSTORE,
           preferences_was HSTORE,
-          source_kind VARCHAR,
+          source_kind VARCHAR NOT NULL,
           source_uuid VARCHAR,
           start_at TIMESTAMP NOT NULL,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW(),
           delta INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_tenant_id_user_id_source_kind_source_uuid_start_at_key') THEN
+        ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_tenant_id_user_id_source_kind_source_uuid_start_at_key UNIQUE(tenant_id, user_id, source_kind, source_uuid, start_at);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_tenant_id_index') THEN
@@ -160,6 +165,11 @@ describe Masamune::Schema::Dimension do
           version INTEGER DEFAULT 1,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_tenant_id_user_id_start_at_key') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_tenant_id_user_id_start_at_key UNIQUE(tenant_id, user_id, start_at);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_tenant_id_index') THEN
