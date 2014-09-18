@@ -73,7 +73,8 @@ module Masamune::Transform
         if reference = column.reference
           select = "(SELECT #{reference.primary_key.name} FROM #{reference.name} WHERE #{column.foreign_key_name} = #{column.name})"
           if reference.default_foreign_key_name
-            "COALESCE(#{select}, #{reference.default_foreign_key_name})"
+            #"COALESCE(#{select}, (CASE delta WHEN 0 THEN #{reference.default_foreign_key_name} ELSE NULL END))"
+            select
           else
             select
           end
@@ -86,5 +87,4 @@ module Masamune::Transform
     end
     method_with_last_element :insert_values
   end
-
 end

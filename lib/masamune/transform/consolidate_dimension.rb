@@ -72,6 +72,7 @@ module Masamune::Transform
     def insert_view_constraints
       consolidated_columns.reject { |_, column| column.null }.map { |_, column| "#{column.name} IS NOT NULL" }
     end
+    method_with_last_element :insert_view_constraints
 
     def window(*extra)
       (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra).uniq

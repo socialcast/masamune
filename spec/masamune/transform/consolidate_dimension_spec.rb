@@ -38,41 +38,67 @@ describe Masamune::Transform::ConsolidateDimension do
           FROM user_dimension_ledger
         ), windows AS (
           SELECT *,
-          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at) window_id
+          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at, delta) window_id
           FROM ranges
+        ), duplicated_consolidated AS (
+          SELECT
+            consolidated.user_account_state_type_id,
+            consolidated.tenant_id,
+            consolidated.user_id,
+            consolidated.preferences,
+            consolidated.parent_uuid,
+            consolidated.record_uuid,
+            consolidated.start_at
+          FROM (
+            SELECT
+              FIRST_VALUE(uuid) OVER w AS parent_uuid,
+              FIRST_VALUE(start_at) OVER w AS parent_start_at,
+              uuid AS record_uuid,
+              COALESCE(user_account_state_type_id, FIRST_VALUE(user_account_state_type_id) OVER w) AS user_account_state_type_id,
+              tenant_id AS tenant_id,
+              user_id AS user_id,
+              hstore_merge(preferences_now) OVER w - hstore_merge(preferences_was) OVER w AS preferences,
+              start_at AS start_at
+            FROM
+              windows
+            WINDOW w AS (PARTITION BY tenant_id, user_id, window_id ORDER BY start_at)
+          ) consolidated
+          WHERE
+            consolidated.user_account_state_type_id IS NOT NULL AND
+            consolidated.tenant_id IS NOT NULL AND
+            consolidated.user_id IS NOT NULL
         )
         INSERT INTO
           user_dimension_stage (user_account_state_type_id, tenant_id, user_id, preferences, parent_uuid, record_uuid, start_at)
         SELECT
-          consolidated.user_account_state_type_id,
-          consolidated.tenant_id,
-          consolidated.user_id,
-          consolidated.preferences,
-          consolidated.parent_uuid,
-          consolidated.record_uuid,
-          consolidated.start_at
+          user_account_state_type_id,
+          tenant_id,
+          user_id,
+          preferences,
+          parent_uuid,
+          record_uuid,
+          start_at
         FROM (
           SELECT
-            FIRST_VALUE(uuid) OVER w AS parent_uuid,
-            FIRST_VALUE(start_at) OVER w AS parent_start_at,
-            uuid AS record_uuid,
-            COALESCE(user_account_state_type_id, FIRST_VALUE(user_account_state_type_id) OVER w) AS user_account_state_type_id,
-            tenant_id AS tenant_id,
-            user_id AS user_id,
-            hstore_merge(preferences_now) OVER w - hstore_merge(preferences_was) OVER w AS preferences,
-            start_at AS start_at
+            user_account_state_type_id,
+            tenant_id,
+            user_id,
+            preferences,
+            parent_uuid,
+            record_uuid,
+            start_at,
+            CASE
+            WHEN (LAG(user_account_state_type_id) OVER w = user_account_state_type_id) AND (LAG(tenant_id) OVER w = tenant_id) AND (LAG(user_id) OVER w = user_id) AND (LAG(preferences) OVER w = preferences) THEN
+              1
+            ELSE
+              0
+            END AS duplicate
           FROM
-            windows
-          WINDOW w AS (PARTITION BY tenant_id, user_id, window_id ORDER BY start_at)
-        ) consolidated
+            duplicated_consolidated
+          WINDOW w AS (PARTITION BY tenant_id, user_id ORDER BY start_at)
+        ) tmp
         WHERE
-          consolidated.user_account_state_type_id IS NOT NULL AND
-          consolidated.tenant_id IS NOT NULL AND
-          consolidated.user_id IS NOT NULL AND
-          (
-            parent_uuid = record_uuid OR
-            parent_start_at <> start_at
-          )
+          duplicate = 0
         ;
       EOS
     end
