@@ -95,8 +95,8 @@ describe Masamune::Transform::LoadDimension do
         SELECT
           tenant_id,
           user_id,
-          (SELECT uuid FROM department_type WHERE department_type.department_id = department_type_department_id),
-          COALESCE((SELECT id FROM user_account_state_type WHERE user_account_state_type.name = user_account_state_type_name), default_user_account_state_type_id()),
+          (SELECT uuid FROM department_type WHERE department_type.department_id = department_type_department_id AND department_type.tenant_id = tenant_id),
+          (SELECT id FROM user_account_state_type WHERE user_account_state_type.name = user_account_state_type_name),
           json_to_hstore(preferences_now),
           start_at,
           source_kind,
@@ -121,6 +121,7 @@ describe Masamune::Transform::LoadDimension do
           user_dimension_ledger.tenant_id = user_dimension_ledger_stage.tenant_id AND
           user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
           user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
+          user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
           user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
         ;
 
@@ -146,11 +147,13 @@ describe Masamune::Transform::LoadDimension do
           user_dimension_ledger.tenant_id = user_dimension_ledger_stage.tenant_id AND
           user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
           user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
+          user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
           user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
         WHERE
           user_dimension_ledger.tenant_id IS NULL AND
           user_dimension_ledger.user_id IS NULL AND
           user_dimension_ledger.source_kind IS NULL AND
+          user_dimension_ledger.source_uuid IS NULL AND
           user_dimension_ledger.start_at IS NULL
         ;
 

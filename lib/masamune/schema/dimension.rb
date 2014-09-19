@@ -82,7 +82,7 @@ module Masamune::Schema
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :ledger
         initialize_column! id: 'source_kind', type: :string, unique: 'surrogate'
-        initialize_column! id: 'source_uuid', type: :string, null: true, unique: 'surrogate'
+        initialize_column! id: 'source_uuid', type: :string, unique: 'surrogate'
         initialize_column! id: 'start_at', type: :timestamp, index: true, unique: 'surrogate'
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
         initialize_column! id: 'delta', type: :integer

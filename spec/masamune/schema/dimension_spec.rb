@@ -125,7 +125,7 @@ describe Masamune::Schema::Dimension do
           preferences_now HSTORE,
           preferences_was HSTORE,
           source_kind VARCHAR NOT NULL,
-          source_uuid VARCHAR,
+          source_uuid VARCHAR NOT NULL,
           start_at TIMESTAMP NOT NULL,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW(),
           delta INTEGER NOT NULL

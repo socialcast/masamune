@@ -134,5 +134,4 @@ module Masamune::Transform
       end
     end
   end
-
 end

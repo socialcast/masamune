@@ -71,13 +71,17 @@ module Masamune::Transform
     def insert_values(source)
       source.columns.map do |_, column|
         if reference = column.reference
-          select = "(SELECT #{reference.primary_key.name} FROM #{reference.name} WHERE #{column.foreign_key_name} = #{column.name})"
-          if reference.default_foreign_key_name
-            #"COALESCE(#{select}, (CASE delta WHEN 0 THEN #{reference.default_foreign_key_name} ELSE NULL END))"
-            select
-          else
-            select
+          constraints = {}
+          constraints[column.foreign_key_name] = column.name
+          shared_columns(reference).each do |left_column, right_columns|
+            next if left_column.auto_reference
+            right_columns.each do |right_column|
+              constraints[right_column.qualified_name] = left_column.name
+            end
           end
+
+          where_clause = constraints.map { |key, value| "#{key} = #{value}" }.join(' AND ')
+          "(SELECT #{reference.primary_key.name} FROM #{reference.name} WHERE #{where_clause})"
         elsif column.type == :json || column.type == :yaml || column.type == :key_value
           "json_to_hstore(#{column.name})"
         else
