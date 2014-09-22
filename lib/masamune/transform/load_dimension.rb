@@ -59,7 +59,7 @@ module Masamune::Transform
     end
 
     def insert_columns(source)
-      source.columns.map do |_, column|
+      shared_columns(source).keys.map do |column|
         if reference = column.reference
           reference.foreign_key_name
         else
@@ -69,26 +69,35 @@ module Masamune::Transform
     end
 
     def insert_values(source)
-      source.columns.map do |_, column|
+      shared_columns(source).keys.map do |column|
         if reference = column.reference
-          constraints = {}
-          constraints[column.foreign_key_name] = column.name
-          shared_columns(reference).each do |left_column, right_columns|
-            next if left_column.auto_reference
-            right_columns.each do |right_column|
-              constraints[right_column.qualified_name] = left_column.name
-            end
-          end
-
-          where_clause = constraints.map { |key, value| "#{key} = #{value}" }.join(' AND ')
-          "(SELECT #{reference.primary_key.name} FROM #{reference.name} WHERE #{where_clause})"
+          reference.primary_key.qualified_name
         elsif column.type == :json || column.type == :yaml || column.type == :key_value
-          "json_to_hstore(#{column.name})"
+          "json_to_hstore(#{column.qualified_name})"
         else
-          column.name.to_s
+          column.qualified_name
         end
       end
     end
     method_with_last_element :insert_values
+
+    def join_conditions(source)
+      join_columns = shared_columns(source).values.flatten.lazy
+      join_columns = join_columns.select { |column| column.reference }.lazy
+      join_columns = join_columns.group_by { |column| column.reference }.lazy
+
+      conditions = Hash.new { |h,k| h[k] = [] }
+      join_columns.each do |reference, columns|
+        (columns + lateral_references(reference)).each do |column|
+          left = reference.columns[column.id]
+          conditions[reference.name] << "#{left.qualified_name} = #{column.qualified_name}"
+        end
+      end
+      conditions
+    end
+
+    def lateral_references(reference)
+      shared_columns(reference).keys.reject { |column| column.auto_reference}
+    end
   end
 end

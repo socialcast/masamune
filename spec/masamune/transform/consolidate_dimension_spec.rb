@@ -38,7 +38,7 @@ describe Masamune::Transform::ConsolidateDimension do
           FROM user_dimension_ledger
         ), windows AS (
           SELECT *,
-          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at, delta) window_id
+          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at, delta, source_uuid DESC) window_id
           FROM ranges
         ), duplicated_consolidated AS (
           SELECT
@@ -50,7 +50,7 @@ describe Masamune::Transform::ConsolidateDimension do
             consolidated.record_uuid,
             consolidated.start_at
           FROM (
-            SELECT
+            SELECT DISTINCT ON (tenant_id, user_id, start_at)
               FIRST_VALUE(uuid) OVER w AS parent_uuid,
               FIRST_VALUE(start_at) OVER w AS parent_start_at,
               uuid AS record_uuid,
@@ -62,6 +62,7 @@ describe Masamune::Transform::ConsolidateDimension do
             FROM
               windows
             WINDOW w AS (PARTITION BY tenant_id, user_id, window_id ORDER BY start_at)
+            ORDER BY tenant_id, user_id, start_at, window_id
           ) consolidated
           WHERE
             consolidated.user_account_state_type_id IS NOT NULL AND

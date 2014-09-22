@@ -26,6 +26,7 @@ describe Masamune::Transform::LoadDimension do
         column 'uuid', type: :uuid, primary_key: true
         column 'tenant_id', type: :integer, unique: true, surrogate_key: true
         column 'department_id', type: :integer, unique: true, surrogate_key: true
+        row tenant_id: -1, department_id: -1, attributes: {default: true}
       end
 
       dimension 'user', type: :four do
@@ -52,7 +53,8 @@ describe Masamune::Transform::LoadDimension do
 
   let(:data) { double(path: 'output.csv') }
   let(:target) { registry.dimensions[:user].ledger_table }
-  let(:source) { registry.files[:user].as_table(target) }
+  let(:fields) { registry.files[:user].columns.map { |_, column| column.compact_name } }
+  let(:source) { target.as_file(fields).as_table }
 
   let(:transform) { described_class.new data, source, target }
 
@@ -61,7 +63,7 @@ describe Masamune::Transform::LoadDimension do
 
     it 'should eq render load_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_stage
         (
           tenant_id INTEGER,
           user_id INTEGER,
@@ -73,16 +75,15 @@ describe Masamune::Transform::LoadDimension do
           delta INTEGER
         );
 
-        COPY user_dimension_ledger_stage FROM 'output.csv' WITH (FORMAT 'csv');
+        COPY user_stage FROM 'output.csv' WITH (FORMAT 'csv');
 
-        CREATE INDEX user_dimension_ledger_stage_tenant_id_index ON user_dimension_ledger_stage (tenant_id);
-        CREATE INDEX user_dimension_ledger_stage_user_id_index ON user_dimension_ledger_stage (user_id);
-        CREATE INDEX user_dimension_ledger_stage_start_at_index ON user_dimension_ledger_stage (start_at);
+        CREATE INDEX user_stage_tenant_id_index ON user_stage (tenant_id);
+        CREATE INDEX user_stage_user_id_index ON user_stage (user_id);
+        CREATE INDEX user_stage_start_at_index ON user_stage (start_at);
       EOS
     end
   end
 
-  # XXX spec initialization is causing table aliasing
   describe '#load_dimension_as_psql' do
     subject(:result) { transform.load_dimension_as_psql }
 
@@ -91,18 +92,27 @@ describe Masamune::Transform::LoadDimension do
         CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage (LIKE user_dimension_ledger INCLUDING ALL);
 
         INSERT INTO
-          user_dimension_ledger_stage (tenant_id, user_id, department_type_uuid, user_account_state_type_id, preferences_now, start_at, source_kind, delta)
+          user_dimension_ledger_stage (department_type_uuid, user_account_state_type_id, tenant_id, user_id, preferences_now, source_kind, start_at, delta)
         SELECT
-          tenant_id,
-          user_id,
-          (SELECT uuid FROM department_type WHERE department_type.department_id = department_type_department_id AND department_type.tenant_id = tenant_id),
-          (SELECT id FROM user_account_state_type WHERE user_account_state_type.name = user_account_state_type_name),
-          json_to_hstore(preferences_now),
-          start_at,
-          source_kind,
-          delta
+          department_type.uuid,
+          user_account_state_type.id,
+          user_stage.tenant_id,
+          user_stage.user_id,
+          json_to_hstore(user_stage.preferences_now),
+          user_stage.source_kind,
+          user_stage.start_at,
+          user_stage.delta
         FROM
-          user_dimension_ledger_stage
+          user_stage
+        LEFT JOIN
+          department_type
+        ON
+          department_type.department_id = user_stage.department_type_department_id AND
+          department_type.tenant_id = user_stage.tenant_id
+        LEFT JOIN
+          user_account_state_type
+        ON
+          user_account_state_type.name = user_stage.user_account_state_type_name
         ;
 
         BEGIN;
@@ -174,7 +184,7 @@ describe Masamune::Transform::LoadDimension do
           tenant_id,
           department_type_department_id
         FROM
-          user_dimension_ledger_stage
+          user_stage
         WHERE
           tenant_id IS NOT NULL AND
           department_type_department_id IS NOT NULL

@@ -12,7 +12,7 @@ module Masamune::Schema
 
     DEFAULT_ATTRIBUTES =
     {
-      format: :csv,
+      format:  :csv,
       headers: false,
       columns: {},
       debug:   false

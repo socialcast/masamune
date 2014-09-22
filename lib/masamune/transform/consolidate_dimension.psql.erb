@@ -12,7 +12,7 @@ WITH ranges AS (
   FROM <%= target.ledger_table.name %>
 ), windows AS (
   SELECT *,
-  SUM(r) OVER (ORDER BY <%= target.window('start_at', 'delta').join(', ') %>) window_id
+  SUM(r) OVER (ORDER BY <%= target.window('start_at', 'delta', 'source_uuid DESC').join(', ') %>) window_id
   FROM ranges
 ), duplicated_consolidated AS (
   SELECT
@@ -23,7 +23,7 @@ WITH ranges AS (
     consolidated.record_uuid,
     consolidated.start_at
   FROM (
-    SELECT
+    SELECT DISTINCT ON (<%= target.window('start_at').join(', ') %>)
       FIRST_VALUE(uuid) OVER w AS parent_uuid,
       FIRST_VALUE(start_at) OVER w AS parent_start_at,
       uuid AS record_uuid,
@@ -34,6 +34,7 @@ WITH ranges AS (
     FROM
       windows
     WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at)
+    ORDER BY <%= target.window('start_at', 'window_id').join(', ') %>
   ) consolidated
   WHERE
     <%- target.insert_view_constraints.each do |constraint, last| -%>

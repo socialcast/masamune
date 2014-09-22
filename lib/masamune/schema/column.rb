@@ -203,7 +203,7 @@ module Masamune::Schema
     def ==(other)
       return false unless other
       id == other.id &&
-      type == other.type
+      typecast?(other.type)
     end
 
     def eql?(other)
@@ -212,6 +212,20 @@ module Masamune::Schema
 
     def hash
       [id, type].hash
+    end
+
+    def typecast?(other_type)
+      return true if type == other_type
+      case [type, other_type]
+      when [:key_value, :yaml]
+        true
+      when [:key_value, :json]
+        true
+      when [:yaml, :json]
+        true
+      else
+        false
+      end
     end
 
     def auto_reference

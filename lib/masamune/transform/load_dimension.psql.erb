@@ -8,6 +8,12 @@ SELECT
   <%- end -%>
 FROM
   <%= source.name %>
+<%- target.join_conditions(source).each do |table, conditions| -%>
+LEFT JOIN
+  <%= table %>
+ON
+  <%= conditions.join(" AND\n  ") %>
+<%- end -%>
 ;
 
 <%= render 'bulk_upsert.psql.erb', target: target, source: target.stage_table %>
