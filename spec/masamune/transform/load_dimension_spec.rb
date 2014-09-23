@@ -35,6 +35,7 @@ describe Masamune::Transform::LoadDimension do
         references :user_account_state
         column 'tenant_id', index: true, surrogate_key: true
         column 'user_id', index: true, surrogate_key: true
+        column 'name', type: :string
         column 'preferences', type: :key_value, null: true
       end
 
@@ -123,6 +124,7 @@ describe Masamune::Transform::LoadDimension do
         SET
           department_type_uuid = user_dimension_ledger_stage.department_type_uuid,
           user_account_state_type_id = user_dimension_ledger_stage.user_account_state_type_id,
+          name = user_dimension_ledger_stage.name,
           preferences_now = user_dimension_ledger_stage.preferences_now,
           preferences_was = user_dimension_ledger_stage.preferences_was
         FROM
@@ -136,12 +138,13 @@ describe Masamune::Transform::LoadDimension do
         ;
 
         INSERT INTO
-          user_dimension_ledger (department_type_uuid,user_account_state_type_id,tenant_id,user_id,preferences_now,preferences_was,source_kind,source_uuid,start_at,last_modified_at,delta)
+          user_dimension_ledger (department_type_uuid,user_account_state_type_id,tenant_id,user_id,name,preferences_now,preferences_was,source_kind,source_uuid,start_at,last_modified_at,delta)
         SELECT
           user_dimension_ledger_stage.department_type_uuid,
           user_dimension_ledger_stage.user_account_state_type_id,
           user_dimension_ledger_stage.tenant_id,
           user_dimension_ledger_stage.user_id,
+          user_dimension_ledger_stage.name,
           user_dimension_ledger_stage.preferences_now,
           user_dimension_ledger_stage.preferences_was,
           user_dimension_ledger_stage.source_kind,
