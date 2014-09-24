@@ -2,21 +2,20 @@ module Masamune::Schema
   class File
     extend Forwardable
 
-    attr_accessor :id
-    attr_accessor :format
-    attr_accessor :headers
-    attr_accessor :columns
-    attr_accessor :debug
-
     def_delegators :@io, :flush, :path
 
     DEFAULT_ATTRIBUTES =
     {
+      id:      nil,
       format:  :csv,
       headers: false,
       columns: {},
       debug:   false
     }
+
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr.to_sym
+    end
 
     def initialize(opts = {})
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|

@@ -1,16 +1,16 @@
 module Masamune::Schema
   class Map
-    attr_accessor :id
-    attr_accessor :fields
-    attr_accessor :headers
-    attr_accessor :debug
-
     DEFAULT_ATTRIBUTES =
     {
-      fields: {},
+      id:      nil,
+      fields:  {},
       headers: false,
       debug:   false
     }
+
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr.to_sym
+    end
 
     def initialize(opts = {})
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|

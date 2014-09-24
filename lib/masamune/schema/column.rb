@@ -2,29 +2,14 @@ require 'json'
 
 module Masamune::Schema
   class Column
-    attr_accessor :id
-    attr_accessor :type
-    attr_accessor :sub_type
-    attr_accessor :null
-    attr_accessor :strict
-    attr_accessor :default
-    attr_accessor :auto
-    attr_accessor :index
-    attr_accessor :unique
-    attr_accessor :ignore
-    attr_accessor :primary_key
-    attr_accessor :surrogate_key
-    attr_accessor :degenerate_key
-    attr_accessor :reference
-    attr_accessor :parent
-    attr_accessor :debug
-
     DEFAULT_ATTRIBUTES =
     {
       id:                  nil,
       type:                :integer,
+      sub_type:            nil,
       null:                false,
       strict:              true,
+      default:             nil,
       auto:                false,
       index:               Set.new,
       unique:              Set.new,
@@ -32,8 +17,14 @@ module Masamune::Schema
       primary_key:         false,
       surrogate_key:       false,
       degenerate_key:      false,
+      reference:           nil,
+      parent:              nil,
       debug:               false
     }
+
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr.to_sym
+    end
 
     def initialize(opts = {})
       raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)

@@ -2,28 +2,25 @@ module Masamune::Schema
   class Table
     include Masamune::LastElement
 
-    attr_accessor :id
-    attr_accessor :type
-    attr_accessor :label
-    attr_accessor :references
-    attr_accessor :columns
-    attr_accessor :rows
-    attr_accessor :insert
-    attr_accessor :inherit
-    attr_accessor :parent
-    attr_accessor :children
-    attr_accessor :debug
+    attr_reader :children
 
     DEFAULT_ATTRIBUTES =
     {
+      id:              nil,
       type:            :table,
+      label:           nil,
       references:      {},
       columns:         {},
       rows:            [],
       insert:          false,
       inherit:         false,
+      parent:          nil,
       debug:           false
     }
+
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr.to_sym
+    end
 
     def initialize(opts = {})
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
