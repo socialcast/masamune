@@ -225,7 +225,7 @@ module Masamune::Schema
             map[index] << column.name
           end
         end
-      end.sort { |a,b| a[1].length <=> b[1].length }.to_h
+      end.sort_by { |k, v| v.length }.to_h
     end
 
     def unique_constraints_map
@@ -235,7 +235,7 @@ module Masamune::Schema
             map[unique] << column.name
           end
         end
-      end.sort { |a,b| a[1].length <=> b[1].length }.to_h
+      end.sort_by { |k, v| v.length }.to_h
     end
 
     def reverse_unique_constraints_map
