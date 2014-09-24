@@ -30,5 +30,17 @@ module Masamune::Schema
         @columns[column.name.to_sym] = column
       end
     end
+
+    def create_type
+      @create_type ||= "#{id}_create"
+    end
+
+    def update_type
+      @update_type ||= "#{id}_update"
+    end
+
+    def delete_type
+      @delete_type ||= "#{id}_delete"
+    end
   end
 end

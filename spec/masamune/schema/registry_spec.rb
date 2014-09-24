@@ -150,7 +150,10 @@ describe Masamune::Schema::Registry do
       let(:event_one) { instance.events[:event_one] }
       let(:event_two) { instance.events[:event_two] }
 
-      it { expect(event_one.attributes).to include :attribute_one}
+      it { expect(event_one.attributes).to include :attribute_one }
+      it { expect(event_one.attributes).to include :attribute_two }
+      it { expect(event_two.attributes).to include :attribute_three }
+      it { expect(event_two.attributes).to include :attribute_four }
     end
 
     context 'when schema contains file' do
