@@ -2,27 +2,36 @@ module Masamune::Schema
   class File
     extend Forwardable
 
-    attr_accessor :id
-    attr_accessor :format
-    attr_accessor :headers
-    attr_accessor :columns
-    attr_accessor :debug
-
     def_delegators :@io, :flush, :path
 
-    def initialize(id: nil, format: :csv, headers: false, columns: {}, debug: false)
-      @id      = id
-      @format  = format
-      @headers = headers
-      @debug   = debug
-      @io      = ::File.open(::File::NULL, "w")
+    DEFAULT_ATTRIBUTES =
+    {
+      id:      nil,
+      format:  :csv,
+      headers: false,
+      columns: {},
+      debug:   false
+    }
 
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr.to_sym
+    end
+
+    def initialize(opts = {})
+      DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
+        send("#{name}=", value)
+      end
+
+      @io = ::File.open(::File::NULL, "w")
+      @total_lines = 0
+    end
+
+    def columns=(instance)
       @columns  = {}
+      columns = (instance.is_a?(Hash) ? instance.values : instance).compact
       columns.each do |column|
         @columns[column.name] = column
       end
-
-      @total_lines = 0
     end
 
     def bind(input)

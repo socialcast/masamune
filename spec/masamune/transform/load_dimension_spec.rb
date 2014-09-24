@@ -26,6 +26,7 @@ describe Masamune::Transform::LoadDimension do
         column 'uuid', type: :uuid, primary_key: true
         column 'tenant_id', type: :integer, unique: true, surrogate_key: true
         column 'department_id', type: :integer, unique: true, surrogate_key: true
+        row tenant_id: -1, department_id: -1, attributes: {default: true}
       end
 
       dimension 'user', type: :four do
@@ -34,6 +35,7 @@ describe Masamune::Transform::LoadDimension do
         references :user_account_state
         column 'tenant_id', index: true, surrogate_key: true
         column 'user_id', index: true, surrogate_key: true
+        column 'name', type: :string
         column 'preferences', type: :key_value, null: true
       end
 
@@ -52,7 +54,8 @@ describe Masamune::Transform::LoadDimension do
 
   let(:data) { double(path: 'output.csv') }
   let(:target) { registry.dimensions[:user].ledger_table }
-  let(:source) { registry.files[:user].as_table(target) }
+  let(:fields) { registry.files[:user].columns.map { |_, column| column.compact_name } }
+  let(:source) { target.as_file(fields).as_table }
 
   let(:transform) { described_class.new data, source, target }
 
@@ -61,7 +64,7 @@ describe Masamune::Transform::LoadDimension do
 
     it 'should eq render load_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_stage
         (
           tenant_id INTEGER,
           user_id INTEGER,
@@ -73,11 +76,11 @@ describe Masamune::Transform::LoadDimension do
           delta INTEGER
         );
 
-        COPY user_dimension_ledger_stage FROM 'output.csv' WITH (FORMAT 'csv');
+        COPY user_stage FROM 'output.csv' WITH (FORMAT 'csv');
 
-        CREATE INDEX user_dimension_ledger_stage_tenant_id_index ON user_dimension_ledger_stage (tenant_id);
-        CREATE INDEX user_dimension_ledger_stage_user_id_index ON user_dimension_ledger_stage (user_id);
-        CREATE INDEX user_dimension_ledger_stage_start_at_index ON user_dimension_ledger_stage (start_at);
+        CREATE INDEX user_stage_tenant_id_index ON user_stage (tenant_id);
+        CREATE INDEX user_stage_user_id_index ON user_stage (user_id);
+        CREATE INDEX user_stage_start_at_index ON user_stage (start_at);
       EOS
     end
   end
@@ -90,18 +93,27 @@ describe Masamune::Transform::LoadDimension do
         CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage (LIKE user_dimension_ledger INCLUDING ALL);
 
         INSERT INTO
-          user_dimension_ledger_stage (tenant_id, user_id, department_type_uuid, user_account_state_type_id, preferences_now, start_at, source_kind, delta)
+          user_dimension_ledger_stage (department_type_uuid, user_account_state_type_id, tenant_id, user_id, preferences_now, source_kind, start_at, delta)
         SELECT
-          tenant_id,
-          user_id,
-          (SELECT uuid FROM department_type WHERE department_type.department_id = department_type_department_id),
-          COALESCE((SELECT id FROM user_account_state_type WHERE user_account_state_type.name = user_account_state_type_name), default_user_account_state_type_id()),
-          json_to_hstore(preferences_now),
-          start_at,
-          source_kind,
-          delta
+          department_type.uuid,
+          user_account_state_type.id,
+          user_stage.tenant_id,
+          user_stage.user_id,
+          json_to_hstore(user_stage.preferences_now),
+          user_stage.source_kind,
+          user_stage.start_at,
+          user_stage.delta
         FROM
-          user_dimension_ledger_stage
+          user_stage
+        LEFT JOIN
+          department_type
+        ON
+          department_type.department_id = user_stage.department_type_department_id AND
+          department_type.tenant_id = user_stage.tenant_id
+        LEFT JOIN
+          user_account_state_type
+        ON
+          user_account_state_type.name = user_stage.user_account_state_type_name
         ;
 
         BEGIN;
@@ -112,6 +124,7 @@ describe Masamune::Transform::LoadDimension do
         SET
           department_type_uuid = user_dimension_ledger_stage.department_type_uuid,
           user_account_state_type_id = user_dimension_ledger_stage.user_account_state_type_id,
+          name = user_dimension_ledger_stage.name,
           preferences_now = user_dimension_ledger_stage.preferences_now,
           preferences_was = user_dimension_ledger_stage.preferences_was
         FROM
@@ -120,16 +133,18 @@ describe Masamune::Transform::LoadDimension do
           user_dimension_ledger.tenant_id = user_dimension_ledger_stage.tenant_id AND
           user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
           user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
+          user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
           user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
         ;
 
         INSERT INTO
-          user_dimension_ledger (department_type_uuid,user_account_state_type_id,tenant_id,user_id,preferences_now,preferences_was,source_kind,source_uuid,start_at,last_modified_at,delta)
+          user_dimension_ledger (department_type_uuid,user_account_state_type_id,tenant_id,user_id,name,preferences_now,preferences_was,source_kind,source_uuid,start_at,last_modified_at,delta)
         SELECT
           user_dimension_ledger_stage.department_type_uuid,
           user_dimension_ledger_stage.user_account_state_type_id,
           user_dimension_ledger_stage.tenant_id,
           user_dimension_ledger_stage.user_id,
+          user_dimension_ledger_stage.name,
           user_dimension_ledger_stage.preferences_now,
           user_dimension_ledger_stage.preferences_was,
           user_dimension_ledger_stage.source_kind,
@@ -145,11 +160,13 @@ describe Masamune::Transform::LoadDimension do
           user_dimension_ledger.tenant_id = user_dimension_ledger_stage.tenant_id AND
           user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
           user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
+          user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
           user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
         WHERE
           user_dimension_ledger.tenant_id IS NULL AND
           user_dimension_ledger.user_id IS NULL AND
           user_dimension_ledger.source_kind IS NULL AND
+          user_dimension_ledger.source_uuid IS NULL AND
           user_dimension_ledger.start_at IS NULL
         ;
 
@@ -170,7 +187,7 @@ describe Masamune::Transform::LoadDimension do
           tenant_id,
           department_type_department_id
         FROM
-          user_dimension_ledger_stage
+          user_stage
         WHERE
           tenant_id IS NOT NULL AND
           department_type_department_id IS NOT NULL

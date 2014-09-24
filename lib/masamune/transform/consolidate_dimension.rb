@@ -2,19 +2,18 @@ module Masamune::Transform
   class ConsolidateDimension
     def initialize(target)
       @target = target
-      @source = target.stage_table
-    end
-
-    def bulk_upsert_as_psql
-      Masamune::Template.render_to_string(bulk_upsert_template, target: @target, source: @source)
     end
 
     def consolidate_dimension_as_psql
-      Masamune::Template.render_to_string(consolidate_dimension_template, target: @target, source: @source)
+      Masamune::Template.render_to_string(consolidate_dimension_template, target: Target.new(@target))
+    end
+
+    def bulk_upsert_as_psql
+      Masamune::Template.render_to_string(bulk_upsert_template, source: @target.stage_table, target: @target)
     end
 
     def relabel_dimension_as_psql
-      Masamune::Template.render_to_string(relabel_dimension_template, target: @target)
+      Masamune::Template.render_to_string(relabel_dimension_template, target: Target.new(@target))
     end
 
     def as_psql
@@ -44,6 +43,59 @@ module Masamune::Transform
 
     def relabel_dimension_template
       @relabel_dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'relabel_dimension.psql.erb'))
+    end
+  end
+
+  class ConsolidateDimension::Target < Delegator
+    include Masamune::LastElement
+
+    def initialize(delegate)
+      @delegate = delegate
+    end
+
+    def __getobj__
+      @delegate
+    end
+
+    def __setobj__(obj)
+      @delegate = obj
+    end
+
+    def insert_columns(source = nil)
+      consolidated_columns.map { |_, column| column.name }
+    end
+
+    def insert_view_values
+      consolidated_columns.map { |_, column| column.name }
+    end
+
+    def insert_view_constraints
+      consolidated_columns.reject { |_, column| column.null }.map { |_, column| "#{column.name} IS NOT NULL" }
+    end
+    method_with_last_element :insert_view_constraints
+
+    def window(*extra)
+      (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra).uniq
+    end
+
+    def insert_values(opts = {})
+      window = opts[:window]
+      consolidated_columns.map do |_, column|
+        if column.surrogate_key
+          "#{column.name} AS #{column.name}"
+        elsif column.type == :key_value
+          "hstore_merge(#{column.name}_now) OVER #{window} - hstore_merge(#{column.name}_was) OVER #{window} AS #{column.name}"
+        else
+          "COALESCE(#{column.name}, FIRST_VALUE(#{column.name}) OVER #{window}) AS #{column.name}"
+        end
+      end
+    end
+    method_with_last_element :insert_values
+
+    private
+
+    def consolidated_columns
+      unreserved_columns.reject { |_, column| column.primary_key }
     end
   end
 end

@@ -1,15 +1,21 @@
 module Masamune::Schema
   class Map
-    attr_accessor :id
-    attr_accessor :fields
-    attr_accessor :headers
-    attr_accessor :debug
+    DEFAULT_ATTRIBUTES =
+    {
+      id:      nil,
+      fields:  {},
+      headers: false,
+      debug:   false
+    }
 
-    def initialize(id: nil, fields: {}, headers: false, debug: false)
-      @id       = id
-      @fields   = fields
-      @debug    = debug
-      @headers  = headers
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr.to_sym
+    end
+
+    def initialize(opts = {})
+      DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
+        send("#{name}=", value)
+      end
     end
 
     def columns

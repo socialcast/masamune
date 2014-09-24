@@ -1,13 +1,19 @@
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
 
 INSERT INTO
-  <%= target.stage_table.name %> (<%= source.insert_columns.join(', ') %>)
+  <%= target.stage_table.name %> (<%= target.insert_columns(source).join(', ') %>)
 SELECT
-  <%- source.insert_values.each do |value, last| -%>
+  <%- target.insert_values(source).each do |value, last| -%>
   <%= value %><%= ',' unless last %>
   <%- end -%>
 FROM
   <%= source.name %>
+<%- target.join_conditions(source).each do |table, conditions| -%>
+LEFT JOIN
+  <%= table %>
+ON
+  <%= conditions.join(" AND\n  ") %>
+<%- end -%>
 ;
 
 <%= render 'bulk_upsert.psql.erb', target: target, source: target.stage_table %>

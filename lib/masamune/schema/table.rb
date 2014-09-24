@@ -2,53 +2,65 @@ module Masamune::Schema
   class Table
     include Masamune::LastElement
 
-    attr_accessor :id
-    attr_accessor :type
-    attr_accessor :label
-    attr_accessor :references
-    attr_accessor :columns
-    attr_accessor :rows
-    attr_accessor :insert
-    attr_accessor :parent
-    attr_accessor :children
-    attr_accessor :debug
+    attr_reader :children
 
-    def initialize(id:, type: :table, label: nil, references: [], columns: [], rows: [], insert: false, parent: nil, inherit: false, debug: false)
-      self.id = id
-      @type   = type
-      @label  = label
-      @insert = insert
-      @parent = parent
-      @debug  = debug
+    DEFAULT_ATTRIBUTES =
+    {
+      id:              nil,
+      type:            :table,
+      label:           nil,
+      references:      {},
+      columns:         {},
+      rows:            [],
+      insert:          false,
+      inherit:         false,
+      parent:          nil,
+      debug:           false
+    }
 
-      @children = []
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr.to_sym
+    end
 
+    def initialize(opts = {})
+      DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
+        send("#{name}=", value)
+      end
+      @children = Set.new
+      inherit_column_attributes! if inherit
+    end
+
+    def id=(id)
+      @id = id.to_sym
+    end
+
+    def references=(instance)
       @references = {}
+      references = (instance.is_a?(Hash) ? instance.values : instance).compact
       references.each do |reference|
         @references[reference.id] = reference
       end
+    end
 
-      columns.compact!
+    def columns=(instance)
+      @columns = {}
+      columns = (instance.is_a?(Hash) ? instance.values : instance).compact
       raise ArgumentError, "table #{name} contains reserved columns" if columns.any? { |column| reserved_column_ids.include?(column.id) }
 
-      @columns = {}
       initialize_primary_key_column! unless columns.any? { |column| column.primary_key }
       initialize_foreign_key_columns!
       columns.each do |column|
         column.parent = self
         @columns[column.name.to_sym] = column
       end
-      inherit_column_attributes! if inherit
+    end
 
+    def rows=(rows)
       @rows = []
       rows.each do |row|
         row.parent = self
         @rows << row
       end
-    end
-
-    def id=(id)
-      @id = id.to_sym
     end
 
     def name
@@ -83,12 +95,16 @@ module Masamune::Schema
     end
     method_with_last_element :defined_columns
 
+    def unique_constraints
+      return [] if temporary?
+      unique_constraints_map.map do |_, column_names|
+        column_names
+      end
+    end
+
     def index_columns
-      indices = columns.select { |_, column| column.index }.lazy
-      indices = indices.group_by { |_, column| column.index == true ? column.name : column.index }.lazy
-      indices = indices.map { |_, index_and_columns| index_and_columns.map(&:last) }.lazy
-      indices.map do |columns|
-        [columns.map(&:name), columns.all? { |column| column.unique }]
+      index_column_map.map do |_, column_names|
+        [column_names, reverse_unique_constraints_map.key?(column_names.sort)]
       end
     end
 
@@ -97,18 +113,8 @@ module Masamune::Schema
       columns.select { |_, column| column.unique }
     end
 
-    def insert_columns
-      columns.map do |_, column|
-        if reference = column.reference
-          reference.foreign_key_name
-        else
-          column.name
-        end
-      end
-    end
-
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique || column.auto_reference || column.ignore }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_update_columns
 
@@ -117,14 +123,14 @@ module Masamune::Schema
     end
     method_with_last_element :upsert_insert_columns
 
+    def upsert_unique_columns
+      columns.values.select { |column| column.unique.any? && !column.null }
+    end
+    method_with_last_element :upsert_unique_columns
+
     def foreign_key_columns
       columns.values.select { | column| column.reference }
     end
-
-    def upsert_unique_columns
-      columns.values.select { |column| column.surrogate_key || column.unique }
-    end
-    method_with_last_element :upsert_unique_columns
 
     def default_foreign_key_name
       rows.detect { |row| row.default }.try(:name)
@@ -134,30 +140,16 @@ module Masamune::Schema
       rows.select { |row| row.insert_values.any? }
     end
 
-    def insert_values
-      columns.map do |_, column|
-        if reference = column.reference
-          select = "(SELECT #{reference.primary_key.name} FROM #{reference.name} WHERE #{column.foreign_key_name} = #{column.name})"
-          if reference.default_foreign_key_name
-            "COALESCE(#{select}, #{reference.default_foreign_key_name})"
-          else
-            select
-          end
-        elsif column.type == :json || column.type == :yaml || column.type == :key_value
-          "json_to_hstore(#{column.name})"
-        else
-          column.name.to_s
-        end
-      end
-    end
-    method_with_last_element :insert_values
-
     def aliased_rows
       rows.select { |row| row.name }
     end
 
     def insert_references
       references.select { |_, reference| reference.insert }
+    end
+
+    def unreserved_columns
+      columns.reject { |_, column| reserved_column_ids.include?(column.id) }
     end
 
     def stage_table
@@ -224,6 +216,30 @@ module Masamune::Schema
           end
         end
       end
+    end
+
+    def index_column_map
+      @index_column_map ||= Hash.new { |h,k| h[k] = [] }.tap do |map|
+        columns.each do |_, column|
+          column.index.each do |index|
+            map[index] << column.name
+          end
+        end
+      end.sort_by { |k, v| v.length }.to_h
+    end
+
+    def unique_constraints_map
+      @unique_constraints_map ||= Hash.new { |h,k| h[k] = [] }.tap do |map|
+        columns.each do |_, column|
+          column.unique.each do |unique|
+            map[unique] << column.name
+          end
+        end
+      end.sort_by { |k, v| v.length }.to_h
+    end
+
+    def reverse_unique_constraints_map
+      @reverse_unique_constraints_map ||= unique_constraints_map.to_a.map { |k,v| [v.sort, k] }.to_h
     end
 
     def reserved_column_ids

@@ -1,0 +1,12 @@
+<%- table.index_columns.each do |column_names, unique| -%>
+<%- index_name = "#{table.name}_#{column_names.join('_')}_index" -%>
+<%- unless table.temporary? -%>
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= index_name %>') THEN
+<%- end -%>
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= table.name %> (<%= column_names.join(', ') %>);
+<%- unless table.temporary? -%>
+END IF; END $$;
+
+<%- end -%>
+<%- end -%>

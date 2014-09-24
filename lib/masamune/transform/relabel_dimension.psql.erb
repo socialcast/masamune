@@ -12,15 +12,15 @@ FROM
   (
     SELECT
       uuid,
-      <%- target.consolidated_window.each do |name| -%>
+      <%- target.window.each do |name| -%>
       <%= name %>,
       <%- end -%>
       start_at,
-      rank() OVER (PARTITION BY <%= target.consolidated_window.join(', ') %> ORDER BY start_at) AS version
+      rank() OVER (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at) AS version
     FROM
       <%= target.name %>
     GROUP BY
-      <%= target.consolidated_window(:uuid, :start_at).join(', ') %>
+      <%= target.window(:uuid, :start_at).join(', ') %>
    ) AS tmp
 WHERE
   <%= target.name %>.uuid = tmp.uuid
@@ -38,14 +38,14 @@ FROM
     SELECT
       uuid,
       start_at,
-      <%- target.consolidated_window.each do |name| -%>
+      <%- target.window.each do |name| -%>
       <%= name %>,
       <%- end -%>
-      LEAD(start_at, 1) OVER (PARTITION BY <%= target.consolidated_window.join(', ') %> ORDER BY start_at) AS end_at
+      LEAD(start_at, 1) OVER (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at) AS end_at
     FROM
       <%= target.name %>
     GROUP BY
-      <%= target.consolidated_window(:uuid, :start_at).join(', ') %>
+      <%= target.window(:uuid, :start_at).join(', ') %>
    ) AS tmp
 WHERE
   <%= target.name %>.uuid = tmp.uuid

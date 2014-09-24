@@ -12,7 +12,7 @@ describe Masamune::Commands::Shell do
     end
 
     context 'with simple command that succeeds' do
-      let(:command) { %Q{echo 'stdout 1'; echo 'stderr 1' 1>&2; echo 'stdout 2'; echo 'stderr 2' 1>&2} }
+      let(:command) { %Q{bash -c "echo 'stdout 1'; echo 'stderr 1' 1>&2; echo 'stdout 2'; echo 'stderr 2' 1>&2"} }
 
       before do
         subject
@@ -24,7 +24,7 @@ describe Masamune::Commands::Shell do
     end
 
     context 'with simple command that fails' do
-      let(:command) { %Q{exit 1;} }
+      let(:command) { %Q{bash -c 'exit 1'} }
 
       before do
         subject
@@ -36,13 +36,13 @@ describe Masamune::Commands::Shell do
     end
 
     context 'with fail_fast and simple command that fails' do
-      let(:command) { %Q{exit 1;} }
+      let(:command) { %Q{bash -c 'exit 1'} }
       let(:options) { {fail_fast: true} }
       it { expect { subject }.to raise_error RuntimeError, "fail_fast: #{command}" }
     end
 
     context 'when command is interrupted' do
-      let(:command) { %Q{echo 'test'} }
+      let(:command) { %Q{bash -c "echo 'test'"} }
 
       before do
         expect(delegate).to receive(:after_execute) { raise Interrupt }

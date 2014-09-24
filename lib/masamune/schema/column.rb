@@ -2,40 +2,35 @@ require 'json'
 
 module Masamune::Schema
   class Column
-    attr_accessor :id
-    attr_accessor :type
-    attr_accessor :sub_type
-    attr_accessor :null
-    attr_accessor :strict
-    attr_accessor :default
-    attr_accessor :auto
-    attr_accessor :index
-    attr_accessor :unique
-    attr_accessor :ignore
-    attr_accessor :primary_key
-    attr_accessor :surrogate_key
-    attr_accessor :degenerate_key
-    attr_accessor :reference
-    attr_accessor :parent
-    attr_accessor :debug
+    DEFAULT_ATTRIBUTES =
+    {
+      id:                  nil,
+      type:                :integer,
+      sub_type:            nil,
+      null:                false,
+      strict:              true,
+      default:             nil,
+      auto:                false,
+      index:               Set.new,
+      unique:              Set.new,
+      ignore:              false,
+      primary_key:         false,
+      surrogate_key:       false,
+      degenerate_key:      false,
+      reference:           nil,
+      parent:              nil,
+      debug:               false
+    }
 
-    def initialize(id:, type: :integer, sub_type: nil, null: false, strict: true, default: nil, auto: false, index: false, unique: false, ignore: false, primary_key: false, surrogate_key: false, degenerate_key: false, reference: nil, parent: nil, debug: false)
-      self.id         = id
-      @type           = type
-      @sub_type       = sub_type
-      @null           = null
-      @strict         = strict
-      @default        = default
-      @auto           = auto
-      @index          = index
-      @unique         = unique
-      @ignore         = ignore
-      @primary_key    = primary_key
-      @surrogate_key  = surrogate_key
-      @degenerate_key = degenerate_key
-      @reference      = reference
-      @parent         = parent
-      @debug          = debug
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr.to_sym
+    end
+
+    def initialize(opts = {})
+      raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
+      DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
+        send("#{name}=", value)
+      end
 
       initialize_default_attributes!
     end
@@ -49,6 +44,42 @@ module Masamune::Schema
         "#{reference.name}_#{@id}".to_sym
       else
         @id
+      end
+    end
+
+    def index=(value)
+      @index ||= Set.new
+      @index.clear
+      @index +=
+      case value
+      when true
+        [id]
+      when false
+        []
+      when String, Symbol
+        [value.to_sym]
+      when Array, Set
+        value.map(&:to_sym)
+      else
+        raise ArgumentError
+      end
+    end
+
+    def unique=(value)
+      @unique ||= Set.new
+      @unique.clear
+      @unique +=
+      case value
+      when true
+        [id]
+      when false
+        []
+      when String, Symbol
+        [value.to_sym]
+      when Array, Set
+        value.map(&:to_sym)
+      else
+        raise ArgumentError
       end
     end
 
@@ -163,7 +194,9 @@ module Masamune::Schema
     def ==(other)
       return false unless other
       id == other.id &&
-      type == other.type
+      typecast?(other.type) &&
+      (!reference || reference.id == other.reference.try(:id) || reference.id == other.parent.try(:id)) &&
+      (!other.reference || other.reference.id == reference.try(:id) || other.reference.id == parent.try(:id))
     end
 
     def eql?(other)
@@ -174,11 +207,26 @@ module Masamune::Schema
       [id, type].hash
     end
 
+    def typecast?(other_type)
+      return true if type == other_type
+      case [type, other_type]
+      when [:key_value, :yaml]
+        true
+      when [:key_value, :json]
+        true
+      when [:yaml, :json]
+        true
+      else
+        false
+      end
+    end
+
     def auto_reference
       reference && reference.primary_key.auto
     end
 
     def references?(other)
+      return false unless other
       if reference && other.reference && reference.id == other.reference.id
         true
       elsif parent && other.parent && parent.id == other.parent.id
@@ -212,6 +260,7 @@ module Masamune::Schema
 
     def initialize_default_attributes!
       self.default = 'uuid_generate_v4()' if primary_key && type == :uuid
+      self.unique = 'surrogate' if surrogate_key
     end
 
     def ruby_key_value(hash)

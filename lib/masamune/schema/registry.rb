@@ -9,12 +9,13 @@ module Masamune::Schema
 
     def initialize(environment)
       self.environment = environment
+
       @dimensions = {}
-      @facts = {}
-      @files = {}
-      @maps = {}
-      @options = Hash.new { |h,k| h[k] = [] }
-      @extra = []
+      @facts      = {}
+      @files      = {}
+      @maps       = {}
+      @options    = Hash.new { |h,k| h[k] = [] }
+      @extra      = []
     end
 
     def schema(options = {}, &block)

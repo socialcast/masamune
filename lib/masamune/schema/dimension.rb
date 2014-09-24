@@ -30,37 +30,6 @@ module Masamune::Schema
       columns.values.detect { |column| column.id == :version }
     end
 
-    def upsert_unique_columns
-      columns.values.select { |column| [:source_kind, :start_at].include?(column.id) || column.surrogate_key || column.unique }
-    end
-    method_with_last_element :upsert_unique_columns
-
-    def consolidated_window(*extra)
-      (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra).uniq
-    end
-
-    def consolidated_columns
-      columns.reject { |_, column| [:end_at, :version, :last_modified_at].include?(column.id) || column.primary_key }
-    end
-    method_with_last_element :consolidated_columns
-
-    def consolidated_values(window: nil)
-      consolidated_columns.reject { |id, _| [:parent_uuid, :record_uuid].include?(id) }.map do |_, column, _|
-        if column.surrogate_key || column.name == :start_at
-          "#{column.name} AS #{column.name}"
-        elsif column.type == :key_value
-          "hstore_merge(#{column.name}_now) OVER #{window} - hstore_merge(#{column.name}_was) OVER #{window} AS #{column.name}"
-        else
-          "COALESCE(#{column.name}, FIRST_VALUE(#{column.name}) OVER #{window}) AS #{column.name}"
-        end
-      end
-    end
-    method_with_last_element :consolidated_values
-
-    def consolidated_constraints
-      consolidated_columns.reject { |id, column| [:parent_uuid, :record_uuid, :start_at].include?(id) || column.null }
-    end
-
     def ledger_table
       @ledger_table ||= self.class.new(id: id, type: :ledger, columns: ledger_table_columns, references: references.values, parent: self)
     end
@@ -107,14 +76,14 @@ module Masamune::Schema
         children << ledger_table
         initialize_column! id: 'parent_uuid', type: :uuid, null: true, reference: ledger_table
         initialize_column! id: 'record_uuid', type: :uuid, null: true, reference: ledger_table
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'surrogate'
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
         initialize_column! id: 'version', type: :integer, default: 1, null: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :ledger
-        initialize_column! id: 'source_kind', type: :string, null: true
-        initialize_column! id: 'source_uuid', type: :string, null: true
-        initialize_column! id: 'start_at', type: :timestamp, index: true
+        initialize_column! id: 'source_kind', type: :string, unique: 'surrogate'
+        initialize_column! id: 'source_uuid', type: :string, unique: 'surrogate'
+        initialize_column! id: 'start_at', type: :timestamp, index: true, unique: 'surrogate'
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
         initialize_column! id: 'delta', type: :integer
       end

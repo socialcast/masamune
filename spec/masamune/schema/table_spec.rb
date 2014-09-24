@@ -56,6 +56,73 @@ describe Masamune::Schema::Table do
     end
   end
 
+  context 'with multiple index columns' do
+    let(:table) do
+      described_class.new id: 'user',
+        columns: [
+          Masamune::Schema::Column.new(id: 'tenant_id', index: ['tenant_id', 'shared']),
+          Masamune::Schema::Column.new(id: 'user_id', index: ['user_id', 'shared'])
+        ]
+    end
+
+    it 'should eq table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_index') THEN
+        CREATE INDEX user_table_tenant_id_index ON user_table (tenant_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_id_index') THEN
+        CREATE INDEX user_table_user_id_index ON user_table (user_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_index') THEN
+        CREATE INDEX user_table_tenant_id_user_id_index ON user_table (tenant_id, user_id);
+        END IF; END $$;
+      EOS
+    end
+  end
+
+  context 'with multiple unique columns' do
+    let(:table) do
+      described_class.new id: 'user',
+        columns: [
+          Masamune::Schema::Column.new(id: 'tenant_id', unique: ['shared']),
+          Masamune::Schema::Column.new(id: 'user_id', unique: ['user_id', 'shared'])
+        ]
+    end
+
+    it 'should eq table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_id_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_user_id_key UNIQUE(user_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_tenant_id_user_id_key UNIQUE(tenant_id, user_id);
+        END IF; END $$;
+      EOS
+    end
+  end
+
   context 'with primary_key columns override' do
     let(:table) do
       described_class.new id: 'user',
@@ -137,8 +204,8 @@ describe Masamune::Schema::Table do
     let(:table) do
       described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, unique: true, index: 'tenant_and_user'),
-          Masamune::Schema::Column.new(id: 'user_id', type: :integer, unique: true, index: 'tenant_and_user')
+          Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, unique: 'tenant_and_user', index: 'tenant_and_user'),
+          Masamune::Schema::Column.new(id: 'user_id', type: :integer, unique: 'tenant_and_user', index: 'tenant_and_user')
         ]
     end
 
@@ -148,9 +215,13 @@ describe Masamune::Schema::Table do
         (
           uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
           tenant_id INTEGER NOT NULL,
-          user_id INTEGER NOT NULL,
-          UNIQUE(tenant_id, user_id)
+          user_id INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_tenant_id_user_id_key UNIQUE(tenant_id, user_id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_index') THEN
@@ -188,6 +259,11 @@ describe Masamune::Schema::Table do
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_tenant_id_user_id_key UNIQUE(tenant_id, user_id);
+        END IF; END $$;
 
         INSERT INTO user_table (tenant_id, user_id)
         SELECT default_tenant_id(), -1
