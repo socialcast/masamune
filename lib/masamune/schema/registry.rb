@@ -5,6 +5,7 @@ module Masamune::Schema
     attr_accessor :dimensions
     attr_accessor :facts
     attr_accessor :files
+    attr_accessor :events
     attr_accessor :maps
 
     def initialize(environment)
@@ -13,6 +14,7 @@ module Masamune::Schema
       @dimensions = {}
       @facts      = {}
       @files      = {}
+      @events     = {}
       @maps       = {}
       @options    = Hash.new { |h,k| h[k] = [] }
       @extra      = []
@@ -68,6 +70,18 @@ module Masamune::Schema
       @options = prev_options
     end
 
+    def event(id, options = {}, &block)
+      prev_options = @options.dup
+      yield if block_given?
+      self.events[id.to_sym] = Masamune::Schema::Event.new(options.merge(@options).merge(id: id))
+    ensure
+      @options = prev_options
+    end
+
+    def attribute(id, options = {}, &block)
+      @options[:columns] << Masamune::Schema::Column.new(options.merge(id: id))
+    end
+
     def map(id, options = {}, &block)
       prev_options = @options.dup
       @options[:fields] = {}
@@ -113,6 +127,9 @@ module Masamune::Schema
         file.write(as_psql)
         file.close
       end.path
+    end
+
+    def as_hql
     end
 
     private
