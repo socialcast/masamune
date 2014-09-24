@@ -15,8 +15,7 @@ module Masamune::Schema
     alias_method :attributes=, :columns=
 
     def initialize(opts = {})
-      # TODO raise ArgumentError unless id
-      # TODO Use opts everywhere
+      raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         send("#{name}=", value)
       end

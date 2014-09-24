@@ -1,6 +1,6 @@
 module Masamune::Schema
   class Dimension < Table
-    def initialize(o)
+    def initialize(opts = {})
       super
       initialize_dimension_columns!
     end

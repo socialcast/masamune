@@ -4,6 +4,11 @@ require 'active_support/core_ext/string/strip'
 describe Masamune::Schema::Table do
   subject { table.as_psql }
 
+  context 'without id' do
+    subject(:table) { described_class.new }
+    it { expect { table }.to raise_error ArgumentError }
+  end
+
   context 'with columns' do
     let(:table) do
       described_class.new id: 'user',

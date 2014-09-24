@@ -18,6 +18,7 @@ module Masamune::Schema
     end
 
     def initialize(opts = {})
+      raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         send("#{name}=", value)
       end
