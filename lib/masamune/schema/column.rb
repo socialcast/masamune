@@ -195,16 +195,8 @@ module Masamune::Schema
       return false unless other
       id == other.id &&
       typecast?(other.type) &&
-      (
-        reference ?
-          reference.id == other.reference.try(:id) ||
-          reference.id == other.parent.try(:id) : true
-      ) &&
-      (
-        other.reference ?
-          other.reference.id == reference.try(:id) ||
-          other.reference.id == parent.try(:id) : true
-      )
+      (!reference || reference.id == other.reference.try(:id) || reference.id == other.parent.try(:id)) &&
+      (!other.reference || other.reference.id == reference.try(:id) || other.reference.id == parent.try(:id))
     end
 
     def eql?(other)
