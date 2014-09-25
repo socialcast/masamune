@@ -1,18 +1,30 @@
+# TODO consider database/schema for views
+# TODO consider columnar store materialized view
 module Masamune::Schema
   class Event
+    class Attribute
+      attr_accessor :id
+      attr_accessor :type
+      attr_accessor :immutable
+
+      def initialize(opts = {})
+        raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
+        self.id = opts[:id].to_sym
+        self.type = opts.fetch(:type, :integer).to_sym
+        self.immutable = opts.fetch(:immutable, false)
+      end
+    end
+
     DEFAULT_ATTRIBUTES =
     {
       id:              nil,
-      columns:         {},
+      attributes:      [],
       debug:           false
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
       attr_accessor attr.to_sym
     end
-
-    alias_method :attributes, :columns
-    alias_method :attributes=, :columns=
 
     def initialize(opts = {})
       raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
@@ -21,13 +33,10 @@ module Masamune::Schema
       end
     end
 
-    def columns=(instance)
-      @columns = {}
-      columns = (instance.is_a?(Hash) ? instance.values : instance).compact
-
-      columns.each do |column|
-        column.parent = self
-        @columns[column.name.to_sym] = column
+    def attributes=(attributes)
+      @attributes = {}
+      attributes.each do |attribute|
+        @attributes[attribute.id] = attribute
       end
     end
 

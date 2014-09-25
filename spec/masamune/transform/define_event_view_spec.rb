@@ -8,7 +8,7 @@ describe Masamune::Transform::DefineEventView do
   before do
     registry.schema do
       event 'tenant' do
-        attribute 'tenant_id', type: :integer
+        attribute 'tenant_id', type: :integer, immutable: true
         attribute 'account_state', type: :string
         attribute 'premium_type', type: :string
         attribute 'preferences', type: :json
@@ -27,7 +27,41 @@ describe Masamune::Transform::DefineEventView do
 
     it 'should eq render template' do
       is_expected.to eq <<-EOS.strip_heredoc
-
+        CREATE VIEW tenant_events (
+          uuid,
+          tenant_id,
+          account_state_now,
+          account_state_was,
+          premium_type_now,
+          premium_type_was,
+          preferences_now,
+          preferences_was
+          delta,
+          created_at,
+          y, m, d ,h
+        ) PARTITIONED ON (y, m, d, h) AS
+        SELECT DISTINCT
+          uuid,
+          tenant_id,
+          account_state_now,
+          account_state_was,
+          premium_type_now,
+          premium_type_was,
+          preferences_now,
+          preferences_was
+          IF(type = 'tenant_update', 1, 0) AS delta,
+          ctime_iso8601 AS created_at
+        FROM
+          events
+        LATERAL VIEW
+          json_tuple(events.json, 'tenant_id', 'account_state_now', 'account_state_was', 'premium_type_now', 'premium_type_was', 'preferences_now', 'preferences_was') event_data AS tenant_id, account_state_now, account_state_was, premium_type_now, premium_type_was, preferences_now, preferences_was
+        WHERE
+          type = 'tenant_create' OR
+          type = 'tenant_update' OR
+          type = 'tenant_delete'
+        SORT BY
+          created_at
+        ;
       EOS
     end
   end

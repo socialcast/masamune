@@ -41,7 +41,13 @@ module Masamune::Transform
     end
 
     def view_attributes
-      columns.map { |_, column| column.name }
+      attributes.map do |_, attribute|
+        if attribute.immutable
+          attribute.id
+        else
+          ["#{attribute.id}_now", "#{attribute.id}_was"]
+        end
+      end.flatten
     end
   end
 end

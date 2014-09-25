@@ -79,7 +79,7 @@ module Masamune::Schema
     end
 
     def attribute(id, options = {}, &block)
-      @options[:columns] << Masamune::Schema::Column.new(options.merge(id: id))
+      @options[:attributes] << Masamune::Schema::Event::Attribute.new(options.merge(id: id))
     end
 
     def map(id, options = {}, &block)
