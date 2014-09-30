@@ -38,6 +38,11 @@ module Masamune::Actions
       postgres file: transform.to_psql_file, debug: target_table.debug
     end
 
+    def relabel_dimension(target_table)
+      transform = Masamune::Transform::RelabelDimension.new(target_table)
+      postgres file: transform.to_psql_file, debug: target_table.debug
+    end
+
     def load_fact(source_files, source, target_table, date)
       transform = Masamune::Transform::LoadFact.new(source_files, source.as_table(target_table), target_table, date)
       postgres file: transform.to_psql_file, debug: (source.debug || target_table.debug)
