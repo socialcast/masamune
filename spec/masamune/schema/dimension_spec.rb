@@ -30,8 +30,8 @@ describe Masamune::Schema::Dimension do
     let(:dimension) do
       described_class.new id: 'user', type: :two,
         columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', index: true),
-          Masamune::Schema::Column.new(id: 'user_id', index: true)
+          Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
+          Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true)
         ]
     end
 
@@ -47,6 +47,11 @@ describe Masamune::Schema::Dimension do
           version INTEGER DEFAULT 1,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_tenant_id_user_id_start_at_key') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_tenant_id_user_id_start_at_key UNIQUE(tenant_id, user_id, start_at);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_tenant_id_index') THEN

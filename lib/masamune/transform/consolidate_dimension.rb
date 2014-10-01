@@ -13,7 +13,7 @@ module Masamune::Transform
     end
 
     def relabel_dimension_as_psql
-      Masamune::Template.render_to_string(relabel_dimension_template, target: Target.new(@target))
+      RelabelDimension.new(@target).as_psql
     end
 
     def as_psql
