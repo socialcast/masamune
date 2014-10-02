@@ -186,7 +186,7 @@ describe Masamune::Transform::ConsolidateDimension do
         ;
 
         INSERT INTO
-          user_dimension (user_account_state_type_id,tenant_id,user_id,preferences,parent_uuid,record_uuid,start_at,end_at,version,last_modified_at)
+          user_dimension (user_account_state_type_id, tenant_id, user_id, preferences, parent_uuid, record_uuid, start_at, end_at, version, last_modified_at)
         SELECT
           user_dimension_stage.user_account_state_type_id,
           user_dimension_stage.tenant_id,

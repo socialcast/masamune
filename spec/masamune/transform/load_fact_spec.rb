@@ -160,7 +160,8 @@ describe Masamune::Transform::LoadFact do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TEMPORARY TABLE IF NOT EXISTS user_agent_type_stage (LIKE user_agent_type INCLUDING ALL);
 
-        INSERT INTO user_agent_type_stage(name, version)
+        INSERT INTO
+          user_agent_type_stage (name, version)
         SELECT DISTINCT
           user_agent_type_name,
           COALESCE(user_agent_type_version, 'Unknown')
@@ -174,7 +175,7 @@ describe Masamune::Transform::LoadFact do
         LOCK TABLE user_agent_type IN EXCLUSIVE MODE;
 
         INSERT INTO
-          user_agent_type (name,version)
+          user_agent_type (name, version)
         SELECT
           user_agent_type_stage.name,
           user_agent_type_stage.version
@@ -194,7 +195,8 @@ describe Masamune::Transform::LoadFact do
 
         CREATE TEMPORARY TABLE IF NOT EXISTS feature_type_stage (LIKE feature_type INCLUDING ALL);
 
-        INSERT INTO feature_type_stage(name)
+        INSERT INTO
+          feature_type_stage (name)
         SELECT DISTINCT
           feature_type_name
         FROM

@@ -138,7 +138,7 @@ describe Masamune::Transform::LoadDimension do
         ;
 
         INSERT INTO
-          user_dimension_ledger (department_type_uuid,user_account_state_type_id,tenant_id,user_id,name,preferences_now,preferences_was,source_kind,source_uuid,start_at,last_modified_at,delta)
+          user_dimension_ledger (department_type_uuid, user_account_state_type_id, tenant_id, user_id, name, preferences_now, preferences_was, source_kind, source_uuid, start_at, last_modified_at, delta)
         SELECT
           user_dimension_ledger_stage.department_type_uuid,
           user_dimension_ledger_stage.user_account_state_type_id,
@@ -182,7 +182,8 @@ describe Masamune::Transform::LoadDimension do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TEMPORARY TABLE IF NOT EXISTS department_type_stage (LIKE department_type INCLUDING ALL);
 
-        INSERT INTO department_type_stage(tenant_id, department_id)
+        INSERT INTO
+          department_type_stage (tenant_id, department_id)
         SELECT DISTINCT
           tenant_id,
           department_type_department_id
@@ -197,7 +198,7 @@ describe Masamune::Transform::LoadDimension do
         LOCK TABLE department_type IN EXCLUSIVE MODE;
 
         INSERT INTO
-          department_type (tenant_id,department_id)
+          department_type (tenant_id, department_id)
         SELECT
           department_type_stage.tenant_id,
           department_type_stage.department_id
