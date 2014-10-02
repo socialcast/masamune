@@ -23,6 +23,7 @@ module Masamune::Schema
     end
 
     def initialize(opts = {})
+      raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         send("#{name}=", value)
       end
@@ -185,7 +186,7 @@ module Masamune::Schema
 
     def initialize_foreign_key_columns!
       references.map do |_, table|
-        initialize_column! id: table.foreign_key_name, type: table.primary_key.type, reference: table, default: table.default_foreign_key_name
+        initialize_column! id: table.foreign_key_name, type: table.primary_key.type, reference: table, default: table.default_foreign_key_name, index: true
       end
     end
 

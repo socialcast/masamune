@@ -1,0 +1,23 @@
+CREATE VIEW <%= target.view_name %> (
+  uuid,
+  <%= target.view_attributes.join(",\n  ") %>
+  delta,
+  created_at,
+  y, m, d ,h
+) PARTITIONED ON (y, m, d, h) AS
+SELECT DISTINCT
+  uuid,
+  <%= target.view_attributes.join(",\n  ") %>
+  IF(type = '<%= target.update_type %>', 1, 0) AS delta,
+  ctime_iso8601 AS created_at
+FROM
+  events
+LATERAL VIEW
+  json_tuple(events.json, <%= target.view_attributes.map { |attribute| "'#{attribute}'" }.join(', ') %>) event_data AS <%= target.view_attributes.join(', ') %>
+WHERE
+  type = '<%= target.create_type %>' OR
+  type = '<%= target.update_type %>' OR
+  type = '<%= target.delete_type %>'
+SORT BY
+  created_at
+;

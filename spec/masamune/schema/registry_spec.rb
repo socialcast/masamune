@@ -132,6 +132,30 @@ describe Masamune::Schema::Registry do
       it { expect(fact_one.measures).to include :measure_one }
     end
 
+    context 'when schema contains events' do
+      before do
+        instance.schema do
+          event 'event_one' do
+            attribute 'attribute_one'
+            attribute 'attribute_two'
+          end
+
+          event 'event_two' do
+            attribute 'attribute_three'
+            attribute 'attribute_four'
+          end
+        end
+      end
+
+      let(:event_one) { instance.events[:event_one] }
+      let(:event_two) { instance.events[:event_two] }
+
+      it { expect(event_one.attributes).to include :attribute_one }
+      it { expect(event_one.attributes).to include :attribute_two }
+      it { expect(event_two.attributes).to include :attribute_three }
+      it { expect(event_two.attributes).to include :attribute_four }
+    end
+
     context 'when schema contains file' do
       before do
         instance.schema do

@@ -4,6 +4,11 @@ require 'active_support/core_ext/string/strip'
 describe Masamune::Schema::Table do
   subject { table.as_psql }
 
+  context 'without id' do
+    subject(:table) { described_class.new }
+    it { expect { table }.to raise_error ArgumentError }
+  end
+
   context 'with columns' do
     let(:table) do
       described_class.new id: 'user',
@@ -334,6 +339,11 @@ describe Masamune::Schema::Table do
           user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid) DEFAULT default_user_account_state_table_uuid(),
           name VARCHAR NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_account_state_table_uuid_index') THEN
+        CREATE INDEX user_table_user_account_state_table_uuid_index ON user_table (user_account_state_table_uuid);
+        END IF; END $$;
       EOS
     end
 
@@ -375,6 +385,11 @@ describe Masamune::Schema::Table do
           actor_user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid),
           name VARCHAR NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_actor_user_account_state_table_uuid_index') THEN
+        CREATE INDEX user_table_actor_user_account_state_table_uuid_index ON user_table (actor_user_account_state_table_uuid);
+        END IF; END $$;
       EOS
     end
   end
@@ -415,6 +430,8 @@ describe Masamune::Schema::Table do
             user_account_state_table_uuid UUID,
             name VARCHAR
           );
+
+          CREATE INDEX user_table_stage_user_account_state_table_uuid_index ON user_table_stage (user_account_state_table_uuid);
         EOS
       end
     end

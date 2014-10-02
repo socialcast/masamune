@@ -1,19 +1,18 @@
 module Masamune::Schema
   class Row
-    attr_accessor :id
-    attr_accessor :parent
-    attr_accessor :values
-    attr_accessor :default
-    attr_accessor :strict
-    attr_accessor :debug
-
     DEFAULT_ATTRIBUTES =
     {
+      id:       nil,
       values:   {},
       default:  false,
       strict:   true,
+      parent:   nil,
       debug:    false
     }
+
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr.to_sym
+    end
 
     def initialize(opts = {})
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|

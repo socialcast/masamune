@@ -1,6 +1,6 @@
 module Masamune::Schema
   class Dimension < Table
-    def initialize(o)
+    def initialize(opts = {})
       super
       initialize_dimension_columns!
     end
@@ -70,7 +70,7 @@ module Masamune::Schema
       when :two
         initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'surrogate'
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
-        initialize_column! id: 'version', type: :integer, default: 1, null: true
+        initialize_column! id: 'version', type: :integer, default: 1, null: true, index: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :four
         children << ledger_table
@@ -78,7 +78,7 @@ module Masamune::Schema
         initialize_column! id: 'record_uuid', type: :uuid, null: true, reference: ledger_table
         initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'surrogate'
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
-        initialize_column! id: 'version', type: :integer, default: 1, null: true
+        initialize_column! id: 'version', type: :integer, default: 1, null: true, index: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :ledger
         initialize_column! id: 'source_kind', type: :string, unique: 'surrogate'
