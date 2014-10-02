@@ -107,6 +107,8 @@ module Masamune::Schema
       case type
       when :integer
         for_primary_key ? 'SERIAL' : 'INTEGER'
+      when :money
+        'MONEY'
       when :string
         'VARCHAR'
       when :uuid
