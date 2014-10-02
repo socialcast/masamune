@@ -185,7 +185,7 @@ module Masamune::Schema
 
     def initialize_foreign_key_columns!
       references.map do |_, table|
-        initialize_column! id: table.foreign_key_name, type: table.primary_key.type, reference: table, default: table.default_foreign_key_name
+        initialize_column! id: table.foreign_key_name, type: table.primary_key.type, reference: table, default: table.default_foreign_key_name, index: true
       end
     end
 
