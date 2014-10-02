@@ -11,7 +11,7 @@ module Masamune::Schema
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
-      attr_accessor attr.to_sym
+      attr_accessor attr
     end
 
     def initialize(opts = {})
