@@ -72,6 +72,11 @@ describe Masamune::Schema::Dimension do
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_end_at_index') THEN
         CREATE INDEX user_dimension_end_at_index ON user_dimension (end_at);
         END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_version_index') THEN
+        CREATE INDEX user_dimension_version_index ON user_dimension (version);
+        END IF; END $$;
       EOS
     end
   end
@@ -194,6 +199,11 @@ describe Masamune::Schema::Dimension do
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_end_at_index') THEN
         CREATE INDEX user_dimension_end_at_index ON user_dimension (end_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_version_index') THEN
+        CREATE INDEX user_dimension_version_index ON user_dimension (version);
         END IF; END $$;
       EOS
     end
