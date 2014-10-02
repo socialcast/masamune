@@ -147,6 +147,11 @@ describe Masamune::Schema::Dimension do
         END IF; END $$;
 
         DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_user_account_state_type_id_index') THEN
+        CREATE INDEX user_dimension_ledger_user_account_state_type_id_index ON user_dimension_ledger (user_account_state_type_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_tenant_id_index') THEN
         CREATE INDEX user_dimension_ledger_tenant_id_index ON user_dimension_ledger (tenant_id);
         END IF; END $$;
@@ -179,6 +184,11 @@ describe Masamune::Schema::Dimension do
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_tenant_id_user_id_start_at_key') THEN
         ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_tenant_id_user_id_start_at_key UNIQUE(tenant_id, user_id, start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_user_account_state_type_id_index') THEN
+        CREATE INDEX user_dimension_user_account_state_type_id_index ON user_dimension (user_account_state_type_id);
         END IF; END $$;
 
         DO $$ BEGIN

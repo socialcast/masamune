@@ -339,6 +339,11 @@ describe Masamune::Schema::Table do
           user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid) DEFAULT default_user_account_state_table_uuid(),
           name VARCHAR NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_account_state_table_uuid_index') THEN
+        CREATE INDEX user_table_user_account_state_table_uuid_index ON user_table (user_account_state_table_uuid);
+        END IF; END $$;
       EOS
     end
 
@@ -380,6 +385,11 @@ describe Masamune::Schema::Table do
           actor_user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid),
           name VARCHAR NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_actor_user_account_state_table_uuid_index') THEN
+        CREATE INDEX user_table_actor_user_account_state_table_uuid_index ON user_table (actor_user_account_state_table_uuid);
+        END IF; END $$;
       EOS
     end
   end
@@ -420,6 +430,8 @@ describe Masamune::Schema::Table do
             user_account_state_table_uuid UUID,
             name VARCHAR
           );
+
+          CREATE INDEX user_table_stage_user_account_state_table_uuid_index ON user_table_stage (user_account_state_table_uuid);
         EOS
       end
     end
