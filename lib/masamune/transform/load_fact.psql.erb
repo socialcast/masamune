@@ -21,3 +21,8 @@ ON
   <%= conditions.join(" AND\n  ") %>
 <%- end -%>
 ;
+
+<%- target.index_columns.each do |column_names, unique| -%>
+<%- index_name = "#{target.partition_table_name(date)}_#{column_names.join('_')}_index" -%>
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target.partition_table_name(date) %> (<%= column_names.join(', ') %>);
+<%- end -%>

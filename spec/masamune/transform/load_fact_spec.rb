@@ -142,6 +142,13 @@ describe Masamune::Transform::LoadFact do
         ON
           feature_type.name = visits_fact_stage.feature_type_name
         ;
+
+        CREATE INDEX visits_fact_y2014m08_date_dimension_uuid_index ON visits_fact_y2014m08 (date_dimension_uuid);
+        CREATE INDEX visits_fact_y2014m08_tenant_dimension_uuid_index ON visits_fact_y2014m08 (tenant_dimension_uuid);
+        CREATE INDEX visits_fact_y2014m08_user_dimension_uuid_index ON visits_fact_y2014m08 (user_dimension_uuid);
+        CREATE INDEX visits_fact_y2014m08_user_agent_type_id_index ON visits_fact_y2014m08 (user_agent_type_id);
+        CREATE INDEX visits_fact_y2014m08_feature_type_id_index ON visits_fact_y2014m08 (feature_type_id);
+        CREATE INDEX visits_fact_y2014m08_time_key_index ON visits_fact_y2014m08 (time_key);
       EOS
     end
   end
