@@ -72,6 +72,11 @@ describe Masamune::Schema::Dimension do
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_end_at_index') THEN
         CREATE INDEX user_dimension_end_at_index ON user_dimension (end_at);
         END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_version_index') THEN
+        CREATE INDEX user_dimension_version_index ON user_dimension (version);
+        END IF; END $$;
       EOS
     end
   end
@@ -142,6 +147,11 @@ describe Masamune::Schema::Dimension do
         END IF; END $$;
 
         DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_user_account_state_type_id_index') THEN
+        CREATE INDEX user_dimension_ledger_user_account_state_type_id_index ON user_dimension_ledger (user_account_state_type_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_tenant_id_index') THEN
         CREATE INDEX user_dimension_ledger_tenant_id_index ON user_dimension_ledger (tenant_id);
         END IF; END $$;
@@ -177,6 +187,11 @@ describe Masamune::Schema::Dimension do
         END IF; END $$;
 
         DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_user_account_state_type_id_index') THEN
+        CREATE INDEX user_dimension_user_account_state_type_id_index ON user_dimension (user_account_state_type_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_tenant_id_index') THEN
         CREATE INDEX user_dimension_tenant_id_index ON user_dimension (tenant_id);
         END IF; END $$;
@@ -194,6 +209,11 @@ describe Masamune::Schema::Dimension do
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_end_at_index') THEN
         CREATE INDEX user_dimension_end_at_index ON user_dimension (end_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_version_index') THEN
+        CREATE INDEX user_dimension_version_index ON user_dimension (version);
         END IF; END $$;
       EOS
     end
