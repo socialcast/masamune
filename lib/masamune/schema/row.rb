@@ -15,6 +15,7 @@ module Masamune::Schema
     end
 
     def initialize(opts = {})
+      opts.symbolize_keys!
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         send("#{name}=", value)
       end

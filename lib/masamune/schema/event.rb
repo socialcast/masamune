@@ -8,6 +8,7 @@ module Masamune::Schema
       attr_accessor :immutable
 
       def initialize(opts = {})
+        opts.symbolize_keys!
         raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
         self.id = opts[:id].to_sym
         self.type = opts.fetch(:type, :integer).to_sym
@@ -27,6 +28,7 @@ module Masamune::Schema
     end
 
     def initialize(opts = {})
+      opts.symbolize_keys!
       raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         send("#{name}=", value)

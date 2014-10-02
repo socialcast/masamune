@@ -3,6 +3,7 @@ module Masamune::Schema
     attr_accessor :partition
 
     def initialize(opts = {})
+      opts.symbolize_keys!
       @partition = opts.delete(:partition)
       super opts.reverse_merge(type: :fact)
       initialize_fact_columns!
