@@ -1,3 +1,5 @@
+require 'active_support/core_ext/hash'
+
 module Masamune::Schema
   class Registry
     include Masamune::HasEnvironment
@@ -28,14 +30,13 @@ module Masamune::Schema
     attr_accessor :files
     attr_accessor :events
 
-    # FIXME use indifferent access
     def initialize(environment)
       self.environment = environment
 
-      @dimensions = {}
-      @facts      = {}
-      @files      = {}
-      @events     = {}
+      @dimensions = {}.with_indifferent_access
+      @facts      = {}.with_indifferent_access
+      @files      = {}.with_indifferent_access
+      @events     = {}.with_indifferent_access
       @options    = Hash.new { |h,k| h[k] = [] }
       @extra      = []
     end
@@ -48,7 +49,7 @@ module Masamune::Schema
     def dimension(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.dimensions[id.to_sym] ||= Masamune::Schema::Dimension.new(options.merge(@options).merge(id: id))
+      self.dimensions[id] ||= Masamune::Schema::Dimension.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end
@@ -59,7 +60,7 @@ module Masamune::Schema
     end
 
     def references(id, options = {})
-      @options[:references] << dimensions[id.to_sym].dup.tap do |dimension|
+      @options[:references] << dimensions[id].dup.tap do |dimension|
         dimension.label = options[:label]
       end
     end
@@ -73,7 +74,7 @@ module Masamune::Schema
     def fact(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.facts[id.to_sym] ||= Masamune::Schema::Fact.new(options.merge(@options).merge(id: id))
+      self.facts[id] ||= Masamune::Schema::Fact.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end
@@ -85,7 +86,7 @@ module Masamune::Schema
     def file(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.files[id.to_sym] = HasMap.new Masamune::Schema::File.new(options.merge(@options).merge(id: id))
+      self.files[id] = HasMap.new Masamune::Schema::File.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end
@@ -93,7 +94,7 @@ module Masamune::Schema
     def event(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.events[id.to_sym] = Masamune::Schema::Event.new(options.merge(@options).merge(id: id))
+      self.events[id] = Masamune::Schema::Event.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end
@@ -107,7 +108,7 @@ module Masamune::Schema
       from, to = options[:from], options[:to]
       raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
       raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
-      @options[:fields] = {}
+      @options[:fields] = {}.with_indifferent_access
       yield if block_given?
       from.maps[to] ||= Masamune::Schema::Map.new(options.merge(@options))
     ensure
@@ -115,9 +116,9 @@ module Masamune::Schema
     end
 
     def field(id, value = nil, &block)
-      @options[:fields][id.to_sym] = value
-      @options[:fields][id.to_sym] ||= block.to_proc if block_given?
-      @options[:fields][id.to_sym] ||= id
+      @options[:fields][id] = value
+      @options[:fields][id] ||= block.to_proc if block_given?
+      @options[:fields][id] ||= id
     end
 
     def maps(options = {})
@@ -164,7 +165,7 @@ module Masamune::Schema
     def dereference_column(id)
       if id =~ /\./
         reference_id, column_id = id.to_s.split('.')
-        if dimension = dimensions[reference_id.to_sym]
+        if dimension = dimensions[reference_id]
           [column_id.to_sym, dimension]
         else
           raise ArgumentError, "dimension #{reference_id} not defined"

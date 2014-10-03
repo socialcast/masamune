@@ -256,5 +256,24 @@ describe Masamune::Schema::Registry do
         expect { schema }.to raise_error /invalid map from: 'users', to: is missing/
       end
     end
+
+    context 'when schema addressed with strings' do
+      before do
+        instance.schema do
+          dimension 'user' do; end
+          file 'users' do; end
+
+          map from: files['users'], to: dimensions['user'] do
+            field 'tenant_id'
+          end
+        end
+      end
+
+      subject(:map) { instance.files[:users].map(to: instance.dimensions[:user]) }
+
+      it 'should construct map' do
+        is_expected.to_not be_nil
+      end
+    end
   end
 end
