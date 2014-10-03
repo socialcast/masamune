@@ -81,7 +81,6 @@ describe Masamune::Actions::Postgres do
       before do
         filesystem.touch!(*schema_files)
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
-        expect(registry).to receive(:load).with('schema.psql').once
         expect(instance).to receive(:postgres).once
         after_initialize_invoke
       end
@@ -93,8 +92,6 @@ describe Masamune::Actions::Postgres do
       before do
         filesystem.touch!('schema_1.psql', 'schema_2.psql')
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
-        expect(registry).to receive(:load).with('schema_1.psql').once
-        expect(registry).to receive(:load).with('schema_2.psql').once
         expect(instance).to receive(:postgres).with(file: 'registry.psql').once
         after_initialize_invoke
       end
@@ -106,7 +103,6 @@ describe Masamune::Actions::Postgres do
       before do
         filesystem.touch!('schema.rb')
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
-        expect(registry).to receive(:load).with('schema.rb').once
         expect(instance).to receive(:postgres).with(file: 'registry.psql').once
         after_initialize_invoke
       end
