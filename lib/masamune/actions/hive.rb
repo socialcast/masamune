@@ -25,7 +25,7 @@ module Masamune::Actions
       hive(exec: sql.join(' ') + ';', database: nil)
     end
 
-    def load_schema_registry
+    def load_hive_schema_registry
       hive(file: registry.to_hql_file)
     rescue => e
       logger.error(e)
@@ -40,7 +40,7 @@ module Masamune::Actions
         if options[:dry_run]
           raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'SHOW TABLES;', safe: true, fail_fast: false).success?
         end
-        thor.load_schema_registry
+        thor.load_hive_schema_registry
       end if defined?(base.after_initialize)
     end
   end

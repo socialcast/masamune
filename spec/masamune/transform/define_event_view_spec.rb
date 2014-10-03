@@ -27,7 +27,7 @@ describe Masamune::Transform::DefineEventView do
 
     it 'should eq render template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE VIEW tenant_events (
+        CREATE VIEW IF NOT EXISTS tenant_events (
           uuid,
           tenant_id,
           account_state_now,
@@ -35,7 +35,7 @@ describe Masamune::Transform::DefineEventView do
           premium_type_now,
           premium_type_was,
           preferences_now,
-          preferences_was
+          preferences_was,
           delta,
           created_at,
           y, m, d ,h
@@ -48,9 +48,10 @@ describe Masamune::Transform::DefineEventView do
           premium_type_now,
           premium_type_was,
           preferences_now,
-          preferences_was
+          preferences_was,
           IF(type = 'tenant_update', 1, 0) AS delta,
-          ctime_iso8601 AS created_at
+          ctime_iso8601 AS created_at,
+          y, m, d ,h
         FROM
           events
         LATERAL VIEW

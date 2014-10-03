@@ -1,15 +1,20 @@
-CREATE VIEW <%= target.view_name %> (
+CREATE VIEW IF NOT EXISTS <%= target.view_name %> (
   uuid,
-  <%= target.view_attributes.join(",\n  ") %>
+  <%- target.view_attributes.each do |attribute| -%>
+  <%= attribute %>,
+  <%- end -%>
   delta,
   created_at,
   y, m, d ,h
 ) PARTITIONED ON (y, m, d, h) AS
 SELECT DISTINCT
   uuid,
-  <%= target.view_attributes.join(",\n  ") %>
+  <%- target.view_attributes.each do |attribute| -%>
+  <%= attribute %>,
+  <%- end -%>
   IF(type = '<%= target.update_type %>', 1, 0) AS delta,
-  ctime_iso8601 AS created_at
+  ctime_iso8601 AS created_at,
+  y, m, d ,h
 FROM
   events
 LATERAL VIEW
