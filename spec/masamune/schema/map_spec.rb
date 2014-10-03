@@ -30,7 +30,7 @@ describe Masamune::Schema::Map do
         column 'deleted_at', type: :timestamp
       end
 
-      map 'user_map', headers: true do
+      map from: files[:user], to: dimensions[:user], headers: true do
         field 'tenant_id', 'tenant_id'
         field 'user_id', 'id'
         field 'user_account_state.name' do |row|
@@ -46,13 +46,23 @@ describe Masamune::Schema::Map do
     end
   end
 
+  context 'without from' do
+    subject(:map) { described_class.new }
+    it { expect { map }.to raise_error ArgumentError }
+  end
+
+  context 'without to' do
+    subject(:map) { described_class.new(from: registry.files[:user]) }
+    it { expect { map }.to raise_error ArgumentError }
+  end
+
   describe '#apply' do
     let(:source) do
       registry.files[:user]
     end
 
     let(:map) do
-      registry.maps[:user_map]
+      registry.files[:user].map(to: registry.dimensions[:user])
     end
 
     let(:target) do

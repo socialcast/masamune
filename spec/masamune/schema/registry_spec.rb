@@ -195,7 +195,6 @@ describe Masamune::Schema::Registry do
       end
     end
 
-
     context 'when schema contains map' do
       before do
         instance.schema do
@@ -203,7 +202,9 @@ describe Masamune::Schema::Registry do
             column 'name', type: :string
           end
 
-          map :user_csv_to_dimension do
+          file 'users' do; end
+
+          map from: files[:users], to: dimensions[:user_account_state] do
             field 'tenant_id'
             field 'user_id', 'id'
             field 'user_account_state.name' do |row|
@@ -215,15 +216,44 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject(:map) { instance.maps[:user_csv_to_dimension] }
+      subject(:map) { instance.files[:users].map(to: instance.dimensions[:user_account_state]) }
 
       it 'constructs map' do
-        expect(map.id).to eq(:user_csv_to_dimension)
         expect(map.fields[:tenant_id]).to eq('tenant_id')
         expect(map.fields[:user_id]).to eq('id')
         expect(map.fields[:'user_account_state.name']).to be_a(Proc)
         expect(map.fields[:start_at]).to eq('updated_at')
         expect(map.fields[:delta]).to eq(0)
+      end
+    end
+
+    context 'when schema contains map missing the from: field' do
+      subject(:schema) do
+        instance.schema do
+          map do
+            field 'tenant_id'
+          end
+        end
+      end
+
+      it 'should raise an exception' do
+        expect { schema }.to raise_error /invalid map, from: is missing/
+      end
+    end
+
+    context 'when schema contains map missing the to: field' do
+      subject(:schema) do
+        instance.schema do
+          file 'users' do; end
+
+          map from: files[:users] do
+            field 'tenant_id'
+          end
+        end
+      end
+
+      it 'should raise an exception' do
+        expect { schema }.to raise_error /invalid map from: 'users', to: is missing/
       end
     end
   end

@@ -2,12 +2,33 @@ module Masamune::Schema
   class Registry
     include Masamune::HasEnvironment
 
+    class HasMap < Delegator
+      attr_accessor :maps
+
+      def initialize(delegate)
+        @delegate = delegate
+        @maps = {}
+      end
+
+      def __getobj__
+        @delegate
+      end
+
+      def __setobj__(obj)
+        @delegate = obj
+      end
+
+      def map(options = {})
+        self.maps[options[:to]]
+      end
+    end
+
     attr_accessor :dimensions
     attr_accessor :facts
     attr_accessor :files
     attr_accessor :events
-    attr_accessor :maps
 
+    # FIXME use indifferent access
     def initialize(environment)
       self.environment = environment
 
@@ -15,7 +36,6 @@ module Masamune::Schema
       @facts      = {}
       @files      = {}
       @events     = {}
-      @maps       = {}
       @options    = Hash.new { |h,k| h[k] = [] }
       @extra      = []
     end
@@ -65,7 +85,7 @@ module Masamune::Schema
     def file(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.files[id.to_sym] = Masamune::Schema::File.new(options.merge(@options).merge(id: id))
+      self.files[id.to_sym] = HasMap.new Masamune::Schema::File.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end
@@ -82,11 +102,14 @@ module Masamune::Schema
       @options[:attributes] << Masamune::Schema::Event::Attribute.new(options.merge(id: id))
     end
 
-    def map(id, options = {}, &block)
+    def map(options = {}, &block)
       prev_options = @options.dup
+      from, to = options[:from], options[:to]
+      raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
+      raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
       @options[:fields] = {}
       yield if block_given?
-      self.maps[id.to_sym] ||= Masamune::Schema::Map.new(options.merge(@options).merge(id: id))
+      from.maps[to] ||= Masamune::Schema::Map.new(options.merge(@options))
     ensure
       @options = prev_options
     end
@@ -95,6 +118,10 @@ module Masamune::Schema
       @options[:fields][id.to_sym] = value
       @options[:fields][id.to_sym] ||= block.to_proc if block_given?
       @options[:fields][id.to_sym] ||= id
+    end
+
+    def maps(options = {})
+      self.maps[options[:from]][options[:to]]
     end
 
     def load(file)

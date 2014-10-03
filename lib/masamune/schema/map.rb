@@ -2,7 +2,8 @@ module Masamune::Schema
   class Map
     DEFAULT_ATTRIBUTES =
     {
-      id:      nil,
+      from:    nil,
+      to:      nil,
       fields:  {},
       headers: false,
       debug:   false
@@ -14,6 +15,8 @@ module Masamune::Schema
 
     def initialize(opts = {})
       opts.symbolize_keys!
+      raise ArgumentError, 'required parameter from: missing' unless opts.key?(:from)
+      raise ArgumentError, 'required parameter to: missing' unless opts.key?(:to)
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         public_send("#{name}=", value)
       end
