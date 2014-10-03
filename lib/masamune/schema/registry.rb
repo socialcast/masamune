@@ -159,6 +159,20 @@ module Masamune::Schema
     end
 
     def as_hql
+      output = []
+      events.each do |id, event|
+        t = Masamune::Transform::DefineEventView.new(nil, event)
+        logger.debug("#{id}\n" + t.as_hql) if event.debug
+        output << t.as_hql
+      end
+      output.join("\n")
+    end
+
+    def to_hql_file
+      Tempfile.new('masamune').tap do |file|
+        file.write(as_hql)
+        file.close
+      end.path
     end
 
     private
