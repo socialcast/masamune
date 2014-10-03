@@ -94,7 +94,7 @@ module Masamune::Schema
     def event(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.events[id] = Masamune::Schema::Event.new(options.merge(@options).merge(id: id))
+      self.events[id] = HasMap.new Masamune::Schema::Event.new(options.merge(@options).merge(id: id))
     ensure
       @options = prev_options
     end

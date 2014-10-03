@@ -195,16 +195,27 @@ describe Masamune::Schema::Registry do
       end
     end
 
-    context 'when schema contains map' do
+    context 'when schema contains map from: file' do
       before do
         instance.schema do
           dimension 'user_account_state', type: :mini do
             column 'name', type: :string
           end
 
-          file 'users' do; end
+          dimension 'user', type: :two do
+            references :user_account_state
+            column 'tenant_id', type: :integer, surrogate_key: true
+            column 'user_id', type: :integer, surrogate_key: true
+          end
 
-          map from: files[:users], to: dimensions[:user_account_state] do
+          file 'users' do
+            column 'id', type: :integer
+            column 'tenant_id', type: :integer
+            column 'updated_at', type: :timestamp
+            column 'deleted_at', type: :timestamp
+          end
+
+          map from: files[:users], to: dimensions[:user] do
             field 'tenant_id'
             field 'user_id', 'id'
             field 'user_account_state.name' do |row|
@@ -216,7 +227,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject(:map) { instance.files[:users].map(to: instance.dimensions[:user_account_state]) }
+      subject(:map) { instance.files[:users].map(to: instance.dimensions[:user]) }
 
       it 'constructs map' do
         expect(map.fields[:tenant_id]).to eq('tenant_id')
@@ -224,6 +235,34 @@ describe Masamune::Schema::Registry do
         expect(map.fields[:'user_account_state.name']).to be_a(Proc)
         expect(map.fields[:start_at]).to eq('updated_at')
         expect(map.fields[:delta]).to eq(0)
+      end
+    end
+
+    context 'when schema contains map from: event' do
+      before do
+        instance.schema do
+          dimension 'user', type: :mini do
+            column 'user_id', type: :integer, surrogate_key: true
+            column 'name', type: :string
+          end
+
+          event 'users' do
+            attribute 'id', type: :integer, immutable: true
+            attribute 'name', type: :string
+          end
+
+          map from: events[:users], to: dimensions[:user] do
+            field 'user_id', 'id'
+            field 'name', 'name_now'
+          end
+        end
+      end
+
+      subject(:map) { instance.events[:users].map(to: instance.dimensions[:user]) }
+
+      it 'constructs map' do
+        expect(map.fields[:user_id]).to eq('id')
+        expect(map.fields[:name]).to eq('name_now')
       end
     end
 
