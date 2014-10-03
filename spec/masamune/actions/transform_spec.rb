@@ -17,7 +17,7 @@ describe Masamune::Actions::Transform do
         column 'updated_at', type: :timestamp
       end
 
-      map 'user' do
+      map from: files[:user], to: dimensions[:user] do
         field 'user_id', 'id'
         field 'tenant_id'
         field 'source_kind', 'users'
@@ -59,7 +59,9 @@ describe Masamune::Actions::Transform do
       mock_command(/\Apsql/, mock_success)
     end
 
-    subject { instance.load_dimension(source_file, registry.files[:user], registry.dimensions[:user], registry.maps[:user]) }
+    let(:map) { registry.files[:user].map(to: registry.dimensions[:user]) }
+
+    subject { instance.load_dimension(source_file, registry.files[:user], registry.dimensions[:user], map) }
 
     it { is_expected.to be_success }
   end
