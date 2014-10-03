@@ -104,6 +104,7 @@ module Masamune::Schema
     end
 
     def map(options = {}, &block)
+      raise ArgumentError, "invalid map, from: is missing" unless options.is_a?(Hash)
       prev_options = @options.dup
       from, to = options[:from], options[:to]
       raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)

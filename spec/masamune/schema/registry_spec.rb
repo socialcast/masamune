@@ -241,6 +241,20 @@ describe Masamune::Schema::Registry do
       end
     end
 
+    context 'when schema contains map with invalid options' do
+      subject(:schema) do
+        instance.schema do
+          map :x do
+            field 'tenant_id'
+          end
+        end
+      end
+
+      it 'should raise an exception' do
+        expect { schema }.to raise_error /invalid map, from: is missing/
+      end
+    end
+
     context 'when schema contains map missing the to: field' do
       subject(:schema) do
         instance.schema do
