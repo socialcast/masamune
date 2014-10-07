@@ -12,40 +12,35 @@ module Masamune::Actions
 
     FILE_MODE = 0777 - File.umask
 
-    def load_dimension(file, source_file, target_table, map)
-      input = File.open(file)
+    def load_dimension(source_file, source, target)
+      input = File.open(source_file)
       output = Tempfile.new('masamune')
       FileUtils.chmod(FILE_MODE, output.path)
 
-      target = target_table.type == :four ? target_table.ledger_table : target_table
-      intermediate  = target.as_file(map.columns)
-
-      source_file.bind(input)
-      intermediate.bind(output)
-
-      map.apply(source_file, intermediate)
-
-      transform = Masamune::Transform::LoadDimension.new(intermediate, intermediate.as_table, target)
-      logger.debug(File.read(output)) if (source_file.debug || map.debug)
-      postgres file: transform.to_psql_file, debug: (source_file.debug || target_table.debug || map.debug)
+      # TODO return identity map
+      map = source.map(to: target)
+      result = map.apply(input, output)
+      transform = Masamune::Transform::LoadDimension.new(output, result, target)
+      logger.debug(File.read(output)) if (source.debug || map.debug)
+      postgres file: transform.to_psql_file, debug: (source.debug || target.debug || map.debug)
     ensure
       input.close
       output.unlink
     end
 
-    def consolidate_dimension(target_table)
-      transform = Masamune::Transform::ConsolidateDimension.new(target_table)
-      postgres file: transform.to_psql_file, debug: target_table.debug
+    def consolidate_dimension(target)
+      transform = Masamune::Transform::ConsolidateDimension.new(target)
+      postgres file: transform.to_psql_file, debug: target.debug
     end
 
-    def relabel_dimension(target_table)
-      transform = Masamune::Transform::RelabelDimension.new(target_table)
-      postgres file: transform.to_psql_file, debug: target_table.debug
+    def relabel_dimension(target)
+      transform = Masamune::Transform::RelabelDimension.new(target)
+      postgres file: transform.to_psql_file, debug: target.debug
     end
 
-    def load_fact(source_files, source, target_table, date)
-      transform = Masamune::Transform::LoadFact.new(source_files, source.as_table(target_table), target_table, date)
-      postgres file: transform.to_psql_file, debug: (source.debug || target_table.debug)
+    def load_fact(source_files, source, target, date)
+      transform = Masamune::Transform::LoadFact.new(source_files, source, target, date)
+      postgres file: transform.to_psql_file, debug: (source.debug || target.debug)
     end
   end
 end

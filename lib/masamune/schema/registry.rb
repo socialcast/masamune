@@ -106,12 +106,12 @@ module Masamune::Schema
     def map(options = {}, &block)
       raise ArgumentError, "invalid map, from: is missing" unless options.is_a?(Hash)
       prev_options = @options.dup
-      from, to = options[:from], options[:to]
+      from, to = options.delete(:from), options.delete(:to)
       raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
       raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
       @options[:fields] = {}.with_indifferent_access
       yield if block_given?
-      from.maps[to] ||= Masamune::Schema::Map.new(options.merge(@options))
+      from.maps[to] ||= Masamune::Schema::Map.new(options.merge(@options).merge(source: from, target: to))
     ensure
       @options = prev_options
     end

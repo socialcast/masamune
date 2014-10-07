@@ -68,8 +68,8 @@ module Masamune::Schema
 
     def to_csv
       [].tap do |result|
-        parent.columns.each do |_, column|
-          result << column.csv_value(values[column.name])
+        values.each do |key, value|
+          result << @columns[key].csv_value(value)
         end
       end.to_csv
     end
@@ -78,17 +78,22 @@ module Masamune::Schema
 
     def normalize_values!
       result = {}
-      parent.columns.each do |_, column|
-        if @values.key?(column.compact_name)
-          value = @values[column.compact_name]
+      @columns = {}
+      values.each do |key, value|
+        next unless key
+        reference_name, column_name = Column::dereference_column_name(key)
+        if reference_name && reference = parent.references[reference_name]
+          if column = reference.columns[column_name]
+            @columns[column.reference_name] = column
+            result[column.reference_name] = column.ruby_value(value)
+          end
+        elsif column = parent.columns[column_name]
+          @columns[column.name] = column
           result[column.name] = column.ruby_value(value)
+        elsif strict
+          raise ArgumentError, "#{@values} contains undefined columns #{key}"
         end
       end
-
-      if strict && @values.length > result.length
-        raise ArgumentError, "#{@values} contains undefined columns"
-      end
-
       @values = result
     end
   end

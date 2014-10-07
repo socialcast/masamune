@@ -59,9 +59,7 @@ describe Masamune::Actions::Transform do
       mock_command(/\Apsql/, mock_success)
     end
 
-    let(:map) { registry.files[:user].map(to: registry.dimensions[:user]) }
-
-    subject { instance.load_dimension(source_file, registry.files[:user], registry.dimensions[:user], map) }
+    subject { instance.load_dimension(source_file, registry.files[:user], registry.dimensions[:user]) }
 
     it { is_expected.to be_success }
   end

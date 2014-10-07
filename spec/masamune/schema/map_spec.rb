@@ -22,7 +22,7 @@ describe Masamune::Schema::Map do
         column 'source', type: :string
       end
 
-      file 'user', format: :csv do
+      file 'user', format: :csv, headers: true do
         column 'id', type: :integer
         column 'tenant_id', type: :integer
         column 'admin', type: :boolean
@@ -39,20 +39,20 @@ describe Masamune::Schema::Map do
         field 'admin' do |row|
           row[:admin]
         end
-        field 'preferences', 'preferences'
+        field 'preferences_now', 'preferences'
         field 'source', 'users_file'
         field 'cluster_id', 100
       end
     end
   end
 
-  context 'without from' do
+  context 'without source' do
     subject(:map) { described_class.new }
     it { expect { map }.to raise_error ArgumentError }
   end
 
-  context 'without to' do
-    subject(:map) { described_class.new(from: registry.files[:user]) }
+  context 'without target' do
+    subject(:map) { described_class.new(source: registry.files[:user]) }
     it { expect { map }.to raise_error ArgumentError }
   end
 
@@ -61,12 +61,12 @@ describe Masamune::Schema::Map do
       registry.files[:user]
     end
 
-    let(:map) do
-      registry.files[:user].map(to: registry.dimensions[:user])
+    let(:target) do
+      registry.dimensions[:user]
     end
 
-    let(:target) do
-      registry.dimensions[:user].as_file(map.columns)
+    let(:map) do
+      source.map(to: target)
     end
 
     let(:source_data) do
@@ -81,7 +81,7 @@ describe Masamune::Schema::Map do
 
     let(:target_data) do
       <<-EOS.strip_heredoc
-        tenant_id,user_id,user_account_state_type_name,admin,preferences,source,cluster_id
+        tenant_id,user_id,user_account_state_type_name,admin,preferences_now,source,cluster_id
         30,1,active,FALSE,{},users_file,100
         40,2,deleted,TRUE,"{""enabled"":true}",users_file,100
       EOS
@@ -91,7 +91,7 @@ describe Masamune::Schema::Map do
     let(:output) { StringIO.new }
 
     before do
-      map.apply(source.bind(input), target.bind(output))
+      map.apply(input, output)
     end
 
     subject { output.string }

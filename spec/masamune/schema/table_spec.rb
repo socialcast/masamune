@@ -346,19 +346,6 @@ describe Masamune::Schema::Table do
         END IF; END $$;
       EOS
     end
-
-    describe '#as_file' do
-      let(:columns) { ['user_account_state.name', 'name'] }
-
-      subject(:file) { table.as_file(columns) }
-
-      it { expect(file.columns).to include :user_account_state_table_name }
-      it { expect(file.columns).to include :name }
-
-      it 'should reference mini_table' do
-        expect(file.columns[:user_account_state_table_name].reference).to eq(mini_table)
-      end
-    end
   end
 
   context 'with labeled referenced table' do

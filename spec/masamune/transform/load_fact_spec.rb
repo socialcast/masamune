@@ -55,7 +55,7 @@ describe Masamune::Transform::LoadFact do
   let(:data) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
   let(:date) { DateTime.civil(2014,8) }
   let(:target) { registry.facts[:visits] }
-  let(:source) { registry.files[:visits].as_table(target) }
+  let(:source) { registry.files[:visits] }
 
   let(:transform) { described_class.new data, source, target, date }
 
@@ -64,7 +64,7 @@ describe Masamune::Transform::LoadFact do
 
     it 'should eq render load_fact template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS visits_fact_stage
+        CREATE TEMPORARY TABLE IF NOT EXISTS visits_file
         (
           date_dimension_date_id INTEGER,
           tenant_dimension_tenant_id INTEGER,
@@ -76,17 +76,17 @@ describe Masamune::Transform::LoadFact do
           total INTEGER
         );
 
-        COPY visits_fact_stage FROM 'output_1.csv' WITH (FORMAT 'csv');
-        COPY visits_fact_stage FROM 'output_2.csv' WITH (FORMAT 'csv');
-        COPY visits_fact_stage FROM 'output_3.csv' WITH (FORMAT 'csv');
+        COPY visits_file FROM 'output_1.csv' WITH (FORMAT 'csv');
+        COPY visits_file FROM 'output_2.csv' WITH (FORMAT 'csv');
+        COPY visits_file FROM 'output_3.csv' WITH (FORMAT 'csv');
 
-        CREATE INDEX visits_fact_stage_date_dimension_date_id_index ON visits_fact_stage (date_dimension_date_id);
-        CREATE INDEX visits_fact_stage_tenant_dimension_tenant_id_index ON visits_fact_stage (tenant_dimension_tenant_id);
-        CREATE INDEX visits_fact_stage_user_dimension_user_id_index ON visits_fact_stage (user_dimension_user_id);
-        CREATE INDEX visits_fact_stage_user_agent_type_name_index ON visits_fact_stage (user_agent_type_name);
-        CREATE INDEX visits_fact_stage_user_agent_type_version_index ON visits_fact_stage (user_agent_type_version);
-        CREATE INDEX visits_fact_stage_feature_type_name_index ON visits_fact_stage (feature_type_name);
-        CREATE INDEX visits_fact_stage_time_key_index ON visits_fact_stage (time_key);
+        CREATE INDEX visits_file_date_dimension_date_id_index ON visits_file (date_dimension_date_id);
+        CREATE INDEX visits_file_tenant_dimension_tenant_id_index ON visits_file (tenant_dimension_tenant_id);
+        CREATE INDEX visits_file_user_dimension_user_id_index ON visits_file (user_dimension_user_id);
+        CREATE INDEX visits_file_user_agent_type_name_index ON visits_file (user_agent_type_name);
+        CREATE INDEX visits_file_user_agent_type_version_index ON visits_file (user_agent_type_version);
+        CREATE INDEX visits_file_feature_type_name_index ON visits_file (feature_type_name);
+        CREATE INDEX visits_file_time_key_index ON visits_file (time_key);
       EOS
     end
   end
@@ -114,33 +114,33 @@ describe Masamune::Transform::LoadFact do
           user_dimension.uuid,
           user_agent_type.id,
           feature_type.id,
-          visits_fact_stage.total,
-          visits_fact_stage.time_key
+          visits_file.total,
+          visits_file.time_key
         FROM
-          visits_fact_stage
+          visits_file
         JOIN
           date_dimension
         ON
-          date_dimension.date_id = visits_fact_stage.date_dimension_date_id
+          date_dimension.date_id = visits_file.date_dimension_date_id
         JOIN
           user_dimension
         ON
-          user_dimension.user_id = visits_fact_stage.user_dimension_user_id AND
-          ((TO_TIMESTAMP(visits_fact_stage.time_key) BETWEEN user_dimension.start_at AND COALESCE(user_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_fact_stage.time_key) < user_dimension.start_at AND user_dimension.version = 1))
+          user_dimension.user_id = visits_file.user_dimension_user_id AND
+          ((TO_TIMESTAMP(visits_file.time_key) BETWEEN user_dimension.start_at AND COALESCE(user_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_file.time_key) < user_dimension.start_at AND user_dimension.version = 1))
         JOIN
           tenant_dimension
         ON
-          tenant_dimension.tenant_id = COALESCE(visits_fact_stage.tenant_dimension_tenant_id, user_dimension.tenant_id) AND
-          ((TO_TIMESTAMP(visits_fact_stage.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_fact_stage.time_key) < tenant_dimension.start_at AND tenant_dimension.version = 1))
+          tenant_dimension.tenant_id = COALESCE(visits_file.tenant_dimension_tenant_id, user_dimension.tenant_id) AND
+          ((TO_TIMESTAMP(visits_file.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_file.time_key) < tenant_dimension.start_at AND tenant_dimension.version = 1))
         JOIN
           user_agent_type
         ON
-          user_agent_type.name = visits_fact_stage.user_agent_type_name AND
-          user_agent_type.version = COALESCE(visits_fact_stage.user_agent_type_version, 'Unknown')
+          user_agent_type.name = visits_file.user_agent_type_name AND
+          user_agent_type.version = COALESCE(visits_file.user_agent_type_version, 'Unknown')
         JOIN
           feature_type
         ON
-          feature_type.name = visits_fact_stage.feature_type_name
+          feature_type.name = visits_file.feature_type_name
         ;
 
         CREATE INDEX visits_fact_y2014m08_date_dimension_uuid_index ON visits_fact_y2014m08 (date_dimension_uuid);
@@ -166,7 +166,7 @@ describe Masamune::Transform::LoadFact do
           user_agent_type_name,
           COALESCE(user_agent_type_version, 'Unknown')
         FROM
-          visits_fact_stage
+          visits_file
         WHERE
           user_agent_type_name IS NOT NULL
         ;
@@ -200,7 +200,7 @@ describe Masamune::Transform::LoadFact do
         SELECT DISTINCT
           feature_type_name
         FROM
-          visits_fact_stage
+          visits_file
         WHERE
           feature_type_name IS NOT NULL
         ;

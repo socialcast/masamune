@@ -2,8 +2,8 @@ module Masamune::Transform
   class LoadFact
     def initialize(source_files, source, target, date)
       @source_files = source_files
-      @source = source
       @target = target
+      @source = source.as_table(@target)
       @date   = date
     end
 

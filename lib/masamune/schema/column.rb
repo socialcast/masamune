@@ -119,7 +119,7 @@ module Masamune::Schema
       when :boolean
         'BOOLEAN'
       when :key_value
-        parent.type == :stage ? 'JSON' : 'HSTORE'
+        parent.type == :file ? 'JSON' : 'HSTORE'
       when :json, :yaml
         'JSON'
       end
@@ -185,6 +185,7 @@ module Masamune::Schema
 
     class << self
       def dereference_column_name(name)
+        return unless name
         if name =~ /\./
           reference_name, column_name = name.to_s.split('.')
           [reference_name.to_sym, column_name.to_sym]

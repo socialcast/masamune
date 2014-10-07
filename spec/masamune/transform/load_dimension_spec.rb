@@ -53,9 +53,8 @@ describe Masamune::Transform::LoadDimension do
   end
 
   let(:data) { double(path: 'output.csv') }
-  let(:target) { registry.dimensions[:user].ledger_table }
-  let(:fields) { registry.files[:user].columns.map { |_, column| column.compact_name } }
-  let(:source) { target.as_file(fields).as_table }
+  let(:target) { registry.dimensions[:user] }
+  let(:source) { registry.files[:user] }
 
   let(:transform) { described_class.new data, source, target }
 
@@ -64,7 +63,7 @@ describe Masamune::Transform::LoadDimension do
 
     it 'should eq render load_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_stage
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_file
         (
           tenant_id INTEGER,
           user_id INTEGER,
@@ -76,11 +75,11 @@ describe Masamune::Transform::LoadDimension do
           delta INTEGER
         );
 
-        COPY user_stage FROM 'output.csv' WITH (FORMAT 'csv');
+        COPY user_file FROM 'output.csv' WITH (FORMAT 'csv');
 
-        CREATE INDEX user_stage_tenant_id_index ON user_stage (tenant_id);
-        CREATE INDEX user_stage_user_id_index ON user_stage (user_id);
-        CREATE INDEX user_stage_start_at_index ON user_stage (start_at);
+        CREATE INDEX user_file_tenant_id_index ON user_file (tenant_id);
+        CREATE INDEX user_file_user_id_index ON user_file (user_id);
+        CREATE INDEX user_file_start_at_index ON user_file (start_at);
       EOS
     end
   end
@@ -97,23 +96,23 @@ describe Masamune::Transform::LoadDimension do
         SELECT
           department_type.uuid,
           user_account_state_type.id,
-          user_stage.tenant_id,
-          user_stage.user_id,
-          json_to_hstore(user_stage.preferences_now),
-          user_stage.source_kind,
-          user_stage.start_at,
-          user_stage.delta
+          user_file.tenant_id,
+          user_file.user_id,
+          json_to_hstore(user_file.preferences_now),
+          user_file.source_kind,
+          user_file.start_at,
+          user_file.delta
         FROM
-          user_stage
+          user_file
         LEFT JOIN
           department_type
         ON
-          department_type.department_id = user_stage.department_type_department_id AND
-          department_type.tenant_id = user_stage.tenant_id
+          department_type.department_id = user_file.department_type_department_id AND
+          department_type.tenant_id = user_file.tenant_id
         LEFT JOIN
           user_account_state_type
         ON
-          user_account_state_type.name = user_stage.user_account_state_type_name
+          user_account_state_type.name = user_file.user_account_state_type_name
         ;
 
         BEGIN;
@@ -188,7 +187,7 @@ describe Masamune::Transform::LoadDimension do
           tenant_id,
           department_type_department_id
         FROM
-          user_stage
+          user_file
         WHERE
           tenant_id IS NOT NULL AND
           department_type_department_id IS NOT NULL

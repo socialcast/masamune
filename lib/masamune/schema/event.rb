@@ -53,5 +53,8 @@ module Masamune::Schema
     def delete_type
       @delete_type ||= "#{id}_delete"
     end
+
+    def as_table(parent)
+    end
   end
 end
