@@ -75,7 +75,7 @@ module Masamune::Transform
     method_with_last_element :insert_view_constraints
 
     def window(*extra)
-      (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key }.map(&:name) + extra).uniq
+      (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key || column.auto_reference }.map(&:name) + extra).uniq
     end
 
     def insert_values(opts = {})

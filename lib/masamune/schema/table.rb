@@ -114,7 +114,7 @@ module Masamune::Schema
     end
 
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference || column.ignore }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference(true) || column.ignore }
     end
     method_with_last_element :upsert_update_columns
 

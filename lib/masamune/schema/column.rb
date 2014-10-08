@@ -223,8 +223,8 @@ module Masamune::Schema
       end
     end
 
-    def auto_reference
-      reference && reference.primary_key.auto
+    def auto_reference(insert = false)
+      reference && reference.primary_key.auto && (insert ? !reference.insert : true)
     end
 
     def references?(other)
