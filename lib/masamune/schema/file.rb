@@ -21,10 +21,15 @@ module Masamune::Schema
       end
     end
 
+    def kind
+      :file
+    end
+
     def columns=(instance)
       @columns  = {}
       columns = (instance.is_a?(Hash) ? instance.values : instance).compact
       columns.each do |column|
+        column.parent = self
         @columns[column.name] = column
       end
     end

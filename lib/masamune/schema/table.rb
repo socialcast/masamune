@@ -32,6 +32,10 @@ module Masamune::Schema
       inherit_column_attributes! if inherit
     end
 
+    def kind
+      :psql
+    end
+
     def id=(id)
       @id = id.to_sym
     end

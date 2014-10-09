@@ -29,6 +29,7 @@ describe Masamune::Transform::DefineEventView do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE VIEW IF NOT EXISTS tenant_events (
           uuid,
+          type,
           tenant_id,
           account_state_now,
           account_state_was,
@@ -42,6 +43,7 @@ describe Masamune::Transform::DefineEventView do
         ) PARTITIONED ON (y, m, d, h) AS
         SELECT DISTINCT
           uuid,
+          type,
           tenant_id,
           account_state_now,
           account_state_was,

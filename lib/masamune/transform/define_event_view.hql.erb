@@ -1,5 +1,6 @@
 CREATE VIEW IF NOT EXISTS <%= target.view_name %> (
   uuid,
+  type,
   <%- target.view_attributes.each do |attribute| -%>
   <%= attribute %>,
   <%- end -%>
@@ -9,6 +10,7 @@ CREATE VIEW IF NOT EXISTS <%= target.view_name %> (
 ) PARTITIONED ON (y, m, d, h) AS
 SELECT DISTINCT
   uuid,
+  type,
   <%- target.view_attributes.each do |attribute| -%>
   <%= attribute %>,
   <%- end -%>

@@ -150,6 +150,7 @@ module Masamune::Schema
     end
 
     def ruby_value(value)
+      value = nil if null_value?(value)
       return value if sql_function?(value)
       case type
       when :boolean
@@ -163,8 +164,20 @@ module Masamune::Schema
         value.nil? ? nil : value.to_i
       when :yaml
         value.nil? ? {} : ruby_key_value(YAML.load(value))
+      when :json
+        value.nil? ? {} : ruby_key_value(JSON.load(value))
       else
         value
+      end
+    end
+
+    def null_value?(value)
+      return false unless parent
+      case parent.kind
+      when :hql
+        value == '\N'
+      when :psql
+        false
       end
     end
 

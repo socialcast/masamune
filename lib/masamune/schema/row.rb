@@ -74,6 +74,14 @@ module Masamune::Schema
       end.to_csv
     end
 
+    def to_tsv
+      [].tap do |result|
+        values.each do |key, value|
+          result << @columns[key].csv_value(value)
+        end
+      end.join("\t") + "\n"
+    end
+
     private
 
     def normalize_values!

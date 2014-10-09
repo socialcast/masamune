@@ -43,6 +43,28 @@ describe Masamune::Schema::Map do
         field 'source', 'users_file'
         field 'cluster_id', 100
       end
+
+      event 'user' do
+        attribute 'id', type: :integer, immutable: true
+        attribute 'tenant_id', type: :integer, immutable: true
+        attribute 'admin', type: :boolean
+        attribute 'preferences', type: :json
+      end
+
+      map from: events[:user], to: dimensions[:user] do
+        field 'tenant_id'
+        field 'user_id', 'id'
+        field 'user_account_state.name' do |row|
+          row[:type] =~ /delete/ ? 'deleted' : 'active'
+        end
+        field 'admin' do |row|
+          row[:type] =~ /delete/ ? row[:admin_was] : row[:admin_now]
+        end
+        field 'preferences_now', 'preferences_now'
+        field 'preferences_was', 'preferences_was'
+        field 'source', 'user_event'
+        field 'cluster_id', 100
+      end
     end
   end
 
@@ -57,34 +79,12 @@ describe Masamune::Schema::Map do
   end
 
   describe '#apply' do
-    let(:source) do
-      registry.files[:user]
-    end
-
     let(:target) do
       registry.dimensions[:user]
     end
 
     let(:map) do
       source.map(to: target)
-    end
-
-    let(:source_data) do
-      <<-EOS.strip_heredoc
-        id,tenant_id,junk_id,deleted_at,admin,preferences
-        1,30,X,,0,,
-        2,40,Y,2014-02-26 18:15:51 UTC,1,"---
-        :enabled: true
-        "
-      EOS
-    end
-
-    let(:target_data) do
-      <<-EOS.strip_heredoc
-        tenant_id,user_id,user_account_state_type_name,admin,preferences_now,source,cluster_id
-        30,1,active,FALSE,{},users_file,100
-        40,2,deleted,TRUE,"{""enabled"":true}",users_file,100
-      EOS
     end
 
     let(:input) { StringIO.new(source_data) }
@@ -96,8 +96,56 @@ describe Masamune::Schema::Map do
 
     subject { output.string }
 
-    it 'should match target data' do
-      is_expected.to eq(target_data)
+    context 'with csv format file' do
+      let(:source) do
+        registry.files[:user]
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          id,tenant_id,junk_id,deleted_at,admin,preferences
+          1,30,X,,0,,
+          2,40,Y,2014-02-26 18:15:51 UTC,1,"---
+          :enabled: true
+          "
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          tenant_id,user_id,user_account_state_type_name,admin,preferences_now,source,cluster_id
+          30,1,active,FALSE,{},users_file,100
+          40,2,deleted,TRUE,"{""enabled"":true}",users_file,100
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+    end
+
+    context 'with tsv format event' do
+      let(:source) do
+        registry.events[:user]
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          X	user_create	1	30	0	\\N	\\N	\\N
+          Y	user_delete	2	40	0	1	"{""enabled"":true}"	\\N
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          30	1	active	FALSE	{}	{}	user_event	100
+          40	2	deleted	TRUE	{"enabled":true}	{}	user_event	100
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
     end
   end
 end
