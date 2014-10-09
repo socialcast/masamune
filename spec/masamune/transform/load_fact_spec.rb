@@ -11,13 +11,13 @@ describe Masamune::Transform::LoadFact do
         column 'date_id', type: :integer, unique: true, index: true, surrogate_key: true
       end
 
-      dimension 'user_agent', type: :mini, insert: true do
+      dimension 'user_agent', type: :mini do
         column 'name', type: :string, unique: true, index: 'shared'
         column 'version', type: :string, unique: true, index: 'shared', default: 'Unknown'
         column 'description', type: :string, null: true, ignore: true
       end
 
-      dimension  'feature', type: :mini, insert: true do
+      dimension  'feature', type: :mini do
         column  'name', type: :string, unique: true, index: true
       end
 
@@ -34,8 +34,8 @@ describe Masamune::Transform::LoadFact do
         references :date
         references :tenant
         references :user
-        references :user_agent
-        references :feature
+        references :user_agent, insert: true
+        references :feature, insert: true
         measure 'total', type: :integer
       end
 

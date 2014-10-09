@@ -21,7 +21,7 @@ describe Masamune::Transform::LoadDimension do
         row name: 'inactive', description: 'Inactive'
       end
 
-      dimension 'department', type: :mini, insert: true do
+      dimension 'department', type: :mini do
         references :cluster
         column 'uuid', type: :uuid, primary_key: true
         column 'tenant_id', type: :integer, unique: true, surrogate_key: true
@@ -31,7 +31,7 @@ describe Masamune::Transform::LoadDimension do
 
       dimension 'user', type: :four do
         references :cluster
-        references :department
+        references :department, insert: true
         references :user_account_state
         column 'tenant_id', index: true, surrogate_key: true
         column 'user_id', index: true, surrogate_key: true
