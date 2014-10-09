@@ -62,6 +62,7 @@ module Masamune::Schema
     def references(id, options = {})
       @options[:references] << dimensions[id].dup.tap do |dimension|
         dimension.label = options[:label]
+        dimension.insert = options[:insert]
       end
     end
 
