@@ -142,8 +142,10 @@ module Masamune::Schema
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
-      when :json, :yaml, :key_value
-        value.to_json
+      when :yaml
+        value.to_h.to_yaml
+      when :json, :key_value
+        value.to_h.to_json
       else
         value
       end
@@ -163,9 +165,23 @@ module Masamune::Schema
       when :integer
         value.nil? ? nil : value.to_i
       when :yaml
-        value.nil? ? {} : ruby_key_value(YAML.load(value))
+        case value
+        when Hash
+          value
+        when String
+          ruby_key_value(YAML.load(value))
+        when nil
+          {}
+        end
       when :json
-        value.nil? ? {} : ruby_key_value(JSON.load(value))
+        case value
+        when Hash
+          value
+        when String
+          ruby_key_value(JSON.load(value))
+        when nil
+          {}
+        end
       else
         value
       end

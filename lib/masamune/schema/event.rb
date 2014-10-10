@@ -66,9 +66,18 @@ module Masamune::Schema
             columns[:"#{attribute.id}_was"] = Column.new id: "#{attribute.id}_was", type: attribute.type, parent: self
           end
         end
+        # TODO consider if this should be part of standard event, can derive from type
         columns[:delta] = Column.new id: :delta, type: :integer, parent: self
         columns[:created_at] = Column.new id: :created_at, type: :timestamp, parent: self
       end
+    end
+
+    def reserved_column_ids
+      @reserved_column_ids ||= [:uuid, :type, :delta, :created_at]
+    end
+
+    def unreserved_columns
+      columns.reject { |_, column| reserved_column_ids.include?(column.id) }
     end
 
     def create_type

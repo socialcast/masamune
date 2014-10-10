@@ -5,52 +5,33 @@ module Masamune::Schema
     class Buffer
       extend Forwardable
 
+      def_delegators :@store, :headers, :format
       def_delegators :@io, :flush, :path
-      def_delegators :@map, :source, :target, :fields, :headers
 
-      def initialize(map, io)
-        @map    = map
+      def initialize(store, io)
+        @store  = store
         @io     = io
-        @lines  = 0
       end
 
       def each(&block)
-        opts = {headers: headers}
-        opts.merge!(col_sep: "\t") if source.format == :tsv
-        CSV.parse(@io, opts) do |data|
-          row = Masamune::Schema::Row.new(parent: source, values: parse(data), strict: false)
+        CSV.parse(@io, options.merge(headers: @store.headers || @store.columns.keys)) do |data|
+          row = Masamune::Schema::Row.new(parent: @store, values: data.to_hash, strict: false)
           yield row.to_hash
         end
       end
 
       def append(data)
-        row = Masamune::Schema::Row.new(parent: target, values: data)
-        append_with_format(row.values.keys) if headers && @lines < 1
-        append_with_format(row)
-      end
-
-      def append_with_format(data)
+        row = Masamune::Schema::Row.new(parent: @store, values: data.to_hash)
         @io ||= Tempfile.new('masamune')
-        @lines += 1
-        @io << encode(data)
+        @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: headers))
+        @csv << row.serialize
       end
 
-      private
-
-      def parse(data)
-        if headers
-          data.to_hash
-        else
-          Hash[source.columns.keys.zip(data)]
-        end
-      end
-
-      def encode(data)
-        case source.format
-        when :csv
-          data.to_csv
-        when :tsv
-          data.to_tsv
+      # TODO replace: undef
+      # line.encode('UTF-8', 'binary', :undef => :replace)
+      def options
+        { encoding: 'UTF-8' }.tap do |opts|
+          opts.merge!(col_sep: "\t") if format == :tsv
         end
       end
     end
@@ -86,7 +67,7 @@ module Masamune::Schema
     end
 
     def apply(input_stream, output_stream)
-      input_buffer, output_buffer = Buffer.new(self, input_stream), Buffer.new(self, output_stream)
+      input_buffer, output_buffer = Buffer.new(source, input_stream), Buffer.new(target, output_stream)
       input_buffer.each do |input|
         output = {}
         fields.each do |field, value|

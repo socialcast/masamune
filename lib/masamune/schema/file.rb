@@ -21,6 +21,10 @@ module Masamune::Schema
       end
     end
 
+    def type
+      :file
+    end
+
     def kind
       :file
     end
@@ -34,8 +38,12 @@ module Masamune::Schema
       end
     end
 
-    def as_table(parent)
-      parent.class.new(id: id, type: :file, columns: columns.values, parent: parent, inherit: true)
+    def as_table(table)
+      table.class.new(id: id, type: :file, columns: columns.values, parent: table, inherit: true)
+    end
+
+    def as_file(columns = [])
+      self
     end
   end
 end

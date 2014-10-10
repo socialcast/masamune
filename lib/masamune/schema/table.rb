@@ -36,6 +36,14 @@ module Masamune::Schema
       :psql
     end
 
+    def headers
+      true
+    end
+
+    def format
+      :csv
+    end
+
     def id=(id)
       @id = id.to_sym
     end
@@ -178,7 +186,8 @@ module Masamune::Schema
       Masamune::Template.render_to_string(table_template, extra.merge(table: self))
     end
 
-    def select_columns(selected_columns)
+    def select_columns(selected_columns = [])
+      return columns.values unless selected_columns.any?
       [].tap do |result|
         selected_columns.each do |name|
           reference_name, column_name = Column::dereference_column_name(name)
@@ -193,7 +202,7 @@ module Masamune::Schema
       end
     end
 
-    def as_file(selected_columns)
+    def as_file(selected_columns = [])
       File.new(id: id, columns: select_columns(selected_columns))
     end
 

@@ -17,9 +17,12 @@ module Masamune::Actions
       output = Tempfile.new('masamune')
       FileUtils.chmod(FILE_MODE, output.path)
 
-      # TODO return identity map
-      map = source.map(to: target)
-      result = map.apply(input, output)
+      if source.respond_to?(:map) and map = source.map(to: target)
+        result = map.apply(input, output)
+      else
+        result = input
+      end
+
       transform = Masamune::Transform::LoadDimension.new(output, result, target)
       logger.debug(File.read(output)) if (source.debug || map.debug)
       postgres file: transform.to_psql_file, debug: (source.debug || target.debug || map.debug)

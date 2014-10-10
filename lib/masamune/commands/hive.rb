@@ -96,7 +96,9 @@ module Masamune::Commands
         @block.call(line) if @block
 
         if @buffer
-          @buffer.puts(@csv ? line.split(@delimiter).map { |row| encode_row(row) }.to_csv : line)
+          # FIXME prevent double encoding
+          # @buffer.puts(@csv ? line.split(@delimiter).map { |row| encode_row(row) }.to_csv : line)
+          @buffer.puts(@csv ? line.split(@delimiter).map { |row| encode_row(row) }.join(",") : line)
         else
           console(line) if print?
         end

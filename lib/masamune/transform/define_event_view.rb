@@ -40,14 +40,22 @@ module Masamune::Transform
       "#{id}_events"
     end
 
-    def view_attributes
-      attributes.map do |_, attribute|
-        if attribute.immutable
-          attribute.id
+    def view_columns
+      unreserved_columns.map do |_, column|
+        column.name
+      end
+    end
+
+    def view_values
+      unreserved_columns.map do |_, column|
+        case column.type
+        when :json
+          # NOTE could just use split "\t" to parse tsv output
+          %Q{CONCAT('"', REGEXP_REPLACE(#{column.name}, '"', '""'),  '"') AS #{column.name}}
         else
-          ["#{attribute.id}_now", "#{attribute.id}_was"]
+          column.name
         end
-      end.flatten
+      end
     end
   end
 end

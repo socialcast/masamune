@@ -1,8 +1,8 @@
 CREATE VIEW IF NOT EXISTS <%= target.view_name %> (
   uuid,
   type,
-  <%- target.view_attributes.each do |attribute| -%>
-  <%= attribute %>,
+  <%- target.view_columns.each do |value| -%>
+  <%= value %>,
   <%- end -%>
   delta,
   created_at,
@@ -11,8 +11,8 @@ CREATE VIEW IF NOT EXISTS <%= target.view_name %> (
 SELECT DISTINCT
   uuid,
   type,
-  <%- target.view_attributes.each do |attribute| -%>
-  <%= attribute %>,
+  <%- target.view_values.each do |value| -%>
+  <%= value %>,
   <%- end -%>
   IF(type = '<%= target.update_type %>', 1, 0) AS delta,
   ctime_iso8601 AS created_at,
@@ -20,7 +20,7 @@ SELECT DISTINCT
 FROM
   events
 LATERAL VIEW
-  json_tuple(events.json, <%= target.view_attributes.map { |attribute| "'#{attribute}'" }.join(', ') %>) event_data AS <%= target.view_attributes.join(', ') %>
+  json_tuple(events.json, <%= target.view_columns.map { |value| "'#{value}'" }.join(', ') %>) event_data AS <%= target.view_columns.join(', ') %>
 WHERE
   type = '<%= target.create_type %>' OR
   type = '<%= target.update_type %>' OR

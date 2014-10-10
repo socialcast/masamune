@@ -49,8 +49,8 @@ describe Masamune::Transform::DefineEventView do
           account_state_was,
           premium_type_now,
           premium_type_was,
-          preferences_now,
-          preferences_was,
+          CONCAT('"', REGEXP_REPLACE(preferences_now, '"', '""'),  '"') AS preferences_now,
+          CONCAT('"', REGEXP_REPLACE(preferences_was, '"', '""'),  '"') AS preferences_was,
           IF(type = 'tenant_update', 1, 0) AS delta,
           ctime_iso8601 AS created_at,
           y, m, d ,h

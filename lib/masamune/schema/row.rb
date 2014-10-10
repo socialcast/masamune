@@ -66,20 +66,16 @@ module Masamune::Schema
       values.with_indifferent_access
     end
 
-    def to_csv
-      [].tap do |result|
-        values.each do |key, value|
-          result << @columns[key].csv_value(value)
-        end
-      end.to_csv
+    def headers
+      values.keys
     end
 
-    def to_tsv
+    def serialize
       [].tap do |result|
         values.each do |key, value|
           result << @columns[key].csv_value(value)
         end
-      end.join("\t") + "\n"
+      end
     end
 
     private
