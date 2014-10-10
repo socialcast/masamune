@@ -27,4 +27,13 @@ module Masamune
 
   extend self
   extend Masamune::HasEnvironment
+
+  def load(config_file, &block)
+    Masamune::Environment.new.tap do |env|
+      env.configure do |config|
+        config.load(config_file)
+      end
+      env.registry.instance_eval &block
+    end
+  end
 end
