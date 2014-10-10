@@ -122,7 +122,9 @@ class Masamune::Configuration
   end
 
   def load_yaml_erb_file(file)
-    YAML.load(ERB.new(File.read(file)).result(binding))
+    t = ERB.new(File.read(file))
+    t.filename = file
+    YAML.load(t.result(binding))
   end
 
   class << self
