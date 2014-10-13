@@ -157,9 +157,9 @@ module Masamune::Schema
       case type
       when :boolean
         case value
-        when false, 0, '0', "'0'", 'FALSE'
+        when false, 0, '0', "'0'", /\Afalse\z/i
           false
-        when true, 1, '1', "'1'", 'TRUE'
+        when true, 1, '1', "'1'", /\Atrue\z/i
           true
         end
       when :integer

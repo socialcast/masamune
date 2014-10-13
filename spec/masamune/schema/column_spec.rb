@@ -77,6 +77,70 @@ describe Masamune::Schema::Column do
   describe '#ruby_value' do
     subject(:result) { column.ruby_value(value) }
 
+    context 'with type :boolean' do
+      let(:column) { described_class.new(id: 'bool', type: :boolean) }
+
+      context 'when 1' do
+        let(:value) { 1 }
+        it { is_expected.to eq(true) }
+      end
+
+      context "when '1'" do
+        let(:value) { '1' }
+        it { is_expected.to eq(true) }
+      end
+
+      context "when ''1''" do
+        let(:value) { %Q{'1'} }
+        it { is_expected.to eq(true) }
+      end
+
+      context 'when TRUE' do
+        let(:value) { 'TRUE' }
+        it { is_expected.to eq(true) }
+      end
+
+      context 'when true' do
+        let(:value) { 'true' }
+        it { is_expected.to eq(true) }
+      end
+
+      context 'when 0' do
+        let(:value) { 0 }
+        it { is_expected.to eq(false) }
+      end
+
+      context "when '0'" do
+        let(:value) { '0' }
+        it { is_expected.to eq(false) }
+      end
+
+      context "when ''0''" do
+        let(:value) { %Q{'0'} }
+        it { is_expected.to eq(false) }
+      end
+
+      context 'when FALSE' do
+        let(:value) { 'FALSE' }
+        it { is_expected.to eq(false) }
+      end
+
+      context 'when false' do
+        let(:value) { 'false' }
+        it { is_expected.to eq(false) }
+      end
+
+      context 'when nil ' do
+        let(:value) { nil }
+        it { is_expected.to be(nil) }
+      end
+
+      context 'when "junk"' do
+        let(:value) { 'junk' }
+        it { is_expected.to be(nil) }
+      end
+    end
+
     context 'with type :yaml and sub_type :boolean' do
       let(:column) { described_class.new(id: 'yaml', type: :yaml, sub_type: :boolean) }
       let(:value) do
