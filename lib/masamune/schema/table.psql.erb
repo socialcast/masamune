@@ -16,7 +16,13 @@ CREATE TABLE IF NOT EXISTS <%= table.name %>
 );
 
 <%- source_files.each do |source_file| -%>
-COPY <%= table.name %> FROM '<%= source_file.path %>' WITH (FORMAT 'csv');
+<%-
+  copy_options = []
+  copy_options << "FORMAT 'csv'" if table.format == :csv
+  copy_options << "DELIMITER '\t'" if table.format == :tsv
+  copy_options << "HEADER true" if table.headers
+-%>
+COPY <%= table.name %> FROM '<%= source_file.path %>' WITH (<%= copy_options.join(", ") %>);
 <%- end -%>
 
 <%= render 'define_unique.psql.erb', table: table %>

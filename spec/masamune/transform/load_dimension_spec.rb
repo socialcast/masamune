@@ -75,7 +75,7 @@ describe Masamune::Transform::LoadDimension do
           delta INTEGER
         );
 
-        COPY user_file FROM 'output.csv' WITH (FORMAT 'csv');
+        COPY user_file FROM 'output.csv' WITH (FORMAT 'csv', HEADER true);
 
         CREATE INDEX user_file_tenant_id_index ON user_file (tenant_id);
         CREATE INDEX user_file_user_id_index ON user_file (user_id);
