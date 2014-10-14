@@ -1,5 +1,3 @@
-# TODO consider database/schema for views
-# TODO consider columnar store materialized view
 module Masamune::Schema
   class Event
     class Attribute
