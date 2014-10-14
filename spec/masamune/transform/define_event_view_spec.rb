@@ -17,8 +17,7 @@ describe Masamune::Transform::DefineEventView do
   end
 
   let(:target) { registry.events[:tenant] }
-  # FIXME view is derived from events store
-  let(:source) { nil }
+  let(:source) { double('event_store') }
 
   let(:transform) { described_class.new source, target }
 
