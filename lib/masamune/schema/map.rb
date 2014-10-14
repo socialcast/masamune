@@ -10,7 +10,7 @@ module Masamune::Schema
 
       def initialize(store, io)
         @store  = store
-        @io     = io
+        @io     = io.set_encoding('binary', 'UTF-8', undef: :replace)
       end
 
       def each(&block)
@@ -27,11 +27,11 @@ module Masamune::Schema
         @csv << row.serialize
       end
 
-      # TODO replace: undef
-      # line.encode('UTF-8', 'binary', :undef => :replace)
       def options
-        { encoding: 'UTF-8' }.tap do |opts|
-          opts.merge!(col_sep: "\t") if format == :tsv
+        if format == :tsv
+          { col_sep: "\t" }
+        else
+          {}
         end
       end
     end
