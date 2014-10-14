@@ -76,9 +76,9 @@ describe Masamune::Transform::LoadFact do
           total INTEGER
         );
 
-        COPY visits_file FROM 'output_1.csv' WITH (FORMAT 'csv', HEADER true);
-        COPY visits_file FROM 'output_2.csv' WITH (FORMAT 'csv', HEADER true);
-        COPY visits_file FROM 'output_3.csv' WITH (FORMAT 'csv', HEADER true);
+        COPY visits_file FROM 'output_1.csv' WITH (FORMAT 'csv');
+        COPY visits_file FROM 'output_2.csv' WITH (FORMAT 'csv');
+        COPY visits_file FROM 'output_3.csv' WITH (FORMAT 'csv');
 
         CREATE INDEX visits_file_date_dimension_date_id_index ON visits_file (date_dimension_date_id);
         CREATE INDEX visits_file_tenant_dimension_tenant_id_index ON visits_file (tenant_dimension_tenant_id);

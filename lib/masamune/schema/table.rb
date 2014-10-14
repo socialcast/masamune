@@ -10,6 +10,7 @@ module Masamune::Schema
       type:            :table,
       label:           nil,
       references:      {},
+      headers:         true,
       columns:         {},
       rows:            [],
       insert:          false,
@@ -34,10 +35,6 @@ module Masamune::Schema
 
     def kind
       :psql
-    end
-
-    def headers
-      true
     end
 
     def format
@@ -203,7 +200,7 @@ module Masamune::Schema
     end
 
     def as_file(selected_columns = [])
-      File.new(id: id, columns: select_columns(selected_columns))
+      File.new(id: id, columns: select_columns(selected_columns), headers: headers)
     end
 
     private

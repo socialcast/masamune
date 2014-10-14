@@ -39,7 +39,7 @@ module Masamune::Schema
     end
 
     def as_table(table)
-      table.class.new(id: id, type: :file, columns: columns.values, parent: table, inherit: true)
+      table.class.new(id: id, type: :file, columns: columns.values, parent: table, inherit: true, headers: headers)
     end
 
     def as_file(columns = [])

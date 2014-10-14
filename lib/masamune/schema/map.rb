@@ -41,7 +41,6 @@ module Masamune::Schema
       source:  nil,
       target:  nil,
       fields:  {},
-      headers: false,
       debug:   false
     }
 
