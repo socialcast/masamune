@@ -2,8 +2,8 @@ module Masamune::Transform
   class LoadDimension
     def initialize(source_file, source, target)
       @source_file = source_file
-      @source = source
-      @target = target
+      @target = target.type == :four ? target.ledger_table : target
+      @source = source.as_table(@target)
     end
 
     def stage_dimension_as_psql
@@ -59,7 +59,8 @@ module Masamune::Transform
     end
 
     def insert_columns(source)
-      shared_columns(source).keys.map do |column|
+      shared_columns(source).values.map do |columns|
+        column = columns.first
         if reference = column.reference
           reference.foreign_key_name
         else
@@ -69,7 +70,8 @@ module Masamune::Transform
     end
 
     def insert_values(source)
-      shared_columns(source).keys.map do |column|
+      shared_columns(source).values.map do |columns|
+        column = columns.first
         if reference = column.reference
           reference.primary_key.qualified_name
         elsif column.type == :json || column.type == :yaml || column.type == :key_value
@@ -88,16 +90,17 @@ module Masamune::Transform
 
       conditions = Hash.new { |h,k| h[k] = [] }
       join_columns.each do |reference, columns|
-        (columns + lateral_references(reference)).each do |column|
+        (columns + lateral_references(source, reference)).each do |column|
           left = reference.columns[column.id]
           conditions[reference.name] << "#{left.qualified_name} = #{column.qualified_name}"
+          conditions[reference.name].uniq!
         end
       end
       conditions
     end
 
-    def lateral_references(reference)
-      shared_columns(reference).keys.reject { |column| column.auto_reference}
+    def lateral_references(source, reference)
+      source.shared_columns(reference).keys.reject { |column| column.auto_reference }
     end
   end
 end

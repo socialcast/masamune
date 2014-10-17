@@ -19,7 +19,7 @@ WHERE
 
 <%- if target.upsert_unique_columns.any? -%>
 INSERT INTO
-  <%= target.name %> (<%= target.upsert_insert_columns.map { |column,_| column.name }.join(',') %>)
+  <%= target.name %> (<%= target.upsert_insert_columns.map { |column,_| column.name }.join(', ') %>)
 SELECT
   <%- target.upsert_insert_columns.each do |column, last| -%>
   <%= source.name %>.<%= column.name %><%= ',' unless last %>

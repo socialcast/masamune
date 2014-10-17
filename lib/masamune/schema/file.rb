@@ -1,9 +1,5 @@
 module Masamune::Schema
   class File
-    extend Forwardable
-
-    def_delegators :@io, :flush, :path
-
     DEFAULT_ATTRIBUTES =
     {
       id:      nil,
@@ -14,61 +10,40 @@ module Masamune::Schema
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
-      attr_accessor attr.to_sym
+      attr_accessor attr
     end
 
     def initialize(opts = {})
+      opts.symbolize_keys!
+      raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
-        send("#{name}=", value)
+        public_send("#{name}=", value)
       end
+    end
 
-      @io = ::File.open(::File::NULL, "w")
-      @total_lines = 0
+    def type
+      :file
+    end
+
+    def kind
+      :file
     end
 
     def columns=(instance)
       @columns  = {}
       columns = (instance.is_a?(Hash) ? instance.values : instance).compact
       columns.each do |column|
+        column.parent = self
         @columns[column.name] = column
       end
     end
 
-    def bind(input)
-      @io = input
-      dup
+    def as_table(table)
+      table.class.new(id: id, type: :file, columns: columns.values, parent: table, inherit: true, headers: headers)
     end
 
-    def each(&block)
-      ::CSV.parse(@io, headers: true) do |data|
-        row = Masamune::Schema::Row.new(parent: self, values: data.to_hash, strict: false)
-        yield row.to_hash
-      end
-    end
-
-    def append(data)
-      append_with_format(columns.keys) if headers && @total_lines < 1
-      append_with_format(Masamune::Schema::Row.new(parent: self, values: data))
-    end
-
-    def to_s
-      [path, ::File.read(path)].join("\n")
-    end
-
-    def as_table(parent = nil)
-      if parent
-        parent.class.new(id: id, type: :stage, columns: columns.values, parent: parent, inherit: true)
-      else
-        Masamune::Schema::Table.new id: id, type: :stage, columns: columns.values
-      end
-    end
-
-    private
-
-    def append_with_format(data)
-      @io ||= Tempfile.new('masamune')
-      @total_lines += 1
-      @io << data.to_csv
+    def as_file(columns = [])
+      self
     end
   end
 end

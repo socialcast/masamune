@@ -2,9 +2,10 @@ module Masamune::Schema
   class Fact < Table
     attr_accessor :partition
 
-    def initialize(o = {})
-      @partition = o.delete(:partition)
-      super o.reverse_merge(type: :fact)
+    def initialize(opts = {})
+      opts.symbolize_keys!
+      @partition = opts.delete(:partition)
+      super opts.reverse_merge(type: :fact)
       initialize_fact_columns!
       foreign_key_columns.each do |column|
         column.index << column.name

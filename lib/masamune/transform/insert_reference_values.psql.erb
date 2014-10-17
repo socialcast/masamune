@@ -1,6 +1,7 @@
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
 
-INSERT INTO <%= target.stage_table.name %>(<%= target.insert_columns(source).join(', ') %>)
+INSERT INTO
+  <%= target.stage_table.name %> (<%= target.insert_columns(source).join(', ') %>)
 SELECT DISTINCT
   <%- target.insert_values(source).each do |value, last| -%>
   <%= value %><%= ',' unless last %>

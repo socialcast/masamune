@@ -1,23 +1,23 @@
 module Masamune::Schema
   class Row
-    attr_accessor :id
-    attr_accessor :parent
-    attr_accessor :values
-    attr_accessor :default
-    attr_accessor :strict
-    attr_accessor :debug
-
     DEFAULT_ATTRIBUTES =
     {
+      id:       nil,
       values:   {},
       default:  false,
       strict:   true,
+      parent:   nil,
       debug:    false
     }
 
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr
+    end
+
     def initialize(opts = {})
+      opts.symbolize_keys!
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
-        send("#{name}=", value)
+        public_send("#{name}=", value)
       end
       self.id ||= :default if default
     end
@@ -66,29 +66,38 @@ module Masamune::Schema
       values.with_indifferent_access
     end
 
-    def to_csv
+    def headers
+      values.keys
+    end
+
+    def serialize
       [].tap do |result|
-        parent.columns.each do |_, column|
-          result << column.csv_value(values[column.name])
+        values.each do |key, value|
+          result << @columns[key].csv_value(value)
         end
-      end.to_csv
+      end
     end
 
     private
 
     def normalize_values!
       result = {}
-      parent.columns.each do |_, column|
-        if @values.key?(column.compact_name)
-          value = @values[column.compact_name]
+      @columns = {}
+      values.each do |key, value|
+        next unless key
+        reference_name, column_name = Column::dereference_column_name(key)
+        if reference_name && reference = parent.references[reference_name]
+          if column = reference.columns[column_name]
+            @columns[column.reference_name] = column
+            result[column.reference_name] = column.ruby_value(value)
+          end
+        elsif column = parent.columns[column_name]
+          @columns[column.name] = column
           result[column.name] = column.ruby_value(value)
+        elsif strict
+          raise ArgumentError, "#{@values} contains undefined columns #{key}"
         end
       end
-
-      if strict && @values.length > result.length
-        raise ArgumentError, "#{@values} contains undefined columns"
-      end
-
       @values = result
     end
   end

@@ -10,6 +10,7 @@ module Masamune::Schema
       type:            :table,
       label:           nil,
       references:      {},
+      headers:         true,
       columns:         {},
       rows:            [],
       insert:          false,
@@ -19,15 +20,25 @@ module Masamune::Schema
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
-      attr_accessor attr.to_sym
+      attr_accessor attr
     end
 
     def initialize(opts = {})
+      opts.symbolize_keys!
+      raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
-        send("#{name}=", value)
+        public_send("#{name}=", value)
       end
       @children = Set.new
       inherit_column_attributes! if inherit
+    end
+
+    def kind
+      :psql
+    end
+
+    def format
+      :csv
     end
 
     def id=(id)
@@ -65,6 +76,8 @@ module Masamune::Schema
 
     def name
       case type
+      when :file
+        "#{@id}_file"
       when :stage
         parent ? "#{parent.name}_stage" : "#{@id}_stage"
       when :table
@@ -75,7 +88,7 @@ module Masamune::Schema
     end
 
     def temporary?
-      type == :stage
+      type == :stage || type == :file
     end
 
     def primary_key
@@ -170,8 +183,24 @@ module Masamune::Schema
       Masamune::Template.render_to_string(table_template, extra.merge(table: self))
     end
 
-    def as_file(selected_columns)
-      Masamune::Schema::File.new id: id, columns: select_columns(selected_columns)
+    def select_columns(selected_columns = [])
+      return columns.values unless selected_columns.any?
+      [].tap do |result|
+        selected_columns.each do |name|
+          reference_name, column_name = Column::dereference_column_name(name)
+          if reference = references[reference_name]
+            if reference.columns[column_name]
+              result << reference.columns[column_name].dup.tap { |column| column.reference = reference }
+            end
+          elsif columns[column_name]
+            result << columns[column_name]
+          end
+        end
+      end
+    end
+
+    def as_file(selected_columns = [])
+      File.new(id: id, columns: select_columns(selected_columns), headers: headers)
     end
 
     private
@@ -199,21 +228,6 @@ module Masamune::Schema
       columns.each do |_, column|
         parent.columns.each do |_, parent_column|
           column.index = parent_column.index if column == parent_column
-        end
-      end
-    end
-
-    def select_columns(selected_columns)
-      [].tap do |result|
-        selected_columns.each do |name|
-          reference_name, column_name = Column::dereference_column_name(name)
-          if reference = references[reference_name]
-            if reference.columns[column_name]
-              result << reference.columns[column_name].dup.tap { |column| column.reference = reference }
-            end
-          elsif columns[column_name]
-            result << columns[column_name]
-          end
         end
       end
     end

@@ -1,6 +1,6 @@
 module Masamune::Schema
   class Dimension < Table
-    def initialize(o)
+    def initialize(opts = {})
       super
       initialize_dimension_columns!
     end
@@ -15,6 +15,8 @@ module Masamune::Schema
         "#{id}_dimension"
       when :ledger
         parent ? "#{parent.name}_ledger" : "#{id}_ledger"
+      else
+        super
       end
     end
 

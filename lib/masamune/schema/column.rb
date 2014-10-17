@@ -23,13 +23,14 @@ module Masamune::Schema
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
-      attr_accessor attr.to_sym
+      attr_accessor attr
     end
 
     def initialize(opts = {})
+      opts.symbolize_keys!
       raise ArgumentError, 'required parameter id: missing' unless opts.key?(:id)
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
-        send("#{name}=", value)
+        public_send("#{name}=", value)
       end
 
       initialize_default_attributes!
@@ -118,7 +119,7 @@ module Masamune::Schema
       when :boolean
         'BOOLEAN'
       when :key_value
-        parent.type == :stage ? 'JSON' : 'HSTORE'
+        parent.type == :file ? 'JSON' : 'HSTORE'
       when :json, :yaml
         'JSON'
       end
@@ -141,29 +142,58 @@ module Masamune::Schema
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
-      when :json, :yaml, :key_value
-        value.to_json
+      when :yaml
+        value.to_h.to_yaml
+      when :json, :key_value
+        value.to_h.to_json
       else
         value
       end
     end
 
     def ruby_value(value)
+      value = nil if null_value?(value)
       return value if sql_function?(value)
       case type
       when :boolean
         case value
-        when false, 0, '0', "'0'", 'FALSE'
+        when false, 0, '0', "'0'", /\Afalse\z/i
           false
-        when true, 1, '1', "'1'", 'TRUE'
+        when true, 1, '1', "'1'", /\Atrue\z/i
           true
         end
       when :integer
         value.nil? ? nil : value.to_i
       when :yaml
-        value.nil? ? {} : ruby_key_value(YAML.load(value))
+        case value
+        when Hash
+          value
+        when String
+          ruby_key_value(YAML.load(value))
+        when nil
+          {}
+        end
+      when :json
+        case value
+        when Hash
+          value
+        when String
+          ruby_key_value(JSON.load(value))
+        when nil
+          {}
+        end
       else
         value
+      end
+    end
+
+    def null_value?(value)
+      return false unless parent
+      case parent.kind
+      when :hql
+        value == '\N'
+      when :psql
+        false
       end
     end
 
@@ -184,6 +214,7 @@ module Masamune::Schema
 
     class << self
       def dereference_column_name(name)
+        return unless name
         if name =~ /\./
           reference_name, column_name = name.to_s.split('.')
           [reference_name.to_sym, column_name.to_sym]

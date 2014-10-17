@@ -57,6 +57,17 @@ class Masamune::Configuration
         end
       end
       logger.debug("Loaded configuration #{file}")
+      load_registry(configuration.postgres[:schema_files] || [])
+    end
+  end
+
+  def load_registry(paths = [])
+    paths.each do |path|
+      filesystem.glob_sort(path, order: :basename).each do |file|
+        configuration.with_quiet do
+          registry.load(file)
+        end
+      end
     end
   end
 
@@ -109,7 +120,9 @@ class Masamune::Configuration
   end
 
   def load_yaml_erb_file(file)
-    YAML.load(ERB.new(File.read(file)).result(binding))
+    t = ERB.new(File.read(file))
+    t.filename = file
+    YAML.load(t.result(binding))
   end
 
   class << self

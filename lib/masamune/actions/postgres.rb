@@ -30,16 +30,6 @@ module Masamune::Actions
       end if configuration.postgres.has_key?(:setup_files)
     end
 
-    def load_schema_files
-      configuration.postgres[:schema_files].each do |path|
-        filesystem.glob_sort(path, order: :basename).each do |file|
-          configuration.with_quiet do
-            registry.load(file)
-          end
-        end
-      end if configuration.postgres.has_key?(:schema_files)
-    end
-
     def load_schema_registry
       postgres(file: registry.to_psql_file)
     rescue => e
@@ -53,7 +43,6 @@ module Masamune::Actions
       base.after_initialize do |thor, options|
         thor.create_database_if_not_exists
         thor.load_setup_files
-        thor.load_schema_files
         thor.load_schema_registry
       end if defined?(base.after_initialize)
     end

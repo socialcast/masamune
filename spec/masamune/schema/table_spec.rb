@@ -4,6 +4,11 @@ require 'active_support/core_ext/string/strip'
 describe Masamune::Schema::Table do
   subject { table.as_psql }
 
+  context 'without id' do
+    subject(:table) { described_class.new }
+    it { expect { table }.to raise_error ArgumentError }
+  end
+
   context 'with columns' do
     let(:table) do
       described_class.new id: 'user',
@@ -340,19 +345,6 @@ describe Masamune::Schema::Table do
         CREATE INDEX user_table_user_account_state_table_uuid_index ON user_table (user_account_state_table_uuid);
         END IF; END $$;
       EOS
-    end
-
-    describe '#as_file' do
-      let(:columns) { ['user_account_state.name', 'name'] }
-
-      subject(:file) { table.as_file(columns) }
-
-      it { expect(file.columns).to include :user_account_state_table_name }
-      it { expect(file.columns).to include :name }
-
-      it 'should reference mini_table' do
-        expect(file.columns[:user_account_state_table_name].reference).to eq(mini_table)
-      end
     end
   end
 
