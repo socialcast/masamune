@@ -126,6 +126,11 @@ module Masamune::Schema
       columns.select { |_, column| column.unique }
     end
 
+    def enum_columns
+      return {} if temporary?
+      columns.select { |_, column| column.type == :enum }
+    end
+
     def upsert_update_columns
       columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference(true) || column.ignore }
     end

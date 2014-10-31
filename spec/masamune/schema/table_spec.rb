@@ -128,6 +128,45 @@ describe Masamune::Schema::Table do
     end
   end
 
+  context 'with enum column' do
+    let(:table) do
+      described_class.new id: 'user',
+        columns: [
+          Masamune::Schema::Column.new(id: 'tenant_id'),
+          Masamune::Schema::Column.new(id: 'user_id'),
+          Masamune::Schema::Column.new(id: 'state', type: :enum, sub_type: :user_state, values: %w(active inactive terminated), default: 'active')
+        ]
+    end
+
+    it 'should eq table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TYPE USER_STATE_TYPE AS ENUM ('active', 'inactive', 'terminated');
+
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          state USER_STATE_TYPE NOT NULL DEFAULT 'active'
+        );
+      EOS
+    end
+
+    context '#stage_table' do
+      it 'should eq table template' do
+        expect(table.stage_table.as_psql).to eq <<-EOS.strip_heredoc
+          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
+          (
+            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            tenant_id INTEGER,
+            user_id INTEGER,
+            state USER_STATE_TYPE DEFAULT 'active'
+          );
+        EOS
+      end
+    end
+  end
+
   context 'with primary_key columns override' do
     let(:table) do
       described_class.new id: 'user',

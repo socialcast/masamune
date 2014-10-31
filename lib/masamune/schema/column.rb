@@ -7,6 +7,7 @@ module Masamune::Schema
       id:                  nil,
       type:                :integer,
       sub_type:            nil,
+      values:              [],
       null:                false,
       strict:              true,
       default:             nil,
@@ -118,6 +119,8 @@ module Masamune::Schema
         'TIMESTAMP'
       when :boolean
         'BOOLEAN'
+      when :enum
+        "#{sub_type}_TYPE".upcase
       when :key_value
         parent.type == :file ? 'JSON' : 'HSTORE'
       when :json, :yaml
@@ -130,7 +133,7 @@ module Masamune::Schema
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
-      when :string
+      when :string, :enum
         "'#{value}'"
       else
         value

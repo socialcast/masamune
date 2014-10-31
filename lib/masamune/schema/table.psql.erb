@@ -4,6 +4,10 @@
 <%= child.as_psql %>
 <%- end -%>
 
+<%- table.enum_columns.each do |_, column| -%>
+CREATE TYPE <%= column.sql_type %> AS ENUM (<%= column.values.map { |value| "'#{value}'" }.join(', ') %>);
+<%- end -%>
+
 <%- if table.temporary? -%>
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= table.name %>
 <%- else -%>
