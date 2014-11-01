@@ -8,12 +8,10 @@ module Masamune::Schema
     {
       id:              nil,
       type:            :table,
-      label:           nil,
       references:      {},
       headers:         true,
       columns:         {},
       rows:            [],
-      insert:          false,
       inherit:         false,
       parent:          nil,
       debug:           false
@@ -99,10 +97,6 @@ module Masamune::Schema
       columns.values.select { |column| column.surrogate_key }
     end
 
-    def foreign_key_name
-      [label, name, primary_key.try(:name)].compact.join('_').to_sym
-    end
-
     def defined_columns
       columns.values
     end
@@ -148,10 +142,6 @@ module Masamune::Schema
 
     def foreign_key_columns
       columns.values.select { | column| column.reference }
-    end
-
-    def default_foreign_key_name
-      rows.detect { |row| row.default }.try(:name)
     end
 
     def insert_rows
@@ -218,8 +208,8 @@ module Masamune::Schema
     end
 
     def initialize_foreign_key_columns!
-      references.map do |_, table|
-        initialize_column! id: table.foreign_key_name, type: table.primary_key.type, reference: table, default: table.default_foreign_key_name, index: true
+      references.map do |_, reference|
+        initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true
       end
     end
 

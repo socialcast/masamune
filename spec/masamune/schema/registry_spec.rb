@@ -81,9 +81,9 @@ describe Masamune::Schema::Registry do
       subject(:references) { instance.dimensions[:baz].references }
 
       it { is_expected.to include :foo }
-      it { is_expected.to include :bar }
+      it { is_expected.to include :quux_bar }
       it { expect(references[:foo].label).to be_nil }
-      it { expect(references[:bar].label).to eq(:quux) }
+      it { expect(references[:quux_bar].label).to eq(:quux) }
     end
 
     context 'when schema contains overrides' do

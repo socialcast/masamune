@@ -56,14 +56,15 @@ module Masamune::Schema
 
     def column(id, options = {}, &block)
       column_id, column_reference = dereference_column(id)
-      @options[:columns] << Masamune::Schema::Column.new(options.merge(id: column_id, reference: column_reference))
+      if column_reference
+        @options[:columns] << Masamune::Schema::Column.new(options.merge(id: column_id, reference: Masamune::Schema::TableReference.new(column_reference)))
+      else
+        @options[:columns] << Masamune::Schema::Column.new(options.merge(id: column_id))
+      end
     end
 
     def references(id, options = {})
-      @options[:references] << dimensions[id].dup.tap do |dimension|
-        dimension.label = options[:label]
-        dimension.insert = options[:insert]
-      end
+      @options[:references] << Masamune::Schema::TableReference.new(dimensions[id], options)
     end
 
     def row(options)

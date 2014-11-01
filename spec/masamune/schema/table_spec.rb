@@ -364,7 +364,7 @@ describe Masamune::Schema::Table do
     end
 
     let(:table) do
-      described_class.new id: 'user', references: [mini_table],
+      described_class.new id: 'user', references: [Masamune::Schema::TableReference.new(mini_table)],
         columns: [
           Masamune::Schema::Column.new(id: 'name', type: :string)
         ]
@@ -389,7 +389,7 @@ describe Masamune::Schema::Table do
 
   context 'with labeled referenced table' do
     let(:mini_table) do
-      described_class.new id: 'user_account_state', label: 'actor',
+      described_class.new id: 'user_account_state',
         columns: [
           Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
           Masamune::Schema::Column.new(id: 'description', type: :string)
@@ -397,7 +397,7 @@ describe Masamune::Schema::Table do
     end
 
     let(:table) do
-      described_class.new id: 'user', references: [mini_table],
+      described_class.new id: 'user', references: [Masamune::Schema::TableReference.new(mini_table, label: 'actor')],
         columns: [
           Masamune::Schema::Column.new(id: 'name', type: :string)
         ]
@@ -430,7 +430,7 @@ describe Masamune::Schema::Table do
     end
 
     let(:table) do
-      described_class.new id: 'user', references: [mini_table],
+      described_class.new id: 'user', references: [Masamune::Schema::TableReference.new(mini_table)],
         columns: [
           Masamune::Schema::Column.new(id: 'name', type: :string)
         ]

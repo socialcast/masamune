@@ -15,7 +15,7 @@ describe Masamune::Schema::Fact do
 
     let(:fact) do
       described_class.new id: 'visits',
-        references: [dimension],
+        references: [Masamune::Schema::TableReference.new(dimension)],
         columns: [
           Masamune::Schema::Column.new(id: 'total', type: :integer)
         ]
