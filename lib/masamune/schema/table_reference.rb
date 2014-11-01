@@ -4,6 +4,8 @@ module Masamune::Schema
     {
       label:           nil,
       insert:          false,
+      null:            false,
+      surrogate_key:   false
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|

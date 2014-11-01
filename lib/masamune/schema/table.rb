@@ -126,7 +126,7 @@ module Masamune::Schema
     end
 
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference(true) || column.ignore }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_update_columns
 
@@ -209,7 +209,7 @@ module Masamune::Schema
 
     def initialize_foreign_key_columns!
       references.map do |_, reference|
-        initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true
+        initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true, null: reference.null, surrogate_key: reference.surrogate_key
       end
     end
 
