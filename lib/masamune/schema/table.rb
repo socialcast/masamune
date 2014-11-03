@@ -60,7 +60,7 @@ module Masamune::Schema
       initialize_foreign_key_columns!
       columns.each do |column|
         column.parent = self
-        @columns[column.name.to_sym] = column
+        @columns[column.name] = column
       end
     end
 
@@ -181,7 +181,7 @@ module Masamune::Schema
     def select_columns(selected_columns = [])
       return columns.values unless selected_columns.any?
       [].tap do |result|
-        selected_columns.each do |name|
+        selected_columns.map(&:to_sym).each do |name|
           reference_name, column_name = Column::dereference_column_name(name)
           if reference = references[reference_name]
             if reference.columns[column_name]
@@ -222,7 +222,7 @@ module Masamune::Schema
       return unless parent
       columns.each do |_, column|
         parent.columns.each do |_, parent_column|
-          column.index = parent_column.index if column == parent_column
+          column.index += parent_column.index if column == parent_column
         end
       end
     end

@@ -43,7 +43,7 @@ module Masamune::Schema
 
     def name
       if reference && reference.columns.include?(@id)
-        "#{reference.name}_#{@id}".to_sym
+        [reference.label, reference.name, @id].compact.join('_').to_sym
       else
         @id
       end

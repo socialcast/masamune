@@ -462,4 +462,90 @@ describe Masamune::Schema::Table do
       end
     end
   end
+
+  context '#as_file' do
+    let(:mini_table) do
+      described_class.new id: 'user_account_state',
+        columns: [
+          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(id: 'description', type: :string)
+        ]
+    end
+
+    let(:table) do
+      described_class.new id: 'user', references: [
+          Masamune::Schema::TableReference.new(mini_table),
+          Masamune::Schema::TableReference.new(mini_table, label: :hr)
+        ],
+        columns: [
+          Masamune::Schema::Column.new(id: 'name', type: :string)
+        ]
+    end
+
+    context 'without specified columns' do
+      let(:file) { table.as_file }
+
+      describe '#as_psql' do
+        subject { file.as_table(table).as_psql }
+
+        it 'should eq table template' do
+          is_expected.to eq <<-EOS.strip_heredoc
+            CREATE TEMPORARY TABLE IF NOT EXISTS user_file
+            (
+              uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+              user_account_state_table_uuid UUID,
+              hr_user_account_state_table_uuid UUID,
+              name VARCHAR
+            );
+
+            CREATE INDEX user_file_user_account_state_table_uuid_index ON user_file (user_account_state_table_uuid);
+            CREATE INDEX user_file_hr_user_account_state_table_uuid_index ON user_file (hr_user_account_state_table_uuid);
+          EOS
+        end
+      end
+    end
+
+    context 'with all specified columns' do
+      let(:file) { table.as_file(%w(uuid hr_user_account_state_table_uuid user_account_state_table_uuid name)) }
+
+      describe '#as_psql' do
+        subject { file.as_table(table).as_psql }
+
+        it 'should eq table template' do
+          is_expected.to eq <<-EOS.strip_heredoc
+            CREATE TEMPORARY TABLE IF NOT EXISTS user_file
+            (
+              uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+              hr_user_account_state_table_uuid UUID,
+              user_account_state_table_uuid UUID,
+              name VARCHAR
+            );
+
+            CREATE INDEX user_file_hr_user_account_state_table_uuid_index ON user_file (hr_user_account_state_table_uuid);
+            CREATE INDEX user_file_user_account_state_table_uuid_index ON user_file (user_account_state_table_uuid);
+          EOS
+        end
+      end
+    end
+
+    context 'with all specified columns in denormalized form' do
+      let(:file) { table.as_file(%w(uuid hr_user_account_state.name user_account_state.name name)) }
+
+      describe '#as_psql' do
+        subject { file.as_table(table).as_psql }
+
+        it 'should eq table template' do
+          is_expected.to eq <<-EOS.strip_heredoc
+            CREATE TEMPORARY TABLE IF NOT EXISTS user_file
+            (
+              uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+              hr_user_account_state_table_name VARCHAR,
+              user_account_state_table_name VARCHAR,
+              name VARCHAR
+            );
+          EOS
+        end
+      end
+    end
+  end
 end
