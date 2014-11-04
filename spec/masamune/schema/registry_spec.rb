@@ -329,4 +329,43 @@ describe Masamune::Schema::Registry do
       end
     end
   end
+
+  describe '.dereference_column' do
+    before do
+      instance.schema do
+        dimension 'table_one', type: :two do
+          column 'column_one'
+        end
+
+        dimension 'table_two', type: :two do
+          references :table_one
+          references :table_one, label: :label_one
+
+          column 'column_two'
+        end
+      end
+    end
+
+    subject(:result) { instance.dereference_column(input) }
+
+    context 'with a column name' do
+      let(:input) { 'column_two' }
+      it { expect(result.name).to eq(:column_two) }
+    end
+
+    context 'with a table.column name' do
+      let(:input) { 'table_one.column_one' }
+      it { expect(result.name).to eq(:table_one_dimension_column_one) }
+    end
+
+    context 'with a labeled table.column name' do
+      let(:input) { 'label_one_table_one.column_one' }
+      it { expect(result.name).to eq(:label_one_table_one_dimension_column_one) }
+    end
+
+    context 'with a undefined table.column name' do
+      let(:input) { 'undef.column_one' }
+      it { expect { result }.to raise_error ArgumentError, /dimension undef not defined/ }
+    end
+  end
 end

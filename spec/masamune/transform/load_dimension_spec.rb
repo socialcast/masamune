@@ -33,6 +33,7 @@ describe Masamune::Transform::LoadDimension do
         references :cluster
         references :department, insert: true
         references :user_account_state
+        references :user_account_state, label: :hr
         column 'tenant_id', index: true, surrogate_key: true
         column 'user_id', index: true, surrogate_key: true
         column 'name', type: :string
@@ -44,6 +45,7 @@ describe Masamune::Transform::LoadDimension do
         column  'user_id', type: :integer
         column  'department.department_id', type: :integer
         column  'user_account_state.name', type: :string
+        column  'hr_user_account_state.name', type: :string
         column  'preferences_now', type: :json
         column  'start_at', type: :timestamp
         column  'source_kind', type: :string
@@ -69,6 +71,7 @@ describe Masamune::Transform::LoadDimension do
           user_id INTEGER,
           department_type_department_id INTEGER,
           user_account_state_type_name VARCHAR,
+          hr_user_account_state_type_name VARCHAR,
           preferences_now JSON,
           start_at TIMESTAMP,
           source_kind VARCHAR,

@@ -37,6 +37,7 @@ module Masamune::Schema
       @facts      = {}.with_indifferent_access
       @files      = {}.with_indifferent_access
       @events     = {}.with_indifferent_access
+      @references = {}.with_indifferent_access
       @options    = Hash.new { |h,k| h[k] = [] }
       @extra      = []
     end
@@ -50,21 +51,20 @@ module Masamune::Schema
       prev_options = @options.dup
       yield if block_given?
       self.dimensions[id] ||= Masamune::Schema::Dimension.new(options.merge(@options).merge(id: id))
+      @references[id] ||= Masamune::Schema::TableReference.new(dimensions[id])
     ensure
       @options = prev_options
     end
 
     def column(id, options = {}, &block)
-      column_id, column_reference = dereference_column(id)
-      if column_reference
-        @options[:columns] << Masamune::Schema::Column.new(options.merge(id: column_id, reference: Masamune::Schema::TableReference.new(column_reference)))
-      else
-        @options[:columns] << Masamune::Schema::Column.new(options.merge(id: column_id))
-      end
+      prev_options = @options.dup
+      @options[:columns] << dereference_column(id, options)
     end
 
     def references(id, options = {})
-      @options[:references] << Masamune::Schema::TableReference.new(dimensions[id], options)
+      reference = Masamune::Schema::TableReference.new(dimensions[id], options)
+      @references[reference.id] = reference
+      @options[:references] << reference
     end
 
     def row(options)
@@ -177,19 +177,17 @@ module Masamune::Schema
       end.path
     end
 
-    private
+    def dereference_column(id, options = {})
+      column_id, reference_id = id.split(/\./).reverse
+      options.merge!(id: column_id)
 
-    def dereference_column(id)
-      if id =~ /\./
-        reference_id, column_id = id.to_s.split('.')
-        if dimension = dimensions[reference_id]
-          [column_id.to_sym, dimension]
-        else
-          raise ArgumentError, "dimension #{reference_id} not defined"
-        end
+      if reference = @references[reference_id]
+        options.merge!(reference: reference)
       else
-        [id.to_sym, nil]
-      end
+        raise ArgumentError, "dimension #{reference_id} not defined"
+      end if reference_id
+
+      Masamune::Schema::Column.new(options)
     end
   end
 end

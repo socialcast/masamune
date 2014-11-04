@@ -92,8 +92,8 @@ module Masamune::Transform
       join_columns.each do |reference, columns|
         (columns + lateral_references(source, reference)).each do |column|
           left = reference.columns[column.id]
-          conditions[reference.name] << "#{left.qualified_name} = #{column.qualified_name}"
-          conditions[reference.name].uniq!
+          conditions[reference] << "#{left.qualified_name} = #{column.qualified_name}"
+          conditions[reference].uniq!
         end
       end
       conditions

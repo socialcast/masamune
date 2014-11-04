@@ -10,7 +10,7 @@ FROM
   <%= source.name %>
 <%- target.join_conditions(source).each do |table, conditions| -%>
 LEFT JOIN
-  <%= table %>
+  <%= table.name %> AS <%= table.name %>
 ON
   <%= conditions.join(" AND\n  ") %>
 <%- end -%>
