@@ -138,6 +138,7 @@ module Masamune::Schema
      # TODO construct a partial ordering of dimensions by reference
     def as_psql
       output = []
+      output << ::File.read(helper_psql_file)
       dimensions.each do |id, dimension|
         logger.debug("#{id}\n" + dimension.as_psql) if dimension.debug
         output << dimension.as_psql
@@ -188,6 +189,12 @@ module Masamune::Schema
       end if reference_id
 
       Masamune::Schema::Column.new(column_options)
+    end
+
+    private
+
+    def helper_psql_file
+      @helper_psql_file ||= ::File.expand_path(::File.join(__FILE__, '..', 'helper.psql'))
     end
   end
 end

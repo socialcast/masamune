@@ -1,0 +1,18 @@
+CREATE OR REPLACE FUNCTION json_to_hstore(JSON)
+RETURNS HSTORE AS $$
+  SELECT HSTORE(RTRIM(LTRIM(REPLACE($1::TEXT, ':', '=>'), '{'), '}'))
+$$ LANGUAGE SQL RETURNS NULL ON NULL INPUT;
+
+-- Adapted from https://gist.github.com/mfenniak/3008378
+CREATE OR REPLACE FUNCTION hstore_merge(left HSTORE, right HSTORE) RETURNS HSTORE AS $$
+  SELECT COALESCE($1, '') || COALESCE($2, '');
+$$ LANGUAGE SQL;
+
+DO $$ BEGIN
+IF NOT EXISTS (SELECT * FROM pg_proc WHERE proname = 'hstore_merge' AND proisagg) THEN
+CREATE AGGREGATE hstore_merge (HSTORE) (
+  SFUNC = hstore_merge,
+  STYPE = HSTORE,
+  INITCOND = ''
+);
+END IF; END $$;
