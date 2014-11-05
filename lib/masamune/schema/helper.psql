@@ -16,3 +16,15 @@ CREATE AGGREGATE hstore_merge (HSTORE) (
   INITCOND = ''
 );
 END IF; END $$;
+
+CREATE OR REPLACE FUNCTION coalesce_merge(left ANYELEMENT, right ANYELEMENT) RETURNS ANYELEMENT AS $$
+  SELECT COALESCE($2, $1)
+$$ LANGUAGE SQL;
+
+DO $$ BEGIN
+IF NOT EXISTS (SELECT * FROM pg_proc WHERE proname = 'coalesce_merge' AND proisagg) THEN
+CREATE AGGREGATE coalesce_merge (ANYELEMENT) (
+  SFUNC = coalesce_merge,
+  STYPE = ANYELEMENT
+);
+END IF; END $$;

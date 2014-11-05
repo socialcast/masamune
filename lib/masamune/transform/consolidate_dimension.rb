@@ -86,7 +86,7 @@ module Masamune::Transform
         elsif column.type == :key_value
           "hstore_merge(#{column.name}_now) OVER #{window} - hstore_merge(#{column.name}_was) OVER #{window} AS #{column.name}"
         else
-          "COALESCE(#{column.name}, FIRST_VALUE(#{column.name}) OVER #{window}) AS #{column.name}"
+          "coalesce_merge(#{column.name}) OVER #{window} AS #{column.name}"
         end
       end
     end
