@@ -179,15 +179,16 @@ module Masamune::Schema
 
     def dereference_column(id, options = {})
       column_id, reference_id = id.split(/\./).reverse
-      options.merge!(id: column_id)
+      column_options = options.dup
+      column_options.merge!(id: column_id)
 
       if reference = @references[reference_id]
-        options.merge!(reference: reference)
+        column_options.merge!(reference: reference)
       else
         raise ArgumentError, "dimension #{reference_id} not defined"
       end if reference_id
 
-      Masamune::Schema::Column.new(options)
+      Masamune::Schema::Column.new(column_options)
     end
   end
 end
