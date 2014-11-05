@@ -12,9 +12,24 @@ module Masamune::Tasks
     namespace :shell
 
     desc 'shell', 'Launch an interactive shell'
+    method_option :dump, :type => :boolean, :desc => 'Dump SQL schema'
+    method_option :type, :enum => ['psql', 'hql'], :desc => 'Schema type', :default => 'psql'
+    class_option :start, :aliases => '-a', :desc => 'Start time', default: '1 month ago'
     def shell_exec
+      print_registry; exit if options[:dump]
       Pry.start self, prompt: proc { 'masamune> ' }
     end
     default_task :shell_exec
+
+    private
+
+    def print_registry
+      case options[:type]
+      when 'psql'
+        puts registry.as_psql
+      when 'hql'
+        puts registry.as_hql
+      end
+    end
   end
 end
