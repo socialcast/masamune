@@ -93,7 +93,6 @@ module Masamune::Transform
         left_uniq = Set.new
         (columns + lateral_references(source, reference)).each do |column|
           left = reference.columns[column.id]
-          # FIXME hash on left.qualified_name(reference.label) to prevent duplicates
           next unless left_uniq.add?(left.qualified_name(reference.label))
           conditions[[reference.name, reference.alias]] << "#{left.qualified_name(reference.label)} = #{column.qualified_name}"
         end
