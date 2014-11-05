@@ -101,8 +101,8 @@ module Masamune::Schema
       [label, (parent ? "#{parent.name}.#{name}" : name)].compact.join('_').to_sym
     end
 
-    def reference_name
-      (parent ? "#{parent.name}_#{name}" : name).to_sym
+    def reference_name(label = nil)
+      qualified_name(label).to_s.gsub(/\./, '_').to_sym
     end
 
     def sql_type(for_primary_key = false)
