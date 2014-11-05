@@ -38,7 +38,7 @@ describe Masamune::Transform::ConsolidateDimension do
           FROM user_dimension_ledger
         ), windows AS (
           SELECT *,
-          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at, delta, source_uuid DESC) window_id
+          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at, delta, source_uuid) window_id
           FROM ranges
         ), duplicated_consolidated AS (
           SELECT
