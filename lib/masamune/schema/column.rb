@@ -97,8 +97,8 @@ module Masamune::Schema
       end
     end
 
-    def qualified_name
-      (parent ? "#{parent.name}.#{name}" : name).to_sym
+    def qualified_name(label = nil)
+      [label, (parent ? "#{parent.name}.#{name}" : name)].compact.join('_').to_sym
     end
 
     def reference_name

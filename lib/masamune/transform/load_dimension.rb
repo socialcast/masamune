@@ -73,7 +73,7 @@ module Masamune::Transform
       shared_columns(source).values.map do |columns|
         column = columns.first
         if reference = column.reference
-          reference.primary_key.qualified_name
+          reference.primary_key.qualified_name(reference.label)
         elsif column.type == :json || column.type == :yaml || column.type == :key_value
           "json_to_hstore(#{column.qualified_name})"
         else
@@ -88,12 +88,14 @@ module Masamune::Transform
       join_columns = join_columns.select { |column| column.reference }.lazy
       join_columns = join_columns.group_by { |column| column.reference }.lazy
 
-      conditions = Hash.new { |h,k| h[k] = [] }
+      conditions = Hash.new { |h,k| h[k] = Set.new }
       join_columns.each do |reference, columns|
+        left_uniq = Set.new
         (columns + lateral_references(source, reference)).each do |column|
           left = reference.columns[column.id]
-          conditions[reference] << "#{left.qualified_name} = #{column.qualified_name}"
-          conditions[reference].uniq!
+          # FIXME hash on left.qualified_name(reference.label) to prevent duplicates
+          next unless left_uniq.add?(left.qualified_name(reference.label))
+          conditions[[reference.name, reference.alias]] << "#{left.qualified_name(reference.label)} = #{column.qualified_name}"
         end
       end
       conditions

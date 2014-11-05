@@ -31,6 +31,10 @@ module Masamune::Schema
       [label, @table.id].compact.join('_').to_sym
     end
 
+    def alias
+      [label, @table.name].compact.join('_')
+    end
+
     def foreign_key_name
       [label, @table.name, @table.primary_key.try(:name)].compact.join('_').to_sym
     end

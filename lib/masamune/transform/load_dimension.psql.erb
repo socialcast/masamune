@@ -8,11 +8,11 @@ SELECT
   <%- end -%>
 FROM
   <%= source.name %>
-<%- target.join_conditions(source).each do |table, conditions| -%>
+<%- target.join_conditions(source).each do |(table_name, alias_name), conditions| -%>
 LEFT JOIN
-  <%= table.name %> AS <%= table.name %>
+  <%= table_name %> AS <%= alias_name %>
 ON
-  <%= conditions.join(" AND\n  ") %>
+  <%= conditions.to_a.join(" AND\n  ") %>
 <%- end -%>
 ;
 
