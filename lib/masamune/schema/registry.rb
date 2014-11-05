@@ -57,7 +57,6 @@ module Masamune::Schema
     end
 
     def column(id, options = {}, &block)
-      prev_options = @options.dup
       @options[:columns] << dereference_column(id, options)
     end
 
