@@ -88,8 +88,8 @@ module Masamune::Schema
         reference_name, column_name = Column::dereference_column_name(key)
         if reference_name && reference = parent.references[reference_name]
           if column = reference.columns[column_name]
-            @columns[column.reference_name] = column
-            result[column.reference_name] = column.ruby_value(value)
+            @columns[column.reference_name(reference.label)] = column
+            result[column.reference_name(reference.label)] = column.ruby_value(value)
           end
         elsif column = parent.columns[column_name]
           @columns[column.name] = column

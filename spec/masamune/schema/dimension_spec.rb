@@ -116,7 +116,7 @@ describe Masamune::Schema::Dimension do
     end
 
     let(:dimension) do
-      described_class.new id: 'user', type: :four, references: [mini_dimension],
+      described_class.new id: 'user', type: :four, references: [Masamune::Schema::TableReference.new(mini_dimension)],
         columns: [
           Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
           Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true),

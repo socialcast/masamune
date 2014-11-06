@@ -43,7 +43,7 @@ module Masamune::Schema
 
     def name
       if reference && reference.columns.include?(@id)
-        "#{reference.name}_#{@id}".to_sym
+        [reference.label, reference.name, @id].compact.join('_').to_sym
       else
         @id
       end
@@ -97,12 +97,12 @@ module Masamune::Schema
       end
     end
 
-    def qualified_name
-      (parent ? "#{parent.name}.#{name}" : name).to_sym
+    def qualified_name(label = nil)
+      [label, (parent ? "#{parent.name}.#{name}" : name)].compact.join('_').to_sym
     end
 
-    def reference_name
-      (parent ? "#{parent.name}_#{name}" : name).to_sym
+    def reference_name(label = nil)
+      qualified_name(label).to_s.gsub(/\./, '_').to_sym
     end
 
     def sql_type(for_primary_key = false)
@@ -257,8 +257,8 @@ module Masamune::Schema
       end
     end
 
-    def auto_reference(insert = false)
-      reference && reference.primary_key.auto && (insert ? !reference.insert : true)
+    def auto_reference
+      reference && reference.primary_key.auto && !reference.insert
     end
 
     def references?(other)

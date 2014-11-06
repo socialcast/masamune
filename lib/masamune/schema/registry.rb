@@ -37,6 +37,7 @@ module Masamune::Schema
       @facts      = {}.with_indifferent_access
       @files      = {}.with_indifferent_access
       @events     = {}.with_indifferent_access
+      @references = {}.with_indifferent_access
       @options    = Hash.new { |h,k| h[k] = [] }
       @extra      = []
     end
@@ -50,20 +51,19 @@ module Masamune::Schema
       prev_options = @options.dup
       yield if block_given?
       self.dimensions[id] ||= Masamune::Schema::Dimension.new(options.merge(@options).merge(id: id))
+      @references[id] ||= Masamune::Schema::TableReference.new(dimensions[id])
     ensure
       @options = prev_options
     end
 
     def column(id, options = {}, &block)
-      column_id, column_reference = dereference_column(id)
-      @options[:columns] << Masamune::Schema::Column.new(options.merge(id: column_id, reference: column_reference))
+      @options[:columns] << dereference_column(id, options)
     end
 
     def references(id, options = {})
-      @options[:references] << dimensions[id].dup.tap do |dimension|
-        dimension.label = options[:label]
-        dimension.insert = options[:insert]
-      end
+      reference = Masamune::Schema::TableReference.new(dimensions[id], options)
+      @references[reference.id] = reference
+      @options[:references] << reference
     end
 
     def row(options)
@@ -138,6 +138,7 @@ module Masamune::Schema
      # TODO construct a partial ordering of dimensions by reference
     def as_psql
       output = []
+      output << ::File.read(helper_psql_file)
       dimensions.each do |id, dimension|
         logger.debug("#{id}\n" + dimension.as_psql) if dimension.debug
         output << dimension.as_psql
@@ -176,19 +177,24 @@ module Masamune::Schema
       end.path
     end
 
+    def dereference_column(id, options = {})
+      column_id, reference_id = id.split(/\./).reverse
+      column_options = options.dup
+      column_options.merge!(id: column_id)
+
+      if reference = @references[reference_id]
+        column_options.merge!(reference: reference)
+      else
+        raise ArgumentError, "dimension #{reference_id} not defined"
+      end if reference_id
+
+      Masamune::Schema::Column.new(column_options)
+    end
+
     private
 
-    def dereference_column(id)
-      if id =~ /\./
-        reference_id, column_id = id.to_s.split('.')
-        if dimension = dimensions[reference_id]
-          [column_id.to_sym, dimension]
-        else
-          raise ArgumentError, "dimension #{reference_id} not defined"
-        end
-      else
-        [id.to_sym, nil]
-      end
+    def helper_psql_file
+      @helper_psql_file ||= ::File.expand_path(::File.join(__FILE__, '..', 'helper.psql'))
     end
   end
 end

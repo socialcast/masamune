@@ -81,9 +81,9 @@ describe Masamune::Schema::Registry do
       subject(:references) { instance.dimensions[:baz].references }
 
       it { is_expected.to include :foo }
-      it { is_expected.to include :bar }
+      it { is_expected.to include :quux_bar }
       it { expect(references[:foo].label).to be_nil }
-      it { expect(references[:bar].label).to eq(:quux) }
+      it { expect(references[:quux_bar].label).to eq(:quux) }
     end
 
     context 'when schema contains overrides' do
@@ -327,6 +327,45 @@ describe Masamune::Schema::Registry do
       it 'should construct map' do
         is_expected.to_not be_nil
       end
+    end
+  end
+
+  describe '.dereference_column' do
+    before do
+      instance.schema do
+        dimension 'table_one', type: :two do
+          column 'column_one'
+        end
+
+        dimension 'table_two', type: :two do
+          references :table_one
+          references :table_one, label: :label_one
+
+          column 'column_two'
+        end
+      end
+    end
+
+    subject(:result) { instance.dereference_column(input) }
+
+    context 'with a column name' do
+      let(:input) { 'column_two' }
+      it { expect(result.name).to eq(:column_two) }
+    end
+
+    context 'with a table.column name' do
+      let(:input) { 'table_one.column_one' }
+      it { expect(result.name).to eq(:table_one_dimension_column_one) }
+    end
+
+    context 'with a labeled table.column name' do
+      let(:input) { 'label_one_table_one.column_one' }
+      it { expect(result.name).to eq(:label_one_table_one_dimension_column_one) }
+    end
+
+    context 'with a undefined table.column name' do
+      let(:input) { 'undef.column_one' }
+      it { expect { result }.to raise_error ArgumentError, /dimension undef not defined/ }
     end
   end
 end

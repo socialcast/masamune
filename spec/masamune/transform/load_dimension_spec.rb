@@ -33,6 +33,7 @@ describe Masamune::Transform::LoadDimension do
         references :cluster
         references :department, insert: true
         references :user_account_state
+        references :user_account_state, label: :hr
         column 'tenant_id', index: true, surrogate_key: true
         column 'user_id', index: true, surrogate_key: true
         column 'name', type: :string
@@ -44,6 +45,7 @@ describe Masamune::Transform::LoadDimension do
         column  'user_id', type: :integer
         column  'department.department_id', type: :integer
         column  'user_account_state.name', type: :string
+        column  'hr_user_account_state.name', type: :string
         column  'preferences_now', type: :json
         column  'start_at', type: :timestamp
         column  'source_kind', type: :string
@@ -69,6 +71,7 @@ describe Masamune::Transform::LoadDimension do
           user_id INTEGER,
           department_type_department_id INTEGER,
           user_account_state_type_name VARCHAR,
+          hr_user_account_state_type_name VARCHAR,
           preferences_now JSON,
           start_at TIMESTAMP,
           source_kind VARCHAR,
@@ -92,10 +95,11 @@ describe Masamune::Transform::LoadDimension do
         CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage (LIKE user_dimension_ledger INCLUDING ALL);
 
         INSERT INTO
-          user_dimension_ledger_stage (department_type_uuid, user_account_state_type_id, tenant_id, user_id, preferences_now, source_kind, start_at, delta)
+          user_dimension_ledger_stage (department_type_uuid, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, preferences_now, source_kind, start_at, delta)
         SELECT
           department_type.uuid,
           user_account_state_type.id,
+          hr_user_account_state_type.id,
           user_file.tenant_id,
           user_file.user_id,
           json_to_hstore(user_file.preferences_now),
@@ -105,14 +109,18 @@ describe Masamune::Transform::LoadDimension do
         FROM
           user_file
         LEFT JOIN
-          department_type
+          department_type AS department_type
         ON
           department_type.department_id = user_file.department_type_department_id AND
           department_type.tenant_id = user_file.tenant_id
         LEFT JOIN
-          user_account_state_type
+          user_account_state_type AS user_account_state_type
         ON
           user_account_state_type.name = user_file.user_account_state_type_name
+        LEFT JOIN
+          user_account_state_type AS hr_user_account_state_type
+        ON
+          hr_user_account_state_type.name = user_file.hr_user_account_state_type_name
         ;
 
         BEGIN;
@@ -123,6 +131,7 @@ describe Masamune::Transform::LoadDimension do
         SET
           department_type_uuid = user_dimension_ledger_stage.department_type_uuid,
           user_account_state_type_id = user_dimension_ledger_stage.user_account_state_type_id,
+          hr_user_account_state_type_id = user_dimension_ledger_stage.hr_user_account_state_type_id,
           name = user_dimension_ledger_stage.name,
           preferences_now = user_dimension_ledger_stage.preferences_now,
           preferences_was = user_dimension_ledger_stage.preferences_was
@@ -137,10 +146,11 @@ describe Masamune::Transform::LoadDimension do
         ;
 
         INSERT INTO
-          user_dimension_ledger (department_type_uuid, user_account_state_type_id, tenant_id, user_id, name, preferences_now, preferences_was, source_kind, source_uuid, start_at, last_modified_at, delta)
+          user_dimension_ledger (department_type_uuid, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, name, preferences_now, preferences_was, source_kind, source_uuid, start_at, last_modified_at, delta)
         SELECT
           user_dimension_ledger_stage.department_type_uuid,
           user_dimension_ledger_stage.user_account_state_type_id,
+          user_dimension_ledger_stage.hr_user_account_state_type_id,
           user_dimension_ledger_stage.tenant_id,
           user_dimension_ledger_stage.user_id,
           user_dimension_ledger_stage.name,

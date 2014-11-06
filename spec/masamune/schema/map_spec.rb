@@ -14,6 +14,7 @@ describe Masamune::Schema::Map do
 
       dimension 'user', type: :four do
         references :user_account_state
+        references :user_account_state, label: :hr
         column 'cluster_id', index: true, surrogate_key: true
         column 'tenant_id', index: true, surrogate_key: true
         column 'user_id', index: true, surrogate_key: true
@@ -34,6 +35,9 @@ describe Masamune::Schema::Map do
         field 'tenant_id', 'tenant_id'
         field 'user_id', 'id'
         field 'user_account_state.name' do |row|
+          row[:deleted_at] ? 'deleted' : 'active'
+        end
+        field 'hr_user_account_state.name' do |row|
           row[:deleted_at] ? 'deleted' : 'active'
         end
         field 'admin' do |row|
@@ -123,9 +127,9 @@ describe Masamune::Schema::Map do
 
       let(:target_data) do
         <<-EOS.strip_heredoc
-          tenant_id,user_id,user_account_state_type_name,admin,preferences_now,source,cluster_id
-          30,1,active,FALSE,{},users_file,100
-          40,2,deleted,TRUE,"{""enabled"":true}",users_file,100
+          tenant_id,user_id,user_account_state_type_name,hr_user_account_state_type_name,admin,preferences_now,source,cluster_id
+          30,1,active,active,FALSE,{},users_file,100
+          40,2,deleted,deleted,TRUE,"{""enabled"":true}",users_file,100
         EOS
       end
 

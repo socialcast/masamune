@@ -12,7 +12,7 @@ WITH ranges AS (
   FROM <%= target.ledger_table.name %>
 ), windows AS (
   SELECT *,
-  SUM(r) OVER (ORDER BY <%= target.window('start_at', 'delta', 'source_uuid DESC').join(', ') %>) window_id
+  SUM(r) OVER (ORDER BY <%= target.window('start_at', 'delta', 'source_uuid').join(', ') %>) window_id
   FROM ranges
 ), duplicated_consolidated AS (
   SELECT

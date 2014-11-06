@@ -8,12 +8,10 @@ module Masamune::Schema
     {
       id:              nil,
       type:            :table,
-      label:           nil,
       references:      {},
       headers:         true,
       columns:         {},
       rows:            [],
-      insert:          false,
       inherit:         false,
       parent:          nil,
       debug:           false
@@ -62,7 +60,7 @@ module Masamune::Schema
       initialize_foreign_key_columns!
       columns.each do |column|
         column.parent = self
-        @columns[column.name.to_sym] = column
+        @columns[column.name] = column
       end
     end
 
@@ -99,10 +97,6 @@ module Masamune::Schema
       columns.values.select { |column| column.surrogate_key }
     end
 
-    def foreign_key_name
-      [label, name, primary_key.try(:name)].compact.join('_').to_sym
-    end
-
     def defined_columns
       columns.values
     end
@@ -132,7 +126,7 @@ module Masamune::Schema
     end
 
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference(true) || column.ignore }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_update_columns
 
@@ -148,10 +142,6 @@ module Masamune::Schema
 
     def foreign_key_columns
       columns.values.select { | column| column.reference }
-    end
-
-    def default_foreign_key_name
-      rows.detect { |row| row.default }.try(:name)
     end
 
     def insert_rows
@@ -191,7 +181,7 @@ module Masamune::Schema
     def select_columns(selected_columns = [])
       return columns.values unless selected_columns.any?
       [].tap do |result|
-        selected_columns.each do |name|
+        selected_columns.map(&:to_sym).each do |name|
           reference_name, column_name = Column::dereference_column_name(name)
           if reference = references[reference_name]
             if reference.columns[column_name]
@@ -218,8 +208,8 @@ module Masamune::Schema
     end
 
     def initialize_foreign_key_columns!
-      references.map do |_, table|
-        initialize_column! id: table.foreign_key_name, type: table.primary_key.type, reference: table, default: table.default_foreign_key_name, index: true
+      references.map do |_, reference|
+        initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true, null: reference.null, surrogate_key: reference.surrogate_key
       end
     end
 
@@ -232,7 +222,7 @@ module Masamune::Schema
       return unless parent
       columns.each do |_, column|
         parent.columns.each do |_, parent_column|
-          column.index = parent_column.index if column == parent_column
+          column.index += parent_column.index if column == parent_column
         end
       end
     end
