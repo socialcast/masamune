@@ -363,7 +363,7 @@ module Masamune
     end
 
     def glob_to_regexp(input)
-      /\A#{Regexp.escape(input).gsub('\\*', '.*?')}\z/
+      /\A#{Regexp.escape(input).gsub('\\*', '.*?')}/
     end
 
     private
