@@ -9,7 +9,11 @@ describe Masamune::Commands::Hive do
   let(:delegate) { double }
   let(:instance) { described_class.new(delegate, attrs) }
 
+  let(:local_file) { File.join(Dir.tmpdir, SecureRandom.hex + '.txt') }
+  let(:remote_file) { filesystem.path(:tmp_dir, File.basename(local_file)) }
+
   before do
+    FileUtils.touch(local_file)
     filesystem.add_path(:tmp_dir, File.join(Dir.tmpdir, SecureRandom.hex))
     allow(delegate).to receive(:filesystem) { filesystem }
     allow(delegate).to receive_message_chain(:configuration, :hive).and_return(configuration)
@@ -44,13 +48,13 @@ describe Masamune::Commands::Hive do
     end
 
     context 'with file' do
-      let(:attrs) { {file: 'zomg.hql'} }
-      it { is_expected.to eq([*default_command, '-f', 'zomg.hql']) }
+      let(:attrs) { {file: local_file} }
+      it { is_expected.to eq([*default_command, '-f', remote_file]) }
     end
 
     context 'with variables' do
-      let(:attrs) { {file: 'zomg.hql', variables: {R: 'R2DO', C: 'C3PO'}} }
-      it { is_expected.to eq([*default_command, '-f', 'zomg.hql', '-d', 'R=R2DO', '-d', 'C=C3PO']) }
+      let(:attrs) { {file: local_file, variables: {R: 'R2DO', C: 'C3PO'}} }
+      it { is_expected.to eq([*default_command, '-f', remote_file, '-d', 'R=R2DO', '-d', 'C=C3PO']) }
     end
 
     context 'with setup files' do
