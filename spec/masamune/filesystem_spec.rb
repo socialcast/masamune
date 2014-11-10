@@ -488,6 +488,35 @@ shared_examples_for 'Filesystem' do
         it { is_expected.to eq(2912) }
       end
     end
+
+    context 's3 existing directory' do
+      before do
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir]}, safe: true).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt))
+      end
+
+      let(:result) { instance.stat('s3://bucket/dir') }
+
+      describe '#name' do
+        subject { stat.name }
+        it { is_expected.to eq('s3://bucket/dir/file.txt') }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to eq(Time.parse('2013-05-24 18:52:00 +0000')) }
+      end
+
+      describe '#mtime' do
+        subject { stat.mtime }
+        it { is_expected.to be_a(Time) }
+      end
+
+      describe '#size' do
+        subject { stat.size }
+        it { is_expected.to eq(2912) }
+      end
+    end
   end
 
   describe '#mkdir!' do

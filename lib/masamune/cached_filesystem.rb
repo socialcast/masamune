@@ -11,30 +11,23 @@ module Masamune
     end
 
     def clear!
-      @cache = {}
+      @cache = Hash.new { |h,k| h[k] = Set.new }
     end
 
     def exists?(file)
-      glob(file).any?
+      @cache.key?(file) || glob(file).any?
     end
 
     def stat(file_or_glob, &block)
-      update!(file_or_glob)
-      file_regexp = glob_to_regexp(file_or_glob, recursive: false)
-      @cache.keys.each do |file|
-        if file =~ file_regexp
-          @cache[file] ||= @filesystem.stat(file)
-          yield @cache[file]
-        end
+      scan(file_or_glob) do |entry|
+        yield entry
       end
     end
     method_accumulate :stat
 
     def glob(file_or_glob, &block)
-      update!(file_or_glob)
-      file_regexp = glob_to_regexp(file_or_glob, recursive: false)
-      @cache.keys.each do |file|
-        yield file if file =~ file_regexp
+      scan(file_or_glob) do |entry|
+        yield entry.name
       end
     end
     method_accumulate :glob
@@ -57,16 +50,20 @@ module Masamune
 
     private
 
-    def update!(file_or_glob, expand = true, &block)
+    def scan(file_or_glob, &block)
       return if file_or_glob.blank?
 
       dirname = @filesystem.dirname(file_or_glob)
-      return if @cache.key?(dirname)
-      @filesystem.stat(File.join(dirname, '*')) do |entry|
-        @filesystem.parent_paths(entry.name) { |path| @cache[path] ||= nil }
-        @cache[entry.name] = entry
+      unless @cache.key?(dirname)
+        @filesystem.stat(File.join(dirname, '*')) do |entry|
+          @cache[dirname] << entry
+        end
       end
-      update!(dirname, false) if expand && !@filesystem.root_path?(dirname)
+
+      file_regexp = glob_to_regexp(file_or_glob, recursive: false)
+      @cache[dirname].each do |entry|
+        yield entry if entry.name =~ file_regexp
+      end
     end
   end
 end
