@@ -47,13 +47,19 @@ class Masamune::DataPlanElem
   end
 
   def remove
-    if rule.for_table_with_partition?
+    if rule.for_path?
+      if rule.for_hive_table?
+        rule.plan.hive_helper.drop_partition(rule.hive_table, start_time.strftime(rule.hive_partition))
+      else
+        rule.plan.filesystem.remove_file(path)
+      end
+    elsif rule.for_table_with_partition?
       rule.plan.postgres_helper.drop_table(table)
     end
   end
 
   def removable?
-    rule.for_table_with_partition?
+    !rule.immutable? && exists?
   end
 
   def explode(&block)
