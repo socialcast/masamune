@@ -362,8 +362,12 @@ module Masamune
       [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input) ]
     end
 
-    def glob_to_regexp(input)
-      /\A#{Regexp.escape(input).gsub('\\*', '.*?')}/
+    def glob_to_regexp(input, recursive: true)
+      if recursive
+        /\A#{Regexp.escape(input).gsub('\\*', '.*?')}/
+      else
+        /\A#{Regexp.escape(input).gsub('\\*', '.*?')}\z/
+      end
     end
 
     private

@@ -20,7 +20,7 @@ module Masamune
 
     def stat(file_or_glob, &block)
       update!(file_or_glob)
-      file_regexp = glob_to_regexp(file_or_glob)
+      file_regexp = glob_to_regexp(file_or_glob, recursive: false)
       @cache.keys.each do |file|
         if file =~ file_regexp
           @cache[file] ||= @filesystem.stat(file)
@@ -32,7 +32,7 @@ module Masamune
 
     def glob(file_or_glob, &block)
       update!(file_or_glob)
-      file_regexp = glob_to_regexp(file_or_glob)
+      file_regexp = glob_to_regexp(file_or_glob, recursive: false)
       @cache.keys.each do |file|
         yield file if file =~ file_regexp
       end
