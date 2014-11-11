@@ -40,7 +40,7 @@ class Masamune::DataPlanElem
 
   def last_modified_at
     if rule.for_path?
-      rule.plan.filesystem.stat(path).map { |stat| stat.try(:mtime) }.compact.max
+      rule.plan.filesystem.stat(path).try(:mtime)
     elsif rule.for_table?
       rule.plan.postgres_helper.table_last_modified_at(table, @options)
     end || MISSING_MODIFIED_AT

@@ -7,7 +7,7 @@ require 'securerandom'
 shared_examples_for 'Filesystem' do
   let(:filesystem) { Masamune::Filesystem.new }
 
-  let(:tmp_dir) { File.join(Dir.tmpdir, SecureRandom.hex) }
+  let(:tmp_dir) { File.join(Dir.tmpdir, SecureRandom.hex, SecureRandom.hex) }
   let(:old_dir) { File.join(tmp_dir, SecureRandom.hex) }
   let(:new_dir) { File.join(tmp_dir, SecureRandom.hex) }
   let(:other_new_dir) { File.join(tmp_dir, SecureRandom.hex) }
@@ -344,7 +344,7 @@ shared_examples_for 'Filesystem' do
   end
 
   describe '#stat' do
-    subject(:stat) { result.last }
+    subject(:stat) { result }
     context 'local missing file' do
       let(:result) { instance.stat(new_file) }
       it { is_expected.to be_nil }
@@ -391,50 +391,7 @@ shared_examples_for 'Filesystem' do
 
     context 'local existing file (recursive)' do
       let(:result) { instance.stat(File.join(tmp_dir, '*')) }
-
-      describe '#name' do
-        subject { stat.name }
-        it { is_expected.to eq(old_file) }
-      end
-
-      describe '#mtime' do
-        subject { stat.mtime }
-        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
-      end
-
-      describe '#mtime' do
-        subject { stat.mtime }
-        it { is_expected.to be_a(Time) }
-      end
-
-      describe '#size' do
-        subject { stat.size }
-        it { is_expected.to be_an(Integer) }
-      end
-    end
-
-    context 'local existing file (with suffix)' do
-      let(:result) { instance.stat(File.join(old_dir, '*.txt')) }
-
-      describe '#name' do
-        subject { stat.name }
-        it { is_expected.to eq(old_file) }
-      end
-
-      describe '#mtime' do
-        subject { stat.mtime }
-        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
-      end
-
-      describe '#mtime' do
-        subject { stat.mtime }
-        it { is_expected.to be_a(Time) }
-      end
-
-      describe '#size' do
-        subject { stat.size }
-        it { is_expected.to be_an(Integer) }
-      end
+      it { expect { result }.to raise_error /cannot contain wildcard/ }
     end
 
     context 'hdfs existing file' do
@@ -612,7 +569,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir/*]}, safe: true).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
       end
@@ -625,7 +582,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*' }
 
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir/*]}, safe: true).
           and_yield(%q(                       DIR   s3://bucket/dir/file_$folder$)).
           and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
@@ -1353,7 +1310,7 @@ shared_examples_for 'Filesystem' do
       end
 
       subject do
-        instance.cat(*instance.glob(instance.path(:new_dir, '**', '*'))).string
+        instance.cat(*instance.glob(instance.path(:new_dir, '*'))).string
       end
 
       it { is_expected.to eq('dog') }

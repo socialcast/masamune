@@ -32,13 +32,16 @@ class Masamune::MockFilesystem < Delegator
     glob(pattern)
   end
 
-  def stat(pattern, &block)
+  def glob_stat(pattern, &block)
     file_regexp = glob_to_regexp(pattern)
     @files.each do |name, stat|
       yield stat if name =~ file_regexp
     end
   end
-  method_accumulate :stat
+
+  def stat(file)
+    @files[file]
+  end
 
   def write(data, file)
     @files[file] = OpenStruct.new(name: file, data: data)
