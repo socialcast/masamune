@@ -97,9 +97,9 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/a/b/c')).to eq(true)
       expect(cached_filesystem.exists?('/a/b')).to eq(true)
       expect(cached_filesystem.exists?('/a')).to eq(true)
-      expect(cached_filesystem.glob('/a')).to be_empty
+      expect(cached_filesystem.glob('/a')).to_not be_empty
       expect(cached_filesystem.glob('/a/*')).not_to be_empty
-      expect(cached_filesystem.glob('/a/b')).to be_empty
+      expect(cached_filesystem.glob('/a/b')).to_not be_empty
       expect(cached_filesystem.glob('/a/b/*')).not_to be_empty
       expect(cached_filesystem.glob('/a/b/c')).not_to be_empty
       expect(cached_filesystem.glob('/a/b/c/*')).to be_empty

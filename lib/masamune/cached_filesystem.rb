@@ -65,7 +65,7 @@ module Masamune
       end
       @cache[dirname] ||= EMPTY_SET
 
-      file_regexp = glob_to_regexp(file_or_glob, recursive: false)
+      file_regexp = glob_to_regexp(file_or_glob)
       @cache[dirname].each do |entry|
         yield entry if entry.name =~ file_regexp
       end if depth == 0
