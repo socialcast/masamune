@@ -62,7 +62,7 @@ describe Masamune::DataPlanElem do
     context 'with missing mtime' do
       before do
         expect(rule.plan.filesystem).to receive(:stat).with(instance.path).
-          and_return([[]])
+          and_return(nil)
       end
 
       it { is_expected.to eq(Masamune::DataPlanElem::MISSING_MODIFIED_AT) }
@@ -71,19 +71,10 @@ describe Masamune::DataPlanElem do
     context 'with single mtime' do
       before do
         expect(rule.plan.filesystem).to receive(:stat).with(instance.path).
-          and_return([OpenStruct.new(mtime: early)])
+          and_return(OpenStruct.new(mtime: early))
       end
 
       it { is_expected.to eq(early) }
-    end
-
-    context 'with multiple mtime' do
-      before do
-        expect(rule.plan.filesystem).to receive(:stat).with(instance.path).
-          and_return([OpenStruct.new(mtime: early), OpenStruct.new(mtime: later)])
-      end
-
-      it { is_expected.to eq(later) }
     end
   end
 end

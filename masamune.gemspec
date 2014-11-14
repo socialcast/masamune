@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.files = Dir['{bin,lib,spec/support/masamune}/**/*'] + ['LICENSE', 'Rakefile', 'README.md']
   s.test_files = Dir['spec/**/*']
   s.require_path = 'lib'
-  s.executables = ['masamune-hive', 'masamune-elastic-mapreduce', 'masamune-psql']
+  s.executables = ['masamune-shell', 'masamune-hive', 'masamune-elastic-mapreduce', 'masamune-psql']
 
   s.add_dependency('thor')
   s.add_dependency('activesupport')
@@ -22,6 +22,9 @@ Gem::Specification.new do |s|
   s.add_dependency('chronic')
   s.add_dependency('tilt')
   s.add_dependency('erubis')
+  s.add_dependency('pry')
+  # Needed to work around: https://github.com/pry/pry/issues/1217
+  s.add_dependency('rb-readline')
 
   # Development
   s.add_development_dependency('rake', '>= 0.9')

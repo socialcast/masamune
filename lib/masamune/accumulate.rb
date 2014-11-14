@@ -14,6 +14,7 @@ module Masamune
           new_method = "#{method}_with_accumulate".to_sym
           old_method = "#{method}_without_accumulate".to_sym
           alias_method old_method, method
+
           define_method(new_method) do |*args, &block|
             if block
               send(old_method, *args, &block)

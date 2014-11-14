@@ -28,9 +28,9 @@ module Masamune::Actions
     end
 
     # TODO sources from file or input array
-    def parse_file_type(key, default)
-      return default unless key
-      value = options[key] or return default
+    def parse_file_type(key)
+      return Set.new unless key
+      value = options[key] or return Set.new
       File.exists?(value) or raise Thor::MalformattedArgumentError, "Expected file value for '--#{key}'; got #{value}"
       Set.new File.read(value).split(/\s+/)
     end
@@ -54,8 +54,8 @@ module Masamune::Actions
         raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start' or '--at'" unless options[:start] || options[:at] || options[:sources] || options[:targets]
         raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
 
-        desired_sources = thor.parse_file_type(:sources, Set.new)
-        desired_targets = thor.parse_file_type(:targets, Set.new)
+        desired_sources = Masamune::DataPlanSet.new thor.current_command_name, thor.parse_file_type(:sources)
+        desired_targets = Masamune::DataPlanSet.new thor.current_command_name, thor.parse_file_type(:targets)
 
         if thor.start_time && thor.stop_time
           desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.start_time, thor.stop_time)

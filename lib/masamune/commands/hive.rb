@@ -122,7 +122,8 @@ module Masamune::Commands
     end
 
     def command_args_for_simple_file
-      ['-f', @file].tap do |args|
+      filesystem.copy_file_to_dir(@file, filesystem.get_path(:tmp_dir))
+      ['-f', filesystem.get_path(:tmp_dir, File.basename(@file))].tap do |args|
         @variables.each do |key, val|
           args << ['-d', "#{key.to_s}=#{val.to_s}"]
         end

@@ -128,7 +128,7 @@ module Masamune
       end
     end
 
-    def stat(pattern, &block)
+    def glob_stat(pattern, &block)
       case type(pattern)
       when :hdfs
         hadoop_fs('-ls', pattern, safe: true) do |line|
@@ -153,7 +153,17 @@ module Masamune
         end
       end
     end
-    method_accumulate :stat
+    method_accumulate :glob_stat
+
+    def stat(file_or_dir)
+      raise ArgumentError, 'cannot contain wildcard' if file_or_dir.include?('*')
+      result = glob_stat(file_or_dir)
+      return unless result.any?
+      return result.first if result.size == 1
+      max_time = result.map { |stat| stat.try(:mtime) }.compact.max
+      sum_size = result.map { |stat| stat.try(:size) }.compact.reduce(:+)
+      OpenStruct.new(name: file_or_dir, mtime: max_time, size: sum_size)
+    end
 
     def mkdir!(*dirs)
       dirs.group_by { |path| type(path) }.each do |type, dir_set|
@@ -362,8 +372,12 @@ module Masamune
       [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input) ]
     end
 
-    def glob_to_regexp(input)
-      /\A#{Regexp.escape(input).gsub('\\*', '.*?')}\z/
+    def glob_to_regexp(input, recursive: true)
+      if recursive
+        /\A#{Regexp.escape(input).gsub('\\*', '.*?')}/
+      else
+        /\A#{Regexp.escape(input).gsub('\\*', '.*?')}\z/
+      end
     end
 
     private

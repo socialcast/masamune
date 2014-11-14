@@ -113,6 +113,10 @@ module Masamune
       @registry ||= Masamune::Schema::Registry.new(self)
     end
 
+    def hive_helper
+      @hive_helper ||= Masamune::Helpers::Hive.new(self)
+    end
+
     def postgres_helper
       @postgres_helper ||= Masamune::Helpers::Postgres.new(self)
     end

@@ -11,30 +11,16 @@ module Masamune
     end
 
     def clear!
-      @cache = {}
+      @cache = Hash.new { |h,k| h[k] = Set.new }
     end
 
     def exists?(file)
-      glob(file).any?
+      @cache.key?(file) || glob(file).include?(file) || @cache.key?(file)
     end
-
-    def stat(file_or_glob, &block)
-      update!(file_or_glob)
-      file_regexp = glob_to_regexp(file_or_glob)
-      @cache.keys.each do |file|
-        if file =~ file_regexp
-          @cache[file] ||= @filesystem.stat(file)
-          yield @cache[file]
-        end
-      end
-    end
-    method_accumulate :stat
 
     def glob(file_or_glob, &block)
-      update!(file_or_glob)
-      file_regexp = glob_to_regexp(file_or_glob)
-      @cache.keys.each do |file|
-        yield file if file =~ file_regexp
+      glob_stat(file_or_glob) do |entry|
+        yield entry.name
       end
     end
     method_accumulate :glob
@@ -57,16 +43,37 @@ module Masamune
 
     private
 
-    def update!(file_or_glob, expand = true, &block)
+    MAX_DEPTH   = 10
+    CACHE_DEPTH = 1
+    EMPTY_SET   = Set.new
+
+    def glob_stat(file_or_glob, depth: 0, &block)
       return if file_or_glob.blank?
+      return if depth > MAX_DEPTH || depth > CACHE_DEPTH
+
+      glob_stat(File.join(@filesystem.dirname(file_or_glob)), depth: depth + 1, &block)
 
       dirname = @filesystem.dirname(file_or_glob)
-      return if @cache.key?(dirname)
-      @filesystem.stat(File.join(dirname, '*')) do |entry|
-        @filesystem.parent_paths(entry.name) { |path| @cache[path] ||= nil }
-        @cache[entry.name] = entry
+      unless @cache.key?(dirname)
+        @filesystem.glob_stat(File.join(dirname, '*')) do |entry|
+          recursive_paths(dirname, entry.name) do |path|
+            @cache[path] << entry
+          end
+        end
       end
-      update!(dirname, false) if expand && !@filesystem.root_path?(dirname)
+      @cache[dirname] ||= EMPTY_SET
+
+      file_regexp = glob_to_regexp(file_or_glob, recursive: false)
+      @cache[dirname].each do |entry|
+        yield entry if entry.name =~ file_regexp
+      end if depth == 0
+    end
+
+    def recursive_paths(root, path, depth: 0, &block)
+      return if depth > MAX_DEPTH
+      return if root == path
+      yield @filesystem.dirname(path)
+      recursive_paths(root, @filesystem.dirname(path), depth: depth + 1, &block)
     end
   end
 end

@@ -57,14 +57,14 @@ class Masamune::DataPlan
     end
   end
 
-  # TODO convert to DataPlanSet
   def targets_for_date_range(rule, start, stop, &block)
     target_template = @target_rules[rule]
-    target_template.generate(start.to_time.utc, stop.to_time.utc) do |target_instance|
-      yield target_instance
-    end if target_template
+    return unless target_template
+    target_template.generate(start.to_time.utc, stop.to_time.utc) do |target|
+      yield target
+    end
   end
-  method_accumulate :targets_for_date_range
+  method_accumulate :targets_for_date_range, lambda { |plan, rule, _, _| Masamune::DataPlanSet.new(plan.get_target_rule(rule)) }
 
   def targets_for_source(rule, source, &block)
     source_template = @source_rules[rule]
