@@ -71,6 +71,7 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/logs/box3_456.txt')).to eq(false)
       expect(cached_filesystem.exists?('/logs/box4_123.txt')).to eq(false)
       expect(cached_filesystem.exists?('/logs/box4_456.txt')).to eq(false)
+      expect(cached_filesystem.exists?('/logs/box')).to eq(false)
       expect(cached_filesystem.glob('/logs/*')).not_to be_empty
       expect(cached_filesystem.glob('/logs/*.txt')).not_to be_empty
       expect(cached_filesystem.glob('/logs/box1_*.txt')).not_to be_empty
@@ -78,6 +79,8 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.glob('/logs/box3_*.txt')).not_to be_empty
       expect(cached_filesystem.glob('/logs/box*.txt').size).to eq(3)
       expect(cached_filesystem.glob('/logs/box*.csv')).to be_empty
+      expect(cached_filesystem.glob('/logs/box')).to be_empty
+      expect(cached_filesystem.glob('/logs/box/*')).to be_empty
     end
   end
 
@@ -97,9 +100,9 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/a/b/c')).to eq(true)
       expect(cached_filesystem.exists?('/a/b')).to eq(true)
       expect(cached_filesystem.exists?('/a')).to eq(true)
-      expect(cached_filesystem.glob('/a')).to_not be_empty
+      expect(cached_filesystem.glob('/a')).to be_empty
       expect(cached_filesystem.glob('/a/*')).not_to be_empty
-      expect(cached_filesystem.glob('/a/b')).to_not be_empty
+      expect(cached_filesystem.glob('/a/b')).to be_empty
       expect(cached_filesystem.glob('/a/b/*')).not_to be_empty
       expect(cached_filesystem.glob('/a/b/c')).not_to be_empty
       expect(cached_filesystem.glob('/a/b/c/*')).to be_empty
