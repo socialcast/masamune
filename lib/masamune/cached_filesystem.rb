@@ -49,11 +49,13 @@ module Masamune
 
     def glob_stat(file_or_glob, depth: 0, &block)
       return if file_or_glob.blank?
+      return if root_path?(file_or_glob)
       return if depth > MAX_DEPTH || depth > CACHE_DEPTH
 
-      glob_stat(File.join(@filesystem.dirname(file_or_glob)), depth: depth + 1, &block)
+      glob_stat(dirname(file_or_glob), depth: depth + 1, &block)
 
-      dirname = @filesystem.dirname(file_or_glob)
+      dirname = dirname(file_or_glob)
+      dirname = file_or_glob if root_path?(dirname)
       unless @cache.key?(dirname)
         @filesystem.glob_stat(File.join(dirname, '*')) do |entry|
           recursive_paths(dirname, entry.name) do |path|
@@ -72,8 +74,8 @@ module Masamune
     def recursive_paths(root, path, depth: 0, &block)
       return if depth > MAX_DEPTH
       return if root == path
-      yield @filesystem.dirname(path)
-      recursive_paths(root, @filesystem.dirname(path), depth: depth + 1, &block)
+      yield dirname(path)
+      recursive_paths(root, dirname(path), depth: depth + 1, &block)
     end
   end
 end
