@@ -8,6 +8,7 @@ describe Masamune::CachedFilesystem do
     before do
       filesystem.touch!('/a/b/c/1.txt', '/a/b/c/2.txt', '/a/b/c/3.txt')
       expect(filesystem).to receive(:glob_stat).with('/a/b/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/*').never
     end
 
     it 'calls Filesystem#glob_stat once for multiple calls' do
@@ -25,6 +26,7 @@ describe Masamune::CachedFilesystem do
     before do
       filesystem.touch!('/a/b/c/1.txt', '/a/b/c/2.txt', '/a/b/c/3.txt')
       expect(filesystem).to receive(:glob_stat).with('/a/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/*').never
     end
 
     it 'calls Filesystem#glob_stat once for multiple calls' do
@@ -41,6 +43,7 @@ describe Masamune::CachedFilesystem do
       filesystem.touch!('/y=2013/m=1/d=22/00000')
       expect(filesystem).to receive(:glob_stat).with('/y=2013/m=1/*').once.and_call_original
       expect(filesystem).to receive(:glob_stat).with('/y=2013/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/*').never
     end
 
     it 'calls Filesystem#glob_stat once for multiple calls' do
@@ -55,7 +58,8 @@ describe Masamune::CachedFilesystem do
   context 'when path is present, checking for similar existing paths' do
     before do
       filesystem.touch!('/logs/box1_123.txt', '/logs/box2_123.txt', '/logs/box3_123.txt')
-      expect(filesystem).to receive(:glob_stat).with('/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/logs/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/*').never
     end
 
     it 'calls Filesystem#glob_stat once for multiple calls' do
@@ -67,6 +71,7 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/logs/box3_456.txt')).to eq(false)
       expect(cached_filesystem.exists?('/logs/box4_123.txt')).to eq(false)
       expect(cached_filesystem.exists?('/logs/box4_456.txt')).to eq(false)
+      expect(cached_filesystem.exists?('/logs/box')).to eq(false)
       expect(cached_filesystem.glob('/logs/*')).not_to be_empty
       expect(cached_filesystem.glob('/logs/*.txt')).not_to be_empty
       expect(cached_filesystem.glob('/logs/box1_*.txt')).not_to be_empty
@@ -74,6 +79,8 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.glob('/logs/box3_*.txt')).not_to be_empty
       expect(cached_filesystem.glob('/logs/box*.txt').size).to eq(3)
       expect(cached_filesystem.glob('/logs/box*.csv')).to be_empty
+      expect(cached_filesystem.glob('/logs/box')).to be_empty
+      expect(cached_filesystem.glob('/logs/box/*')).to be_empty
     end
   end
 
@@ -82,7 +89,8 @@ describe Masamune::CachedFilesystem do
       filesystem.touch!('/a/b/c')
       expect(filesystem).to receive(:glob_stat).with('/a/b/c/*').once.and_call_original
       expect(filesystem).to receive(:glob_stat).with('/a/b/*').once.and_call_original
-      expect(filesystem).to receive(:glob_stat).with('/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/a/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/*').never
     end
 
     it 'calls Filesystem#glob_stat once for multiple calls' do

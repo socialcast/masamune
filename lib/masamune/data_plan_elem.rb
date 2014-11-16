@@ -64,7 +64,9 @@ class Masamune::DataPlanElem
 
   def explode(&block)
     if rule.for_path?
-      rule.plan.filesystem.glob(path) do |new_path|
+      file_glob = path
+      file_glob += '*' unless path.include?('*')
+      rule.plan.filesystem.glob(file_glob) do |new_path|
         yield rule.bind_input(new_path)
       end
     elsif rule.for_table_with_partition?

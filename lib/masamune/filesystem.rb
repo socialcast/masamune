@@ -138,7 +138,7 @@ module Masamune
           yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").at_beginning_of_minute.utc, size: size.to_i)
         end
       when :s3
-        file_glob, file_regexp = glob_split(pattern)
+        file_glob, file_regexp = glob_split(pattern, recursive: true)
         s3cmd('ls', '--recursive', s3b(file_glob), safe: true) do |line|
           next if line =~ /\$folder$/
           date, time, size, name = line.split(/\s+/)
@@ -189,7 +189,7 @@ module Masamune
           yield q(pattern, name)
         end
       when :s3
-        file_glob, file_regexp = glob_split(pattern)
+        file_glob, file_regexp = glob_split(pattern, recursive: true)
         s3cmd('ls', '--recursive', s3b(file_glob), safe: true) do |line|
           next if line =~ /\$folder$/
           name = line.split(/\s+/).last
@@ -368,15 +368,15 @@ module Masamune
       end
     end
 
-    def glob_split(input)
-      [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input) ]
+    def glob_split(input, recursive: false)
+      [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input, recursive: recursive) ]
     end
 
-    def glob_to_regexp(input, recursive: true)
-      if recursive
+    def glob_to_regexp(input, recursive: false)
+      if input.include?('*') || recursive
         /\A#{Regexp.escape(input).gsub('\\*', '.*?')}/
       else
-        /\A#{Regexp.escape(input).gsub('\\*', '.*?')}\z/
+        /\A#{Regexp.escape(input)}\z/
       end
     end
 
