@@ -70,8 +70,9 @@ class Masamune::DataPlanSet < Set
 
   def incomplete(&block)
     return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_sources?
+    set = Set.new
     self.each do |target|
-      yield target unless target.complete?
+      yield target if set.add?(target) unless target.complete?
     end
   end
   method_accumulate :incomplete, lambda { |set| set.class.new(set.rule) }

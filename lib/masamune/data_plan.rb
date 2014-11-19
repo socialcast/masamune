@@ -113,6 +113,7 @@ class Masamune::DataPlan
         logger.warn("Detected incomplete target #{target.input}, skipping")
       end
     end
+
     targets(rule).stale do |target|
       if target.removable?
         logger.warn("Detected stale target #{target.input}, removing")
