@@ -104,6 +104,8 @@ class Masamune::DataPlan
         logger.warn("Detected incomplete target #{target.input}, removing")
         target.remove
         dirty = true
+      else
+        logger.warn("Detected incomplete target #{target.input}, skipping")
       end
     end
     targets(rule).stale do |target|
@@ -115,6 +117,13 @@ class Masamune::DataPlan
         logger.warn("Detected stale target #{target.input}, skipping")
       end
     end
+
+    constrain_max_depth(rule) do
+      sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
+        prepare(derived_rule, targets: sources.map(&:input)) if derived_rule != Masamune::DataPlanRule::TERMINAL
+      end
+    end if options.fetch(:resolve, true)
+
     environment.clear! if dirty
   end
 
@@ -123,10 +132,7 @@ class Masamune::DataPlan
 
     constrain_max_depth(rule) do
       sources(rule).missing.group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
-        if derived_rule != Masamune::DataPlanRule::TERMINAL
-          prepare(derived_rule, targets: sources.map(&:input))
-          execute(derived_rule, options)
-        end
+        execute(derived_rule, options) if derived_rule != Masamune::DataPlanRule::TERMINAL
       end
     end if options.fetch(:resolve, true)
 

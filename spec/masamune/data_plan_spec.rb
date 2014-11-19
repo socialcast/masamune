@@ -409,8 +409,7 @@ describe Masamune::DataPlan do
     end
 
     it 'should raise exception' do
-      plan.prepare('derived', targets: ['log/20140228.wtf.log'])
-      expect { plan.execute('derived') }.to raise_error /Max depth .* exceeded for rule 'derived'/
+      expect { plan.prepare('derived', targets: ['log/20140228.wtf.log']) }.to raise_error /Max depth .* exceeded for rule 'derived'/
     end
   end
 end
