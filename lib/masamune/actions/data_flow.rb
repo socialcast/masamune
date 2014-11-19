@@ -61,7 +61,7 @@ module Masamune::Actions
           desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.start_time, thor.stop_time)
         end
 
-        thor.data_plan.prepare(thor.current_command_name, sources: desired_sources, targets: desired_targets)
+        thor.data_plan.prepare(thor.current_command_name, options.merge(sources: desired_sources, targets: desired_targets))
         thor.data_plan.execute(thor.current_command_name, options)
         exit 0 if thor.top_level?
       end if defined?(base.after_initialize)
