@@ -54,6 +54,10 @@ class Masamune::MockFilesystem < Delegator
   def clear!
   end
 
+  def check_immutable_path!(file)
+    true
+  end
+
   def __getobj__
     @filesystem
   end

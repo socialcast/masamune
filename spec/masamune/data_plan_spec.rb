@@ -1,11 +1,14 @@
 require 'spec_helper'
 
 describe Masamune::DataPlan do
-  let(:fs) { Masamune::MockFilesystem.new }
+  let(:filesystem) { Masamune::MockFilesystem.new }
+  let(:environment) { Masamune::Environment.new }
   let(:plan) { Masamune::DataPlan.new }
+  let(:fs) { filesystem }
 
   before do
-    plan.filesystem = fs
+    environment.filesystem = filesystem
+    plan.environment = environment
   end
 
   let(:command) do
@@ -14,7 +17,7 @@ describe Masamune::DataPlan do
       plan.targets(rule).missing.each do |target|
         missing_targets << target.path if target.sources.existing.any?
       end
-      fs.touch!(*missing_targets) if missing_targets.any?
+      filesystem.touch!(*missing_targets) if missing_targets.any?
     end
   end
 

@@ -20,6 +20,11 @@ class Masamune::DataPlan
     @current_depth = 0
   end
 
+  def environment=(environment)
+    super
+    @filesystem = Masamune::CachedFilesystem.new(environment.filesystem)
+  end
+
   def add_target_rule(rule, target_options = {})
     @target_rules[rule] = Masamune::DataPlanRule.new(self, rule, :target, target_options)
   end
