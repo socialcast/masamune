@@ -144,7 +144,7 @@ class Masamune::DataPlanElem
   def ==(other)
     rule == other.rule &&
     options == other.options &&
-    start_time == other.start_time
+    input == other.input
   end
 
   def eql?(other)
@@ -152,7 +152,7 @@ class Masamune::DataPlanElem
   end
 
   def hash
-    [rule, options, start_time].hash
+    [rule, options, input].hash
   end
 
   # FIXME should consider stop_time for correctness
