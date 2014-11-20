@@ -109,8 +109,6 @@ class Masamune::DataPlan
         logger.warn("Detected incomplete target #{target.input}, removing")
         target.remove
         dirty = true
-      else
-        logger.warn("Detected incomplete target #{target.input}, skipping")
       end
     end
 
