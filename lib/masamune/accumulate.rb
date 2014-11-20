@@ -1,4 +1,3 @@
-require 'set'
 module Masamune
   module Accumulate
     def accumulate(method, accumulator, *args)
