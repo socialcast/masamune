@@ -73,7 +73,7 @@ module Masamune::Transform
       shared_columns(source).values.map do |columns|
         column = columns.first
         if reference = column.reference
-          reference.primary_key.qualified_name(reference.label)
+          reference.surrogate_key.qualified_name(reference.label)
         elsif column.type == :json || column.type == :yaml || column.type == :key_value
           "json_to_hstore(#{column.qualified_name})"
         else

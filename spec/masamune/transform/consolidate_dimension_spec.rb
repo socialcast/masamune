@@ -14,8 +14,8 @@ describe Masamune::Transform::ConsolidateDimension do
 
       dimension 'user', type: :four do
         references :user_account_state
-        column 'tenant_id', index: true, surrogate_key: true
-        column 'user_id', index: true, surrogate_key: true
+        column 'tenant_id', index: true, natural_key: true
+        column 'user_id', index: true, natural_key: true
         column 'preferences', type: :key_value, null: true
       end
     end

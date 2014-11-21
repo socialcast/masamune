@@ -39,7 +39,7 @@ WHERE NOT EXISTS (SELECT 1 FROM <%= table.name %> WHERE <%= row.insert_constrain
 <%- end -%>
 
 <% table.aliased_rows.each do |row| %>
-<%- row.surrogate_keys.each do |column| -%>
+<%- row.natural_keys.each do |column| -%>
 CREATE OR REPLACE FUNCTION <%= row.name(column) %>
 RETURNS <%= column.sql_type %> IMMUTABLE AS $$
   SELECT <%= row.values[column.name] %>;
@@ -47,7 +47,7 @@ $$ LANGUAGE SQL;
 <%- end -%>
 
 CREATE OR REPLACE FUNCTION <%= row.name %>
-RETURNS <%= table.primary_key.sql_type %> IMMUTABLE AS $$
-  SELECT <%= table.primary_key.name %> FROM <%= table.name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
+RETURNS <%= table.surrogate_key.sql_type %> IMMUTABLE AS $$
+  SELECT <%= table.surrogate_key.name %> FROM <%= table.name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
 $$ LANGUAGE SQL;
 <%- end -%>

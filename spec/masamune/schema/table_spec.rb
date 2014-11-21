@@ -167,11 +167,11 @@ describe Masamune::Schema::Table do
     end
   end
 
-  context 'with primary_key columns override' do
+  context 'with surrogate_key columns override' do
     let(:table) do
       described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(id: 'identifier', type: :uuid, primary_key: true),
+          Masamune::Schema::Column.new(id: 'identifier', type: :uuid, surrogate_key: true),
           Masamune::Schema::Column.new(id: 'name', type: :string)
         ]
     end
@@ -279,9 +279,9 @@ describe Masamune::Schema::Table do
     let(:table) do
       described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(id: 'uuid', type: :uuid, primary_key: true),
-          Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, surrogate_key: true),
-          Masamune::Schema::Column.new(id: 'user_id', type: :integer, surrogate_key: true)
+          Masamune::Schema::Column.new(id: 'uuid', type: :uuid, surrogate_key: true),
+          Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, natural_key: true),
+          Masamune::Schema::Column.new(id: 'user_id', type: :integer, natural_key: true)
         ],
         rows: [
           Masamune::Schema::Row.new(values: {

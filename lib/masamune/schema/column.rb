@@ -15,8 +15,8 @@ module Masamune::Schema
       index:               Set.new,
       unique:              Set.new,
       ignore:              false,
-      primary_key:         false,
       surrogate_key:       false,
+      natural_key:         false,
       degenerate_key:      false,
       reference:           nil,
       parent:              nil,
@@ -105,10 +105,10 @@ module Masamune::Schema
       qualified_name(label).to_s.gsub(/\./, '_').to_sym
     end
 
-    def sql_type(for_primary_key = false)
+    def sql_type(for_surrogate_key = false)
       case type
       when :integer
-        for_primary_key ? 'SERIAL' : 'INTEGER'
+        for_surrogate_key ? 'SERIAL' : 'INTEGER'
       when :money
         'MONEY'
       when :string
@@ -205,13 +205,13 @@ module Masamune::Schema
     end
 
     def as_psql
-      [name, sql_type(primary_key), *sql_constraints, reference_constraint, sql_default].compact.join(' ')
+      [name, sql_type(surrogate_key), *sql_constraints, reference_constraint, sql_default].compact.join(' ')
     end
 
     def reference_constraint
       return if parent.temporary?
-      if reference && reference.primary_key.type == type
-        "REFERENCES #{reference.name}(#{reference.primary_key.name})"
+      if reference && reference.surrogate_key.type == type
+        "REFERENCES #{reference.name}(#{reference.surrogate_key.name})"
       end
     end
 
@@ -258,7 +258,7 @@ module Masamune::Schema
     end
 
     def auto_reference
-      reference && reference.primary_key.auto && !reference.insert
+      reference && reference.surrogate_key.auto && !reference.insert
     end
 
     def references?(other)
@@ -269,7 +269,7 @@ module Masamune::Schema
         self == other
       elsif reference && other.parent && reference.id == other.parent.id
         self == other
-      elsif surrogate_key || other.surrogate_key
+      elsif natural_key || other.natural_key
         self == other
       else
         false
@@ -285,8 +285,8 @@ module Masamune::Schema
 
     def sql_constraints
       [].tap do |constraints|
-        constraints << 'NOT NULL' unless null || primary_key || !strict || parent.temporary?
-        constraints << 'PRIMARY KEY' if primary_key
+        constraints << 'NOT NULL' unless null || surrogate_key || !strict || parent.temporary?
+        constraints << 'PRIMARY KEY' if surrogate_key
       end
     end
 
@@ -295,8 +295,8 @@ module Masamune::Schema
     end
 
     def initialize_default_attributes!
-      self.default = 'uuid_generate_v4()' if primary_key && type == :uuid
-      self.unique = 'surrogate' if surrogate_key
+      self.default = 'uuid_generate_v4()' if surrogate_key && type == :uuid
+      self.unique = 'natural' if natural_key
     end
 
     def ruby_key_value(hash)

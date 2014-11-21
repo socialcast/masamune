@@ -75,13 +75,13 @@ module Masamune::Transform
     method_with_last_element :insert_view_constraints
 
     def window(*extra)
-      (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key || column.auto_reference }.map(&:name) + extra).uniq
+      (columns.values.select { |column| extra.delete(column.name) || column.natural_key || column.auto_reference }.map(&:name) + extra).uniq
     end
 
     def insert_values(opts = {})
       window = opts[:window]
       consolidated_columns.map do |_, column|
-        if column.surrogate_key
+        if column.natural_key
           "#{column.name} AS #{column.name}"
         elsif column.type == :key_value
           "hstore_merge(#{column.name}_now) OVER #{window} - hstore_merge(#{column.name}_was) OVER #{window} AS #{column.name}"
@@ -95,7 +95,7 @@ module Masamune::Transform
     private
 
     def consolidated_columns
-      unreserved_columns.reject { |_, column| column.primary_key }
+      unreserved_columns.reject { |_, column| column.surrogate_key }
     end
   end
 end

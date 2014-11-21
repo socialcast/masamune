@@ -8,7 +8,7 @@ describe Masamune::Transform::LoadFact do
   before do
     registry.schema do
       dimension 'date', type: :one do
-        column 'date_id', type: :integer, unique: true, index: true, surrogate_key: true
+        column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
 
       dimension 'user_agent', type: :mini do
@@ -22,12 +22,12 @@ describe Masamune::Transform::LoadFact do
       end
 
       dimension  'tenant', type: :two do
-        column  'tenant_id', type: :integer, index: true, surrogate_key: true
+        column  'tenant_id', type: :integer, index: true, natural_key: true
       end
 
       dimension  'user', type: :two do
-        column  'tenant_id', type: :integer, index: true, surrogate_key: true
-        column  'user_id', type: :integer, index: true, surrogate_key: true
+        column  'tenant_id', type: :integer, index: true, natural_key: true
+        column  'user_id', type: :integer, index: true, natural_key: true
       end
 
       fact  'visits', partition: 'y%Ym%m' do

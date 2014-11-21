@@ -90,7 +90,7 @@ describe Masamune::Schema::Registry do
       before do
         instance.schema do
           dimension 'cluster', type: :mini do
-            column 'uuid', type: :uuid, primary_key: true
+            column 'uuid', type: :uuid, surrogate_key: true
             column 'name', type: :string, unique: true
             column 'description', type: :string
 
@@ -204,8 +204,8 @@ describe Masamune::Schema::Registry do
 
           dimension 'user', type: :two do
             references :user_account_state
-            column 'tenant_id', type: :integer, surrogate_key: true
-            column 'user_id', type: :integer, surrogate_key: true
+            column 'tenant_id', type: :integer, natural_key: true
+            column 'user_id', type: :integer, natural_key: true
           end
 
           file 'users' do
@@ -242,7 +242,7 @@ describe Masamune::Schema::Registry do
       before do
         instance.schema do
           dimension 'user', type: :mini do
-            column 'user_id', type: :integer, surrogate_key: true
+            column 'user_id', type: :integer, natural_key: true
             column 'name', type: :string
           end
 

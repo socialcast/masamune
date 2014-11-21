@@ -15,9 +15,9 @@ describe Masamune::Schema::Map do
       dimension 'user', type: :four do
         references :user_account_state
         references :user_account_state, label: :hr
-        column 'cluster_id', index: true, surrogate_key: true
-        column 'tenant_id', index: true, surrogate_key: true
-        column 'user_id', index: true, surrogate_key: true
+        column 'cluster_id', index: true, natural_key: true
+        column 'tenant_id', index: true, natural_key: true
+        column 'user_id', index: true, natural_key: true
         column 'preferences', type: :key_value, null: true
         column 'admin', type: :boolean
         column 'source', type: :string

@@ -40,12 +40,12 @@ module Masamune::Schema
       if column
         "#{@id}_#{column.name}()"
       else
-        "#{@id}_#{parent.name}_#{parent.primary_key.name}()"
+        "#{@id}_#{parent.name}_#{parent.surrogate_key.name}()"
       end
     end
 
-    def surrogate_keys
-      parent.surrogate_keys.select do |column|
+    def natural_keys
+      parent.natural_keys.select do |column|
         values.keys.include?(column.name) && !column.sql_function?(values[column.name])
       end
     end
