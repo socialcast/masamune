@@ -46,6 +46,10 @@ module Masamune
 
       def start(*a)
         super
+      rescue SignalException => e
+        raise e unless %w(SIGHUP SIGTERM).include?(e.to_s)
+        instance.logger.debug("Exiting at user request on #{e.to_s}")
+        exit 0
       rescue => e
         instance.logger.error("#{e.message} (#{e.class}) backtrace:")
         e.backtrace.each { |x| instance.logger.error(x) }
