@@ -40,7 +40,7 @@ module Masamune::Schema
 
     def ledger_table_columns
       columns.values.map do |column|
-        next if column.primary_key
+        next if column.surrogate_key
         next if reserved_column_ids.include?(column.id)
 
         if column.type == :key_value
@@ -50,18 +50,18 @@ module Masamune::Schema
           [column_now, column_was]
         else
           column.dup.tap do |column_copy|
-            column_copy.strict = false unless column.primary_key || column.surrogate_key
+            column_copy.strict = false unless column.surrogate_key || column.natural_key
           end
         end
       end.flatten
     end
 
-    def initialize_primary_key_column!
+    def initialize_surrogate_key_column!
       case type
       when :mini
-        initialize_column! id: 'id', type: :integer, primary_key: true
+        initialize_column! id: 'id', type: :integer, surrogate_key: true
       when :one, :two, :four, :ledger
-        initialize_column! id: 'uuid', type: :uuid, primary_key: true
+        initialize_column! id: 'uuid', type: :uuid, surrogate_key: true
       end
     end
 
@@ -70,7 +70,7 @@ module Masamune::Schema
       when :one
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :two
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'surrogate'
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'natural'
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
         initialize_column! id: 'version', type: :integer, default: 1, null: true, index: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
@@ -78,14 +78,14 @@ module Masamune::Schema
         children << ledger_table
         initialize_column! id: 'parent_uuid', type: :uuid, null: true, reference: ledger_table
         initialize_column! id: 'record_uuid', type: :uuid, null: true, reference: ledger_table
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'surrogate'
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'natural'
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
         initialize_column! id: 'version', type: :integer, default: 1, null: true, index: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :ledger
-        initialize_column! id: 'source_kind', type: :string, unique: 'surrogate'
-        initialize_column! id: 'source_uuid', type: :string, unique: 'surrogate'
-        initialize_column! id: 'start_at', type: :timestamp, index: true, unique: 'surrogate'
+        initialize_column! id: 'source_kind', type: :string, unique: 'natural'
+        initialize_column! id: 'source_uuid', type: :string, unique: 'natural'
+        initialize_column! id: 'start_at', type: :timestamp, index: true, unique: 'natural'
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
         initialize_column! id: 'delta', type: :integer
       end

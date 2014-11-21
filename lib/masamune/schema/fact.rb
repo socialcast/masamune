@@ -41,7 +41,7 @@ module Masamune::Schema
 
     private
 
-    def initialize_primary_key_column!
+    def initialize_surrogate_key_column!
     end
 
     def initialize_fact_columns!

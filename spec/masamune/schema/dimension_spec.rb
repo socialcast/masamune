@@ -30,8 +30,8 @@ describe Masamune::Schema::Dimension do
     let(:dimension) do
       described_class.new id: 'user', type: :two,
         columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
-          Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true)
+          Masamune::Schema::Column.new(id: 'tenant_id', index: true, natural_key: true),
+          Masamune::Schema::Column.new(id: 'user_id', index: true, natural_key: true)
         ]
     end
 
@@ -118,8 +118,8 @@ describe Masamune::Schema::Dimension do
     let(:dimension) do
       described_class.new id: 'user', type: :four, references: [Masamune::Schema::TableReference.new(mini_dimension)],
         columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', index: true, surrogate_key: true),
-          Masamune::Schema::Column.new(id: 'user_id', index: true, surrogate_key: true),
+          Masamune::Schema::Column.new(id: 'tenant_id', index: true, natural_key: true),
+          Masamune::Schema::Column.new(id: 'user_id', index: true, natural_key: true),
           Masamune::Schema::Column.new(id: 'preferences', type: :key_value, null: true)
         ]
     end

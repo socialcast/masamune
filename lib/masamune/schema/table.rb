@@ -56,7 +56,7 @@ module Masamune::Schema
       columns = (instance.is_a?(Hash) ? instance.values : instance).compact
       raise ArgumentError, "table #{name} contains reserved columns" if columns.any? { |column| reserved_column_ids.include?(column.id) }
 
-      initialize_primary_key_column! unless columns.any? { |column| column.primary_key }
+      initialize_surrogate_key_column! unless columns.any? { |column| column.surrogate_key }
       initialize_foreign_key_columns!
       columns.each do |column|
         column.parent = self
@@ -89,12 +89,12 @@ module Masamune::Schema
       type == :stage || type == :file
     end
 
-    def primary_key
-      columns.values.detect { |column| column.primary_key }
+    def surrogate_key
+      columns.values.detect { |column| column.surrogate_key }
     end
 
-    def surrogate_keys
-      columns.values.select { |column| column.surrogate_key }
+    def natural_keys
+      columns.values.select { |column| column.natural_key }
     end
 
     def defined_columns
@@ -126,12 +126,12 @@ module Masamune::Schema
     end
 
     def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.primary_key || column.surrogate_key || column.unique.any? || column.auto_reference || column.ignore }
+      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.surrogate_key || column.natural_key || column.unique.any? || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_update_columns
 
     def upsert_insert_columns
-      columns.values.reject { |column| column.primary_key || column.auto_reference || column.ignore }
+      columns.values.reject { |column| column.surrogate_key || column.auto_reference || column.ignore }
     end
     method_with_last_element :upsert_insert_columns
 
@@ -200,16 +200,16 @@ module Masamune::Schema
 
     private
 
-    def initialize_primary_key_column!
+    def initialize_surrogate_key_column!
       case type
       when :table
-        initialize_column! id: 'uuid', type: :uuid, primary_key: true
+        initialize_column! id: 'uuid', type: :uuid, surrogate_key: true
       end
     end
 
     def initialize_foreign_key_columns!
       references.map do |_, reference|
-        initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true, null: reference.null, surrogate_key: reference.surrogate_key
+        initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
       end
     end
 

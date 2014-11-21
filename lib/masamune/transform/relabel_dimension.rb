@@ -36,7 +36,7 @@ module Masamune::Transform
     end
 
     def window(*extra)
-      (columns.values.select { |column| extra.delete(column.name) || column.surrogate_key || column.auto_reference }.map(&:name) + extra).uniq
+      (columns.values.select { |column| extra.delete(column.name) || column.natural_key || column.auto_reference }.map(&:name) + extra).uniq
     end
   end
 end

@@ -78,7 +78,7 @@ module Masamune::Transform
       shared_columns(source).values.map do |columns|
         column = columns.first
         if reference = column.reference
-          reference.primary_key.qualified_name
+          reference.surrogate_key.qualified_name
         else
           column.qualified_name
         end
@@ -124,7 +124,7 @@ module Masamune::Transform
     private
 
     def cross_references(column)
-      return {} unless column.surrogate_key || column.adjacent.try(:surrogate_key)
+      return {} unless column.natural_key || column.adjacent.try(:natural_key)
       {}.tap do |result|
         references.each do |_, reference|
           if reference.id != column.reference.id && reference.columns[column.id]

@@ -8,7 +8,7 @@ describe Masamune::Transform::LoadDimension do
   before do
     registry.schema do
       dimension 'cluster', type: :mini do
-        column 'id', type: :integer, primary_key: true, auto: true
+        column 'id', type: :integer, surrogate_key: true, auto: true
         column 'name', type: :string, unique: true
         row name: 'default', attributes: {default: true}
       end
@@ -23,9 +23,9 @@ describe Masamune::Transform::LoadDimension do
 
       dimension 'department', type: :mini do
         references :cluster
-        column 'uuid', type: :uuid, primary_key: true
-        column 'tenant_id', type: :integer, unique: true, surrogate_key: true
-        column 'department_id', type: :integer, unique: true, surrogate_key: true
+        column 'uuid', type: :uuid, surrogate_key: true
+        column 'tenant_id', type: :integer, unique: true, natural_key: true
+        column 'department_id', type: :integer, unique: true, natural_key: true
         row tenant_id: -1, department_id: -1, attributes: {default: true}
       end
 
@@ -34,8 +34,8 @@ describe Masamune::Transform::LoadDimension do
         references :department, insert: true
         references :user_account_state
         references :user_account_state, label: :hr
-        column 'tenant_id', index: true, surrogate_key: true
-        column 'user_id', index: true, surrogate_key: true
+        column 'tenant_id', index: true, natural_key: true
+        column 'user_id', index: true, natural_key: true
         column 'name', type: :string
         column 'preferences', type: :key_value, null: true
       end
