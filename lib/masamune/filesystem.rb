@@ -14,6 +14,10 @@ module Masamune
       @immutable_paths = {}
     end
 
+    def clear!
+      # Intentionally unimplemented
+    end
+
     def add_path(symbol, path, options = {})
       options ||= {}
       options.symbolize_keys!

@@ -142,9 +142,7 @@ class Masamune::DataPlanElem
   end
 
   def ==(other)
-    rule == other.rule &&
-    options == other.options &&
-    start_time == other.start_time
+    uniq_constraint == other.uniq_constraint
   end
 
   def eql?(other)
@@ -152,7 +150,7 @@ class Masamune::DataPlanElem
   end
 
   def hash
-    [rule, options, start_time].hash
+    uniq_constraint.hash
   end
 
   # FIXME should consider stop_time for correctness
@@ -168,6 +166,12 @@ class Masamune::DataPlanElem
 
   def inspect
     {rule: rule, input: input, start_date: start_time.to_s, stop_date: stop_time.to_s, :options => options}.to_s
+  end
+
+  protected
+
+  def uniq_constraint
+    [rule, options, rule.for_table? ? start_time : input]
   end
 
   private

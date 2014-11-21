@@ -17,7 +17,11 @@ module Masamune
 
           define_method(new_method) do |*args, &block|
             if block
-              send(old_method, *args, &block)
+              instance = accumulator.call(self, *args)
+              send(old_method, *args) do |elem|
+                next if instance.respond_to?(:add?) && !instance.add?(elem)
+                block.call elem
+              end
             else
               accumulate(old_method, accumulator, *args)
             end

@@ -20,6 +20,11 @@ class Masamune::DataPlan
     @current_depth = 0
   end
 
+  def environment=(environment)
+    super
+    @filesystem = Masamune::CachedFilesystem.new(environment.filesystem)
+  end
+
   def add_target_rule(rule, target_options = {})
     @target_rules[rule] = Masamune::DataPlanRule.new(self, rule, :target, target_options)
   end
@@ -106,6 +111,7 @@ class Masamune::DataPlan
         dirty = true
       end
     end
+
     targets(rule).stale do |target|
       if target.removable?
         logger.warn("Detected stale target #{target.input}, removing")
@@ -115,6 +121,13 @@ class Masamune::DataPlan
         logger.warn("Detected stale target #{target.input}, skipping")
       end
     end
+
+    constrain_max_depth(rule) do
+      sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
+        prepare(derived_rule, targets: sources.map(&:input)) if derived_rule != Masamune::DataPlanRule::TERMINAL
+      end
+    end if options.fetch(:resolve, true)
+
     environment.clear! if dirty
   end
 
@@ -123,10 +136,7 @@ class Masamune::DataPlan
 
     constrain_max_depth(rule) do
       sources(rule).missing.group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
-        if derived_rule != Masamune::DataPlanRule::TERMINAL
-          prepare(derived_rule, targets: sources.map(&:input))
-          execute(derived_rule, options)
-        end
+        execute(derived_rule, options) if derived_rule != Masamune::DataPlanRule::TERMINAL
       end
     end if options.fetch(:resolve, true)
 

@@ -35,6 +35,10 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/a/b/c/2.txt')).to eq(true)
       expect(cached_filesystem.exists?('/a/b/c/3.txt')).to eq(true)
       expect(cached_filesystem.exists?('/a/b/c/4.txt')).to eq(false)
+      expect(cached_filesystem.stat('/a/b/c/1.txt')).to_not be_nil
+      expect(cached_filesystem.stat('/a/b/c/2.txt')).to_not be_nil
+      expect(cached_filesystem.stat('/a/b/c/3.txt')).to_not be_nil
+      expect(cached_filesystem.stat('/a/b/c/4.txt')).to be_nil
     end
   end
 
@@ -52,6 +56,7 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/y=2013/m=1/d=2')).to eq(false)
       expect(cached_filesystem.glob('/y=2013/m=1/*')).not_to be_empty
       expect(cached_filesystem.glob('/y=2013/m=1/d=22/*')).not_to be_empty
+      expect(cached_filesystem.stat('/y=2013/m=1/d=22/00000')).not_to be_nil
     end
   end
 
@@ -81,6 +86,14 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.glob('/logs/box*.csv')).to be_empty
       expect(cached_filesystem.glob('/logs/box')).to be_empty
       expect(cached_filesystem.glob('/logs/box/*')).to be_empty
+      expect(cached_filesystem.stat('/logs/box1_123.txt')).to_not be_nil
+      expect(cached_filesystem.stat('/logs/box1_456.txt')).to be_nil
+      expect(cached_filesystem.stat('/logs/box2_123.txt')).to_not be_nil
+      expect(cached_filesystem.stat('/logs/box2_456.txt')).to be_nil
+      expect(cached_filesystem.stat('/logs/box3_123.txt')).to_not be_nil
+      expect(cached_filesystem.stat('/logs/box3_456.txt')).to be_nil
+      expect(cached_filesystem.stat('/logs/box4_123.txt')).to be_nil
+      expect(cached_filesystem.stat('/logs/box4_456.txt')).to be_nil
     end
   end
 
@@ -107,6 +120,9 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.glob('/a/b/c')).not_to be_empty
       expect(cached_filesystem.glob('/a/b/c/*')).to be_empty
       expect(cached_filesystem.glob('/a/b/c/*.txt')).to be_empty
+      expect(cached_filesystem.stat('/a/b/c/1.txt')).to be_nil
+      expect(cached_filesystem.stat('/a/b/c/2.txt')).to be_nil
+      expect(cached_filesystem.stat('/a/b/c/3.txt')).to be_nil
     end
   end
 end
