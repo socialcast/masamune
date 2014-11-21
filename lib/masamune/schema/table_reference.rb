@@ -5,6 +5,7 @@ module Masamune::Schema
       label:           nil,
       insert:          false,
       null:            false,
+      default:         nil,
       surrogate_key:   false
     }
 
@@ -44,8 +45,8 @@ module Masamune::Schema
     end
 
     def default
-      @table.rows.detect { |row| row.default }.try(:name)
+      return if @default == :null
+      @default || @table.rows.detect { |row| row.default }.try(:name)
     end
   end
 end
-

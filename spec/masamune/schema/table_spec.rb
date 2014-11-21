@@ -393,11 +393,17 @@ describe Masamune::Schema::Table do
         columns: [
           Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
           Masamune::Schema::Column.new(id: 'description', type: :string)
+        ],
+        rows: [
+          Masamune::Schema::Row.new(values: {name: 'active'}, default: true)
         ]
     end
 
     let(:table) do
-      described_class.new id: 'user', references: [Masamune::Schema::TableReference.new(mini_table, label: 'actor')],
+      described_class.new id: 'user', references: [
+          Masamune::Schema::TableReference.new(mini_table),
+          Masamune::Schema::TableReference.new(mini_table, label: 'actor', null: true, default: :null)
+        ],
         columns: [
           Masamune::Schema::Column.new(id: 'name', type: :string)
         ]
@@ -408,9 +414,15 @@ describe Masamune::Schema::Table do
         CREATE TABLE IF NOT EXISTS user_table
         (
           uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          actor_user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid),
+          user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid) DEFAULT default_user_account_state_table_uuid(),
+          actor_user_account_state_table_uuid UUID REFERENCES user_account_state_table(uuid),
           name VARCHAR NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_account_state_table_uuid_index') THEN
+        CREATE INDEX user_table_user_account_state_table_uuid_index ON user_table (user_account_state_table_uuid);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_actor_user_account_state_table_uuid_index') THEN
