@@ -20,9 +20,8 @@ class Masamune::DataPlan
     @current_depth = 0
   end
 
-  def environment=(environment)
-    super
-    @filesystem = Masamune::CachedFilesystem.new(environment.filesystem)
+  def filesystem
+    @filesystem ||= Masamune::CachedFilesystem.new(environment.filesystem)
   end
 
   def add_target_rule(rule, target_options = {})
@@ -128,7 +127,7 @@ class Masamune::DataPlan
       end
     end if options.fetch(:resolve, true)
 
-    environment.clear! if dirty
+    clear! if dirty
   end
 
   def execute(rule, options = {})
@@ -142,8 +141,7 @@ class Masamune::DataPlan
 
     @current_rule = rule
     @command_rules[rule].call(self, rule, options)
-    @set_cache.clear
-    environment.clear!
+    clear!
   ensure
     @current_rule = nil
   end
@@ -158,5 +156,11 @@ class Masamune::DataPlan
     yield
   ensure
     @current_depth -= 1
+  end
+
+  def clear!
+    @set_cache.clear
+    filesystem.clear!
+    environment.postgres_helper.clear!
   end
 end

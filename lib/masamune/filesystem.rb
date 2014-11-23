@@ -61,6 +61,11 @@ module Masamune
       new_path
     end
 
+    def relative_path?(path)
+      return false if remote_prefix(path)
+      path[0] != '/'
+    end
+
     def parent_paths(path, &block)
       if prefix = remote_prefix(path)
         node = path.split(prefix).last
@@ -86,6 +91,7 @@ module Masamune
     def root_path?(path)
       raise ArgumentError, 'path cannot be nil' if path.nil?
       raise ArgumentError, 'path cannot be blank' if path.blank?
+      raise ArgumentError, 'path cannot be relative' if relative_path?(path)
       parent_paths(path).length < 1
     end
 
