@@ -88,7 +88,7 @@ describe Masamune::Commands::Hive do
       let(:attrs) { {file: 'zomg.hql.erb'} }
       before do
         expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
-        expect_any_instance_of(Masamune::Filesystem).to receive(:copy_file_to_dir)
+        expect_any_instance_of(Masamune::MockFilesystem).to receive(:copy_file_to_dir)
       end
       it { is_expected.to eq([*default_command, '-f', filesystem.get_path(:tmp_dir, 'zomg.hql')]) }
     end

@@ -113,6 +113,16 @@ shared_examples_for 'Filesystem' do
       it { expect { |b| subject }.to raise_error ArgumentError }
     end
 
+    context 'with empty' do
+      let(:path) { '' }
+      it { expect { |b| subject }.to raise_error ArgumentError }
+    end
+
+    context 'with relative path' do
+      let(:path) { 'tmp' }
+      it { expect { |b| subject }.to raise_error ArgumentError }
+    end
+
     context 'with local root' do
       let(:path) { '/' }
       it { is_expected.to eq(true) }
@@ -899,6 +909,7 @@ shared_examples_for 'Filesystem' do
 
     context 'local dir' do
       before do
+        expect(filesystem).to receive(:root_path?).once.and_return(false)
         instance.remove_dir(old_dir)
       end
 
@@ -906,13 +917,16 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'local root dir' do
-      it { expect { instance.remove_dir('/') }.to raise_error /root path/ }
+      before do
+        expect(filesystem).to receive(:root_path?).once.and_return(true)
+      end
 
-      it 'meets expectations' do; end
+      it { expect { instance.remove_dir(old_dir) }.to raise_error /root path/ }
     end
 
     context 'hdfs dir' do
       before do
+        expect(filesystem).to receive(:root_path?).once.and_return(false)
         instance.remove_dir('file://' + old_dir)
       end
 
@@ -920,9 +934,11 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs root dir' do
-      it { expect { instance.remove_dir('file:///') }.to raise_error /root path/ }
+      before do
+        expect(filesystem).to receive(:root_path?).once.and_return(true)
+      end
 
-      it 'meets expectations' do; end
+      it { expect { instance.remove_dir('file://' + old_dir) }.to raise_error /root path/ }
     end
 
     context 's3 dir' do
