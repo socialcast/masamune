@@ -35,12 +35,9 @@ describe Masamune::DataPlan do
     plan.add_command_rule('derived_monthly', command)
   end
 
-  after do
-    plan.filesystem.clear!
-  end
-
   describe '#filesystem' do
     it { expect(plan.filesystem).to be_a(Masamune::CachedFilesystem) }
+    it { expect(environment.filesystem).to be_a(Masamune::MockFilesystem) }
   end
 
   describe '#targets_for_date_range' do
