@@ -121,13 +121,13 @@ class Masamune::DataPlan
       end
     end
 
+    clear! if dirty
+
     constrain_max_depth(rule) do
       sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
         prepare(derived_rule, targets: sources.map(&:input)) if derived_rule != Masamune::DataPlanRule::TERMINAL
       end
     end if options.fetch(:resolve, true)
-
-    clear! if dirty
   end
 
   def execute(rule, options = {})
