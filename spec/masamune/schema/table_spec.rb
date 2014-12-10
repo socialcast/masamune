@@ -140,7 +140,10 @@ describe Masamune::Schema::Table do
 
     it 'should eq table template' do
       is_expected.to eq <<-EOS.strip_heredoc
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE LOWER(t.typname) = LOWER('USER_STATE_TYPE')) THEN
         CREATE TYPE USER_STATE_TYPE AS ENUM ('active', 'inactive', 'terminated');
+        END IF; END $$;
 
         CREATE TABLE IF NOT EXISTS user_table
         (
