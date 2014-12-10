@@ -146,9 +146,9 @@ module Masamune::Commands
     ensure
       t_stderr.join if t_stderr
       t_stdout.join if t_stdout
-      p_stdin.close unless p_stdin.closed?
-      p_stdout.close unless p_stdout.closed?
-      p_stderr.close unless p_stderr.closed?
+      p_stdin.close if p_stdin && !p_stdin.closed?
+      p_stdout.close if p_stdout && !p_stdout.closed?
+      p_stderr.close if p_stderr && !p_stderr.closed?
     end
 
     def handle_stdout(io)
