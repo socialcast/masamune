@@ -102,7 +102,7 @@ module Masamune::Commands
     end
 
     def execute_block
-      p_stdin, p_stdout, p_stderr, t_in = Open3.popen3(command_env, *command_args)
+      p_stdin, p_stdout, p_stderr, t_stdin = Open3.popen3(command_env, *command_args)
 
       p_stdin.wait_writable(PIPE_TIMEOUT) or raise "IO stdin not ready for write in #{PIPE_TIMEOUT}"
 
@@ -114,7 +114,6 @@ module Masamune::Commands
             p_stdin.puts line
             p_stdin.flush
           end
-          p_stdin.close
         else
           while !p_stdin.closed? do
             input = Readline.readline('', true).strip
@@ -122,30 +121,34 @@ module Masamune::Commands
             p_stdin.flush
           end
         end
+        p_stdin.close unless p_stdin.closed?
       }
 
-      t_err = Thread.new {
+      t_stderr = Thread.new {
         while !p_stderr.eof?  do
           handle_stderr(p_stderr)
         end
-        p_stderr.close
+        p_stderr.close unless p_stderr.closed?
       }
 
-      t_out = Thread.new {
+      t_stdout = Thread.new {
         while !p_stdout.eof?  do
           handle_stdout(p_stdout)
         end
-        p_stdout.close
+        p_stdout.close unless p_stdout.closed?
       }
 
-      t_err.join if t_err
-      t_out.join if t_out
-      t_in.join
-      logger.debug(t_in.value)
-      t_in.value
+      t_stderr.join if t_stderr
+      t_stdout.join if t_stdout
+      t_stdin.join if t_stdin
+      logger.debug(t_stdin.value)
+      t_stdin.value
     ensure
-      t_err.join if t_err
-      t_out.join if t_out
+      t_stderr.join if t_stderr
+      t_stdout.join if t_stdout
+      p_stdin.close unless p_stdin.closed?
+      p_stdout.close unless p_stdout.closed?
+      p_stderr.close unless p_stderr.closed?
     end
 
     def handle_stdout(io)
