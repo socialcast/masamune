@@ -568,7 +568,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/*", safe: true).at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir", safe: true).at_most(:once)
         expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).at_most(:once)
       end
 
