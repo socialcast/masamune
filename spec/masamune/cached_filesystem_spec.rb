@@ -8,6 +8,7 @@ describe Masamune::CachedFilesystem do
     before do
       filesystem.touch!('/a/b/c/1.txt', '/a/b/c/2.txt', '/a/b/c/3.txt')
       expect(filesystem).to receive(:glob_stat).with('/a/b/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/a').once.and_call_original
       expect(filesystem).to receive(:glob_stat).with('/*').never
     end
 
@@ -19,6 +20,13 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/a/b/c')).to eq(true)
       expect(cached_filesystem.glob('/a/b/c/*')).not_to be_empty
       expect(cached_filesystem.glob('/a/b/c/*.txt')).not_to be_empty
+      expect(cached_filesystem.stat('/a/b/c/1.txt')).to_not be_nil
+      expect(cached_filesystem.stat('/a/b/c/2.txt')).to_not be_nil
+      expect(cached_filesystem.stat('/a/b/c/3.txt')).to_not be_nil
+      expect(cached_filesystem.stat('/a/b/c/4.txt')).to be_nil
+      expect(cached_filesystem.stat('/a/b/c')).to_not be_nil
+      expect(cached_filesystem.stat('/a/b')).to_not be_nil
+      expect(cached_filesystem.stat('/a')).to_not be_nil
     end
   end
 
@@ -39,6 +47,9 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.stat('/a/b/c/2.txt')).to_not be_nil
       expect(cached_filesystem.stat('/a/b/c/3.txt')).to_not be_nil
       expect(cached_filesystem.stat('/a/b/c/4.txt')).to be_nil
+      expect(cached_filesystem.stat('/a/b/c')).to_not be_nil
+      expect(cached_filesystem.stat('/a/b')).to_not be_nil
+      expect(cached_filesystem.stat('/a')).to_not be_nil
     end
   end
 
@@ -57,6 +68,9 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.glob('/y=2013/m=1/*')).not_to be_empty
       expect(cached_filesystem.glob('/y=2013/m=1/d=22/*')).not_to be_empty
       expect(cached_filesystem.stat('/y=2013/m=1/d=22/00000')).not_to be_nil
+      expect(cached_filesystem.stat('/y=2013/m=1/d=22')).not_to be_nil
+      expect(cached_filesystem.stat('/y=2013/m=1')).not_to be_nil
+      expect(cached_filesystem.stat('/y=2013')).not_to be_nil
     end
   end
 
@@ -94,6 +108,7 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.stat('/logs/box3_456.txt')).to be_nil
       expect(cached_filesystem.stat('/logs/box4_123.txt')).to be_nil
       expect(cached_filesystem.stat('/logs/box4_456.txt')).to be_nil
+      expect(cached_filesystem.glob('/logs')).not_to be_nil
     end
   end
 
@@ -102,7 +117,7 @@ describe Masamune::CachedFilesystem do
       filesystem.touch!('/a/b/c')
       expect(filesystem).to receive(:glob_stat).with('/a/b/c/*').once.and_call_original
       expect(filesystem).to receive(:glob_stat).with('/a/b/*').once.and_call_original
-      expect(filesystem).to receive(:glob_stat).with('/a/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/a').once.and_call_original
       expect(filesystem).to receive(:glob_stat).with('/*').never
     end
 
@@ -123,6 +138,9 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.stat('/a/b/c/1.txt')).to be_nil
       expect(cached_filesystem.stat('/a/b/c/2.txt')).to be_nil
       expect(cached_filesystem.stat('/a/b/c/3.txt')).to be_nil
+      expect(cached_filesystem.stat('/a/b/c')).to_not be_nil
+      expect(cached_filesystem.stat('/a/b')).to_not be_nil
+      expect(cached_filesystem.stat('/a')).to_not be_nil
     end
   end
 end

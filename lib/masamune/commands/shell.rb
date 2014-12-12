@@ -102,50 +102,45 @@ module Masamune::Commands
     end
 
     def execute_block
-      p_stdin, p_stdout, p_stderr, t_in = Open3.popen3(command_env, *command_args)
+      Open3.popen3(command_env, *command_args) do |p_stdin, p_stdout, p_stderr, t_stdin|
+        p_stdin.wait_writable(PIPE_TIMEOUT) or raise "IO stdin not ready for write in #{PIPE_TIMEOUT}"
 
-      p_stdin.wait_writable(PIPE_TIMEOUT) or raise "IO stdin not ready for write in #{PIPE_TIMEOUT}"
-
-      Thread.new {
-        if @delegate.respond_to?(:stdin)
-          @delegate.stdin.rewind
-          while line = @delegate.stdin.gets
-            trace(line.chomp)
-            p_stdin.puts line
-            p_stdin.flush
+        Thread.new {
+          if @delegate.respond_to?(:stdin)
+            @delegate.stdin.rewind
+            while line = @delegate.stdin.gets
+              trace(line.chomp)
+              p_stdin.puts line
+              p_stdin.flush
+            end
+          else
+            while !p_stdin.closed? do
+              input = Readline.readline('', true).strip
+              p_stdin.puts input
+              p_stdin.flush
+            end
           end
-          p_stdin.close
-        else
-          while !p_stdin.closed? do
-            input = Readline.readline('', true).strip
-            p_stdin.puts input
-            p_stdin.flush
+          p_stdin.close unless p_stdin.closed?
+        }
+
+        t_stderr = Thread.new {
+          while !p_stderr.eof?  do
+            handle_stderr(p_stderr)
           end
-        end
-      }
+          p_stderr.close unless p_stderr.closed?
+        }
 
-      t_err = Thread.new {
-        while !p_stderr.eof?  do
-          handle_stderr(p_stderr)
-        end
-        p_stderr.close
-      }
+        t_stdout = Thread.new {
+          while !p_stdout.eof?  do
+            handle_stdout(p_stdout)
+          end
+          p_stdout.close unless p_stdout.closed?
+        }
 
-      t_out = Thread.new {
-        while !p_stdout.eof?  do
-          handle_stdout(p_stdout)
-        end
-        p_stdout.close
-      }
-
-      t_err.join if t_err
-      t_out.join if t_out
-      t_in.join
-      logger.debug(t_in.value)
-      t_in.value
-    ensure
-      t_err.join if t_err
-      t_out.join if t_out
+        [t_stderr, t_stdout, t_stdin].compact.each { |t| t.join }
+        logger.debug(t_stdin.value)
+        t_stdin.value
+      end
     end
 
     def handle_stdout(io)

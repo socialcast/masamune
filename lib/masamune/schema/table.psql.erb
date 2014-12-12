@@ -5,7 +5,10 @@
 <%- end -%>
 
 <%- table.enum_columns.each do |_, column| -%>
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE LOWER(t.typname) = LOWER('<%= column.sql_type %>')) THEN
 CREATE TYPE <%= column.sql_type %> AS ENUM (<%= column.values.map { |value| "'#{value}'" }.join(', ') %>);
+END IF; END $$;
 <%- end -%>
 
 <%- if table.temporary? -%>

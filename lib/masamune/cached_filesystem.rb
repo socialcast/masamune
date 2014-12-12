@@ -25,6 +25,20 @@ module Masamune
     end
     method_accumulate :glob
 
+    def stat(file_or_dir)
+      raise ArgumentError, 'cannot contain wildcard' if file_or_dir.include?('*')
+      result = Set.new
+      glob_stat(file_or_dir) do |entry|
+        result << entry
+      end
+      result += @cache[file_or_dir]
+      return unless result.any?
+      return result.first if result.size == 1
+      max_time = result.map { |stat| stat.try(:mtime) }.compact.max
+      sum_size = result.map { |stat| stat.try(:size) }.compact.reduce(:+)
+      OpenStruct.new(name: file_or_dir, mtime: max_time, size: sum_size)
+    end
+
     # FIXME cache eviction policy can be more precise
     [:touch!, :mkdir!, :copy_file_to_file, :copy_file_to_dir, :copy_dir, :remove_file, :remove_dir, :move_file_to_file, :move_file_to_dir, :move_dir, :write].each do |method|
       define_method(method) do |*args|
@@ -55,9 +69,9 @@ module Masamune
       glob_stat(dirname(file_or_glob), depth: depth + 1, &block)
 
       dirname = dirname(file_or_glob)
-      dirname = file_or_glob if root_path?(dirname)
       unless @cache.key?(dirname)
-        @filesystem.glob_stat(File.join(dirname, '*')) do |entry|
+        pattern = root_path?(dirname) ? file_or_glob : File.join(dirname, '*')
+        @filesystem.glob_stat(pattern) do |entry|
           recursive_paths(dirname, entry.name) do |path|
             @cache[path] << entry
           end

@@ -399,6 +399,11 @@ shared_examples_for 'Filesystem' do
       end
     end
 
+    context 'local existing file with glob' do
+      let(:result) { instance.stat(File.join(old_dir, '*')) }
+      it { expect { result }.to raise_error ArgumentError }
+    end
+
     context 'local existing file (recursive)' do
       let(:result) { instance.stat(File.join(tmp_dir, '*')) }
       it { expect { result }.to raise_error /cannot contain wildcard/ }
@@ -568,7 +573,7 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/*", safe: true).at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir", safe: true).at_most(:once)
         expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).at_most(:once)
       end
 

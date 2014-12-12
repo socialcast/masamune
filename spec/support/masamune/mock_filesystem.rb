@@ -33,7 +33,7 @@ class Masamune::MockFilesystem < Delegator
   end
 
   def glob_stat(pattern, &block)
-    file_regexp = glob_to_regexp(pattern)
+    file_regexp = glob_to_regexp(pattern, recursive: true)
     @files.each do |name, stat|
       yield stat if name =~ file_regexp
     end
