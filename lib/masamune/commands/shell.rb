@@ -137,9 +137,7 @@ module Masamune::Commands
           p_stdout.close unless p_stdout.closed?
         }
 
-        t_stderr.join if t_stderr
-        t_stdout.join if t_stdout
-        t_stdin.join if t_stdin
+        [t_stderr, t_stdout, t_stdin].compact.each { |t| t.join }
         logger.debug(t_stdin.value)
         t_stdin.value
       end
