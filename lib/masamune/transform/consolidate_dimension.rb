@@ -4,8 +4,8 @@ module Masamune::Transform
       @target = target
     end
 
-    def consolidate_dimension_as_psql
-      Masamune::Template.render_to_string(consolidate_dimension_template, target: Target.new(@target))
+    def consolidate_dimension_as_psql(order = 'DESC')
+      Masamune::Template.render_to_string(consolidate_dimension_template, target: Target.new(@target), order: order)
     end
 
     def bulk_upsert_as_psql
@@ -18,7 +18,9 @@ module Masamune::Transform
 
     def as_psql
       [
-        consolidate_dimension_as_psql,
+        consolidate_dimension_as_psql('ASC'),
+        bulk_upsert_as_psql,
+        consolidate_dimension_as_psql('DESC'),
         bulk_upsert_as_psql,
         relabel_dimension_as_psql
       ].join("\n")

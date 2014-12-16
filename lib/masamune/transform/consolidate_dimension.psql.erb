@@ -1,4 +1,5 @@
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
+TRUNCATE TABLE <%= target.stage_table.name %>;
 
 <%#
 Consolidate complete events from partial events
@@ -12,7 +13,7 @@ WITH ranges AS (
   FROM <%= target.ledger_table.name %>
 ), windows AS (
   SELECT *,
-  SUM(r) OVER (ORDER BY <%= target.window('start_at', 'delta', 'source_uuid').join(', ') %>) window_id
+  SUM(r) OVER (ORDER BY <%= target.window("start_at #{order}", 'delta', 'source_uuid').join(', ') %>) window_id
   FROM ranges
 ), duplicated_consolidated AS (
   SELECT
@@ -33,8 +34,8 @@ WITH ranges AS (
       start_at AS start_at
     FROM
       windows
-    WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at)
-    ORDER BY <%= target.window('start_at', 'window_id').join(', ') %>
+    WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at <%= order %>)
+    ORDER BY <%= target.window("start_at #{order}", 'window_id').join(', ') %>
   ) consolidated
   WHERE
     <%- target.insert_view_constraints.each do |constraint, last| -%>
@@ -66,7 +67,7 @@ FROM (
     END AS duplicate
   FROM
     duplicated_consolidated
-  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at)
+  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at <%= order %>)
 ) tmp
 WHERE
   duplicate = 0
