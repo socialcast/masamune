@@ -132,7 +132,12 @@ module Masamune
       when :hdfs
         hadoop_fs('-test', '-e', file, safe: true).success?
       when :s3
-        s3cmd('ls', s3b(file), safe: true).present?
+        result = Set.new
+        s3cmd('ls', s3b(file), safe: true) do |line|
+          date, time, size, name = line.split(/\s+/)
+          result << (name == file)
+        end
+        result.any?
       when :local
         File.exists?(file)
       end
@@ -199,7 +204,7 @@ module Masamune
           yield q(pattern, name)
         end
       when :s3
-        file_glob, file_regexp = glob_split(pattern, recursive: true)
+        file_glob, file_regexp = glob_split(pattern)
         s3cmd('ls', '--recursive', s3b(file_glob), safe: true) do |line|
           next if line =~ /\$folder$/
           name = line.split(/\s+/).last
@@ -384,7 +389,7 @@ module Masamune
 
     def glob_to_regexp(input, recursive: false)
       if input.include?('*') || recursive
-        /\A#{Regexp.escape(input).gsub('\\*', '.*?')}/
+        /\A#{Regexp.escape(input).gsub('\\*', '.*?').gsub(%r{\/\.\*\?\z}, '\/?.*?')}/
       else
         /\A#{Regexp.escape(input)}\z/
       end

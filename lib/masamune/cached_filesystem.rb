@@ -20,7 +20,7 @@ module Masamune
 
     def glob(file_or_glob, &block)
       glob_stat(file_or_glob) do |entry|
-        yield entry.name
+        yield entry.name unless entry.name == dirname(file_or_glob)
       end
     end
     method_accumulate :glob
@@ -88,6 +88,7 @@ module Masamune
     def recursive_paths(root, path, depth: 0, &block)
       return if depth > MAX_DEPTH
       return if root == path
+      yield path
       yield dirname(path)
       recursive_paths(root, dirname(path), depth: depth + 1, &block)
     end

@@ -351,6 +351,36 @@ shared_examples_for 'Filesystem' do
       subject { instance.exists?('file://' + old_file) }
       it { is_expected.to eq(true) }
     end
+
+    context 's3 existing file' do
+      before do
+        expect(filesystem).to receive(:s3cmd).with('ls', 's3://bucket/00', safe: true).at_most(:once).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/00)).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/01))
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', 's3://bucket/00', safe: true).at_most(:once).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/00)).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/01))
+      end
+
+      subject { instance.exists?('s3://bucket/00') }
+
+      it { is_expected.to eq(true) }
+    end
+
+    context 's3 missing file' do
+      before do
+        expect(filesystem).to receive(:s3cmd).with('ls', 's3://bucket/0', safe: true).at_most(:once).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/00)).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/01))
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', 's3://bucket/0', safe: true).at_most(:once).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/00)).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/01))
+      end
+
+      subject { instance.exists?('s3://bucket/0') }
+
+      it { is_expected.to eq(false) }
+    end
   end
 
   describe '#stat' do
@@ -575,6 +605,18 @@ shared_examples_for 'Filesystem' do
       before do
         expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir", safe: true).at_most(:once)
         expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).at_most(:once)
+      end
+
+      it { is_expected.to be_empty }
+    end
+
+    context 's3 no matches with implicit glob results' do
+      let(:pattern) { 's3://bucket/dir/0' }
+
+      before do
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir/*]}, safe: true).
+          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/01.txt)).
+          and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/02.txt))
       end
 
       it { is_expected.to be_empty }

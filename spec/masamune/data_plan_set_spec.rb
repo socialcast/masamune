@@ -27,9 +27,19 @@ describe Masamune::DataPlanSet do
       it { expect(missing).to include '/table/y=2013/m=01/d=03' }
     end
 
-    context 'when some missing' do
+    context 'when files missing' do
       before do
         fs.touch!('/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02')
+      end
+      it { expect(missing.size).to eq(3) }
+      it { expect(missing).to include '/table/y=2013/m=01/d=01' }
+      it { expect(missing).to include '/table/y=2013/m=01/d=02' }
+      it { expect(missing).to include '/table/y=2013/m=01/d=03' }
+    end
+
+    context 'when some missing' do
+      before do
+        fs.touch!('/table/y=2013/m=01/d=01/0000', '/table/y=2013/m=01/d=02/0000')
       end
       it { expect(missing.size).to eq(1) }
       it { expect(missing).to include '/table/y=2013/m=01/d=03' }
@@ -37,7 +47,7 @@ describe Masamune::DataPlanSet do
 
     context 'when none missing' do
       before do
-        fs.touch!('/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=03')
+        fs.touch!('/table/y=2013/m=01/d=01/0000', '/table/y=2013/m=01/d=02/0000', '/table/y=2013/m=01/d=03/0000')
       end
       it { expect(missing).to be_empty }
     end
