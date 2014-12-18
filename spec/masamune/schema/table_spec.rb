@@ -477,12 +477,12 @@ describe Masamune::Schema::Table do
       end
     end
 
-    context 'stage_table with options override' do
-      let!(:stage_table) { table.stage_table(id: 'actor') }
+    context 'stage_table with optional suffix' do
+      let!(:stage_table) { table.stage_table('actor') }
 
-      it 'should override id' do
-        expect(stage_table.id).to eq(:actor)
-        expect(stage_table.name).to eq('actor_table_stage')
+      it 'should append suffix to id' do
+        expect(stage_table.id).to eq(:user_actor)
+        expect(stage_table.name).to eq('user_actor_table_stage')
       end
 
       it 'should duplicate columns' do

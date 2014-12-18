@@ -4,25 +4,39 @@ module Masamune::Transform
       @target = target
     end
 
-    def consolidate_dimension_as_psql(order = 'DESC')
-      Masamune::Template.render_to_string(consolidate_dimension_template, target: Target.new(@target), order: order)
+    def initialize_dimension_stage_as_psql(target)
+      Masamune::Template.render_to_string(table_template, table: target)
     end
 
-    def bulk_upsert_as_psql
-      Masamune::Template.render_to_string(bulk_upsert_template, source: @target.stage_table, target: @target)
+    def consolidate_dimension_as_psql(source, target, order = 'DESC')
+      Masamune::Template.render_to_string(consolidate_dimension_template, source: source, target: Target.new(target), order: order)
     end
 
-    def relabel_dimension_as_psql
-      RelabelDimension.new(@target).as_psql
+    def deduplicate_dimension_as_psql(source, target)
+      Masamune::Template.render_to_string(deduplicate_dimension_template, source: source, target: Target.new(target))
+    end
+
+    def bulk_upsert_as_psql(source, target)
+      Masamune::Template.render_to_string(bulk_upsert_template, source: source, target: target)
+    end
+
+    def relabel_dimension_as_psql(target)
+      RelabelDimension.new(target).as_psql
     end
 
     def as_psql
       [
-        consolidate_dimension_as_psql('ASC'),
-        bulk_upsert_as_psql,
-        consolidate_dimension_as_psql('DESC'),
-        bulk_upsert_as_psql,
-        relabel_dimension_as_psql
+        initialize_dimension_stage_as_psql(@target.stage_table('consolidated_forward')),
+        initialize_dimension_stage_as_psql(@target.stage_table('consolidated_reverse')),
+        initialize_dimension_stage_as_psql(@target.stage_table('consolidated')),
+        initialize_dimension_stage_as_psql(@target.stage_table('deduplicated')),
+        consolidate_dimension_as_psql(@target.ledger_table, @target.stage_table('consolidated_forward'), 'ASC'),
+        consolidate_dimension_as_psql(@target.ledger_table, @target.stage_table('consolidated_reverse'), 'DESC'),
+        bulk_upsert_as_psql(@target.stage_table('consolidated_forward'), @target.stage_table('consolidated')),
+        bulk_upsert_as_psql(@target.stage_table('consolidated_reverse'), @target.stage_table('consolidated')),
+        deduplicate_dimension_as_psql(@target.stage_table('consolidated'), @target.stage_table('deduplicated')),
+        bulk_upsert_as_psql(@target.stage_table('deduplicated'), @target),
+        relabel_dimension_as_psql(@target)
       ].join("\n")
     end
 
@@ -35,12 +49,20 @@ module Masamune::Transform
 
     private
 
+    def table_template
+      @table_template ||= ::File.expand_path(::File.join(__FILE__, '..', '..', 'schema', 'table.psql.erb'))
+    end
+
     def bulk_upsert_template
       @bulk_upsert_template ||= File.expand_path(File.join(__FILE__, '..', 'bulk_upsert.psql.erb'))
     end
 
     def consolidate_dimension_template
       @consolidate_dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'consolidate_dimension.psql.erb'))
+    end
+
+    def deduplicate_dimension_template
+      @deduplicate_dimension_template ||= File.expand_path(File.join(__FILE__, '..', 'deduplicate_dimension.psql.erb'))
     end
 
     def relabel_dimension_template

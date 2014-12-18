@@ -159,8 +159,10 @@ module Masamune::Schema
       columns.reject { |_, column| reserved_column_ids.include?(column.id) }
     end
 
-    def stage_table(options = {})
-      @stage_table ||= self.class.new options.reverse_merge(id: id, type: :stage, columns: stage_table_columns, parent: self)
+    def stage_table(suffix = nil)
+      stage_id = [id, suffix].compact.join('_')
+      @stage_tables ||= {}
+      @stage_tables[stage_id] ||= self.class.new id: stage_id, type: :stage, columns: stage_table_columns, parent: self
     end
 
     def shared_columns(other)

@@ -1,6 +1,3 @@
-CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
-TRUNCATE TABLE <%= target.stage_table.name %>;
-
 <%#
 Consolidate complete events from partial events
 For discussion on range and group constructions, see:
@@ -10,12 +7,12 @@ WITH ranges AS (
   SELECT *,
   CASE WHEN delta = 0
   THEN 1 ELSE NULL END r
-  FROM <%= target.ledger_table.name %>
+  FROM <%= source.name %>
 ), windows AS (
   SELECT *,
   SUM(r) OVER (ORDER BY <%= target.window("start_at #{order}", 'delta', 'source_uuid').join(', ') %>) window_id
   FROM ranges
-), duplicated_consolidated AS (
+), snapshot AS (
   SELECT
     <%- target.insert_view_values.each do |value| -%>
     consolidated.<%= value %><%= ',' %>
@@ -43,7 +40,7 @@ WITH ranges AS (
     <%- end -%>
 )
 INSERT INTO
-  <%= target.stage_table.name %> (<%= target.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
+  <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
 SELECT
   <%- target.insert_view_values.each do |value| -%>
   <%= value %><%= ',' %>
@@ -51,24 +48,6 @@ SELECT
   parent_uuid,
   record_uuid,
   start_at
-FROM (
-  SELECT
-    <%- target.insert_view_values.each do |value| -%>
-    <%= value %><%= ',' %>
-    <%- end -%>
-    parent_uuid,
-    record_uuid,
-    start_at,
-    CASE
-    WHEN <%= target.insert_view_values.map { |value| "(LAG(#{value}) OVER w = #{value})" }.join(' AND ') %> THEN
-      1
-    ELSE
-      0
-    END AS duplicate
-  FROM
-    duplicated_consolidated
-  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at <%= order %>)
-) tmp
-WHERE
-  duplicate = 0
+FROM
+  snapshot
 ;
