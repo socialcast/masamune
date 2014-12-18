@@ -217,5 +217,26 @@ describe Masamune::Schema::Dimension do
         END IF; END $$;
       EOS
     end
+
+    describe '#stage_table' do
+      let!(:stage_table) { dimension.stage_table }
+
+      it 'should inherit id' do
+        expect(stage_table.id).to eq(:user)
+        expect(stage_table.name).to eq('user_dimension_stage')
+      end
+
+      it 'should duplicate columns' do
+        expect(dimension.parent).to be_nil
+        expect(dimension.columns[:tenant_id].parent).to eq(dimension)
+        expect(stage_table.parent).to eq(dimension)
+        expect(stage_table.columns[:tenant_id].parent).to eq(stage_table)
+      end
+
+      it 'should inherit reserved_columns' do
+        expect(dimension.reserved_columns.keys).to_not be_empty
+        expect(stage_table.reserved_columns.keys).to eq(dimension.reserved_columns.keys)
+      end
+    end
   end
 end

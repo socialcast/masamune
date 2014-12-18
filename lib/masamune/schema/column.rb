@@ -208,6 +208,14 @@ module Masamune::Schema
       [name, sql_type(surrogate_key), *sql_constraints, reference_constraint, sql_default].compact.join(' ')
     end
 
+    def as_hash
+      {id: id}.tap do |hash|
+        DEFAULT_ATTRIBUTES.keys.each do |attr|
+          hash[attr] = public_send(attr)
+        end
+      end
+    end
+
     def reference_constraint
       return if parent.temporary?
       if reference && reference.surrogate_key.type == type
