@@ -16,7 +16,7 @@ describe Masamune::DataPlan do
       plan.targets(rule).missing.each do |target|
         missing_targets << target.path if target.sources.existing.any?
       end
-      plan.filesystem.touch!(*missing_targets) if missing_targets.any?
+      plan.filesystem.touch!(*missing_targets.map { |target| File.join(target, 'DATA') }) if missing_targets.any?
     end
   end
 
@@ -251,7 +251,7 @@ describe Masamune::DataPlan do
 
     context 'when targets exist' do
       before do
-        plan.filesystem.touch!('/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02')
+        plan.filesystem.touch!('/table/y=2013/m=01/d=01/DATA', '/table/y=2013/m=01/d=02/DATA')
       end
 
       it { expect(missing).to be_empty }
@@ -343,8 +343,8 @@ describe Masamune::DataPlan do
       context 'when partial target data exists' do
         before do
           plan.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
-          plan.filesystem.touch!('/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=03')
-          expect(plan.filesystem).to receive(:touch!).with('/table/y=2013/m=01/d=02').and_call_original
+          plan.filesystem.touch!('/table/y=2013/m=01/d=01/DATA', '/table/y=2013/m=01/d=03/DATA')
+          expect(plan.filesystem).to receive(:touch!).with('/table/y=2013/m=01/d=02/DATA').and_call_original
           execute
         end
 
@@ -363,7 +363,7 @@ describe Masamune::DataPlan do
 
     shared_examples_for 'derived daily data' do
       context 'when primary target data exists' do
-        let(:derived_targets) {  ['/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=03'] }
+        let(:derived_targets) {  ['/table/y=2013/m=01/d=01/DATA', '/table/y=2013/m=01/d=02/DATA', '/table/y=2013/m=01/d=03/DATA'] }
 
         before do
           plan.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
@@ -390,7 +390,7 @@ describe Masamune::DataPlan do
 
     context 'derived_daily rule' do
       let(:rule) { 'derived_daily' }
-      let(:targets) { ['/daily/2013-01-01', '/daily/2013-01-02', '/daily/2013-01-03'] }
+      let(:targets) { ['/daily/2013-01-01/DATA', '/daily/2013-01-02/DATA', '/daily/2013-01-03/DATA'] }
 
       it_behaves_like 'derived daily data' do
         let(:derived_command) { derived_daily_command }
@@ -399,7 +399,7 @@ describe Masamune::DataPlan do
 
     context 'derived_monthly rule' do
       let(:rule) { 'derived_monthly' }
-      let(:targets) {  ['/monthly/2013-01'] }
+      let(:targets) {  ['/monthly/2013-01/DATA'] }
 
       it_behaves_like 'derived daily data' do
         let(:derived_command) { derived_monthly_command }

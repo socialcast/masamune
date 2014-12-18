@@ -115,7 +115,6 @@ describe Masamune::CachedFilesystem do
   context 'when path is missing' do
     before do
       filesystem.touch!('/a/b/c')
-      expect(filesystem).to receive(:glob_stat).with('/a/b/c/*').once.and_call_original
       expect(filesystem).to receive(:glob_stat).with('/a/b/*').once.and_call_original
       expect(filesystem).to receive(:glob_stat).with('/a').once.and_call_original
       expect(filesystem).to receive(:glob_stat).with('/*').never
