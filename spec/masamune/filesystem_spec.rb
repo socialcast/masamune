@@ -1395,6 +1395,33 @@ shared_examples_for 'Filesystem' do
       it { expect { operation }.to_not raise_error }
     end
   end
+
+  describe '#glob_to_regexp' do
+    let(:recursive) { false }
+    subject(:file_regexp) { instance.glob_to_regexp(path, recursive: recursive) }
+
+    context 'a path without glob' do
+      let(:path) { '/tmp' }
+      it { is_expected.to eq(%r{\A/tmp\z}) }
+    end
+
+    context 'a path without glob with recursive' do
+      let(:recursive) { true }
+      let(:path) { '/tmp' }
+      it { is_expected.to eq(%r{\A/tmp}) }
+    end
+
+    context 'a path with glob' do
+      let(:path) { '/tmp/*' }
+      it { is_expected.to eq(%r{\A/tmp/?.*?}) }
+    end
+
+    context 'a path with glob with recursive' do
+      let(:recursive) { true }
+      let(:path) { '/tmp/*' }
+      it { is_expected.to eq(%r{\A/tmp/?.*?}) }
+    end
+  end
 end
 
 describe Masamune::Filesystem do
