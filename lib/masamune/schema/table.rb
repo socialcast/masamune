@@ -8,12 +8,12 @@ module Masamune::Schema
     {
       id:              nil,
       type:            :table,
+      parent:          nil,
       references:      {},
       headers:         true,
       columns:         {},
       rows:            [],
       inherit:         false,
-      parent:          nil,
       debug:           false
     }
 
@@ -73,16 +73,11 @@ module Masamune::Schema
     end
 
     def name
-      case type
-      when :file
-        "#{@id}_file"
-      when :stage
-        parent ? "#{parent.name}_stage" : "#{@id}_stage"
-      when :table
-        "#{@id}_table"
-      else
-        "#{@id}_#{@type}"
-      end
+      "#{id}_#{suffix}"
+    end
+
+    def suffix
+      parent ? "#{parent.suffix}_#{type.to_s}" : type.to_s
     end
 
     def temporary?
@@ -156,12 +151,18 @@ module Masamune::Schema
       references.select { |_, reference| reference.insert }
     end
 
+    def reserved_columns
+      columns.select { |_, column| reserved_column_ids.include?(column.id) }
+    end
+
     def unreserved_columns
       columns.reject { |_, column| reserved_column_ids.include?(column.id) }
     end
 
-    def stage_table
-      @stage_table ||= self.class.new id: id, type: :stage, columns: columns.values.map(&:dup), parent: self
+    def stage_table(suffix = nil)
+      stage_id = [id, suffix].compact.join('_')
+      @stage_tables ||= {}
+      @stage_tables[stage_id] ||= self.class.new id: stage_id, type: :stage, columns: stage_table_columns, parent: self
     end
 
     def shared_columns(other)
@@ -198,7 +199,17 @@ module Masamune::Schema
       File.new(id: id, columns: select_columns(selected_columns), headers: headers)
     end
 
+    protected
+
+    def reserved_column_ids
+      @reserved_column_ids ||= []
+    end
+
     private
+
+    def stage_table_columns
+      unreserved_columns.map { |_, column| column.dup }
+    end
 
     def initialize_surrogate_key_column!
       case type
@@ -249,10 +260,6 @@ module Masamune::Schema
 
     def reverse_unique_constraints_map
       @reverse_unique_constraints_map ||= unique_constraints_map.to_a.map { |k,v| [v.sort, k] }.to_h
-    end
-
-    def reserved_column_ids
-      @reserved_column_ids ||= []
     end
 
     def table_template

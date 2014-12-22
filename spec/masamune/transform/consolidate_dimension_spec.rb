@@ -25,12 +25,10 @@ describe Masamune::Transform::ConsolidateDimension do
   let(:transform) { described_class.new target }
 
   describe '#consolidate_dimension_as_psql' do
-    subject(:result) { transform.consolidate_dimension_as_psql }
+    subject(:result) { transform.consolidate_dimension_as_psql(target.ledger_table, target.stage_table) }
 
     it 'should eq render consolidate_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_stage (LIKE user_dimension INCLUDING ALL);
-
         WITH ranges AS (
           SELECT *,
           CASE WHEN delta = 0
@@ -38,9 +36,9 @@ describe Masamune::Transform::ConsolidateDimension do
           FROM user_dimension_ledger
         ), windows AS (
           SELECT *,
-          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at, delta, source_uuid) window_id
+          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at DESC, delta, source_uuid) window_id
           FROM ranges
-        ), duplicated_consolidated AS (
+        ), snapshot AS (
           SELECT
             consolidated.user_account_state_type_id,
             consolidated.tenant_id,
@@ -61,8 +59,8 @@ describe Masamune::Transform::ConsolidateDimension do
               start_at AS start_at
             FROM
               windows
-            WINDOW w AS (PARTITION BY tenant_id, user_id, window_id ORDER BY start_at)
-            ORDER BY tenant_id, user_id, start_at, window_id
+            WINDOW w AS (PARTITION BY tenant_id, user_id, window_id ORDER BY start_at DESC)
+            ORDER BY tenant_id, user_id, start_at DESC, window_id
           ) consolidated
           WHERE
             consolidated.user_account_state_type_id IS NOT NULL AND
@@ -72,6 +70,28 @@ describe Masamune::Transform::ConsolidateDimension do
         INSERT INTO
           user_dimension_stage (user_account_state_type_id, tenant_id, user_id, preferences, parent_uuid, record_uuid, start_at)
         SELECT
+          user_account_state_type_id,
+          tenant_id,
+          user_id,
+          preferences,
+          parent_uuid,
+          record_uuid,
+          start_at
+        FROM
+          snapshot
+        ;
+      EOS
+    end
+  end
+
+  describe '#deduplicate_dimension_as_psql' do
+    subject(:result) { transform.deduplicate_dimension_as_psql(target.stage_table('consolidated'), target.stage_table('deduplicated')) }
+
+    it 'should eq render deduplicate_dimension template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        INSERT INTO
+          user_deduplicated_dimension_stage (user_account_state_type_id, tenant_id, user_id, preferences, parent_uuid, record_uuid, start_at)
+        SELECT DISTINCT
           user_account_state_type_id,
           tenant_id,
           user_id,
@@ -95,7 +115,7 @@ describe Masamune::Transform::ConsolidateDimension do
               0
             END AS duplicate
           FROM
-            duplicated_consolidated
+            user_consolidated_dimension_stage
           WINDOW w AS (PARTITION BY tenant_id, user_id ORDER BY start_at)
         ) tmp
         WHERE
@@ -106,7 +126,7 @@ describe Masamune::Transform::ConsolidateDimension do
   end
 
   describe '#relabel_dimension_as_psql' do
-    subject(:result) { transform.relabel_dimension_as_psql }
+    subject(:result) { transform.relabel_dimension_as_psql(target) }
 
     it 'should eq render relabel_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -165,7 +185,7 @@ describe Masamune::Transform::ConsolidateDimension do
   end
 
   describe '#bulk_upsert_as_psql' do
-    subject(:result) { transform.bulk_upsert_as_psql }
+    subject(:result) { transform.bulk_upsert_as_psql(target.stage_table, target)}
 
     it 'should eq render bulk_upsert template' do
       is_expected.to eq <<-EOS.strip_heredoc

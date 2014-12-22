@@ -1,0 +1,30 @@
+INSERT INTO
+  <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
+SELECT DISTINCT
+  <%- target.insert_view_values.each do |value| -%>
+  <%= value %><%= ',' %>
+  <%- end -%>
+  parent_uuid,
+  record_uuid,
+  start_at
+FROM (
+  SELECT
+    <%- target.insert_view_values.each do |value| -%>
+    <%= value %><%= ',' %>
+    <%- end -%>
+    parent_uuid,
+    record_uuid,
+    start_at,
+    CASE
+    WHEN <%= target.insert_view_values.map { |value| "(LAG(#{value}) OVER w = #{value})" }.join(' AND ') %> THEN
+      1
+    ELSE
+      0
+    END AS duplicate
+  FROM
+    <%= source.name %>
+  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at)
+) tmp
+WHERE
+  duplicate = 0
+;

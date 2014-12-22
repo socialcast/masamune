@@ -1,5 +1,3 @@
-CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
-
 <%#
 Consolidate complete events from partial events
 For discussion on range and group constructions, see:
@@ -9,12 +7,12 @@ WITH ranges AS (
   SELECT *,
   CASE WHEN delta = 0
   THEN 1 ELSE NULL END r
-  FROM <%= target.ledger_table.name %>
+  FROM <%= source.name %>
 ), windows AS (
   SELECT *,
-  SUM(r) OVER (ORDER BY <%= target.window('start_at', 'delta', 'source_uuid').join(', ') %>) window_id
+  SUM(r) OVER (ORDER BY <%= target.window("start_at #{order}", 'delta', 'source_uuid').join(', ') %>) window_id
   FROM ranges
-), duplicated_consolidated AS (
+), snapshot AS (
   SELECT
     <%- target.insert_view_values.each do |value| -%>
     consolidated.<%= value %><%= ',' %>
@@ -33,8 +31,8 @@ WITH ranges AS (
       start_at AS start_at
     FROM
       windows
-    WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at)
-    ORDER BY <%= target.window('start_at', 'window_id').join(', ') %>
+    WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at <%= order %>)
+    ORDER BY <%= target.window("start_at #{order}", 'window_id').join(', ') %>
   ) consolidated
   WHERE
     <%- target.insert_view_constraints.each do |constraint, last| -%>
@@ -42,7 +40,7 @@ WITH ranges AS (
     <%- end -%>
 )
 INSERT INTO
-  <%= target.stage_table.name %> (<%= target.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
+  <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
 SELECT
   <%- target.insert_view_values.each do |value| -%>
   <%= value %><%= ',' %>
@@ -50,24 +48,6 @@ SELECT
   parent_uuid,
   record_uuid,
   start_at
-FROM (
-  SELECT
-    <%- target.insert_view_values.each do |value| -%>
-    <%= value %><%= ',' %>
-    <%- end -%>
-    parent_uuid,
-    record_uuid,
-    start_at,
-    CASE
-    WHEN <%= target.insert_view_values.map { |value| "(LAG(#{value}) OVER w = #{value})" }.join(' AND ') %> THEN
-      1
-    ELSE
-      0
-    END AS duplicate
-  FROM
-    duplicated_consolidated
-  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at)
-) tmp
-WHERE
-  duplicate = 0
+FROM
+  snapshot
 ;

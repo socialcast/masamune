@@ -476,6 +476,22 @@ describe Masamune::Schema::Table do
         EOS
       end
     end
+
+    context 'stage_table with optional suffix' do
+      let!(:stage_table) { table.stage_table('actor') }
+
+      it 'should append suffix to id' do
+        expect(stage_table.id).to eq(:user_actor)
+        expect(stage_table.name).to eq('user_actor_table_stage')
+      end
+
+      it 'should duplicate columns' do
+        expect(table.parent).to be_nil
+        expect(table.columns[:name].parent).to eq(table)
+        expect(stage_table.parent).to eq(table)
+        expect(stage_table.columns[:name].parent).to eq(stage_table)
+      end
+    end
   end
 
   context '#as_file' do
@@ -505,7 +521,7 @@ describe Masamune::Schema::Table do
 
         it 'should eq table template' do
           is_expected.to eq <<-EOS.strip_heredoc
-            CREATE TEMPORARY TABLE IF NOT EXISTS user_file
+            CREATE TEMPORARY TABLE IF NOT EXISTS user_table_file
             (
               uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
               user_account_state_table_uuid UUID,
@@ -513,8 +529,8 @@ describe Masamune::Schema::Table do
               name VARCHAR
             );
 
-            CREATE INDEX user_file_user_account_state_table_uuid_index ON user_file (user_account_state_table_uuid);
-            CREATE INDEX user_file_hr_user_account_state_table_uuid_index ON user_file (hr_user_account_state_table_uuid);
+            CREATE INDEX user_table_file_user_account_state_table_uuid_index ON user_table_file (user_account_state_table_uuid);
+            CREATE INDEX user_table_file_hr_user_account_state_table_uuid_index ON user_table_file (hr_user_account_state_table_uuid);
           EOS
         end
       end
@@ -528,7 +544,7 @@ describe Masamune::Schema::Table do
 
         it 'should eq table template' do
           is_expected.to eq <<-EOS.strip_heredoc
-            CREATE TEMPORARY TABLE IF NOT EXISTS user_file
+            CREATE TEMPORARY TABLE IF NOT EXISTS user_table_file
             (
               uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
               hr_user_account_state_table_uuid UUID,
@@ -536,8 +552,8 @@ describe Masamune::Schema::Table do
               name VARCHAR
             );
 
-            CREATE INDEX user_file_hr_user_account_state_table_uuid_index ON user_file (hr_user_account_state_table_uuid);
-            CREATE INDEX user_file_user_account_state_table_uuid_index ON user_file (user_account_state_table_uuid);
+            CREATE INDEX user_table_file_hr_user_account_state_table_uuid_index ON user_table_file (hr_user_account_state_table_uuid);
+            CREATE INDEX user_table_file_user_account_state_table_uuid_index ON user_table_file (user_account_state_table_uuid);
           EOS
         end
       end
@@ -551,7 +567,7 @@ describe Masamune::Schema::Table do
 
         it 'should eq table template' do
           is_expected.to eq <<-EOS.strip_heredoc
-            CREATE TEMPORARY TABLE IF NOT EXISTS user_file
+            CREATE TEMPORARY TABLE IF NOT EXISTS user_table_file
             (
               uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
               hr_user_account_state_table_name VARCHAR,
