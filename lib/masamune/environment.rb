@@ -33,17 +33,18 @@ module Masamune
 
     def with_exclusive_lock(name, &block)
       raise 'filesystem path :run_dir not defined' unless filesystem.has_path?(:run_dir)
-      logger.debug("acquiring lock '#{name}'")
-      lock_file = lock_file(name)
+      lock_name = [name, configuration.lock].compact.join(':')
+      logger.debug("acquiring lock '#{lock_name}'")
+      lock_file = lock_file(lock_name)
       lock_status = lock_file.flock(File::LOCK_EX | File::LOCK_NB)
       if lock_status == 0
         yield if block_given?
       else
-        logger.error "acquire lock attempt failed for '#{name}'"
+        logger.error "acquire lock attempt failed for '#{lock_name}'"
       end
     ensure
       if lock_file
-        logger.debug("releasing lock '#{name}'")
+        logger.debug("releasing lock '#{lock_name}'")
         lock_file.flock(File::LOCK_UN)
       end
     end
