@@ -96,10 +96,6 @@ class Masamune::DataPlanRule
     @options.fetch(:primary, true)
   end
 
-  def immutable?
-    @options.fetch(:immutable, true)
-  end
-
   def matches?(input)
     matched_pattern = match_data_hash(matcher.match(input))
     matched_pattern.present? && matched_pattern[:rest].blank?

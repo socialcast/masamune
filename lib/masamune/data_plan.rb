@@ -102,27 +102,6 @@ class Masamune::DataPlan
     @targets[rule].merge options.fetch(:targets, [])
     @sources[rule].merge options.fetch(:sources, [])
 
-    dirty = false
-    targets(rule).incomplete do |target|
-      if target.removable?
-        logger.warn("Detected incomplete target #{target.input}, removing")
-        target.remove
-        dirty = true
-      end
-    end
-
-    targets(rule).stale do |target|
-      if target.removable?
-        logger.warn("Detected stale target #{target.input}, removing")
-        target.remove
-        dirty = true
-      else
-        logger.warn("Detected stale target #{target.input}, skipping")
-      end
-    end
-
-    clear! if dirty
-
     constrain_max_depth(rule) do
       sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
         prepare(derived_rule, targets: sources.map(&:input)) if derived_rule != Masamune::DataPlanRule::TERMINAL
