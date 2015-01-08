@@ -21,6 +21,7 @@ class Masamune::DataPlanElem
   def partition
     input.split('_').last
   end
+  alias :suffix :partition
 
   def exists?
     if rule.for_path?
