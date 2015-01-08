@@ -417,6 +417,77 @@ describe Masamune::DataPlanSet do
     end
   end
 
+  describe '#updatable' do
+    let(:paths) { ['/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=03'] }
+
+    let(:instance) { Masamune::DataPlanSet.new(target_rule, paths) }
+
+    let(:past_time) { Time.parse('2013-01-01 09:00:00 +0000') }
+    let(:present_time) { Time.parse('2013-01-01 09:30:00 +0000') }
+    let(:future_time) { Time.parse('2013-01-01 10:00:00 +0000') }
+
+    subject(:updateable) do
+      instance.updateable
+    end
+
+    context 'when targets are existing' do
+      before do
+        fs.touch!('/table/y=2013/m=01/d=01/0000', '/table/y=2013/m=01/d=02/0000', '/table/y=2013/m=01/d=03/0000', mtime: present_time)
+      end
+
+      context 'when all sources missing' do
+        it { expect(updateable).to be_empty }
+      end
+
+      context 'when all sources existing (stale)' do
+        before do
+          fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log', mtime: future_time)
+          fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log', mtime: future_time)
+          fs.touch!('/log/20130103.random_1.log', '/log/20130103.random_2.log', mtime: future_time)
+        end
+        it { expect(updateable.size).to eq(3) }
+        it { expect(updateable).to include '/table/y=2013/m=01/d=01' }
+        it { expect(updateable).to include '/table/y=2013/m=01/d=02' }
+        it { expect(updateable).to include '/table/y=2013/m=01/d=03' }
+      end
+
+      context 'when all sources existing (fresh)' do
+        before do
+          fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log', mtime: past_time)
+          fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log', mtime: past_time)
+          fs.touch!('/log/20130103.random_1.log', '/log/20130103.random_2.log', mtime: past_time)
+        end
+        it { expect(updateable).to be_empty }
+      end
+    end
+
+    context 'when targets are missing' do
+      context 'when all sources missing' do
+        it { expect(updateable).to be_empty }
+      end
+
+      context 'when some sources missing' do
+        before do
+          fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
+        end
+        it { expect(updateable.size).to eq(1) }
+        it { expect(updateable).to include '/table/y=2013/m=01/d=01' }
+      end
+
+      context 'when all sources existing' do
+        before do
+          fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
+          fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log')
+          fs.touch!('/log/20130103.random_1.log', '/log/20130103.random_2.log')
+        end
+        it { expect(updateable.size).to eq(3) }
+        it { expect(updateable).to include '/table/y=2013/m=01/d=01' }
+        it { expect(updateable).to include '/table/y=2013/m=01/d=02' }
+        it { expect(updateable).to include '/table/y=2013/m=01/d=03' }
+      end
+    end
+  end
+
   context 'when sets are chained together' do
     let!(:source_rule) { plan.add_source_rule('primary', path: '/log/%Y%m%d.*.log') }
     let!(:target_rule) { plan.add_target_rule('primary', path: '/table/y=%Y/m=%m') }
