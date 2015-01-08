@@ -25,12 +25,6 @@ module Masamune::Helpers
       tables.include?(table)
     end
 
-    def drop_table(table)
-      return unless table_exists?(table)
-      @cache.delete(table)
-      postgres(exec: "DROP TABLE #{table};", fail_fast: true).success?
-    end
-
     def table_last_modified_at(table, options = {})
       column = options[:last_modified_at]
       return unless column

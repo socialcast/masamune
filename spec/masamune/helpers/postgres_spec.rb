@@ -70,14 +70,4 @@ describe Masamune::Helpers::Postgres do
       it { is_expected.to be_nil }
     end
   end
-
-  describe '#drop_table' do
-    before do
-      expect(instance).to receive(:table_exists?).and_return(true)
-      expect(instance).to receive(:postgres).with(exec: 'DROP TABLE foo;', fail_fast: true).and_return(mock_success)
-      instance.drop_table('foo')
-    end
-
-    it 'meets expectations' do; end
-  end
 end
