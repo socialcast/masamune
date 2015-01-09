@@ -36,10 +36,6 @@ class Masamune::DataPlanRule
     @options.key?(:table)
   end
 
-  def for_hive_table?
-    @options.key?(:hive_table) && @options.key?(:hive_partition)
-  end
-
   def for_table_with_partition?
     @options.key?(:table) && @options.key?(:partition)
   end
@@ -54,14 +50,6 @@ class Masamune::DataPlanRule
 
   def partition
     @options[:partition]
-  end
-
-  def hive_table
-    @options[:hive_table]
-  end
-
-  def hive_partition
-    @options[:hive_partition]
   end
 
   def ==(other)
