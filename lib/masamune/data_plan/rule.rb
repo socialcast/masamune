@@ -11,10 +11,10 @@ class Masamune::DataPlan::Rule
 
   include Masamune::Accumulate
 
-  attr_reader :plan, :name, :type, :options
+  attr_reader :engine, :name, :type, :options
 
-  def initialize(plan, name, type, options = {})
-    @plan    = plan
+  def initialize(engine, name, type, options = {})
+    @engine  = engine
     @name    = name
     @type    = type
     @options = options
@@ -65,7 +65,7 @@ class Masamune::DataPlan::Rule
   end
 
   def ==(other)
-    plan    == other.plan &&
+    engine  == other.engine &&
     name    == other.name &&
     type    == other.type &&
     pattern == other.pattern &&
@@ -77,13 +77,13 @@ class Masamune::DataPlan::Rule
   end
 
   def hash
-    [plan, name, type, pattern, options].hash
+    [engine, name, type, pattern, options].hash
   end
 
   def pattern
     @pattern ||= begin
       if for_path?
-        path.respond_to?(:call) ? path.call(plan.filesystem) : path
+        path.respond_to?(:call) ? path.call(engine.filesystem) : path
       elsif for_table_with_partition?
         [table , partition].join('_')
       elsif for_table?
@@ -217,7 +217,7 @@ class Masamune::DataPlan::Rule
     part_index = pattern_parts.find_index { |part| part =~ time_step_to_format(grain) }
     raise "cannot round to :#{grain} for #{pattern}" unless part_index
     new_pattern = pattern_parts[0..part_index].join('/')
-    self.class.new(plan, name, type, options.merge(path: new_pattern))
+    self.class.new(engine, name, type, options.merge(path: new_pattern))
   end
 
   private

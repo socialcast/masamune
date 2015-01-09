@@ -1,11 +1,11 @@
 require 'spec_helper'
 
 describe Masamune::DataPlan::Elem do
-  let(:plan) { Masamune::DataPlan::Engine.new }
+  let(:engine) { Masamune::DataPlan::Engine.new }
   let(:name) { 'primary' }
   let(:type) { :target }
-  let(:rule) { Masamune::DataPlan::Rule.new(plan, name, type, {path: 'report/%Y-%m-%d/%H'}) }
-  let(:other_rule) { Masamune::DataPlan::Rule.new(plan, name, type, {path: 'log/%Y%m%d.*.log'}) }
+  let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: 'report/%Y-%m-%d/%H'}) }
+  let(:other_rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: 'log/%Y%m%d.*.log'}) }
 
   let(:start_time) { DateTime.civil(2013,07,19,11,07) }
   let(:other_start_time) { DateTime.civil(2013,07,20,0,0) }
@@ -61,7 +61,7 @@ describe Masamune::DataPlan::Elem do
 
     context 'with missing mtime' do
       before do
-        expect(rule.plan.filesystem).to receive(:stat).with(instance.path).
+        expect(rule.engine.filesystem).to receive(:stat).with(instance.path).
           and_return(nil)
       end
 
@@ -70,7 +70,7 @@ describe Masamune::DataPlan::Elem do
 
     context 'with single mtime' do
       before do
-        expect(rule.plan.filesystem).to receive(:stat).with(instance.path).
+        expect(rule.engine.filesystem).to receive(:stat).with(instance.path).
           and_return(OpenStruct.new(mtime: early))
       end
 

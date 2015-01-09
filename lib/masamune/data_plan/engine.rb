@@ -65,7 +65,7 @@ class Masamune::DataPlan::Engine
       yield target
     end
   end
-  method_accumulate :targets_for_date_range, lambda { |plan, rule, _, _| Masamune::DataPlan::Set.new(plan.get_target_rule(rule)) }
+  method_accumulate :targets_for_date_range, lambda { |engine, rule, _, _| Masamune::DataPlan::Set.new(engine.get_target_rule(rule)) }
 
   def targets_for_source(rule, source, &block)
     source_template = @source_rules[rule]
@@ -75,7 +75,7 @@ class Masamune::DataPlan::Engine
       yield target
     end
   end
-  method_accumulate :targets_for_source, lambda { |plan, rule, source| Masamune::DataPlan::Set.new(plan.get_target_rule(rule)) }
+  method_accumulate :targets_for_source, lambda { |engine, rule, source| Masamune::DataPlan::Set.new(engine.get_target_rule(rule)) }
 
   def sources_for_target(rule, target, &block)
     source_template = @source_rules[rule]
@@ -85,7 +85,7 @@ class Masamune::DataPlan::Engine
       yield source
     end
   end
-  method_accumulate :sources_for_target, lambda { |plan, rule, target| Masamune::DataPlan::Set.new(plan.get_source_rule(rule)) }
+  method_accumulate :sources_for_target, lambda { |engine, rule, target| Masamune::DataPlan::Set.new(engine.get_source_rule(rule)) }
 
   def targets(rule)
     @set_cache[:targets_for_rule][rule] ||= @targets[rule].union(@sources[rule].targets)

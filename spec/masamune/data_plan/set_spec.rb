@@ -2,13 +2,13 @@ require 'spec_helper'
 
 describe Masamune::DataPlan::Set do
   let(:fs) { Masamune::MockFilesystem.new }
-  let!(:plan) { Masamune::DataPlan::Engine.new }
+  let!(:engine) { Masamune::DataPlan::Engine.new }
 
-  let!(:source_rule) { plan.add_source_rule('primary', path: '/log/%Y%m%d.*.log') }
-  let!(:target_rule) { plan.add_target_rule('primary', path: '/table/y=%Y/m=%m/d=%d') }
+  let!(:source_rule) { engine.add_source_rule('primary', path: '/log/%Y%m%d.*.log') }
+  let!(:target_rule) { engine.add_target_rule('primary', path: '/table/y=%Y/m=%m/d=%d') }
 
   before do
-    plan.filesystem = fs
+    engine.filesystem = fs
   end
 
   describe '#missing' do
@@ -332,8 +332,8 @@ describe Masamune::DataPlan::Set do
   end
 
   describe '#incomplete' do
-    let!(:source_rule) { plan.add_source_rule('primary', path: '/log/%Y%m%d.*.log') }
-    let!(:target_rule) { plan.add_target_rule('primary', path: '/table/y=%Y/m=%m') }
+    let!(:source_rule) { engine.add_source_rule('primary', path: '/log/%Y%m%d.*.log') }
+    let!(:target_rule) { engine.add_target_rule('primary', path: '/table/y=%Y/m=%m') }
 
     let(:paths) { ['/log/20140101.random_1.log', '/log/20140102.random_1.log', '/log/20140201.random_1.log', '/log/20140202.random_1.log'] }
 
@@ -464,8 +464,8 @@ describe Masamune::DataPlan::Set do
   end
 
   context 'when sets are chained together' do
-    let!(:source_rule) { plan.add_source_rule('primary', path: '/log/%Y%m%d.*.log') }
-    let!(:target_rule) { plan.add_target_rule('primary', path: '/table/y=%Y/m=%m') }
+    let!(:source_rule) { engine.add_source_rule('primary', path: '/log/%Y%m%d.*.log') }
+    let!(:target_rule) { engine.add_target_rule('primary', path: '/table/y=%Y/m=%m') }
 
     let(:paths) { ['/log/20140101.random_1.log', '/log/20140102.random_1.log', '/log/20140201.random_1.log', '/log/20140202.random_1.log'] }
 

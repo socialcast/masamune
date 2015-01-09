@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::DataPlan::Builder do
   describe '#build' do
-    subject(:data_plan) do
+    subject(:engine) do
       described_class.instance.build(namespaces, commands, sources, targets)
     end
 
