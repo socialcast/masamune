@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe Masamune::DataPlan do
+describe Masamune::DataPlan::Engine do
   let(:filesystem) { Masamune::MockFilesystem.new }
   let(:environment) { Masamune::Environment.new }
-  let(:plan) { Masamune::DataPlan.new }
+  let(:plan) { Masamune::DataPlan::Engine.new }
 
   before do
     environment.filesystem = filesystem
@@ -164,7 +164,7 @@ describe Masamune::DataPlan do
 
     context 'primary source' do
       let(:target) { '/log/20130101.random_1.log' }
-      it { is_expected.to eq(Masamune::DataPlanRule::TERMINAL) }
+      it { is_expected.to eq(Masamune::DataPlan::Rule::TERMINAL) }
     end
 
     context 'primary target' do

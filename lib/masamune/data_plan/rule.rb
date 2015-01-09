@@ -6,7 +6,7 @@ require 'active_support/core_ext/date/calculations'
 require 'active_support/core_ext/date_time/calculations'
 require 'date'
 
-class Masamune::DataPlanRule
+class Masamune::DataPlan::Rule
   TERMINAL = nil
 
   include Masamune::Accumulate
@@ -103,14 +103,14 @@ class Masamune::DataPlanRule
 
   def bind_date(input_date)
     output_date = tz.utc_to_local(input_date)
-    Masamune::DataPlanElem.new(self, output_date, options_for_elem)
+    Masamune::DataPlan::Elem.new(self, output_date, options_for_elem)
   end
 
   def bind_input(input)
     matched_pattern = match_data_hash(matcher.match(input))
     raise "Cannot bind_input #{input} to #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
-    Masamune::DataPlanElem.new(self, output_date, options_for_elem.merge(matched_extra(matched_pattern)))
+    Masamune::DataPlan::Elem.new(self, output_date, options_for_elem.merge(matched_extra(matched_pattern)))
   end
 
   def unify(elem, rule)

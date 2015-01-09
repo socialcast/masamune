@@ -1,4 +1,4 @@
-class Masamune::DataPlanElem
+class Masamune::DataPlan::Elem
   MISSING_MODIFIED_AT = Time.new(0)
 
   include Masamune::Accumulate
@@ -62,24 +62,24 @@ class Masamune::DataPlanElem
   method_accumulate :explode
 
   def targets(&block)
-    return Masamune::DataPlanSet::EMPTY if @rule.for_targets?
+    return Masamune::DataPlan::Set::EMPTY if @rule.for_targets?
     rule.plan.targets_for_source(rule.name, self) do |target|
       yield target
     end
   end
-  method_accumulate :targets, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_target_rule(elem.rule.name)) }
+  method_accumulate :targets, lambda { |elem| Masamune::DataPlan::Set.new(elem.rule.plan.get_target_rule(elem.rule.name)) }
 
   def target
     targets.first
   end
 
   def sources(&block)
-    return Masamune::DataPlanSet::EMPTY if @rule.for_sources?
+    return Masamune::DataPlan::Set::EMPTY if @rule.for_sources?
     rule.plan.sources_for_target(rule.name, self) do |source|
       yield source
     end
   end
-  method_accumulate :sources, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_source_rule(elem.rule.name)) }
+  method_accumulate :sources, lambda { |elem| Masamune::DataPlan::Set.new(elem.rule.plan.get_source_rule(elem.rule.name)) }
 
   def source
     sources.first

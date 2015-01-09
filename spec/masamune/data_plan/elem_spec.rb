@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-describe Masamune::DataPlanElem do
-  let(:plan) { Masamune::DataPlan.new }
+describe Masamune::DataPlan::Elem do
+  let(:plan) { Masamune::DataPlan::Engine.new }
   let(:name) { 'primary' }
   let(:type) { :target }
-  let(:rule) { Masamune::DataPlanRule.new(plan, name, type, {path: 'report/%Y-%m-%d/%H'}) }
-  let(:other_rule) { Masamune::DataPlanRule.new(plan, name, type, {path: 'log/%Y%m%d.*.log'}) }
+  let(:rule) { Masamune::DataPlan::Rule.new(plan, name, type, {path: 'report/%Y-%m-%d/%H'}) }
+  let(:other_rule) { Masamune::DataPlan::Rule.new(plan, name, type, {path: 'log/%Y%m%d.*.log'}) }
 
   let(:start_time) { DateTime.civil(2013,07,19,11,07) }
   let(:other_start_time) { DateTime.civil(2013,07,20,0,0) }
@@ -65,7 +65,7 @@ describe Masamune::DataPlanElem do
           and_return(nil)
       end
 
-      it { is_expected.to eq(Masamune::DataPlanElem::MISSING_MODIFIED_AT) }
+      it { is_expected.to eq(Masamune::DataPlan::Elem::MISSING_MODIFIED_AT) }
     end
 
     context 'with single mtime' do

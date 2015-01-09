@@ -46,7 +46,7 @@ module Masamune::Actions
       end
 
       base.after_initialize(:final) do |thor, options|
-        # Only execute this block if DataPlan is not currently executing
+        # Only execute this block if DataPlan::Engine is not currently executing
         next if thor.data_plan.executing?
         thor.data_plan.environment = thor.environment
         thor.data_plan.filesystem.environment = thor.environment
@@ -54,8 +54,8 @@ module Masamune::Actions
         raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start' or '--at'" unless options[:start] || options[:at] || options[:sources] || options[:targets]
         raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
 
-        desired_sources = Masamune::DataPlanSet.new thor.current_command_name, thor.parse_file_type(:sources)
-        desired_targets = Masamune::DataPlanSet.new thor.current_command_name, thor.parse_file_type(:targets)
+        desired_sources = Masamune::DataPlan::Set.new thor.current_command_name, thor.parse_file_type(:sources)
+        desired_targets = Masamune::DataPlan::Set.new thor.current_command_name, thor.parse_file_type(:targets)
 
         if thor.start_time && thor.stop_time
           desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.start_time, thor.stop_time)
@@ -97,7 +97,7 @@ module Masamune::Actions
       end
 
       def data_plan
-        @@data_plan ||= Masamune::DataPlanBuilder.instance.build(@@namespaces, @@commands, @@sources, @@targets)
+        @@data_plan ||= Masamune::DataPlan::Builder.instance.build(@@namespaces, @@commands, @@sources, @@targets)
       end
 
       private

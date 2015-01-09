@@ -1,7 +1,7 @@
 require 'spec_helper'
 
-describe Masamune::DataPlanRule do
-  let(:plan) { Masamune::DataPlan.new }
+describe Masamune::DataPlan::Rule do
+  let(:plan) { Masamune::DataPlan::Engine.new }
   let(:name) { 'primary' }
   let(:type) { :target }
   let(:pattern) { 'report/%Y-%m-%d/%H' }

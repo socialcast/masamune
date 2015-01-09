@@ -54,7 +54,7 @@ module Masamune::Schema
     end
 
     def partition_rule
-      @partition_rule ||= Masamune::DataPlanRule.new(nil, :tmp, :target, table: name, partition: @partition)
+      @partition_rule ||= Masamune::DataPlan::Rule.new(nil, :tmp, :target, table: name, partition: @partition)
     end
 
     def partition_table_columns

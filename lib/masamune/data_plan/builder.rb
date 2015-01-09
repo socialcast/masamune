@@ -1,10 +1,10 @@
 require 'singleton'
 
-class Masamune::DataPlanBuilder
+class Masamune::DataPlan::Builder
   include Singleton
 
   def build(namespaces, commands, sources, targets)
-    Masamune::DataPlan.new.tap do |data_plan|
+    Masamune::DataPlan::Engine.new.tap do |data_plan|
       sources_for, sources_anon = partition_by_for(sources)
       targets_for, targets_anon = partition_by_for(targets)
 
