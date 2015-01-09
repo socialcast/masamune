@@ -47,7 +47,7 @@ module Masamune::Actions
 
       base.after_initialize(:final) do |thor, options|
         # Only execute this block if DataPlan is not currently executing
-        next if thor.data_plan.current_rule.present?
+        next if thor.data_plan.executing?
         thor.data_plan.environment = thor.environment
         thor.data_plan.filesystem.environment = thor.environment
 

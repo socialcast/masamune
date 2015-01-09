@@ -170,51 +170,6 @@ describe Masamune::DataPlanSet do
     end
   end
 
-  describe '#actionable' do
-    let(:paths) { ['/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=03'] }
-
-    let(:instance) { Masamune::DataPlanSet.new(target_rule, paths) }
-
-    subject(:actionable_targets) do
-      instance.actionable
-    end
-
-    subject(:actionable_sources) do
-      instance.actionable.sources
-    end
-
-    context 'when all sources missing' do
-      it { expect(actionable_targets).to be_empty }
-      it { expect(actionable_sources).to be_empty }
-    end
-
-    context 'when some sources missing' do
-      before do
-        fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
-      end
-      it { expect(actionable_targets.size).to eq(1) }
-      it { expect(actionable_targets).to include '/table/y=2013/m=01/d=01' }
-      it { expect(actionable_sources.size).to eq(1) }
-      it { expect(actionable_sources).to include '/log/20130101.*.log' }
-    end
-
-    context 'when all sources existing' do
-      before do
-        fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
-        fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log')
-        fs.touch!('/log/20130103.random_1.log', '/log/20130103.random_2.log')
-      end
-      it { expect(actionable_targets.size).to eq(3) }
-      it { expect(actionable_targets).to include '/table/y=2013/m=01/d=01' }
-      it { expect(actionable_targets).to include '/table/y=2013/m=01/d=02' }
-      it { expect(actionable_targets).to include '/table/y=2013/m=01/d=03' }
-      it { expect(actionable_sources.size).to eq(3) }
-      it { expect(actionable_sources).to include '/log/20130101.*.log' }
-      it { expect(actionable_sources).to include '/log/20130102.*.log' }
-      it { expect(actionable_sources).to include '/log/20130103.*.log' }
-    end
-  end
-
   describe '#stale' do
     context 'when source rule' do
       let(:paths) { ['/log/20130101.random_1.log', '/log/20130102.random_1.log'] }
@@ -426,6 +381,10 @@ describe Masamune::DataPlanSet do
     let(:present_time) { Time.parse('2013-01-01 09:30:00 +0000') }
     let(:future_time) { Time.parse('2013-01-01 10:00:00 +0000') }
 
+    subject(:actionable) do
+      instance.actionable
+    end
+
     subject(:updateable) do
       instance.updateable
     end
@@ -436,6 +395,9 @@ describe Masamune::DataPlanSet do
       end
 
       context 'when all sources missing' do
+        it 'actionable is equivalent to incomplete' do
+          expect(actionable).to eq(instance.incomplete)
+        end
         it { expect(updateable).to be_empty }
       end
 
@@ -444,6 +406,9 @@ describe Masamune::DataPlanSet do
           fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log', mtime: future_time)
           fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log', mtime: future_time)
           fs.touch!('/log/20130103.random_1.log', '/log/20130103.random_2.log', mtime: future_time)
+        end
+        it 'actionable is equivalent to stale' do
+          expect(actionable).to eq(instance.stale)
         end
         it { expect(updateable.size).to eq(3) }
         it { expect(updateable).to include '/table/y=2013/m=01/d=01' }
@@ -457,18 +422,25 @@ describe Masamune::DataPlanSet do
           fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log', mtime: past_time)
           fs.touch!('/log/20130103.random_1.log', '/log/20130103.random_2.log', mtime: past_time)
         end
+        it { expect(actionable).to be_empty }
         it { expect(updateable).to be_empty }
       end
     end
 
     context 'when targets are missing' do
       context 'when all sources missing' do
+        it 'actionable is equivalent to incomplete' do
+          expect(actionable).to eq(instance.incomplete)
+        end
         it { expect(updateable).to be_empty }
       end
 
       context 'when some sources missing' do
         before do
           fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
+        end
+        it 'actionable is equivalent to missing' do
+          expect(actionable).to eq(instance.missing)
         end
         it { expect(updateable.size).to eq(1) }
         it { expect(updateable).to include '/table/y=2013/m=01/d=01' }
@@ -479,6 +451,9 @@ describe Masamune::DataPlanSet do
           fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
           fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log')
           fs.touch!('/log/20130103.random_1.log', '/log/20130103.random_2.log')
+        end
+        it 'actionable is equivalent to missing' do
+          expect(actionable).to eq(instance.missing)
         end
         it { expect(updateable.size).to eq(3) }
         it { expect(updateable).to include '/table/y=2013/m=01/d=01' }

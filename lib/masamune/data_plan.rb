@@ -16,7 +16,6 @@ class Masamune::DataPlan
     @targets = Hash.new { |set,rule| set[rule] = Masamune::DataPlanSet.new(@target_rules[rule]) }
     @sources = Hash.new { |set,rule| set[rule] = Masamune::DataPlanSet.new(@source_rules[rule]) }
     @set_cache = Hash.new { |cache,level| cache[level] = Hash.new }
-    @current_rule = nil
     @current_depth = 0
   end
 
@@ -107,22 +106,24 @@ class Masamune::DataPlan
         prepare(derived_rule, targets: sources.map(&:input)) if derived_rule != Masamune::DataPlanRule::TERMINAL
       end
     end if options.fetch(:resolve, true)
+    clear!
   end
 
   def execute(rule, options = {})
-    clear!
-    return if targets(rule).missing.empty?
+    return if targets(rule).actionable.empty?
 
     constrain_max_depth(rule) do
-      sources(rule).missing.group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
+      sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
         execute(derived_rule, options) if derived_rule != Masamune::DataPlanRule::TERMINAL
       end
     end if options.fetch(:resolve, true)
 
-    @current_rule = rule
     @command_rules[rule].call(self, rule, options)
-  ensure
-    @current_rule = nil
+    clear!
+  end
+
+  def executing?
+    @current_depth > 0
   end
 
   def current_rule
