@@ -110,6 +110,7 @@ class Masamune::DataPlan
   end
 
   def execute(rule, options = {})
+    clear!
     return if targets(rule).missing.empty?
 
     constrain_max_depth(rule) do
@@ -120,7 +121,6 @@ class Masamune::DataPlan
 
     @current_rule = rule
     @command_rules[rule].call(self, rule, options)
-    clear!
   ensure
     @current_rule = nil
   end
