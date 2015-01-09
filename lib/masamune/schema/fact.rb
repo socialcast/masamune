@@ -16,17 +16,13 @@ module Masamune::Schema
 
     alias_method :measures, :columns
 
-    def suffix
-      return super unless range
-      parent ? "#{type}_#{range.suffix}" : type
-    end
-
     def time_key
       columns.values.detect { |column| column.id == :time_key }
     end
 
     def stage_table(*a)
       super.tap do |stage|
+        stage.range = range
         stage.columns.each do |_, column|
           column.unique = false
         end
@@ -36,7 +32,7 @@ module Masamune::Schema
     def partition_table(date)
       partition_range = partition_rule.bind_date(date)
       @partition_tables ||= {}
-      @partition_tables[partition_range] ||= self.class.new id: id, columns: partition_table_columns, parent: self, range: partition_range
+      @partition_tables[partition_range] ||= self.class.new id: id, columns: partition_table_columns, parent: self, range: partition_range, suffix: partition_range.suffix
     end
 
     def constraints

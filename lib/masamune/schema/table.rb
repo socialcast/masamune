@@ -9,6 +9,7 @@ module Masamune::Schema
       id:              nil,
       type:            :table,
       parent:          nil,
+      suffix:          nil,
       references:      {},
       headers:         true,
       columns:         {},
@@ -77,7 +78,7 @@ module Masamune::Schema
     end
 
     def suffix
-      parent ? "#{parent.suffix}_#{type.to_s}" : type.to_s
+      ((parent ? parent.suffix.split('_') : []) + [type.to_s, @suffix]).compact.uniq.join('_')
     end
 
     def temporary?
