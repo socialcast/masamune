@@ -1,42 +1,42 @@
 require 'spec_helper'
 
-describe Masamune::DataPlan do
+describe Masamune::DataPlan::Engine do
   let(:filesystem) { Masamune::MockFilesystem.new }
   let(:environment) { Masamune::Environment.new }
-  let(:plan) { Masamune::DataPlan.new }
+  let(:engine) { Masamune::DataPlan::Engine.new }
 
   before do
     environment.filesystem = filesystem
-    plan.environment = environment
+    engine.environment = environment
   end
 
   let(:command) do
-    Proc.new do |plan, rule|
+    Proc.new do |engine, rule|
       missing_targets = []
-      plan.targets(rule).missing.each do |target|
+      engine.targets(rule).missing.each do |target|
         missing_targets << target.path if target.sources.existing.any?
       end
-      plan.filesystem.touch!(*missing_targets.map { |target| File.join(target, 'DATA') }) if missing_targets.any?
+      engine.filesystem.touch!(*missing_targets.map { |target| File.join(target, 'DATA') }) if missing_targets.any?
     end
   end
 
   before do
-    plan.add_target_rule('non_primary', path: '/table/y=%Y/m=%m/d=%d', primary: false)
-    plan.add_source_rule('non_primary', path: '/log/%Y%m%d.*.log', primary: false)
-    plan.add_command_rule('non_primary', ->(*_) { fail } )
-    plan.add_target_rule('primary', path: '/table/y=%Y/m=%m/d=%d')
-    plan.add_source_rule('primary', path: '/log/%Y%m%d.*.log')
-    plan.add_command_rule('primary', command)
-    plan.add_target_rule('derived_daily', path: '/daily/%Y-%m-%d')
-    plan.add_source_rule('derived_daily', path: '/table/y=%Y/m=%m/d=%d')
-    plan.add_command_rule('derived_daily', command)
-    plan.add_target_rule('derived_monthly', path: '/monthly/%Y-%m')
-    plan.add_source_rule('derived_monthly', path: '/table/y=%Y/m=%m/d=%d')
-    plan.add_command_rule('derived_monthly', command)
+    engine.add_target_rule('non_primary', path: '/table/y=%Y/m=%m/d=%d', primary: false)
+    engine.add_source_rule('non_primary', path: '/log/%Y%m%d.*.log', primary: false)
+    engine.add_command_rule('non_primary', ->(*_) { fail } )
+    engine.add_target_rule('primary', path: '/table/y=%Y/m=%m/d=%d')
+    engine.add_source_rule('primary', path: '/log/%Y%m%d.*.log')
+    engine.add_command_rule('primary', command)
+    engine.add_target_rule('derived_daily', path: '/daily/%Y-%m-%d')
+    engine.add_source_rule('derived_daily', path: '/table/y=%Y/m=%m/d=%d')
+    engine.add_command_rule('derived_daily', command)
+    engine.add_target_rule('derived_monthly', path: '/monthly/%Y-%m')
+    engine.add_source_rule('derived_monthly', path: '/table/y=%Y/m=%m/d=%d')
+    engine.add_command_rule('derived_monthly', command)
   end
 
   describe '#filesystem' do
-    it { expect(plan.filesystem).to be_a(Masamune::CachedFilesystem) }
+    it { expect(engine.filesystem).to be_a(Masamune::CachedFilesystem) }
     it { expect(environment.filesystem).to be_a(Masamune::MockFilesystem) }
   end
 
@@ -44,7 +44,7 @@ describe Masamune::DataPlan do
     let(:start) { Date.civil(2013,01,01) }
     let(:stop) { Date.civil(2013,01,03) }
 
-    subject { plan.targets_for_date_range(rule, start, stop).map(&:path) }
+    subject { engine.targets_for_date_range(rule, start, stop).map(&:path) }
 
     context 'primary' do
       let(:rule) { 'primary' }
@@ -77,7 +77,7 @@ describe Masamune::DataPlan do
 
   describe '#targets_for_source' do
     subject(:targets) do
-      plan.targets_for_source(rule, source)
+      engine.targets_for_source(rule, source)
     end
 
     context 'primary' do
@@ -110,7 +110,7 @@ describe Masamune::DataPlan do
 
   describe '#sources_for_target' do
     subject(:sources) do
-      plan.sources_for_target(rule, target)
+      engine.sources_for_target(rule, target)
     end
 
     subject(:existing) do
@@ -118,10 +118,10 @@ describe Masamune::DataPlan do
     end
 
     before do
-      plan.filesystem.touch!('/log/20130101.app1.log')
-      plan.filesystem.touch!('/log/20130101.app2.log')
-      plan.filesystem.touch!('/log/20130104.app1.log')
-      plan.filesystem.touch!('/log/20130104.app2.log')
+      engine.filesystem.touch!('/log/20130101.app1.log')
+      engine.filesystem.touch!('/log/20130101.app2.log')
+      engine.filesystem.touch!('/log/20130104.app1.log')
+      engine.filesystem.touch!('/log/20130104.app2.log')
     end
 
     context 'valid target associated with wildcard source' do
@@ -160,11 +160,11 @@ describe Masamune::DataPlan do
   end
 
   describe '#rule_for_target' do
-    subject { plan.rule_for_target(target) }
+    subject { engine.rule_for_target(target) }
 
     context 'primary source' do
       let(:target) { '/log/20130101.random_1.log' }
-      it { is_expected.to eq(Masamune::DataPlanRule::TERMINAL) }
+      it { is_expected.to eq(Masamune::DataPlan::Rule::TERMINAL) }
     end
 
     context 'primary target' do
@@ -190,15 +190,15 @@ describe Masamune::DataPlan do
 
   describe '#prepare' do
     before do
-      plan.prepare(rule, options)
+      engine.prepare(rule, options)
     end
 
     subject(:targets) do
-      plan.targets(rule)
+      engine.targets(rule)
     end
 
     subject(:sources) do
-      plan.sources(rule)
+      engine.sources(rule)
     end
 
     context 'with :targets' do
@@ -228,11 +228,11 @@ describe Masamune::DataPlan do
     let(:options) { {} }
 
     before do
-      plan.prepare(rule, targets: targets)
+      engine.prepare(rule, targets: targets)
     end
 
     subject(:execute) do
-      plan.execute(rule, options)
+      engine.execute(rule, options)
     end
 
     context 'primary rule' do
@@ -244,8 +244,8 @@ describe Masamune::DataPlan do
 
       context 'when target data exists' do
         before do
-          plan.filesystem.touch!('/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=03')
-          expect(plan.filesystem).to receive(:touch!).never
+          engine.filesystem.touch!('/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=03')
+          expect(engine.filesystem).to receive(:touch!).never
           execute
         end
 
@@ -254,9 +254,9 @@ describe Masamune::DataPlan do
 
       context 'when partial target data exists' do
         before do
-          plan.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
-          plan.filesystem.touch!('/table/y=2013/m=01/d=01/DATA', '/table/y=2013/m=01/d=03/DATA')
-          expect(plan.filesystem).to receive(:touch!).with('/table/y=2013/m=01/d=02/DATA').and_call_original
+          engine.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
+          engine.filesystem.touch!('/table/y=2013/m=01/d=01/DATA', '/table/y=2013/m=01/d=03/DATA')
+          expect(engine.filesystem).to receive(:touch!).with('/table/y=2013/m=01/d=02/DATA').and_call_original
           execute
         end
 
@@ -265,7 +265,7 @@ describe Masamune::DataPlan do
 
       context 'when source data does not exist' do
         before do
-          expect(plan.filesystem).to receive(:touch!).never
+          expect(engine.filesystem).to receive(:touch!).never
           execute
         end
 
@@ -278,9 +278,9 @@ describe Masamune::DataPlan do
         let(:derived_targets) {  ['/table/y=2013/m=01/d=01/DATA', '/table/y=2013/m=01/d=02/DATA', '/table/y=2013/m=01/d=03/DATA'] }
 
         before do
-          plan.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
-          expect(plan.filesystem).to receive(:touch!).with(*derived_targets).and_call_original
-          expect(plan.filesystem).to receive(:touch!).with(*targets).and_call_original
+          engine.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
+          expect(engine.filesystem).to receive(:touch!).with(*derived_targets).and_call_original
+          expect(engine.filesystem).to receive(:touch!).with(*targets).and_call_original
           execute
         end
 
@@ -291,8 +291,8 @@ describe Masamune::DataPlan do
         let(:options) { {resolve: false} }
 
         before do
-          plan.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
-          expect(plan.filesystem).not_to receive(:touch!)
+          engine.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
+          expect(engine.filesystem).not_to receive(:touch!)
           execute
         end
 
@@ -319,16 +319,16 @@ describe Masamune::DataPlan do
     end
   end
 
-  context 'recursive plans' do
+  context 'recursive engines' do
     before do
-      plan.add_target_rule('primary', path: '/table/y=%Y/m=%m/d=%d')
-      plan.add_source_rule('primary', path: '/log/%Y%m%d.*.log')
-      plan.add_source_rule('derived', path: '/table/y=%Y/m=%m/d=%d')
-      plan.add_target_rule('derived', path: '/log/%Y%m%d.*.log')
+      engine.add_target_rule('primary', path: '/table/y=%Y/m=%m/d=%d')
+      engine.add_source_rule('primary', path: '/log/%Y%m%d.*.log')
+      engine.add_source_rule('derived', path: '/table/y=%Y/m=%m/d=%d')
+      engine.add_target_rule('derived', path: '/log/%Y%m%d.*.log')
     end
 
     it 'should raise exception' do
-      expect { plan.prepare('derived', targets: ['/log/20140228.wtf.log']) }.to raise_error /Max depth .* exceeded for rule 'derived'/
+      expect { engine.prepare('derived', targets: ['/log/20140228.wtf.log']) }.to raise_error /Max depth .* exceeded for rule 'derived'/
     end
   end
 end

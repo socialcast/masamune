@@ -1,10 +1,10 @@
 require 'singleton'
 
-class Masamune::DataPlanBuilder
+class Masamune::DataPlan::Builder
   include Singleton
 
   def build(namespaces, commands, sources, targets)
-    Masamune::DataPlan.new.tap do |data_plan|
+    Masamune::DataPlan::Engine.new.tap do |engine|
       sources_for, sources_anon = partition_by_for(sources)
       targets_for, targets_anon = partition_by_for(targets)
 
@@ -15,10 +15,10 @@ class Masamune::DataPlanBuilder
         target_options = targets_for[name] || targets_anon.shift or next
         next if source_options[:skip] || target_options[:skip]
 
-        data_plan.add_source_rule(command_name, source_options)
-        data_plan.add_target_rule(command_name, target_options)
+        engine.add_source_rule(command_name, source_options)
+        engine.add_target_rule(command_name, target_options)
 
-        data_plan.add_command_rule(command_name, thor_command_wrapper)
+        engine.add_command_rule(command_name, thor_command_wrapper)
       end
     end
   end
@@ -35,9 +35,9 @@ class Masamune::DataPlanBuilder
   end
 
   def thor_command_wrapper
-    Proc.new do |plan, rule, _|
-      plan.environment.with_exclusive_lock(rule) do
-        plan.environment.parent.invoke(rule)
+    Proc.new do |engine, rule, _|
+      engine.environment.with_exclusive_lock(rule) do
+        engine.environment.parent.invoke(rule)
       end
     end
   end

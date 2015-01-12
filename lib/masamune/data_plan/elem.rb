@@ -1,4 +1,4 @@
-class Masamune::DataPlanElem
+class Masamune::DataPlan::Elem
   MISSING_MODIFIED_AT = Time.new(0)
 
   include Masamune::Accumulate
@@ -25,9 +25,9 @@ class Masamune::DataPlanElem
 
   def exists?
     if rule.for_path?
-      rule.plan.filesystem.exists?(path)
+      rule.engine.filesystem.exists?(path)
     elsif rule.for_table_with_partition?
-      rule.plan.postgres_helper.table_exists?(table)
+      rule.engine.postgres_helper.table_exists?(table)
     elsif rule.for_table?
       table
     end
@@ -41,9 +41,9 @@ class Masamune::DataPlanElem
 
   def last_modified_at
     if rule.for_path?
-      rule.plan.filesystem.stat(path).try(:mtime)
+      rule.engine.filesystem.stat(path).try(:mtime)
     elsif rule.for_table?
-      rule.plan.postgres_helper.table_last_modified_at(table, @options)
+      rule.engine.postgres_helper.table_last_modified_at(table, @options)
     end || MISSING_MODIFIED_AT
   end
 
@@ -52,34 +52,34 @@ class Masamune::DataPlanElem
       file_glob = path
       file_glob += '/' unless path.include?('*') || path.include?('.')
       file_glob += '*' unless path.include?('*')
-      rule.plan.filesystem.glob(file_glob) do |new_path|
+      rule.engine.filesystem.glob(file_glob) do |new_path|
         yield rule.bind_input(new_path)
       end
     elsif rule.for_table_with_partition?
-      yield table if rule.plan.postgres_helper.table_exists?(table)
+      yield table if rule.engine.postgres_helper.table_exists?(table)
     end
   end
   method_accumulate :explode
 
   def targets(&block)
-    return Masamune::DataPlanSet::EMPTY if @rule.for_targets?
-    rule.plan.targets_for_source(rule.name, self) do |target|
+    return Masamune::DataPlan::Set::EMPTY if @rule.for_targets?
+    rule.engine.targets_for_source(rule.name, self) do |target|
       yield target
     end
   end
-  method_accumulate :targets, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_target_rule(elem.rule.name)) }
+  method_accumulate :targets, lambda { |elem| Masamune::DataPlan::Set.new(elem.rule.engine.get_target_rule(elem.rule.name)) }
 
   def target
     targets.first
   end
 
   def sources(&block)
-    return Masamune::DataPlanSet::EMPTY if @rule.for_sources?
-    rule.plan.sources_for_target(rule.name, self) do |source|
+    return Masamune::DataPlan::Set::EMPTY if @rule.for_sources?
+    rule.engine.sources_for_target(rule.name, self) do |source|
       yield source
     end
   end
-  method_accumulate :sources, lambda { |elem| Masamune::DataPlanSet.new(elem.rule.plan.get_source_rule(elem.rule.name)) }
+  method_accumulate :sources, lambda { |elem| Masamune::DataPlan::Set.new(elem.rule.engine.get_source_rule(elem.rule.name)) }
 
   def source
     sources.first

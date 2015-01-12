@@ -7,16 +7,16 @@ module Masamune::Actions
 
     include Masamune::Actions::DateParse
 
-    def data_plan
-      self.class.data_plan
+    def engine
+      self.class.engine
     end
 
     def targets
-      data_plan.targets(current_command_name)
+      engine.targets(current_command_name)
     end
 
     def sources
-      data_plan.sources(current_command_name)
+      engine.sources(current_command_name)
     end
 
     def target
@@ -46,23 +46,23 @@ module Masamune::Actions
       end
 
       base.after_initialize(:final) do |thor, options|
-        # Only execute this block if DataPlan is not currently executing
-        next if thor.data_plan.executing?
-        thor.data_plan.environment = thor.environment
-        thor.data_plan.filesystem.environment = thor.environment
+        # Only execute this block if DataPlan::Engine is not currently executing
+        next if thor.engine.executing?
+        thor.engine.environment = thor.environment
+        thor.engine.filesystem.environment = thor.environment
 
         raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start' or '--at'" unless options[:start] || options[:at] || options[:sources] || options[:targets]
         raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
 
-        desired_sources = Masamune::DataPlanSet.new thor.current_command_name, thor.parse_file_type(:sources)
-        desired_targets = Masamune::DataPlanSet.new thor.current_command_name, thor.parse_file_type(:targets)
+        desired_sources = Masamune::DataPlan::Set.new thor.current_command_name, thor.parse_file_type(:sources)
+        desired_targets = Masamune::DataPlan::Set.new thor.current_command_name, thor.parse_file_type(:targets)
 
         if thor.start_time && thor.stop_time
-          desired_targets.merge thor.data_plan.targets_for_date_range(thor.current_command_name, thor.start_time, thor.stop_time)
+          desired_targets.merge thor.engine.targets_for_date_range(thor.current_command_name, thor.start_time, thor.stop_time)
         end
 
-        thor.data_plan.prepare(thor.current_command_name, options.merge(sources: desired_sources, targets: desired_targets))
-        thor.data_plan.execute(thor.current_command_name, options)
+        thor.engine.prepare(thor.current_command_name, options.merge(sources: desired_sources, targets: desired_targets))
+        thor.engine.execute(thor.current_command_name, options)
         exit 0 if thor.top_level?
       end if defined?(base.after_initialize)
     end
@@ -96,8 +96,8 @@ module Masamune::Actions
         end
       end
 
-      def data_plan
-        @@data_plan ||= Masamune::DataPlanBuilder.instance.build(@@namespaces, @@commands, @@sources, @@targets)
+      def engine
+        @@engine ||= Masamune::DataPlan::Builder.instance.build(@@namespaces, @@commands, @@sources, @@targets)
       end
 
       private

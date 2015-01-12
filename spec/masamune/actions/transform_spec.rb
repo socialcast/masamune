@@ -66,7 +66,7 @@ describe Masamune::Actions::Transform do
 
   describe '.load_fact' do
     let(:date) { DateTime.civil(2014, 8) }
-    let(:data) { Masamune::DataPlanSet.new(source_file) }
+    let(:data) { Masamune::DataPlan::Set.new(source_file) }
 
     before do
       mock_command(/\Apsql/, mock_success)

@@ -1,13 +1,13 @@
 require 'spec_helper'
 
-describe Masamune::DataPlanRule do
-  let(:plan) { Masamune::DataPlan.new }
+describe Masamune::DataPlan::Rule do
+  let(:engine) { Masamune::DataPlan::Engine.new }
   let(:name) { 'primary' }
   let(:type) { :target }
   let(:pattern) { 'report/%Y-%m-%d/%H' }
   let(:options) { {path: pattern} }
 
-  let(:instance) { described_class.new(plan, name, type, options) }
+  let(:instance) { described_class.new(engine, name, type, options) }
 
   describe '#pattern' do
     subject do
@@ -98,8 +98,8 @@ describe Masamune::DataPlanRule do
   end
 
   describe '#unify' do
-    let(:primary) { described_class.new(plan, name, type, {path: 'report/%Y-%m-%d/%H'}) }
-    let(:induced) { described_class.new(plan, name, type, {path: 'table/y=%Y/m=%m/d=%d/h=%H'}) }
+    let(:primary) { described_class.new(engine, name, type, {path: 'report/%Y-%m-%d/%H'}) }
+    let(:induced) { described_class.new(engine, name, type, {path: 'table/y=%Y/m=%m/d=%d/h=%H'}) }
     let(:elem) { primary.bind_input(input) }
 
     subject(:new_elem) { instance.unify(elem, induced) }
@@ -114,7 +114,7 @@ describe Masamune::DataPlanRule do
     end
 
     context 'when input partially matches basis pattern' do
-      let(:induced) { described_class.new(plan, name, type, {path: 'table/%Y-%m'}) }
+      let(:induced) { described_class.new(engine, name, type, {path: 'table/%Y-%m'}) }
 
       let(:input) { 'report/2013-01-02/00' }
 

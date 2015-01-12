@@ -6,15 +6,15 @@ require 'active_support/core_ext/date/calculations'
 require 'active_support/core_ext/date_time/calculations'
 require 'date'
 
-class Masamune::DataPlanRule
+class Masamune::DataPlan::Rule
   TERMINAL = nil
 
   include Masamune::Accumulate
 
-  attr_reader :plan, :name, :type, :options
+  attr_reader :engine, :name, :type, :options
 
-  def initialize(plan, name, type, options = {})
-    @plan    = plan
+  def initialize(engine, name, type, options = {})
+    @engine  = engine
     @name    = name
     @type    = type
     @options = options
@@ -53,7 +53,7 @@ class Masamune::DataPlanRule
   end
 
   def ==(other)
-    plan    == other.plan &&
+    engine  == other.engine &&
     name    == other.name &&
     type    == other.type &&
     pattern == other.pattern &&
@@ -65,13 +65,13 @@ class Masamune::DataPlanRule
   end
 
   def hash
-    [plan, name, type, pattern, options].hash
+    [engine, name, type, pattern, options].hash
   end
 
   def pattern
     @pattern ||= begin
       if for_path?
-        path.respond_to?(:call) ? path.call(plan.filesystem) : path
+        path.respond_to?(:call) ? path.call(engine.filesystem) : path
       elsif for_table_with_partition?
         [table , partition].join('_')
       elsif for_table?
@@ -91,14 +91,14 @@ class Masamune::DataPlanRule
 
   def bind_date(input_date)
     output_date = tz.utc_to_local(input_date)
-    Masamune::DataPlanElem.new(self, output_date, options_for_elem)
+    Masamune::DataPlan::Elem.new(self, output_date, options_for_elem)
   end
 
   def bind_input(input)
     matched_pattern = match_data_hash(matcher.match(input))
     raise "Cannot bind_input #{input} to #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
-    Masamune::DataPlanElem.new(self, output_date, options_for_elem.merge(matched_extra(matched_pattern)))
+    Masamune::DataPlan::Elem.new(self, output_date, options_for_elem.merge(matched_extra(matched_pattern)))
   end
 
   def unify(elem, rule)
@@ -205,7 +205,7 @@ class Masamune::DataPlanRule
     part_index = pattern_parts.find_index { |part| part =~ time_step_to_format(grain) }
     raise "cannot round to :#{grain} for #{pattern}" unless part_index
     new_pattern = pattern_parts[0..part_index].join('/')
-    self.class.new(plan, name, type, options.merge(path: new_pattern))
+    self.class.new(engine, name, type, options.merge(path: new_pattern))
   end
 
   private
