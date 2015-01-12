@@ -1,6 +1,6 @@
 require 'set'
 
-class Masamune::DataPlanSet < Set
+class Masamune::DataPlan::Set < Set
   EMPTY = self.new
 
   include Masamune::Accumulate
@@ -49,19 +49,8 @@ class Masamune::DataPlanSet < Set
   end
   method_accumulate :adjacent, lambda { |set| set.class.new(set.rule) }
 
-  def actionable(&block)
-    self.each do |elem|
-      if @rule.for_sources?
-        yield elem if elem.targets.existing.any?
-      elsif @rule.for_targets?
-        yield elem if elem.sources.existing.any?
-      end
-    end
-  end
-  method_accumulate :actionable, lambda { |set| set.class.new(set.rule) }
-
   def stale(&block)
-    return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_sources?
+    return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
     self.each do |target|
       yield target if target.sources.existing.any? { |source| target_stale?(source, target) }
     end
@@ -69,13 +58,37 @@ class Masamune::DataPlanSet < Set
   method_accumulate :stale, lambda { |set| set.class.new(set.rule) }
 
   def incomplete(&block)
-    return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_sources?
+    return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
     set = Set.new
     self.each do |target|
       yield target if set.add?(target) unless target.complete?
     end
   end
   method_accumulate :incomplete, lambda { |set| set.class.new(set.rule) }
+
+  def actionable(&block)
+    return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
+    set = Set.new
+    missing.each do |target|
+      yield target if set.add?(target)
+    end
+    incomplete.each do |target|
+      yield target if set.add?(target)
+    end
+    stale.each do |target|
+      yield target if set.add?(target)
+    end
+  end
+  method_accumulate :actionable, lambda { |set| set.class.new(set.rule) }
+
+  def updateable(&block)
+    return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
+    set = Set.new
+    actionable.each do |target|
+      yield target if set.add?(target) && target.sources.existing.any?
+    end
+  end
+  method_accumulate :updateable, lambda { |set| set.class.new(set.rule) }
 
   # TODO detect & warn or correct if coarser grain set is incomplete
   def with_grain(grain, &block)
@@ -88,7 +101,7 @@ class Masamune::DataPlanSet < Set
   method_accumulate :with_grain, lambda { |set, grain| set.class.new(set.rule.round(grain)) }
 
   def targets
-    return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_targets?
+    return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_targets?
     self.class.new(self.first.targets.rule).tap do |set|
       self.each do |elem|
         set.merge elem.targets
@@ -97,7 +110,7 @@ class Masamune::DataPlanSet < Set
   end
 
   def sources
-    return Masamune::DataPlanSet::EMPTY if empty? || @rule.for_sources?
+    return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
     self.class.new(self.first.sources.rule).tap do |set|
       self.each do |elem|
         set.merge elem.sources
@@ -110,7 +123,7 @@ class Masamune::DataPlanSet < Set
   def convert_elem(elem)
     case elem
     when nil
-    when Masamune::DataPlanElem
+    when Masamune::DataPlan::Elem
       elem
     when String
       @rule.bind_input(elem)
@@ -134,8 +147,8 @@ class Masamune::DataPlanSet < Set
   end
 
   def target_stale?(source, target)
-    target.last_modified_at != Masamune::DataPlanElem::MISSING_MODIFIED_AT &&
-    source.last_modified_at != Masamune::DataPlanElem::MISSING_MODIFIED_AT &&
+    target.last_modified_at != Masamune::DataPlan::Elem::MISSING_MODIFIED_AT &&
+    source.last_modified_at != Masamune::DataPlan::Elem::MISSING_MODIFIED_AT &&
     source.last_modified_at >= target.last_modified_at
   end
 end
