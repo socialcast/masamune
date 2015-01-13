@@ -78,6 +78,7 @@ module Masamune
         class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Combination of --no-op and --verbose', :default => false
         class_option :config, :desc => 'Configuration file'
         class_option :version, :desc => 'Print version and exit', :type => :boolean
+        class_option :lock, :desc => 'Optional job lock name', :type => :string
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
           self.environment.parent = self
@@ -115,6 +116,7 @@ module Masamune
             config.debug    = options[:debug]
             config.no_op    = options[:no_op] || options[:dry_run]
             config.dry_run  = options[:dry_run]
+            config.lock     = options[:lock]
 
             if options[:version]
               puts environment.version

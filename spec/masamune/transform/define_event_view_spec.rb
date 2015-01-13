@@ -26,6 +26,7 @@ describe Masamune::Transform::DefineEventView do
 
     it 'should eq render template' do
       is_expected.to eq <<-EOS.strip_heredoc
+        DROP VIEW IF EXISTS tenant_events;
         CREATE VIEW IF NOT EXISTS tenant_events (
           uuid,
           type,
@@ -61,8 +62,6 @@ describe Masamune::Transform::DefineEventView do
           type = 'tenant_create' OR
           type = 'tenant_update' OR
           type = 'tenant_delete'
-        SORT BY
-          created_at
         ;
       EOS
     end
