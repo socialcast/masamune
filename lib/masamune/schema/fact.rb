@@ -19,6 +19,27 @@ module Masamune::Schema
       columns.values.detect { |column| column.id == :time_key }
     end
 
+    #special handling for visitation table. Include hourly_snapshot in the name
+    def name
+      "#{id}_#{suffix}"
+      s = "#{id}"
+      if s.eql? "visitation"
+        s = "#{id}_hourly_snapshot_#{suffix}"
+      end
+    end
+
+    #special handling for visitation table. Create two rollup tables
+    def as_psql
+      s = "#{id}"
+      super
+      if s.eql? "visitation"
+        output = []
+        output << super
+        output << Masamune::Template.render_to_string(rollup_template)
+        output.join("\n")
+      end
+    end
+
     def stage_table(*a)
       @stage_table = super.tap do |stage|
         stage.columns.each do |_, column|
@@ -39,6 +60,9 @@ module Masamune::Schema
       @partition_rule = Masamune::DataPlanRule.new(nil, :tmp, :target, table: name, partition: @partition)
     end
 
+    def rollup_template
+      ::File.expand_path(::File.join(__FILE__, '..', 'rollup.psql.erb'))
+    end
     private
 
     def initialize_surrogate_key_column!

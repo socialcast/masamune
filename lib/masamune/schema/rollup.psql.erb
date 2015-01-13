@@ -1,0 +1,34 @@
+
+CREATE TABLE IF NOT EXISTS visitation_daily_snapshot_fact (LIKE visitation_hourly_snapshot_fact INCLUDING ALL);
+
+ALERT TABLE visitation_daily_snapshot_fact DROP COLUMN time_key;
+
+ALTER TABLE visitation_daily_snapshot_fact ADD CONSTRAINT "visitation_fact_application_type_id_fkey" FOREIGN KEY (application_type_id) REFERENCES application_type(id);
+
+ALTER TABLE visitation_daily_snapshot_fact ADD CONSTRAINT  "visitation_fact_date_dimension_uuid_fkey" FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid);
+
+ALTER TABLE visitation_daily_snapshot_fact ADD CONSTRAINT "visitation_fact_feature_type_id_fkey" FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
+
+ALTER TABLE visitation_daily_snapshot_fact ADD CONSTRAINT "visitation_fact_tenant_dimension_uuid_fkey" FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid);
+
+ALTER TABLE visitation_daily_snapshot_fact ADD CONSTRAINT "visitation_fact_user_agent_type_id_fkey" FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id);
+
+ALTER TABLE visitation_daily_snapshot_fact ADD CONSTRAINT "visitation_fact_user_dimension_uuid_fkey" FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid);
+ 
+
+CREATE TABLE IF NOT EXISTS visitation_monthly_snapshot_fact (LIKE visitation_hourly_snapshot_fact INCLUDING ALL);
+
+ALERT TABLE visitation_monthly_snapshot_fact DROP COLUMN time_key;
+
+ALTER TABLE visitation_monthly_snapshot_fact ADD CONSTRAINT "visitation_fact_application_type_id_fkey" FOREIGN KEY (application_type_id) REFERENCES application_type(id);
+
+ALTER TABLE visitation_monthly_snapshot_fact ADD CONSTRAINT  "visitation_fact_date_dimension_uuid_fkey" FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid);
+
+ALTER TABLE visitation_monthly_snapshot_fact ADD CONSTRAINT "visitation_fact_feature_type_id_fkey" FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
+
+ALTER TABLE visitation_monthly_snapshot_fact ADD CONSTRAINT "visitation_fact_tenant_dimension_uuid_fkey" FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid);
+
+ALTER TABLE visitation_monthly_snapshot_fact ADD CONSTRAINT "visitation_fact_user_agent_type_id_fkey" FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id);
+
+ALTER TABLE visitation_monthly_snapshot_fact ADD CONSTRAINT "visitation_fact_user_dimension_uuid_fkey" FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid);
+ 
