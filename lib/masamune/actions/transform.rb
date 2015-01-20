@@ -41,7 +41,7 @@ module Masamune::Actions
       postgres file: transform.to_psql_file, debug: target.debug
     end
 
-    def load_fact(source_files, source, target, date, grain=nil)
+    def load_fact(source_files, source, target, date, grain = nil)
       transform = Masamune::Transform::LoadFact.new(source_files, source, target, date, grain)
       postgres file: transform.to_psql_file, debug: (source.debug || target.debug)
     end

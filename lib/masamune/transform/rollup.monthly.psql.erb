@@ -18,19 +18,34 @@ COMMIT;
 BEGIN;
 
 INSERT INTO
-  <%= target_partition.name %> (<%= target.rollup_columns.map{|k, v| "#{k}"}.join(', ') %>,time_key)
+  <%= target_partition.name %> (<%= target.rollup_columns.map{|k, v| "#{k}"}.join(', ') %>, time_key)
 SELECT
   <%- target.rollup_columns.each do |k, v| -%>
   <%- if k.eql? :total -%>
-        SUM(<%= k%><%='),'%>
-  <%- else -%>
-        <%= k %><%=',' %>
+        SUM(a.<%= k%><%=') AS total,'%>
+  <%- else if k.eql? :date_dimension_uuid-%>
+       (SELECT uuid FROM date_dimension c WHERE c.month_epoch = b.month_epoch ORDER BY c.date_id LIMIT 1),
+  <%- else-%>
+        a.<%= k %><%=',' %>
+  <%- end -%>
   <%- end -%>
   <%- end -%><%=target_partition.startTime%>
 FROM
-  <%= source_partition.name %>
+  <%= source_partition.name %> a
+JOIN
+    date_dimension b
+ON
+    b.uuid = a.date_dimension_uuid
+
 GROUP BY
- <%= target.rollup_columns.map{|k, v| "#{k}"}.join(', ') %>
+ <%- target.rollup_columns.each do |k, v| -%>
+ <%- if k.eql? :date_dimension_uuid -%>
+        b.month_epoch
+ <%- else if not k.eql? :total -%>
+        , a.<%= k %>
+ <%- end -%>
+ <%- end -%>
+ <%- end -%>
 ;
 COMMIT;
 

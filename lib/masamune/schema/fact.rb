@@ -2,6 +2,7 @@ module Masamune::Schema
   class Fact < Table
     attr_accessor :partition
     attr_accessor :range
+    attr_accessor :grain
 
     def initialize(opts = {})
       opts.symbolize_keys!
@@ -22,22 +23,36 @@ module Masamune::Schema
 
     #special handling for visitation table. Include hourly_snapshot in the name
     def name
-      "#{id}_#{suffix}"
       s = "#{id}"
       if s.eql? "visitation"
-        s = "#{id}_hourly_snapshot_#{suffix}"
+        "#{id}_#{with_grain}_snapshot_#{suffix}"
+      else
+        super
+      end
+    end
+
+
+    def with_grain
+      g = case @grain
+      when nil, :hourly
+         "hourly"
+      when :daily
+         "daily"
+      when :monthly
+         "monthly"
       end
     end
 
     #special handling for visitation table. Create two rollup tables
-    def as_psql
+    def as_psql(extra = {})
       s = "#{id}"
-      super
       if s.eql? "visitation"
         output = []
         output << super
         output << Masamune::Template.render_to_string(rollup_template)
         output.join("\n")
+      else
+        super
       end
     end
 
@@ -53,9 +68,19 @@ module Masamune::Schema
     def partition_table(date)
       partition_range = partition_rule.bind_date(date)
       @partition_tables ||= {}
-      @partition_tables[partition_range] ||= self.class.new id: id, columns: partition_table_columns, parent: self, range: partition_range, suffix: partition_range.suffix
+      @partition_tables[partition_range] ||= self.class.new id: id, columns: partition_table_columns, parent: self, range: partition_range, suffix: partition_range.suffix, grain: @grain
     end
 
+    def startTime
+      "#{range.start_time.to_i}"
+    end
+
+    def rollup_columns
+      rollupColumns = columns.clone
+      rollupColumns.delete(:last_modified_at)
+      rollupColumns.delete(:time_key)
+      return rollupColumns
+    end
     def constraints
       return unless range
       "CHECK (time_key >= #{range.start_time.to_i} AND time_key < #{range.stop_time.to_i})"

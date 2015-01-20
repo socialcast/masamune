@@ -1,8 +1,6 @@
 
 CREATE TABLE IF NOT EXISTS visitation_daily_snapshot_fact (LIKE visitation_hourly_snapshot_fact INCLUDING ALL);
 
-ALERT TABLE visitation_daily_snapshot_fact DROP COLUMN time_key;
-
 ALTER TABLE visitation_daily_snapshot_fact ADD CONSTRAINT "visitation_fact_application_type_id_fkey" FOREIGN KEY (application_type_id) REFERENCES application_type(id);
 
 ALTER TABLE visitation_daily_snapshot_fact ADD CONSTRAINT  "visitation_fact_date_dimension_uuid_fkey" FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid);
@@ -17,8 +15,6 @@ ALTER TABLE visitation_daily_snapshot_fact ADD CONSTRAINT "visitation_fact_user_
  
 
 CREATE TABLE IF NOT EXISTS visitation_monthly_snapshot_fact (LIKE visitation_hourly_snapshot_fact INCLUDING ALL);
-
-ALERT TABLE visitation_monthly_snapshot_fact DROP COLUMN time_key;
 
 ALTER TABLE visitation_monthly_snapshot_fact ADD CONSTRAINT "visitation_fact_application_type_id_fkey" FOREIGN KEY (application_type_id) REFERENCES application_type(id);
 

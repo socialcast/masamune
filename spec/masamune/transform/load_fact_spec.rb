@@ -57,7 +57,7 @@ describe Masamune::Transform::LoadFact do
   let(:target) { registry.facts[:visits] }
   let(:source) { registry.files[:visits] }
 
-  let(:transform) { described_class.new data, source, target, date }
+  let(:transform) { described_class.new data, source, target, date, nil }
 
   describe '#stage_fact_as_psql' do
     subject(:result) { transform.stage_fact_as_psql }
