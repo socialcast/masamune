@@ -95,6 +95,7 @@ class Masamune::DataPlan::Rule
   end
 
   def bind_input(input)
+    return input if input.is_a?(Masamune::DataPlan::Elem)
     matched_pattern = match_data_hash(matcher.match(input))
     raise "Cannot bind_input #{input} to #{pattern}" unless matched_pattern
     output_date = matched_date(matched_pattern)
