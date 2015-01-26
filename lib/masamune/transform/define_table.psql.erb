@@ -1,0 +1,56 @@
+<% files ||= [] %>
+
+<%- target.children.each do |child| -%>
+<%= render 'define_table.psql.erb', target: child %>
+<%- end -%>
+
+<%- target.enum_columns.each do |_, column| -%>
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE LOWER(t.typname) = LOWER('<%= column.sql_type %>')) THEN
+CREATE TYPE <%= column.sql_type %> AS ENUM (<%= column.values.map { |value| "'#{value}'" }.join(', ') %>);
+END IF; END $$;
+<%- end -%>
+
+<%- if target.temporary? -%>
+CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.name %>
+<%- else -%>
+CREATE TABLE IF NOT EXISTS <%= target.name %>
+<%- end -%>
+(
+  <%- target.defined_columns.each do |column, last| -%>
+  <%= column.as_psql %><%= ',' unless last %>
+  <%- end -%>
+);
+
+<%- files.each do |file| -%>
+<%-
+  copy_options = []
+  copy_options << "FORMAT 'csv'" if target.format == :csv
+  copy_options << "DELIMITER '\t'" if target.format == :tsv
+  copy_options << "HEADER true" if target.headers
+-%>
+COPY <%= target.name %> FROM '<%= file.path %>' WITH (<%= copy_options.join(", ") %>);
+<%- end -%>
+
+<%= render 'define_unique.psql.erb', target: target %>
+<%= render 'define_index.psql.erb', target: target %>
+
+<% target.insert_rows.each do |row| %>
+INSERT INTO <%= target.name %> (<%= row.insert_columns.join(', ') %>)
+SELECT <%= row.insert_values.join(', ') %>
+WHERE NOT EXISTS (SELECT 1 FROM <%= target.name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
+<%- end -%>
+
+<% target.aliased_rows.each do |row| %>
+<%- row.natural_keys.each do |column| -%>
+CREATE OR REPLACE FUNCTION <%= row.name(column) %>
+RETURNS <%= column.sql_type %> IMMUTABLE AS $$
+  SELECT <%= row.values[column.name] %>;
+$$ LANGUAGE SQL;
+<%- end -%>
+
+CREATE OR REPLACE FUNCTION <%= row.name %>
+RETURNS <%= target.surrogate_key.sql_type %> IMMUTABLE AS $$
+  SELECT <%= target.surrogate_key.name %> FROM <%= target.name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
+$$ LANGUAGE SQL;
+<%- end -%>

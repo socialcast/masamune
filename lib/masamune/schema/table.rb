@@ -176,10 +176,6 @@ module Masamune::Schema
       end
     end
 
-    def as_psql(extra = {})
-      Masamune::Template.render_to_string(table_template, extra.merge(table: self))
-    end
-
     def select_columns(selected_columns = [])
       return columns.values unless selected_columns.any?
       [].tap do |result|

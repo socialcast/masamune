@@ -5,6 +5,7 @@ require 'tempfile'
 require 'tmpdir'
 
 require 'masamune/spec_helper'
+require 'active_support/core_ext/string/strip'
 
 MasamuneExampleGroup.configure do |config|
   config.quiet    = ENV['MASAMUNE_DEBUG'] ? false : true

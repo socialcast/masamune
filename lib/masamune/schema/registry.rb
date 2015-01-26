@@ -25,13 +25,15 @@ module Masamune::Schema
       end
     end
 
+    attr_accessor :kind
     attr_accessor :dimensions
     attr_accessor :facts
     attr_accessor :files
     attr_accessor :events
 
-    def initialize(environment)
+    def initialize(environment, kind = :psql)
       self.environment = environment
+      self.kind = kind
 
       @dimensions = {}.with_indifferent_access
       @facts      = {}.with_indifferent_access
@@ -135,48 +137,6 @@ module Masamune::Schema
       end
     end
 
-     # TODO construct a partial ordering of dimensions by reference
-    def as_psql
-      output = []
-      output << ::File.read(helper_psql_file)
-      dimensions.each do |id, dimension|
-        logger.debug("#{id}\n" + dimension.as_psql) if dimension.debug
-        output << dimension.as_psql
-      end
-      facts.each do |id, fact|
-        logger.debug("#{id}\n" + fact.as_psql) if fact.debug
-        output << fact.as_psql
-      end
-      @extra.each do |extra|
-        output << extra
-      end
-      output.join("\n")
-    end
-
-    def to_psql_file
-      Tempfile.new('masamune').tap do |file|
-        file.write(as_psql)
-        file.close
-      end.path
-    end
-
-    def as_hql
-      output = []
-      events.each do |id, event|
-        t = Masamune::Transform::DefineEventView.new(nil, event)
-        logger.debug("#{id}\n" + t.as_hql) if event.debug
-        output << t.as_hql
-      end
-      output.join("\n")
-    end
-
-    def to_hql_file
-      Tempfile.new('masamune').tap do |file|
-        file.write(as_hql)
-        file.close
-      end.path
-    end
-
     def dereference_column(id, options = {})
       column_id, reference_id = id.split(/\./).reverse
       column_options = options.dup
@@ -189,12 +149,6 @@ module Masamune::Schema
       end if reference_id
 
       Masamune::Schema::Column.new(column_options)
-    end
-
-    private
-
-    def helper_psql_file
-      @helper_psql_file ||= ::File.expand_path(::File.join(__FILE__, '..', 'helper.psql'))
     end
   end
 end

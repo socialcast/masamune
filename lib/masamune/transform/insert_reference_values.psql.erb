@@ -1,4 +1,3 @@
-<%- if target.insert_columns(source).any? -%>
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
 
 INSERT INTO
@@ -16,6 +15,3 @@ WHERE
   <%- end -%>
 <%- end -%>
 ;
-
-<%= render 'bulk_upsert.psql.erb', target: target, source: target.stage_table %>
-<%- end -%>
