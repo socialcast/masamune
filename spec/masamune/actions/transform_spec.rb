@@ -72,7 +72,7 @@ describe Masamune::Actions::Transform do
       mock_command(/\Apsql/, mock_success)
     end
 
-    subject { instance.load_fact(data, registry.files[:visits], registry.facts[:visits], date) }
+    subject { instance.load_fact(data, registry.files[:visits], registry.facts[:visits], date, nil) }
 
     it { is_expected.to be_success }
   end

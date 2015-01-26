@@ -1,10 +1,20 @@
 module Masamune::Transform
   class LoadFact
-    def initialize(source_files, source, target, date)
+    def initialize(source_files, source, target, date, grain)
       @source_files = source_files
       @target = target
-      @source = source.as_table(@target)
       @date   = date
+      @grain = grain
+      if @grain.eql? nil
+        @source = source.as_table(@target)
+      else
+        @source = source
+        @source.grain = grain[:srcGrain]
+        @target.grain = grain[:dstGrain]
+        if(grain[:dstGrain].eql? :monthly)
+          @target.partition="y%Y"
+        end
+      end
     end
 
     def stage_fact_as_psql
@@ -26,11 +36,32 @@ module Masamune::Transform
         load_fact_as_psql
     end
 
+    def rollup_as_psql
+      if @grain[:dstGrain] == :monthly
+        Masamune::Template.render_to_string(rollup_monthly_template, source: @source, target: Target.new(@target), date: @date)
+      else
+        Masamune::Template.render_to_string(rollup_template, source: @source, target: Target.new(@target), date: @date)
+      end
+    end
+
+    def as_rollup
+      Masamune::Template.combine rollup_as_psql
+    end
+
+    #if grain is not set, then load data to visitation_hourly_snapshot_fact table;
+    #otherwise do the rollup
     def to_psql_file
-      Tempfile.new('masamune').tap do |file|
-        file.write(as_psql)
-        file.close
-      end.path
+      if @grain.eql? nil or @grain.eql? :hourly
+        Tempfile.new('masamune').tap do |file|
+          file.write(as_psql)
+          file.close
+        end.path
+      else
+        Tempfile.new('masamune').tap do |file|
+          file.write(as_rollup)
+          file.close
+          end.path
+      end
     end
 
     private
@@ -45,6 +76,14 @@ module Masamune::Transform
 
     def load_fact_template
       @load_fact_template ||= File.expand_path(File.join(__FILE__, '..', 'load_fact.psql.erb'))
+    end
+
+    def rollup_template
+      ::File.expand_path(::File.join(__FILE__, '..', 'rollup.psql.erb'))
+    end
+
+    def rollup_monthly_template
+      ::File.expand_path(::File.join(__FILE__, '..', 'rollup.monthly.psql.erb'))
     end
   end
 

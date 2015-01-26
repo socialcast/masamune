@@ -2,10 +2,12 @@ module Masamune::Schema
   class Fact < Table
     attr_accessor :partition
     attr_accessor :range
+    attr_accessor :grain
 
     def initialize(opts = {})
       opts.symbolize_keys!
       @partition = opts.delete(:partition)
+      @grain = opts.delete(:grain)
       super opts.reverse_merge(type: :fact)
       initialize_fact_columns!
       foreign_key_columns.each do |column|
@@ -20,6 +22,14 @@ module Masamune::Schema
       columns.values.detect { |column| column.id == :time_key }
     end
 
+    def name
+      if not @grain.eql? nil
+        "#{id}_#{@grain}_snapshot_#{suffix}"
+      else
+        super
+      end
+    end
+
     def stage_table(*a)
       super.tap do |stage|
         stage.range = range
@@ -32,9 +42,19 @@ module Masamune::Schema
     def partition_table(date)
       partition_range = partition_rule.bind_date(date)
       @partition_tables ||= {}
-      @partition_tables[partition_range] ||= self.class.new id: id, columns: partition_table_columns, parent: self, range: partition_range, suffix: partition_range.suffix
+      @partition_tables[partition_range] ||= self.class.new id: id, columns: partition_table_columns, parent: self, range: partition_range, suffix: partition_range.suffix, grain: @grain
     end
 
+    def startTime
+      "#{range.start_time.to_i}"
+    end
+
+    def rollup_columns
+      rollupColumns = columns.clone
+      rollupColumns.delete(:last_modified_at)
+      rollupColumns.delete(:time_key)
+      return rollupColumns
+    end
     def constraints
       return unless range
       "CHECK (time_key >= #{range.start_time.to_i} AND time_key < #{range.stop_time.to_i})"
