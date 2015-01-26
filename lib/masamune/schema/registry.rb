@@ -75,7 +75,13 @@ module Masamune::Schema
     def fact(id, options = {}, &block)
       prev_options = @options.dup
       yield if block_given?
-      self.facts[id] ||= Masamune::Schema::Fact.new(options.merge(@options).merge(id: id))
+      if(options.has_key? (:grain))
+         options[:grain].each do |g|
+          self.facts[id +"_"+ "#{g}"] ||= Masamune::Schema::Fact.new(options.merge(@options).merge(id: id).merge(grain: g))
+        end
+      else
+         self.facts[id] ||= Masamune::Schema::Fact.new(options.merge(@options).merge(id: id))
+      end
     ensure
       @options = prev_options
     end

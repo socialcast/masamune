@@ -7,6 +7,7 @@ module Masamune::Schema
     def initialize(opts = {})
       opts.symbolize_keys!
       @partition = opts.delete(:partition)
+      @grain = opts.delete(:grain)
       super opts.reverse_merge(type: :fact)
       initialize_fact_columns!
       foreign_key_columns.each do |column|
@@ -21,36 +22,9 @@ module Masamune::Schema
       columns.values.detect { |column| column.id == :time_key }
     end
 
-    #special handling for visitation table. Include hourly_snapshot in the name
     def name
-      s = "#{id}"
-      if s.eql? "visitation"
-        "#{id}_#{with_grain}_snapshot_#{suffix}"
-      else
-        super
-      end
-    end
-
-
-    def with_grain
-      g = case @grain
-      when nil, :hourly
-         "hourly"
-      when :daily
-         "daily"
-      when :monthly
-         "monthly"
-      end
-    end
-
-    #special handling for visitation table. Create two rollup tables
-    def as_psql(extra = {})
-      s = "#{id}"
-      if s.eql? "visitation"
-        output = []
-        output << super
-        output << Masamune::Template.render_to_string(rollup_template)
-        output.join("\n")
+      if not @grain.eql? nil
+        "#{id}_#{@grain}_snapshot_#{suffix}"
       else
         super
       end
@@ -86,9 +60,6 @@ module Masamune::Schema
       "CHECK (time_key >= #{range.start_time.to_i} AND time_key < #{range.stop_time.to_i})"
     end
 
-    def rollup_template
-      ::File.expand_path(::File.join(__FILE__, '..', 'rollup.psql.erb'))
-    end
     private
 
     def initialize_surrogate_key_column!
