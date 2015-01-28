@@ -4,6 +4,18 @@ describe Masamune::Schema::Registry do
   let(:environment) { double }
   let(:instance) { described_class.new(environment) }
 
+  describe '#method_missing' do
+    before do
+      instance.schema do
+        dimension 'foo', type: :two
+      end
+    end
+
+    it { expect(instance.foo_dimension.id).to eq(:foo) }
+    it { expect(instance.bar_dimension).to be_nil }
+    it { expect { instance.foo_baz }.to raise_error ArgumentError, "unknown type 'baz'" }
+  end
+
   describe '#schema' do
     context 'when schema contains dimensions' do
       before do
@@ -13,10 +25,10 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject { instance.dimensions }
-
-      it { is_expected.to include :foo }
-      it { is_expected.to include :bar }
+      it { expect(instance.dimensions).to include :foo }
+      it { expect(instance.dimensions).to include :bar }
+      it { expect(instance.foo_dimension.id).to eq(:foo) }
+      it { expect(instance.bar_dimension.id).to eq(:bar) }
     end
 
     context 'when schema contains columns' do
@@ -34,8 +46,8 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      let(:table_one_columns) { instance.dimensions[:table_one].columns }
-      let(:table_two_columns) { instance.dimensions[:table_two].columns }
+      let(:table_one_columns) { instance.table_one_dimension.columns }
+      let(:table_two_columns) { instance.table_two_dimension.columns }
 
       it { expect(table_one_columns).to include :column_one }
       it { expect(table_one_columns).to include :column_two }
@@ -59,7 +71,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      let(:table_one_rows) { instance.dimensions[:table_one].rows }
+      let(:table_one_rows) { instance.table_one_dimension.rows }
 
       it { expect(table_one_rows[0].values).to include(column_one: 1, column_two: 'a') }
       it { expect(table_one_rows[1].values).to include(column_one: 2, column_two: 'b') }
@@ -77,7 +89,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject(:references) { instance.dimensions[:baz].references }
+      subject(:references) { instance.baz_dimension.references }
 
       it { is_expected.to include :foo }
       it { is_expected.to include :quux_bar }
@@ -98,7 +110,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject { instance.dimensions[:cluster].columns }
+      subject { instance.cluster_dimension.columns }
 
       it { is_expected.to include :uuid }
       it { is_expected.to_not include :id }
@@ -124,8 +136,8 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      let(:fact_one) { instance.facts[:fact_one] }
-      let(:fact_two) { instance.facts[:fact_two] }
+      let(:fact_one) { instance.fact_one_fact }
+      let(:fact_two) { instance.fact_two_fact }
 
       it { expect(fact_one.references).to include :dimension_one}
       it { expect(fact_one.measures).to include :measure_one }
@@ -146,8 +158,8 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      let(:event_one) { instance.events[:event_one] }
-      let(:event_two) { instance.events[:event_two] }
+      let(:event_one) { instance.event_one_event }
+      let(:event_two) { instance.event_two_event }
 
       it { expect(event_one.attributes).to include :attribute_one }
       it { expect(event_one.attributes).to include :attribute_two }
@@ -169,7 +181,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject(:file) { instance.files[:users] }
+      subject(:file) { instance.users_file }
 
       it 'should expect dot notation column names to reference dimensions' do
         expect(file.columns).to include :user_account_type_name
@@ -214,7 +226,7 @@ describe Masamune::Schema::Registry do
             column 'deleted_at', type: :timestamp
           end
 
-          map from: files[:users], to: dimensions[:user] do
+          map from: users_file, to: user_dimension do
             field 'tenant_id'
             field 'user_id', 'id'
             field 'user_account_state.name' do |row|
@@ -226,7 +238,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject(:map) { instance.files[:users].map(to: instance.dimensions[:user]) }
+      subject(:map) { instance.users_file.map(to: instance.user_dimension) }
 
       it 'constructs map' do
         expect(map.fields[:tenant_id]).to eq('tenant_id')
@@ -250,14 +262,14 @@ describe Masamune::Schema::Registry do
             attribute 'name', type: :string
           end
 
-          map from: events[:users], to: dimensions[:user] do
+          map from: users_event, to: user_dimension do
             field 'user_id', 'id'
             field 'name', 'name_now'
           end
         end
       end
 
-      subject(:map) { instance.events[:users].map(to: instance.dimensions[:user]) }
+      subject(:map) { instance.users_event.map(to: instance.user_dimension) }
 
       it 'constructs map' do
         expect(map.fields[:user_id]).to eq('id')
@@ -298,7 +310,7 @@ describe Masamune::Schema::Registry do
         instance.schema do
           file 'users' do; end
 
-          map from: files[:users] do
+          map from: users_file do
             field 'tenant_id'
           end
         end
@@ -306,6 +318,25 @@ describe Masamune::Schema::Registry do
 
       it 'should raise an exception' do
         expect { schema }.to raise_error /invalid map from: 'users', to: is missing/
+      end
+    end
+
+    context 'when schema addressed with symbols' do
+      before do
+        instance.schema do
+          dimension 'user' do; end
+          file 'users' do; end
+
+          map from: files[:users], to: dimensions[:user] do
+            field 'tenant_id'
+          end
+        end
+      end
+
+      subject(:map) { instance.files[:users].map(to: instance.dimensions[:user]) }
+
+      it 'should construct map' do
+        is_expected.to_not be_nil
       end
     end
 
@@ -321,7 +352,7 @@ describe Masamune::Schema::Registry do
         end
       end
 
-      subject(:map) { instance.files[:users].map(to: instance.dimensions[:user]) }
+      subject(:map) { instance.files['users'].map(to: instance.dimensions['user']) }
 
       it 'should construct map' do
         is_expected.to_not be_nil

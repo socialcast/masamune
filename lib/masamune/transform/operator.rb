@@ -26,7 +26,6 @@ module Masamune::Transform
         when Operator
           result << template
         when Symbol, String
-          debugger unless template_suffix.present?
           result << template_eval(template)
         end
       end

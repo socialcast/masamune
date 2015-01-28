@@ -129,6 +129,12 @@ module Masamune::Schema
       self.maps[options[:from]][options[:to]]
     end
 
+    def method_missing(method, *args, &block)
+      *name, type = method.to_s.split('_')
+      raise ArgumentError, "unknown type '#{type}'" unless %(dimension fact file event).include?(type)
+      self.send(type.pluralize)[name.join('_')]
+    end
+
     def load(file)
       if file =~ /\.rb\Z/
         instance_eval(::File.read(file))
