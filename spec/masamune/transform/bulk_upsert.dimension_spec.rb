@@ -7,7 +7,7 @@ describe 'Masamune::Transform::BulkUpsert with Masamune::Schema::Dimension' do
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
   before do
-    registry.schema do
+    registry.schema :postgres do
       dimension 'cluster', type: :mini do
         column 'id', type: :integer, surrogate_key: true, auto: true
         column 'name', type: :string, unique: true
@@ -55,7 +55,7 @@ describe 'Masamune::Transform::BulkUpsert with Masamune::Schema::Dimension' do
     end
   end
 
-  let(:target) { registry.dimensions[:user] }
+  let(:target) { registry.postgres.user_dimension }
 
   describe '#bulk_upsert with dimension' do
     subject(:result) { transform.bulk_upsert(target.stage_table, target).to_s }

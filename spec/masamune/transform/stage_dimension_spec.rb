@@ -7,7 +7,7 @@ describe Masamune::Transform::StageDimension do
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
   before do
-    registry.schema do
+    registry.schema :postgres do
       dimension 'cluster', type: :mini do
         column 'id', type: :integer, surrogate_key: true, auto: true
         column 'name', type: :string, unique: true
@@ -55,8 +55,8 @@ describe Masamune::Transform::StageDimension do
     end
   end
 
-  let(:target) { registry.dimensions[:user].ledger_table }
-  let(:source) { registry.files[:user].as_table(target) }
+  let(:target) { registry.postgres.user_dimension.ledger_table }
+  let(:source) { registry.postgres.user_file.as_table(target) }
 
   describe '#stage_dimension' do
     subject(:result) { transform.stage_dimension(source, target).to_s }

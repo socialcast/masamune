@@ -56,7 +56,7 @@ module Masamune::Commands
       args << @path
       args << ['--database', @database] if @database
       args << @options.map(&:to_a)
-      args << load_setup_and_schema_files.map(&:to_a)
+      args << load_setup_files.map(&:to_a)
       args << command_args_for_file if @file
       args.flatten
     end
@@ -107,9 +107,9 @@ module Masamune::Commands
       row unless row == 'NULL' || row == ''
     end
 
-    def load_setup_and_schema_files
+    def load_setup_files
       files = []
-      (@setup_files + @schema_files).each do |path|
+      @setup_files.each do |path|
         filesystem.glob_sort(path, order: :basename).each do |file|
           files << file
         end

@@ -1,10 +1,13 @@
 require 'active_support/concern'
+require 'masamune/transform/define_schema'
 require 'masamune/actions/postgres_admin'
 
 module Masamune::Actions
   module Postgres
     extend ActiveSupport::Concern
+
     include Masamune::Actions::PostgresAdmin
+    include Masamune::Transform::DefineSchema
 
     def postgres(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
@@ -31,11 +34,12 @@ module Masamune::Actions
     end
 
     def load_schema_registry
-      postgres(file: registry.to_psql_file)
+      transform = define_schema(registry, :postgres)
+      postgres(file: transform.to_file)
     rescue => e
       logger.error(e)
-      logger.error("Could not load schema from registry")
-      logger.error("\n" + registry.to_s)
+      logger.error("Could not load schema")
+      logger.error("\n" + transform.to_s)
       exit
     end
 

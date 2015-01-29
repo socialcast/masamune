@@ -7,7 +7,7 @@ describe 'Masamune::Transform::InsertReferenceValues with Masamune::Schema::Fact
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
   before do
-    registry.schema do
+    registry.schema :postgres do
       dimension 'date', type: :one do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
@@ -53,8 +53,8 @@ describe 'Masamune::Transform::InsertReferenceValues with Masamune::Schema::Fact
     end
   end
 
-  let(:target) { registry.facts[:visits] }
-  let(:source) { registry.files[:visits].as_table(target) }
+  let(:target) { registry.postgres.visits_fact }
+  let(:source) { registry.postgres.visits_file.as_table(target) }
 
   describe '#insert_reference_values' do
     subject(:result) { transform.insert_reference_values(source, target).to_s }

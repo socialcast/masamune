@@ -7,7 +7,7 @@ describe 'Masamune::Transform::InsertReferenceValues with Masamune::Schema::Dime
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
   before do
-    registry.schema do
+    registry.schema :postgres do
       dimension 'department', type: :mini do
         column 'uuid', type: :uuid, surrogate_key: true
         column 'tenant_id', type: :integer, unique: true, natural_key: true
@@ -33,8 +33,8 @@ describe 'Masamune::Transform::InsertReferenceValues with Masamune::Schema::Dime
     end
   end
 
-  let(:target) { registry.dimensions[:user].ledger_table }
-  let(:source) { registry.files[:user].as_table(target) }
+  let(:target) { registry.postgres.user_dimension.ledger_table }
+  let(:source) { registry.postgres.user_file.as_table(target) }
 
   describe '#insert_reference_values' do
     subject(:result) { transform.insert_reference_values(source, target).to_s }

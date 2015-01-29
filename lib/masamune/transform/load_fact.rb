@@ -1,5 +1,5 @@
 require 'masamune/transform/define_table'
-require 'masamune/transform/stage_dimension'
+require 'masamune/transform/stage_fact'
 require 'masamune/transform/insert_reference_values'
 require 'masamune/transform/bulk_upsert'
 

@@ -7,7 +7,7 @@ describe Masamune::Transform::LoadFact do
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
   before do
-    registry.schema do
+    registry.schema :postgres do
       dimension 'date', type: :one do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
@@ -55,8 +55,8 @@ describe Masamune::Transform::LoadFact do
 
   let(:files) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
   let(:date) { DateTime.civil(2014,8) }
-  let(:target) { registry.facts[:visits] }
-  let(:source) { registry.files[:visits] }
+  let(:target) { registry.postgres.visits_fact }
+  let(:source) { registry.postgres.visits_file }
   let(:source_table) { source.as_table(target) }
 
   describe '#load_fact' do

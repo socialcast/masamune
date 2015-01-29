@@ -6,6 +6,7 @@ module Masamune::Tasks
   class ShellThor < Thor
     include Masamune::Thor
     include Masamune::Actions::DataFlow
+    include Masamune::Transform::DefineSchema
 
     # FIXME need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
@@ -31,9 +32,9 @@ module Masamune::Tasks
     def print_registry
       case options[:type]
       when 'psql'
-        puts registry.as_psql
+        puts define_schema(registry, :postgres)
       when 'hql'
-        puts registry.as_hql
+        puts define_schema(registry, :hive)
       end
     end
   end

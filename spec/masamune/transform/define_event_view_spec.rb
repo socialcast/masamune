@@ -7,7 +7,7 @@ describe Masamune::Transform::DefineEventView do
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
   before do
-    registry.schema do
+    registry.schema :hive do
       event 'tenant' do
         attribute 'tenant_id', type: :integer, immutable: true
         attribute 'account_state', type: :string
@@ -17,7 +17,7 @@ describe Masamune::Transform::DefineEventView do
     end
   end
 
-  let(:target) { registry.events[:tenant] }
+  let(:target) { registry.hive.tenant_event }
 
   describe '#define_event_view' do
     subject(:result) { transform.define_event_view(target).to_s }

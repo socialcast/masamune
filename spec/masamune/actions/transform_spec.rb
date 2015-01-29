@@ -5,7 +5,7 @@ describe Masamune::Actions::Transform do
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
   before do
-    registry.schema do
+    registry.schema :postgres do
       dimension 'user', type: :four do
         column 'tenant_id', type: :integer, index: true
         column 'user_id',   type: :integer, index: true, surrogate_key: true
@@ -17,7 +17,7 @@ describe Masamune::Actions::Transform do
         column 'updated_at', type: :timestamp
       end
 
-      map from: files[:user], to: dimensions[:user] do
+      map from: postgres.user_file, to: postgres.user_dimension do
         field 'user_id', 'id'
         field 'tenant_id'
         field 'source_kind', 'users'
@@ -49,17 +49,19 @@ describe Masamune::Actions::Transform do
   end
 
   let(:instance) { klass.new }
+  let(:postgres) { registry.postgres }
 
   before do
     instance.environment = MasamuneExampleGroup
   end
 
   describe '.load_dimension' do
+
     before do
       mock_command(/\Apsql/, mock_success)
     end
 
-    subject { instance.load_dimension(source_file, registry.files[:user], registry.dimensions[:user]) }
+    subject { instance.load_dimension(source_file, postgres.user_file, postgres.user_dimension) }
 
     it { is_expected.to be_success }
   end
@@ -72,7 +74,7 @@ describe Masamune::Actions::Transform do
       mock_command(/\Apsql/, mock_success)
     end
 
-    subject { instance.load_fact(data, registry.files[:visits], registry.facts[:visits], date) }
+    subject { instance.load_fact(data, postgres.visits_file, postgres.visits_fact, date) }
 
     it { is_expected.to be_success }
   end

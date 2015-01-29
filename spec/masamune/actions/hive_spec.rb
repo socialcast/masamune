@@ -15,6 +15,7 @@ describe Masamune::Actions::Hive do
   before do
     allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({})
     allow(instance).to receive_message_chain(:configuration, :hive).and_return(configuration)
+    allow(instance).to receive_message_chain(:define_schema, :to_file) { 'schema.hql' }
   end
 
   describe '.hive' do

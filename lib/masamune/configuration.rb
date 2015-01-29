@@ -59,7 +59,7 @@ class Masamune::Configuration
         end
       end
       logger.debug("Loaded configuration #{file}")
-      load_registry(configuration.postgres[:schema_files] || [])
+      load_registry(configuration.postgres[:schema_files] + configuration.hive[:schema_files])
       true
     end
   end

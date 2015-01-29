@@ -39,7 +39,10 @@ module Masamune::Transform
       end.path
     end
 
+    private
+
     def template_eval(template)
+      return File.read(template) if File.exists?(template.to_s)
       Masamune::Template.render_to_string(template_file(template), @locals.merge(source: source, target: target))
     end
 
@@ -48,7 +51,14 @@ module Masamune::Transform
     end
 
     def template_suffix
-      (@target || @source).try(:kind)
+      case (@target || @source).try(:kind)
+      when :postgres, :psql
+        'psql'
+      when :hive, :hql
+        'hql'
+      else
+        'txt'
+      end
     end
   end
 end

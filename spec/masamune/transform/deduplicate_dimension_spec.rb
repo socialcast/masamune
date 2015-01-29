@@ -5,7 +5,7 @@ describe Masamune::Transform::DeduplicateDimension do
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
   before do
-    registry.schema do
+    registry.schema :postgres do
       dimension 'user_account_state', type: :mini do
         column 'name', type: :string, unique: true
         column 'description', type: :string
@@ -20,7 +20,7 @@ describe Masamune::Transform::DeduplicateDimension do
     end
   end
 
-  let(:target) { registry.dimensions[:user] }
+  let(:target) { registry.postgres.user_dimension }
   let(:transform) { Object.new.extend(described_class) }
 
   describe '#deduplicate_dimension' do

@@ -1,3 +1,5 @@
+require 'masamune/transform/presenter'
+
 module Masamune::Transform
   module DefineEventView
     extend ActiveSupport::Concern

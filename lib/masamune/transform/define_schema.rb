@@ -8,24 +8,25 @@ module Masamune::Transform
 
     extend ActiveSupport::Concern
 
-    def define_schema(registry)
+    def define_schema(registry, store_id)
+      context = registry[store_id]
       operators = []
 
-      registry.dimensions.each do |_, dimension|
+      operators += context.extra
+
+      context.dimensions.each do |_, dimension|
         operators << define_table(dimension)
       end
 
-      registry.facts.each do |_, fact|
+      context.facts.each do |_, fact|
         operators << define_table(fact)
       end
 
-      registry.events.each do |_, event|
+      context.events.each do |_, event|
         operators << define_event_view(event)
       end
 
-      # TODO need per 'kind' extra- should be handled by multiple registries
-
-      Operator.new __method__, *operators, source: registry
+      Operator.new __method__, *operators, source: context
     end
   end
 end

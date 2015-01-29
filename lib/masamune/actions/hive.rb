@@ -26,11 +26,12 @@ module Masamune::Actions
     end
 
     def load_hive_schema_registry
-      hive(file: registry.to_hql_file)
+      transform = define_schema(registry, :hive)
+      hive(file: transform.to_file)
     rescue => e
       logger.error(e)
-      logger.error("Could not load schema from registry")
-      logger.error("\n" + registry.to_s)
+      logger.error("Could not load schema")
+      logger.error("\n" + transform.to_s)
       exit
     end
 

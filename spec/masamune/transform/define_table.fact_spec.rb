@@ -47,7 +47,7 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Fact' do
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
   before do
-    registry.schema do
+    registry.schema :postgres do
       dimension 'date', type: :one do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
@@ -94,8 +94,8 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Fact' do
   end
 
   let(:data) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
-  let(:target) { registry.facts[:visits] }
-  let(:source) { registry.files[:visits] }
+  let(:target) { registry.postgres.visits_fact }
+  let(:source) { registry.postgres.visits_file }
 
   describe '#define_table with data files' do
     subject(:result) { transform.define_table(source.as_table(target), data).to_s }

@@ -1,5 +1,11 @@
 require 'active_support/concern'
+
 require 'masamune/actions/postgres'
+
+require 'masamune/transform/load_dimension'
+require 'masamune/transform/consolidate_dimension'
+require 'masamune/transform/relabel_dimension'
+require 'masamune/transform/load_fact'
 
 module Masamune::Actions
   module Transform
@@ -7,6 +13,11 @@ module Masamune::Actions
     extend Forwardable
 
     include Masamune::Actions::Postgres
+
+    include Masamune::Transform::LoadDimension
+    include Masamune::Transform::ConsolidateDimension
+    include Masamune::Transform::RelabelDimension
+    include Masamune::Transform::LoadFact
 
     def_delegators :registry, :dimensions, :maps, :files, :facts
 
@@ -23,27 +34,27 @@ module Masamune::Actions
         result = input
       end
 
-      transform = Masamune::Transform::LoadDimension.new(output, result, target)
+      transform = load_dimension(output, result, target)
       logger.debug(File.read(output)) if (source.debug || map.debug)
-      postgres file: transform.to_psql_file, debug: (source.debug || target.debug || map.debug)
+      postgres file: transform.to_file, debug: (source.debug || target.debug || map.debug)
     ensure
       input.close
       output.unlink
     end
 
     def consolidate_dimension(target)
-      transform = Masamune::Transform::ConsolidateDimension.new(target)
-      postgres file: transform.to_psql_file, debug: target.debug
+      transform = consolidate_dimension(target)
+      postgres file: transform.to_file, debug: target.debug
     end
 
     def relabel_dimension(target)
-      transform = Masamune::Transform::RelabelDimension.new(target)
-      postgres file: transform.to_psql_file, debug: target.debug
+      transform = relabel_dimension(target)
+      postgres file: transform.to_file, debug: target.debug
     end
 
     def load_fact(source_files, source, target, date)
-      transform = Masamune::Transform::LoadFact.new(source_files, source, target, date)
-      postgres file: transform.to_psql_file, debug: (source.debug || target.debug)
+      transform = Masamune::Transform::LoadFact.load_fact(source_files, source, target, date)
+      postgres file: transform.to_file, debug: (source.debug || target.debug)
     end
   end
 end

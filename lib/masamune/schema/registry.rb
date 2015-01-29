@@ -1,8 +1,11 @@
 require 'active_support/core_ext/hash'
 
+# TODO rename Catalog
 module Masamune::Schema
   class Registry
     include Masamune::HasEnvironment
+
+    SUPPORTED_STORES = [:postgres, :hive, :files]
 
     class HasMap < Delegator
       attr_accessor :maps
@@ -25,136 +28,210 @@ module Masamune::Schema
       end
     end
 
-    attr_accessor :kind
-    attr_accessor :dimensions
-    attr_accessor :facts
-    attr_accessor :files
-    attr_accessor :events
+    # TODO break out, set Table parent as store and derive 'kind' from Store
+    class Store
+      attr_accessor :kind
+      attr_accessor :dimensions
+      attr_accessor :facts
+      attr_accessor :files
+      attr_accessor :events
+      attr_accessor :references
+      attr_accessor :extra
 
-    def initialize(environment, kind = :psql)
-      self.environment = environment
-      self.kind = kind
+      def initialize(kind)
+        @kind       = kind
+        @dimensions = {}.with_indifferent_access
+        @facts      = {}.with_indifferent_access
+        @files      = {}.with_indifferent_access
+        @events     = {}.with_indifferent_access
+        @references = {}.with_indifferent_access
+        @extra      = []
+      end
 
-      @dimensions = {}.with_indifferent_access
-      @facts      = {}.with_indifferent_access
-      @files      = {}.with_indifferent_access
-      @events     = {}.with_indifferent_access
-      @references = {}.with_indifferent_access
-      @options    = Hash.new { |h,k| h[k] = [] }
-      @extra      = []
+      def method_missing(method, *args, &block)
+        if kind == :files
+          files[method]
+        else
+          *name, type = method.to_s.split('_')
+          raise ArgumentError, "unknown type '#{type}'" unless %(dimension fact file event).include?(type)
+          self.send(type.pluralize)[name.join('_')]
+        end
+      end
+
+      def dereference_column(id, options = {})
+        column_id, reference_id = id.split(/\./).reverse
+        column_options = options.dup
+        column_options.merge!(id: column_id)
+
+        if reference = references[reference_id]
+          column_options.merge!(reference: reference)
+        else
+          raise ArgumentError, "dimension #{reference_id} not defined"
+        end if reference_id
+
+        Masamune::Schema::Column.new(column_options)
+      end
     end
 
-    def schema(options = {}, &block)
-      @options.merge!(options)
-      instance_eval &block
+    class Context < Delegator
+      attr_accessor :options
+
+      def initialize(delegate, options = {})
+        @delegate = delegate
+        @options  = Hash.new { |h,k| h[k] = [] }
+        @options.merge!(options)
+      end
+
+      def __getobj__
+        @delegate
+      end
+
+      def __setobj__(obj)
+        @delegate = obj
+      end
+
+      def push(options = {})
+        @prev_options = @options.dup
+      end
+
+      def pop
+        @options = @prev_options
+      end
+    end
+
+    def initialize(environment)
+      self.environment = environment
+      @catalog = Hash.new { |h,k| h[k] = Store.new(k) }
+      @context = nil
+    end
+
+    def schema(*args, &block)
+      options = args.last.is_a?(Hash) ? args.pop : {}
+      raise ArgumentError, 'data store arguments required' unless args.any?
+      stores = args.map(&:to_sym)
+      stores.each do |id|
+        raise ArgumentError, "unknown data store '#{id}'" unless valid_store?(id)
+        begin
+          @context = Context.new(@catalog[id])
+          instance_eval &block
+        ensure
+          @context = nil
+        end
+      end
+    end
+
+    SUPPORTED_STORES.each do |store|
+      define_method(store) do
+        @catalog[store]
+      end
+    end
+
+    def [](store_id)
+      raise ArgumentError, "unknown data store '#{store_id}'" unless valid_store?(store_id)
+      @catalog[store_id.to_sym]
     end
 
     def dimension(id, options = {}, &block)
-      prev_options = @options.dup
+      @context.push(options)
       yield if block_given?
-      self.dimensions[id] ||= Masamune::Schema::Dimension.new(options.merge(@options).merge(id: id))
-      @references[id] ||= Masamune::Schema::TableReference.new(dimensions[id])
+      @context.dimensions[id] ||= Masamune::Schema::Dimension.new(options.merge(@context.options).merge(id: id))
+      @context.references[id] ||= Masamune::Schema::TableReference.new(@context.dimensions[id])
     ensure
-      @options = prev_options
+      @context.pop
     end
 
     def column(id, options = {}, &block)
-      @options[:columns] << dereference_column(id, options)
+      @context.options[:columns] << dereference_column(id, options)
     end
 
     def references(id, options = {})
-      reference = Masamune::Schema::TableReference.new(dimensions[id], options)
-      @references[reference.id] = reference
-      @options[:references] << reference
+      reference = Masamune::Schema::TableReference.new(@context.dimensions[id], options)
+      @context.references[reference.id] = reference
+      @context.options[:references] << reference
     end
 
     def row(options)
       attributes = options.delete(:attributes) || {}
       attributes[:values] = options
-      @options[:rows] << Masamune::Schema::Row.new(attributes)
+      @context.options[:rows] << Masamune::Schema::Row.new(attributes)
     end
 
     def fact(id, options = {}, &block)
-      prev_options = @options.dup
+      @context.push(options)
       yield if block_given?
-      self.facts[id] ||= Masamune::Schema::Fact.new(options.merge(@options).merge(id: id))
+      @context.facts[id] ||= Masamune::Schema::Fact.new(options.merge(@context.options).merge(id: id))
     ensure
-      @options = prev_options
+      @context.pop
     end
 
     def measure(id, options = {}, &block)
-      @options[:columns] << Masamune::Schema::Column.new(options.merge(id: id))
+      @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id))
     end
 
     def file(id, options = {}, &block)
-      prev_options = @options.dup
+      @context.push(options)
       yield if block_given?
-      self.files[id] = HasMap.new Masamune::Schema::File.new(options.merge(@options).merge(id: id))
+      @context.files[id] = HasMap.new Masamune::Schema::File.new(options.merge(@context.options).merge(id: id))
     ensure
-      @options = prev_options
+      @context.pop
     end
 
     def event(id, options = {}, &block)
-      prev_options = @options.dup
+      @context.push(options)
       yield if block_given?
-      self.events[id] = HasMap.new Masamune::Schema::Event.new(options.merge(@options).merge(id: id))
+      @context.events[id] = HasMap.new Masamune::Schema::Event.new(options.merge(@context.options).merge(id: id))
     ensure
-      @options = prev_options
+      @context.pop
     end
 
     def attribute(id, options = {}, &block)
-      @options[:attributes] << Masamune::Schema::Event::Attribute.new(options.merge(id: id))
+      @context.options[:attributes] << Masamune::Schema::Event::Attribute.new(options.merge(id: id))
     end
 
     def map(options = {}, &block)
+      @context.push(options)
       raise ArgumentError, "invalid map, from: is missing" unless options.is_a?(Hash)
-      prev_options = @options.dup
       from, to = options.delete(:from), options.delete(:to)
       raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
       raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
-      @options[:fields] = {}.with_indifferent_access
+      @context.options[:fields] = {}.with_indifferent_access
       yield if block_given?
-      from.maps[to] ||= Masamune::Schema::Map.new(options.merge(@options).merge(source: from, target: to))
+      from.maps[to] ||= Masamune::Schema::Map.new(options.merge(@context.options).merge(source: from, target: to))
     ensure
-      @options = prev_options
+      @context.pop
     end
 
     def field(id, value = nil, &block)
-      @options[:fields][id] = value
-      @options[:fields][id] ||= block.to_proc if block_given?
-      @options[:fields][id] ||= id
+      @context.options[:fields][id] = value
+      @context.options[:fields][id] ||= block.to_proc if block_given?
+      @context.options[:fields][id] ||= id
     end
 
     def maps(options = {})
-      self.maps[options[:from]][options[:to]]
-    end
-
-    def method_missing(method, *args, &block)
-      *name, type = method.to_s.split('_')
-      raise ArgumentError, "unknown type '#{type}'" unless %(dimension fact file event).include?(type)
-      self.send(type.pluralize)[name.join('_')]
+      @context.maps[options[:from]][options[:to]]
     end
 
     def load(file)
-      if file =~ /\.rb\Z/
-        instance_eval(::File.read(file))
-      else
-        @extra << ::File.read(file)
+      case file
+      when /\.rb\Z/
+        instance_eval(::File.read(file), file)
+      when /\.psql\Z/
+        @catalog[:postgres].extra << file
+      when /\.hql\Z/
+        @catalog[:hive].extra << file
       end
     end
 
+    private
+
     def dereference_column(id, options = {})
-      column_id, reference_id = id.split(/\./).reverse
-      column_options = options.dup
-      column_options.merge!(id: column_id)
+      store_id = id.split(/\./).reverse.last
+      context = store_id && valid_store?(store_id) ? @catalog[store_id.to_sym] : @context
+      context.dereference_column(*id, options)
+    end
 
-      if reference = @references[reference_id]
-        column_options.merge!(reference: reference)
-      else
-        raise ArgumentError, "dimension #{reference_id} not defined"
-      end if reference_id
-
-      Masamune::Schema::Column.new(column_options)
+    def valid_store?(store)
+      SUPPORTED_STORES.include?(store.to_sym)
     end
   end
 end
