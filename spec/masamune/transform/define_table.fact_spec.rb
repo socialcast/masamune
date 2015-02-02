@@ -93,12 +93,12 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Fact' do
     end
   end
 
-  let(:data) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
+  let(:files) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
   let(:target) { registry.postgres.visits_fact }
   let(:source) { registry.postgres.visits_file }
 
   describe '#define_table with data files' do
-    subject(:result) { transform.define_table(source.as_table(target), data).to_s }
+    subject(:result) { transform.define_table(source.as_table(target), files).to_s }
 
     it 'should eq render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -126,6 +126,20 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Fact' do
         CREATE INDEX visits_fact_file_feature_type_name_index ON visits_fact_file (feature_type_name);
         CREATE INDEX visits_fact_file_time_key_index ON visits_fact_file (time_key);
       EOS
+    end
+
+    context 'with file' do
+      subject(:result) { transform.define_table(source.as_table(target), files.first).to_s }
+      it 'should eq render table template' do
+        is_expected.to_not be_nil
+      end
+    end
+
+    context 'with Set' do
+      subject(:result) { transform.define_table(source.as_table(target), Set.new(files)).to_s }
+      it 'should eq render table template' do
+        is_expected.to_not be_nil
+      end
     end
   end
 end
