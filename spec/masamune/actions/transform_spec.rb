@@ -39,7 +39,7 @@ describe Masamune::Actions::Transform do
     end
   end
 
-  let(:source_file) { Tempfile.new('masamune').path }
+  let(:source_file) { Tempfile.new('masamune') }
 
   let(:klass) do
     Class.new do
@@ -56,7 +56,6 @@ describe Masamune::Actions::Transform do
   end
 
   describe '.load_dimension' do
-
     before do
       mock_command(/\Apsql/, mock_success)
     end
@@ -68,13 +67,32 @@ describe Masamune::Actions::Transform do
 
   describe '.load_fact' do
     let(:date) { DateTime.civil(2014, 8) }
-    let(:data) { Masamune::DataPlan::Set.new(source_file) }
 
     before do
       mock_command(/\Apsql/, mock_success)
     end
 
-    subject { instance.load_fact(data, postgres.visits_file, postgres.visits_fact, date) }
+    subject { instance.load_fact(source_file, postgres.visits_file, postgres.visits_fact, date) }
+
+    it { is_expected.to be_success }
+  end
+
+  describe '.relabel_dimension' do
+    before do
+      mock_command(/\Apsql/, mock_success)
+    end
+
+    subject { instance.relabel_dimension(postgres.user_dimension) }
+
+    it { is_expected.to be_success }
+  end
+
+  describe '.consolidate_dimension' do
+    before do
+      mock_command(/\Apsql/, mock_success)
+    end
+
+    subject { instance.consolidate_dimension(postgres.user_dimension) }
 
     it { is_expected.to be_success }
   end

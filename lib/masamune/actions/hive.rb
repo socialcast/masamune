@@ -1,7 +1,11 @@
 require 'active_support/concern'
 
+require 'masamune/transform/define_schema'
+
 module Masamune::Actions
   module Hive
+    include Masamune::Transform::DefineSchema
+
     extend ActiveSupport::Concern
 
     def hive(opts = {}, &block)

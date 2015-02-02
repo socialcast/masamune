@@ -14,12 +14,13 @@ module Masamune::Actions
 
     include Masamune::Actions::Postgres
 
-    include Masamune::Transform::LoadDimension
-    include Masamune::Transform::ConsolidateDimension
-    include Masamune::Transform::RelabelDimension
-    include Masamune::Transform::LoadFact
-
-    def_delegators :registry, :dimensions, :maps, :files, :facts
+    # FIXME should eventually be able to include Transform directly instead of through wrapper
+    class Wrapper
+      extend Masamune::Transform::LoadDimension
+      extend Masamune::Transform::ConsolidateDimension
+      extend Masamune::Transform::RelabelDimension
+      extend Masamune::Transform::LoadFact
+    end
 
     FILE_MODE = 0777 - File.umask
 
@@ -34,7 +35,7 @@ module Masamune::Actions
         result = input
       end
 
-      transform = load_dimension(output, result, target)
+      transform = Wrapper.load_dimension(output, result, target)
       logger.debug(File.read(output)) if (source.debug || map.debug)
       postgres file: transform.to_file, debug: (source.debug || target.debug || map.debug)
     ensure
@@ -43,17 +44,17 @@ module Masamune::Actions
     end
 
     def consolidate_dimension(target)
-      transform = consolidate_dimension(target)
+      transform = Wrapper.consolidate_dimension(target)
       postgres file: transform.to_file, debug: target.debug
     end
 
     def relabel_dimension(target)
-      transform = relabel_dimension(target)
+      transform = Wrapper.relabel_dimension(target)
       postgres file: transform.to_file, debug: target.debug
     end
 
     def load_fact(source_files, source, target, date)
-      transform = Masamune::Transform::LoadFact.load_fact(source_files, source, target, date)
+      transform = Wrapper.load_fact(source_files, source, target, date)
       postgres file: transform.to_file, debug: (source.debug || target.debug)
     end
   end
