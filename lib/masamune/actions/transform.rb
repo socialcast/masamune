@@ -34,10 +34,10 @@ module Masamune::Actions
       else
         result = input
       end
+      logger.debug(File.read(output)) if source.debug
 
       transform = Wrapper.load_dimension(output, result, target)
-      logger.debug(File.read(output)) if (source.debug || map.debug)
-      postgres file: transform.to_file, debug: (source.debug || target.debug || map.debug)
+      postgres file: transform.to_file, debug: (source.debug || target.debug)
     ensure
       input.close
       output.unlink

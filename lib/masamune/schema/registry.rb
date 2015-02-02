@@ -127,7 +127,7 @@ module Masamune::Schema
       stores.each do |id|
         raise ArgumentError, "unknown data store '#{id}'" unless valid_store?(id)
         begin
-          @context = Context.new(@catalog[id])
+          @context = Context.new(@catalog[id], options)
           instance_eval &block
         ensure
           @context = nil
