@@ -13,7 +13,15 @@ describe Masamune::Transform::LoadDimension do
         column 'description', type: :string
       end
 
+      dimension 'department', type: :mini do
+        column 'uuid', type: :uuid, surrogate_key: true
+        column 'tenant_id', type: :integer, unique: true, natural_key: true
+        column 'department_id', type: :integer, unique: true, natural_key: true
+        row tenant_id: -1, department_id: -1, attributes: {default: true}
+      end
+
       dimension 'user', type: :four do
+        references :department, insert: true
         references :user_account_state
         column 'tenant_id', index: true, natural_key: true
         column 'user_id', index: true, natural_key: true
@@ -44,8 +52,8 @@ describe Masamune::Transform::LoadDimension do
     it 'should render combined template' do
       is_expected.to eq Masamune::Template.combine \
         transform.define_table(source_table, data),
-        transform.stage_dimension(source_table, target_ledger),
         transform.insert_reference_values(source_table, target_ledger),
+        transform.stage_dimension(source_table, target_ledger),
         transform.bulk_upsert(target_ledger.stage_table, target_ledger)
     end
   end

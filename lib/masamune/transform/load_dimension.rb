@@ -17,8 +17,8 @@ module Masamune::Transform
       source = source.as_table(target)
       Operator.new \
         define_table(source, file),
-        stage_dimension(source, target),
         insert_reference_values(source, target),
+        stage_dimension(source, target),
         bulk_upsert(target.stage_table, target)
     end
   end
