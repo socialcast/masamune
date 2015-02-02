@@ -12,7 +12,7 @@ module Masamune::Transform
       context = registry[store_id]
       operators = []
 
-      operators += context.extra
+      operators += context.extra(:pre)
 
       context.dimensions.each do |_, dimension|
         operators << define_table(dimension)
@@ -25,6 +25,8 @@ module Masamune::Transform
       context.events.each do |_, event|
         operators << define_event_view(event)
       end
+
+      operators += context.extra(:post)
 
       Operator.new __method__, *operators, source: context
     end

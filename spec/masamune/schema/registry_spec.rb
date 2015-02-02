@@ -34,6 +34,30 @@ describe Masamune::Schema::Registry do
     end
   end
 
+  context '#load' do
+    let(:postgres_extra) { %w(/tmp/schema.psql /tmp/00_schema.psql /tmp/20_schema.psql) }
+    let(:hive_extra) { %w(/tmp/schema.hql /tmp/00_schema.hql /tmp/20_schema.hql) }
+    let(:extra) { postgres_extra + hive_extra }
+
+    before do
+      extra.each do |e|
+        instance.load(e)
+      end
+    end
+
+    it 'should load postgres extra in order' do
+      expect(instance.postgres.extra).to eq(postgres_extra)
+      expect(instance.postgres.extra(:pre).size).to eq(2)
+      expect(instance.postgres.extra(:post).size).to eq(1)
+    end
+
+    it 'should load hive extra in order' do
+      expect(instance.hive.extra).to eq(hive_extra)
+      expect(instance.hive.extra(:pre).size).to eq(2)
+      expect(instance.hive.extra(:post).size).to eq(1)
+    end
+  end
+
   describe '#schema' do
     context 'when schema does not define store' do
       subject(:schema) do

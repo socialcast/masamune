@@ -36,7 +36,6 @@ module Masamune::Schema
       attr_accessor :files
       attr_accessor :events
       attr_accessor :references
-      attr_accessor :extra
 
       def initialize(kind)
         @kind       = kind
@@ -70,6 +69,22 @@ module Masamune::Schema
         end if reference_id
 
         Masamune::Schema::Column.new(column_options)
+      end
+
+      def extra(order = nil)
+        return @extra unless order
+        result = Set.new
+        @extra.each do |file|
+          filename = ::File.basename(file)
+          if filename =~ /\A\d+_/
+            number = filename.split('_').first.to_i
+            result << file if number <= 0 && order == :pre
+            result << file if number > 0 && order == :post
+          else
+            result << file if order == :pre
+          end
+        end
+        result.to_a
       end
     end
 
