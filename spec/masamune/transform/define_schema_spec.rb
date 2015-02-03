@@ -1,10 +1,6 @@
 require 'spec_helper'
 
 describe Masamune::Transform::DefineSchema do
-  let(:transform) { Object.new.extend(described_class) }
-  let(:environment) { double }
-  let(:registry) { Masamune::Schema::Registry.new(environment) }
-
   context 'for postgres schema' do
     before do
       registry.schema :postgres do

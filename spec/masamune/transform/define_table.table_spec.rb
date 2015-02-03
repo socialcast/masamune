@@ -1,15 +1,7 @@
 require 'spec_helper'
 
 describe Masamune::Transform::DefineTable do
-  let(:transform) { Object.new.extend(described_class) }
-  let(:environment) { double }
-  let(:registry) { Masamune::Schema::Registry.new(environment) }
-
   subject { transform.define_table(target).to_s }
-
-  after do
-    registry.clear!
-  end
 
   context 'for postgres table with columns' do
     before do

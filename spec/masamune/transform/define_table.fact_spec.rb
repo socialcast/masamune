@@ -1,10 +1,6 @@
 require 'spec_helper'
 
 describe Masamune::Transform::DefineTable do
-  let(:transform) { Object.new.extend(described_class) }
-  let(:environment) { double }
-  let(:registry) { Masamune::Schema::Registry.new(environment) }
-
   before do
     registry.schema :postgres do
       dimension 'date', type: :one do
