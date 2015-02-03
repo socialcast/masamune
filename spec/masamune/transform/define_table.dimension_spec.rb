@@ -5,7 +5,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres dimension type: one' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         dimension 'user', type: :one do
           column 'tenant_id'
           column 'user_id'
@@ -13,7 +13,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:table) { registry.postgres.user_dimension }
+    let(:table) { catalog.postgres.user_dimension }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -30,7 +30,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres dimension type: two' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         dimension 'user', type: :two do
           column 'tenant_id', index: true, natural_key: true
           column 'user_id', index: true, natural_key: true
@@ -38,7 +38,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:table) { registry.postgres.user_dimension }
+    let(:table) { catalog.postgres.user_dimension }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -88,7 +88,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres dimension type: four' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         dimension 'user_account_state', type: :mini do
           column 'name', type: :string, unique: true
           column 'description', type: :string
@@ -104,7 +104,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:table) { registry.postgres.user_dimension }
+    let(:table) { catalog.postgres.user_dimension }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc

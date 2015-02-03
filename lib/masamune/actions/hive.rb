@@ -21,7 +21,7 @@ module Masamune::Actions
     end
 
     # TODO warn or error if database is not defined
-    def create_database_if_not_exists
+    def create_hive_database_if_not_exists
       return if configuration.hive[:database] == 'default'
       sql = []
       sql << %Q(CREATE DATABASE IF NOT EXISTS #{configuration.hive[:database]})
@@ -29,8 +29,8 @@ module Masamune::Actions
       hive(exec: sql.join(' ') + ';', database: nil)
     end
 
-    def load_hive_schema_registry
-      transform = define_schema(registry, :hive)
+    def load_hive_schema
+      transform = define_schema(catalog, :hive)
       hive(file: transform.to_file)
     rescue => e
       logger.error(e)
@@ -41,11 +41,11 @@ module Masamune::Actions
 
     included do |base|
       base.after_initialize do |thor, options|
-        thor.create_database_if_not_exists
+        thor.create_hive_database_if_not_exists
         if options[:dry_run]
           raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'SHOW TABLES;', safe: true, fail_fast: false).success?
         end
-        thor.load_hive_schema_registry
+        thor.load_hive_schema
       end if defined?(base.after_initialize)
     end
   end

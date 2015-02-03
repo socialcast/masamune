@@ -19,13 +19,13 @@ module Masamune::Actions
       command.interactive? ? command.replace : command.execute
     end
 
-    def create_database_if_not_exists
+    def create_postgres_database_if_not_exists
       unless postgres_helper.database_exists?
         postgres_admin(action: :create, database: configuration.postgres[:database], safe: true)
       end if configuration.postgres.has_key?(:database)
     end
 
-    def load_setup_files
+    def load_postgres_setup_files
       configuration.postgres[:setup_files].each do |file|
         configuration.with_quiet do
           postgres(file: file)
@@ -33,8 +33,8 @@ module Masamune::Actions
       end if configuration.postgres.has_key?(:setup_files)
     end
 
-    def load_schema_registry
-      transform = define_schema(registry, :postgres)
+    def load_postgres_schema
+      transform = define_schema(catalog, :postgres)
       postgres(file: transform.to_file)
     rescue => e
       logger.error(e)
@@ -45,9 +45,9 @@ module Masamune::Actions
 
     included do |base|
       base.after_initialize do |thor, options|
-        thor.create_database_if_not_exists
-        thor.load_setup_files
-        thor.load_schema_registry
+        thor.create_postgres_database_if_not_exists
+        thor.load_postgres_setup_files
+        thor.load_postgres_schema
       end if defined?(base.after_initialize)
     end
   end

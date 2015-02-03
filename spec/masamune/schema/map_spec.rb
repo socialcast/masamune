@@ -2,10 +2,10 @@ require 'spec_helper'
 
 describe Masamune::Schema::Map do
   let(:environment) { double }
-  let(:registry) { Masamune::Schema::Registry.new(environment) }
+  let(:catalog) { Masamune::Schema::Catalog.new(environment) }
 
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'user_account_state', type: :mini do
         column 'name', type: :string, unique: true
         column 'description', type: :string, null: true
@@ -23,7 +23,7 @@ describe Masamune::Schema::Map do
       end
     end
 
-    registry.schema :hive do
+    catalog.schema :hive do
       event 'user' do
         attribute 'id', type: :integer, immutable: true
         attribute 'tenant_id', type: :integer, immutable: true
@@ -32,7 +32,7 @@ describe Masamune::Schema::Map do
       end
     end
 
-    registry.schema :files do
+    catalog.schema :files do
       file 'user', format: :csv, headers: true do
         column 'id', type: :integer
         column 'tenant_id', type: :integer
@@ -91,7 +91,7 @@ describe Masamune::Schema::Map do
   end
 
   context 'without target' do
-    subject(:map) { described_class.new(source: registry.files[:user]) }
+    subject(:map) { described_class.new(source: catalog.files[:user]) }
     it { expect { map }.to raise_error ArgumentError }
   end
 
@@ -111,11 +111,11 @@ describe Masamune::Schema::Map do
 
     context 'from csv file to dimension' do
       let(:source) do
-        registry.files.user
+        catalog.files.user
       end
 
       let(:target) do
-        registry.postgres.user_dimension
+        catalog.postgres.user_dimension
       end
 
       let(:source_data) do
@@ -143,11 +143,11 @@ describe Masamune::Schema::Map do
 
     context 'from event to dimension' do
       let(:source) do
-        registry.hive.user_event
+        catalog.hive.user_event
       end
 
       let(:target) do
-        registry.postgres.user_dimension
+        catalog.postgres.user_dimension
       end
 
       let(:source_data) do
@@ -172,11 +172,11 @@ describe Masamune::Schema::Map do
 
     context 'from event to tsv file' do
       let(:source) do
-        registry.hive.user_event
+        catalog.hive.user_event
       end
 
       let(:target) do
-        registry.files.user.tap do |file|
+        catalog.files.user.tap do |file|
           file.format = :tsv
           file.headers = true
           file.columns[:preferences].type = :json
@@ -206,11 +206,11 @@ describe Masamune::Schema::Map do
 
     context 'from event to csv file' do
       let(:source) do
-        registry.hive.user_event
+        catalog.hive.user_event
       end
 
       let(:target) do
-        registry.files.user
+        catalog.files.user
       end
 
       let(:source_data) do

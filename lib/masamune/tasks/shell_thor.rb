@@ -19,7 +19,7 @@ module Masamune::Tasks
     class_option :start, :aliases => '-a', :desc => 'Start time', default: '1 month ago'
     def shell_exec
       if options[:dump]
-        print_registry
+        print_catalog
         exit
       end
 
@@ -29,12 +29,12 @@ module Masamune::Tasks
 
     private
 
-    def print_registry
+    def print_catalog
       case options[:type]
       when 'psql'
-        puts define_schema(registry, :postgres)
+        puts define_schema(catalog, :postgres)
       when 'hql'
-        puts define_schema(registry, :hive)
+        puts define_schema(catalog, :hive)
       end
     end
   end

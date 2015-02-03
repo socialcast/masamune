@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::DefineEventView do
   before do
-    registry.schema :hive do
+    catalog.schema :hive do
       event 'tenant' do
         attribute 'tenant_id', type: :integer, immutable: true
         attribute 'account_state', type: :string
@@ -12,7 +12,7 @@ describe Masamune::Transform::DefineEventView do
     end
   end
 
-  let(:target) { registry.hive.tenant_event }
+  let(:target) { catalog.hive.tenant_event }
 
   context 'with hive event' do
     subject(:result) { transform.define_event_view(target).to_s }

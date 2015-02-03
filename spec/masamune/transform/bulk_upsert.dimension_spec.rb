@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::BulkUpsert do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'cluster', type: :mini do
         column 'id', type: :integer, surrogate_key: true, auto: true
         column 'name', type: :string, unique: true
@@ -50,7 +50,7 @@ describe Masamune::Transform::BulkUpsert do
     end
   end
 
-  let(:target) { registry.postgres.user_dimension }
+  let(:target) { catalog.postgres.user_dimension }
 
   context 'for postgres dimension' do
     subject(:result) { transform.bulk_upsert(target.stage_table, target).to_s }

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::StageDimension do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'cluster', type: :mini do
         column 'id', type: :integer, surrogate_key: true, auto: true
         column 'name', type: :string, unique: true
@@ -50,8 +50,8 @@ describe Masamune::Transform::StageDimension do
     end
   end
 
-  let(:target) { registry.postgres.user_dimension.ledger_table }
-  let(:source) { registry.postgres.user_file.as_table(target) }
+  let(:target) { catalog.postgres.user_dimension.ledger_table }
+  let(:source) { catalog.postgres.user_file.as_table(target) }
 
   context 'for postgres dimension' do
     subject(:result) { transform.stage_dimension(source, target).to_s }

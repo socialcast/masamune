@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::SnapshotDimension do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'user_account_state', type: :mini do
         column 'name', type: :string, unique: true
         column 'description', type: :string
@@ -17,7 +17,7 @@ describe Masamune::Transform::SnapshotDimension do
     end
   end
 
-  let(:target) { registry.postgres.user_dimension }
+  let(:target) { catalog.postgres.user_dimension }
 
   context 'with postgres dimension' do
     subject(:result) { transform.snapshot_dimension(target.ledger_table, target.stage_table).to_s }

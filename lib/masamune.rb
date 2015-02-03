@@ -29,7 +29,7 @@ module Masamune
       env.configure do |config|
         config.load(config_file)
       end
-      env.registry.instance_eval &block
+      env.catalog.instance_eval &block
     end
   end
 end

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::LoadFact do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'date', type: :one do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
@@ -50,8 +50,8 @@ describe Masamune::Transform::LoadFact do
 
   let(:files) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
   let(:date) { DateTime.civil(2014,8) }
-  let(:target) { registry.postgres.visits_fact }
-  let(:source) { registry.postgres.visits_file }
+  let(:target) { catalog.postgres.visits_fact }
+  let(:source) { catalog.postgres.visits_file }
   let(:source_table) { source.as_table(target) }
 
   context 'for postgres fact' do

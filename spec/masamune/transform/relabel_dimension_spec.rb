@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::RelabelDimension do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'user_account_state', type: :mini do
         column 'name', type: :string, unique: true
         column 'description', type: :string
@@ -17,7 +17,7 @@ describe Masamune::Transform::RelabelDimension do
     end
   end
 
-  let(:target) { registry.postgres.user_dimension }
+  let(:target) { catalog.postgres.user_dimension }
 
   context 'for postgres dimension' do
     subject(:result) { transform.relabel_dimension(target).to_s }

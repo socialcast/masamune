@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Masamune::Schema::Registry do
+describe Masamune::Schema::Catalog do
   let(:environment) { double }
   let(:instance) { described_class.new(environment) }
   let(:postgres) { instance.postgres }

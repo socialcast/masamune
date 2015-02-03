@@ -5,7 +5,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with columns' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user' do
           column 'tenant_id'
           column 'user_id'
@@ -13,7 +13,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -29,7 +29,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with index columns' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user' do
           column 'tenant_id', index: true
           column 'user_id', index: true
@@ -37,7 +37,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -63,7 +63,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with multiple index columns' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user' do
           column 'tenant_id', index: ['tenant_id', 'shared']
           column 'user_id', index: ['user_id', 'shared']
@@ -71,7 +71,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -102,7 +102,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with multiple unique columns' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user' do
           column 'tenant_id', unique: ['shared']
           column 'user_id', unique: ['user_id', 'shared']
@@ -110,7 +110,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -136,7 +136,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with enum column' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user' do
           column 'tenant_id'
           column 'user_id'
@@ -145,7 +145,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -165,7 +165,7 @@ describe Masamune::Transform::DefineTable do
     end
 
     context '#stage_table' do
-      let(:target) { registry.postgres.user_table.stage_table }
+      let(:target) { catalog.postgres.user_table.stage_table }
 
       it 'should render table template' do
         is_expected.to eq <<-EOS.strip_heredoc
@@ -183,7 +183,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with surrogate_key columns override' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user' do
           column 'identifier', type: :uuid, surrogate_key: true
           column 'name', type: :string
@@ -191,7 +191,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -206,7 +206,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with partial values' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user' do
           column 'name', type: :string
           column 'description', type: :string
@@ -216,7 +216,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -240,7 +240,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with shared unique index' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user' do
           column 'tenant_id', unique: 'tenant_and_user', index: 'tenant_and_user'
           column 'user_id', unique: 'tenant_and_user', index: 'tenant_and_user'
@@ -248,7 +248,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -274,7 +274,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with multiple default and named rows' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user' do
           column 'uuid', type: :uuid, surrogate_key: true
           column 'tenant_id', type: :integer, natural_key: true
@@ -285,7 +285,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -334,7 +334,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with referenced tables' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user_account_state' do
           column 'name', type: :string, unique: true
           column 'description', type: :string
@@ -350,7 +350,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -371,7 +371,7 @@ describe Masamune::Transform::DefineTable do
 
   context 'for postgres table with labeled referenced table' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user_account_state' do
           column 'name', type: :string, unique: true
           column 'description', type: :string
@@ -386,7 +386,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:target) { registry.postgres.user_table }
+    let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -411,7 +411,7 @@ describe Masamune::Transform::DefineTable do
     end
 
     context '#stage_table' do
-      let(:target) { registry.postgres.user_table.stage_table }
+      let(:target) { catalog.postgres.user_table.stage_table }
 
       it 'should render table template' do
         is_expected.to eq <<-EOS.strip_heredoc
@@ -432,7 +432,7 @@ describe Masamune::Transform::DefineTable do
 
   context '#as_file' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         table 'user_account_state' do
           column 'name', type: :string, unique: true
           column 'description', type: :string
@@ -446,7 +446,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:table) { registry.postgres.user_table }
+    let(:table) { catalog.postgres.user_table }
     let(:file) { table.as_file(columns) }
     let(:target) { file.as_table(table) }
 

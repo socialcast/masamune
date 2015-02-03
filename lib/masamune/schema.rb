@@ -1,6 +1,6 @@
 module Masamune
   module Schema
-    require 'masamune/schema/registry'
+    require 'masamune/schema/catalog'
     require 'masamune/schema/store'
     require 'masamune/schema/table'
     require 'masamune/schema/table_reference'

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::InsertReferenceValues do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'department', type: :mini do
         column 'uuid', type: :uuid, surrogate_key: true
         column 'tenant_id', type: :integer, unique: true, natural_key: true
@@ -31,10 +31,10 @@ describe Masamune::Transform::InsertReferenceValues do
     end
   end
 
-  let(:target) { registry.postgres.user_dimension.ledger_table }
+  let(:target) { catalog.postgres.user_dimension.ledger_table }
 
   context 'for postgres dimension with file containing references' do
-    let(:source) { registry.postgres.user_file.as_table(target) }
+    let(:source) { catalog.postgres.user_file.as_table(target) }
     subject(:result) { transform.insert_reference_values(source, target).to_s }
 
     it 'should render insert_reference_values template' do
@@ -79,7 +79,7 @@ describe Masamune::Transform::InsertReferenceValues do
   end
 
   context 'for postgres dimension with file missing references' do
-    let(:source) { registry.postgres.misc_file.as_table(target) }
+    let(:source) { catalog.postgres.misc_file.as_table(target) }
 
     subject(:result) { transform.insert_reference_values(source, target).to_s }
 

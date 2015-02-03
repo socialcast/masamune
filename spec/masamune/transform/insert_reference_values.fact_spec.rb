@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::InsertReferenceValues do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'date', type: :one do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
@@ -48,8 +48,8 @@ describe Masamune::Transform::InsertReferenceValues do
     end
   end
 
-  let(:target) { registry.postgres.visits_fact }
-  let(:source) { registry.postgres.visits_file.as_table(target) }
+  let(:target) { catalog.postgres.visits_fact }
+  let(:source) { catalog.postgres.visits_file.as_table(target) }
 
   context 'with postgres fact' do
     subject(:result) { transform.insert_reference_values(source, target).to_s }

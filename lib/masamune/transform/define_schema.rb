@@ -8,8 +8,8 @@ module Masamune::Transform
 
     extend ActiveSupport::Concern
 
-    def define_schema(registry, store_id)
-      context = registry[store_id]
+    def define_schema(catalog, store_id)
+      context = catalog[store_id]
       operators = []
 
       operators += context.extra(:pre)

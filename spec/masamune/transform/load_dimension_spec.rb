@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::LoadDimension do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'user_account_state', type: :mini do
         column 'name', type: :string, unique: true
         column 'description', type: :string
@@ -36,8 +36,8 @@ describe Masamune::Transform::LoadDimension do
   end
 
   let(:data) { double(path: 'output.csv') }
-  let(:target) { registry.postgres.user_dimension }
-  let(:source) { registry.postgres.user_file }
+  let(:target) { catalog.postgres.user_dimension }
+  let(:source) { catalog.postgres.user_file }
   let(:target_ledger) { target.ledger_table }
   let(:source_table) { source.as_table(target_ledger) }
 

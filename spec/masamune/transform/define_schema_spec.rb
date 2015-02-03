@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Masamune::Transform::DefineSchema do
   context 'for postgres schema' do
     before do
-      registry.schema :postgres do
+      catalog.schema :postgres do
         dimension 'user_account_state', type: :mini do
           column 'name', type: :string, unique: true
           column 'description', type: :string
@@ -28,19 +28,19 @@ describe Masamune::Transform::DefineSchema do
       end
     end
 
-    subject(:result) { transform.define_schema(registry, :postgres).to_s }
+    subject(:result) { transform.define_schema(catalog, :postgres).to_s }
 
     it 'should render combined template' do
       is_expected.to eq Masamune::Template.combine \
-        Masamune::Transform::Operator.new('define_schema', source: registry.postgres),
-        transform.define_table(registry.postgres.dimensions['user_account_state']),
-        transform.define_table(registry.postgres.dimensions['user'])
+        Masamune::Transform::Operator.new('define_schema', source: catalog.postgres),
+        transform.define_table(catalog.postgres.dimensions['user_account_state']),
+        transform.define_table(catalog.postgres.dimensions['user'])
     end
   end
 
   context 'for hive schema' do
     before do
-      registry.schema :hive do
+      catalog.schema :hive do
         event 'tenant' do
           attribute 'tenant_id', type: :integer, immutable: true
           attribute 'account_state', type: :string
@@ -50,12 +50,12 @@ describe Masamune::Transform::DefineSchema do
       end
     end
 
-    subject(:result) { transform.define_schema(registry, :hive).to_s }
+    subject(:result) { transform.define_schema(catalog, :hive).to_s }
 
     it 'should render combined template' do
       is_expected.to eq Masamune::Template.combine \
-        Masamune::Transform::Operator.new('define_schema', source: registry.hive),
-        transform.define_event_view(registry.hive.events['tenant'])
+        Masamune::Transform::Operator.new('define_schema', source: catalog.hive),
+        transform.define_event_view(catalog.hive.events['tenant'])
     end
   end
 end

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::StageFact do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'date', type: :one do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
@@ -49,8 +49,8 @@ describe Masamune::Transform::StageFact do
   end
 
   let(:date) { DateTime.civil(2014,8) }
-  let(:target) { registry.postgres.visits_fact }
-  let(:source) { registry.postgres.visits_file.as_table(target) }
+  let(:target) { catalog.postgres.visits_fact }
+  let(:source) { catalog.postgres.visits_file.as_table(target) }
 
   context 'with postgres fact' do
     subject(:result) { transform.stage_fact(source, target, date).to_s }

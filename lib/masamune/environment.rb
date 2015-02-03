@@ -9,7 +9,7 @@ module Masamune
   class Environment
     attr_accessor :parent
     attr_accessor :filesystem
-    attr_accessor :registry
+    attr_accessor :catalog
 
     def initialize(parent = nil)
       self.parent = parent
@@ -110,8 +110,8 @@ module Masamune
       end
     end
 
-    def registry
-      @registry ||= Masamune::Schema::Registry.new(self)
+    def catalog
+      @catalog ||= Masamune::Schema::Catalog.new(self)
     end
 
     def hive_helper

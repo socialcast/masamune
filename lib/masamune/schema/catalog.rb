@@ -1,8 +1,7 @@
 require 'active_support/core_ext/hash'
 
-# TODO rename Catalog
 module Masamune::Schema
-  class Registry
+  class Catalog
     include Masamune::HasEnvironment
 
     SUPPORTED_STORES = [:postgres, :hive, :files]

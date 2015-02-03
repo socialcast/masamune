@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::DefineTable do
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'date', type: :one do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
@@ -49,8 +49,8 @@ describe Masamune::Transform::DefineTable do
   end
 
   let(:files) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
-  let(:target) { registry.postgres.visits_fact }
-  let(:source) { registry.postgres.visits_file }
+  let(:target) { catalog.postgres.visits_fact }
+  let(:source) { catalog.postgres.visits_file }
 
   context 'for postgres fact' do
     subject(:result) { transform.define_table(target).to_s }

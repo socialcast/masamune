@@ -2,10 +2,10 @@ require 'spec_helper'
 
 describe Masamune::Actions::Transform do
   let(:environment) { double }
-  let(:registry) { Masamune::Schema::Registry.new(environment) }
+  let(:catalog) { Masamune::Schema::Catalog.new(environment) }
 
   before do
-    registry.schema :postgres do
+    catalog.schema :postgres do
       dimension 'user', type: :four do
         column 'tenant_id', type: :integer, index: true
         column 'user_id',   type: :integer, index: true, surrogate_key: true
@@ -49,7 +49,7 @@ describe Masamune::Actions::Transform do
   end
 
   let(:instance) { klass.new }
-  let(:postgres) { registry.postgres }
+  let(:postgres) { catalog.postgres }
 
   before do
     instance.environment = MasamuneExampleGroup

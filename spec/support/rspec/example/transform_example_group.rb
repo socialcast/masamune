@@ -2,9 +2,9 @@ module TransformExampleGroup
   def self.included(base)
     base.let(:transform) { Object.new.extend(described_class) }
     base.let(:environment) { double }
-    base.let(:registry) { Masamune::Schema::Registry.new(environment) }
+    base.let(:catalog) { Masamune::Schema::Catalog.new(environment) }
     base.after do
-      registry.clear!
+      catalog.clear!
     end
   end
 end
