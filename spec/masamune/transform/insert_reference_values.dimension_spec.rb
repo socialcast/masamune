@@ -25,16 +25,19 @@ describe Masamune::Transform::InsertReferenceValues do
         column 'source_kind', type: :string
         column 'delta', type: :integer
       end
+
+      file 'misc', headers: true do
+      end
     end
   end
 
   let(:target) { registry.postgres.user_dimension.ledger_table }
-  let(:source) { registry.postgres.user_file.as_table(target) }
 
-  context 'for postgres dimension' do
+  context 'for postgres dimension with file containing references' do
+    let(:source) { registry.postgres.user_file.as_table(target) }
     subject(:result) { transform.insert_reference_values(source, target).to_s }
 
-    it 'should eq render insert_reference_values template' do
+    it 'should render insert_reference_values template' do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TEMPORARY TABLE IF NOT EXISTS department_type_stage (LIKE department_type INCLUDING ALL);
 
@@ -72,6 +75,16 @@ describe Masamune::Transform::InsertReferenceValues do
 
         COMMIT;
       EOS
+    end
+  end
+
+  context 'for postgres dimension with file missing references' do
+    let(:source) { registry.postgres.misc_file.as_table(target) }
+
+    subject(:result) { transform.insert_reference_values(source, target).to_s }
+
+    it 'should not render insert_reference_values template' do
+      is_expected.to eq("\n")
     end
   end
 end

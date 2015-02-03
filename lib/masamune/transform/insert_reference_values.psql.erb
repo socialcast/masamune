@@ -1,3 +1,4 @@
+<%- if target.insert_columns(source).any? -%>
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
 
 INSERT INTO
@@ -15,3 +16,6 @@ WHERE
   <%- end -%>
 <%- end -%>
 ;
+
+<%= target.bulk_upsert(target.stage_table, target) %>
+<%- end -%>
