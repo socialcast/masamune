@@ -30,7 +30,7 @@ module Masamune::Schema
     end
 
     def ledger_table
-      @ledger_table ||= self.class.new(id: id, type: :ledger, columns: ledger_table_columns, references: references.values, parent: self)
+      @ledger_table ||= self.class.new(id: id, type: :ledger, store: store, columns: ledger_table_columns, references: references.values, parent: self)
     end
 
     protected

@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe Masamune::Schema::Dimension do
+  let(:store) { double }
+
   context 'for type :one' do
     let(:dimension) do
       described_class.new id: 'user', type: :one,
@@ -62,7 +64,7 @@ describe Masamune::Schema::Dimension do
     end
 
     let(:dimension) do
-      described_class.new id: 'user', type: :four, references: [Masamune::Schema::TableReference.new(mini_dimension)],
+      described_class.new id: 'user', store: store, type: :four, references: [Masamune::Schema::TableReference.new(mini_dimension)],
         columns: [
           Masamune::Schema::Column.new(id: 'tenant_id', index: true, natural_key: true),
           Masamune::Schema::Column.new(id: 'user_id', index: true, natural_key: true),
@@ -79,6 +81,10 @@ describe Masamune::Schema::Dimension do
       it 'should inherit id' do
         expect(stage_table.id).to eq(:user)
         expect(stage_table.name).to eq('user_dimension_stage')
+      end
+
+      it 'should inherit store' do
+        expect(stage_table.store).to eq(store)
       end
 
       it 'should duplicate columns' do

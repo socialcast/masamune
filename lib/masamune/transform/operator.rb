@@ -11,12 +11,12 @@ module Masamune::Transform
 
     def source
       return unless @source
-      @presenters.key?(@source.kind) ? @presenters[@source.kind].new(@source) : @source
+      @presenters.key?(source_store.try(:type)) ? @presenters[source_store.try(:type)].new(@source) : @source
     end
 
     def target
       return unless @target
-      @presenters.key?(@target.kind) ? @presenters[@target.kind].new(@target) : @target
+      @presenters.key?(target_store.try(:type)) ? @presenters[target_store.try(:type)].new(@target) : @target
     end
 
     def to_s
@@ -41,6 +41,16 @@ module Masamune::Transform
 
     private
 
+    def source_store
+      return @source if @source.is_a?(Masamune::Schema::Store)
+      @source.try(:store)
+    end
+
+    def target_store
+      return @target if @target.is_a?(Masamune::Schema::Store)
+      @target.try(:store)
+    end
+
     def template_eval(template)
       return File.read(template) if File.exists?(template.to_s)
       Masamune::Template.render_to_string(template_file(template), @locals.merge(source: source, target: target))
@@ -51,10 +61,10 @@ module Masamune::Transform
     end
 
     def template_suffix
-      case (@target || @source).try(:kind)
-      when :postgres, :psql
+      case (target_store || source_store).try(:type)
+      when :postgres
         'psql'
-      when :hive, :hql
+      when :hive
         'hql'
       else
         'txt'

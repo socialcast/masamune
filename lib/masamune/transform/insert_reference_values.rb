@@ -7,7 +7,7 @@ module Masamune::Transform
     def insert_reference_values(source, target)
       operators = []
       target.insert_references.each do |_, reference|
-        operators << Operator.new(__method__, source: source, target: reference, presenters: { psql: Postgres })
+        operators << Operator.new(__method__, source: source, target: reference, presenters: { postgres: Postgres })
       end
       Operator.new *operators
     end

@@ -22,6 +22,7 @@ module Masamune::Schema
 
     def stage_table(*a)
       super.tap do |stage|
+        stage.store = store
         stage.range = range
         stage.columns.each do |_, column|
           column.unique = false
@@ -32,7 +33,7 @@ module Masamune::Schema
     def partition_table(date)
       partition_range = partition_rule.bind_date(date)
       @partition_tables ||= {}
-      @partition_tables[partition_range] ||= self.class.new id: id, columns: partition_table_columns, parent: self, range: partition_range, suffix: partition_range.suffix
+      @partition_tables[partition_range] ||= self.class.new id: id, store: store, columns: partition_table_columns, parent: self, range: partition_range, suffix: partition_range.suffix
     end
 
     def constraints

@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe Masamune::Schema::Fact do
+  let(:store) { double }
+
   let(:dimension) do
     Masamune::Schema::Dimension.new id: 'user', type: :two,
       columns: [
@@ -10,7 +12,7 @@ describe Masamune::Schema::Fact do
   end
 
   let(:fact) do
-    described_class.new id: 'visits', partition: 'y%Ym%m',
+    described_class.new id: 'visits', store: store, partition: 'y%Ym%m',
       references: [Masamune::Schema::TableReference.new(dimension)],
       columns: [
         Masamune::Schema::Column.new(id: 'total', type: :integer)
@@ -24,12 +26,14 @@ describe Masamune::Schema::Fact do
 
     subject(:partition_table) { fact.partition_table(date) }
 
+    it { expect(partition_table.store).to eq(store) }
     it { expect(partition_table.name).to eq('visits_fact_y2015m01') }
     it { expect(partition_table.range.start_date).to eq(date.utc.to_date) }
 
     describe '#stage_table' do
       subject(:stage_table) { partition_table.stage_table }
 
+      it { expect(stage_table.store).to eq(store) }
       it { expect(stage_table.name).to eq('visits_fact_y2015m01_stage') }
       it { expect(stage_table.range.start_date).to eq(date.utc.to_date) }
     end

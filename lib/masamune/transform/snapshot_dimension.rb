@@ -3,7 +3,7 @@ module Masamune::Transform
     extend ActiveSupport::Concern
 
     def snapshot_dimension(source, target, order = 'DESC')
-      Operator.new(__method__, source: source, target: target, order: order, presenters: { psql: Postgres })
+      Operator.new(__method__, source: source, target: target, order: order, presenters: { postgres: Postgres })
     end
 
     private

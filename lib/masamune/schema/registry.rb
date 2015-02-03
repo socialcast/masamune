@@ -34,6 +34,7 @@ module Masamune::Schema
       def initialize(delegate, options = {})
         @delegate = delegate
         @options  = Hash.new { |h,k| h[k] = [] }
+        @options.merge!(store: @delegate)
         @options.merge!(options)
       end
 

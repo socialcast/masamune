@@ -17,6 +17,7 @@ module Masamune::Schema
     DEFAULT_ATTRIBUTES =
     {
       id:              nil,
+      store:           nil,
       attributes:      [],
       debug:           false
     }
@@ -38,10 +39,6 @@ module Masamune::Schema
       attributes.each do |attribute|
         @attributes[attribute.id] = attribute
       end
-    end
-
-    def kind
-      :hql
     end
 
     def headers

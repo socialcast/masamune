@@ -3,7 +3,7 @@ module Masamune::Transform
     extend ActiveSupport::Concern
 
     def relabel_dimension(target)
-      Operator.new(__method__, target: target, presenters: { psql: Postgres })
+      Operator.new(__method__, target: target, presenters: { postgres: Postgres })
     end
 
     private

@@ -3,7 +3,7 @@ module Masamune::Transform
     extend ActiveSupport::Concern
 
     def stage_fact(source, target, date)
-      Operator.new(__method__, source: source, target: target, date: date, presenters: { psql: Postgres })
+      Operator.new(__method__, source: source, target: target, date: date, presenters: { postgres: Postgres })
     end
 
     private

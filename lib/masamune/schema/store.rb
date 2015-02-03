@@ -1,11 +1,10 @@
 require 'active_support/core_ext/hash'
 
 module Masamune::Schema
-  # TODO break out, set Table parent as store and derive 'kind' from Store
   class Store
-    SUPPORTED_TYPES = %(table dimension fact file event)
+    SUPPORTED_ATTRIBUTES = %(table dimension fact file event)
 
-    attr_accessor :kind
+    attr_accessor :type
     attr_accessor :tables
     attr_accessor :dimensions
     attr_accessor :facts
@@ -13,8 +12,8 @@ module Masamune::Schema
     attr_accessor :events
     attr_accessor :references
 
-    def initialize(kind)
-      @kind       = kind
+    def initialize(type)
+      @type       = type
       @tables     = {}.with_indifferent_access
       @dimensions = {}.with_indifferent_access
       @facts      = {}.with_indifferent_access
@@ -25,12 +24,12 @@ module Masamune::Schema
     end
 
     def method_missing(method, *args, &block)
-      if kind == :files
+      if type == :files
         files[method]
       else
-        *name, type = method.to_s.split('_')
-        raise ArgumentError, "unknown type '#{type}'" unless SUPPORTED_TYPES.include?(type)
-        self.send(type.pluralize)[name.join('_')]
+        *attribute_name, attribute_type = method.to_s.split('_')
+        raise ArgumentError, "unknown attribute type '#{attribute_type}'" unless SUPPORTED_ATTRIBUTES.include?(attribute_type)
+        self.send(attribute_type.pluralize)[attribute_name.join('_')]
       end
     end
 

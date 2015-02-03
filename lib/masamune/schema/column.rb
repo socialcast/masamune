@@ -191,11 +191,11 @@ module Masamune::Schema
     end
 
     def null_value?(value)
-      return false unless parent
-      case parent.kind
-      when :hql
+      return false unless parent && parent.store
+      case parent.store.type
+      when :hive
         value == '\N'
-      when :psql
+      when :postgres
         false
       end
     end

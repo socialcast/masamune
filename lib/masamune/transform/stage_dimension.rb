@@ -3,7 +3,7 @@ module Masamune::Transform
     extend ActiveSupport::Concern
 
     def stage_dimension(source, target)
-      Operator.new(__method__, source: source, target: target, presenters: { psql: Postgres })
+      Operator.new(__method__, source: source, target: target, presenters: { postgres: Postgres })
     end
 
     private
