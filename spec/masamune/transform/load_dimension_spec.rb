@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe Masamune::Transform::LoadDimension do
   let(:transform) { Object.new.extend(described_class) }
-
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -46,7 +45,7 @@ describe Masamune::Transform::LoadDimension do
   let(:target_ledger) { target.ledger_table }
   let(:source_table) { source.as_table(target_ledger) }
 
-  describe '#load_dimension' do
+  context 'with postgres dimension' do
     subject(:result) { transform.load_dimension(data, source, target).to_s }
 
     it 'should render combined template' do

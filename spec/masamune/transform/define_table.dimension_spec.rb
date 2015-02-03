@@ -1,18 +1,27 @@
 require 'spec_helper'
 
-describe 'Masamune::Transform::DefineTable with Masamune::Schema::Dimension' do
-  let(:transform) { Object.new.extend(Masamune::Transform::DefineTable) }
+describe Masamune::Transform::DefineTable do
+  let(:transform) { Object.new.extend(described_class) }
+  let(:environment) { double }
+  let(:registry) { Masamune::Schema::Registry.new(environment) }
 
-  subject { transform.define_table(dimension).to_s }
+  subject { transform.define_table(table).to_s }
 
-  context 'for type :one' do
-    let(:dimension) do
-      Masamune::Schema::Dimension.new id: 'user', type: :one,
-        columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id'),
-          Masamune::Schema::Column.new(id: 'user_id')
-        ]
+  after do
+    registry.clear!
+  end
+
+  context 'for postgres dimension type: one' do
+    before do
+      registry.schema :postgres do
+        dimension 'user', type: :one do
+          column 'tenant_id'
+          column 'user_id'
+        end
+      end
     end
+
+    let(:table) { registry.postgres.user_dimension }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -27,14 +36,17 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Dimension' do
     end
   end
 
-  context 'for type :two' do
-    let(:dimension) do
-      Masamune::Schema::Dimension.new id: 'user', type: :two,
-        columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', index: true, natural_key: true),
-          Masamune::Schema::Column.new(id: 'user_id', index: true, natural_key: true)
-        ]
+  context 'for postgres dimension type: two' do
+    before do
+      registry.schema :postgres do
+        dimension 'user', type: :two do
+          column 'tenant_id', index: true, natural_key: true
+          column 'user_id', index: true, natural_key: true
+        end
+      end
     end
+
+    let(:table) { registry.postgres.user_dimension }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -82,29 +94,25 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Dimension' do
     end
   end
 
-  context 'for type :four' do
-    let(:mini_dimension) do
-      Masamune::Schema::Dimension.new id: 'user_account_state', type: :mini,
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(id: 'description', type: :string)
-        ],
-        rows: [
-          Masamune::Schema::Row.new(values: {
-            name: 'active',
-            description: 'Active',
-          }, default: true)
-        ]
+  context 'for postgres dimension type: four' do
+    before do
+      registry.schema :postgres do
+        dimension 'user_account_state', type: :mini do
+          column 'name', type: :string, unique: true
+          column 'description', type: :string
+          row name: 'active', description: 'Active', attributes: {default: true}
+        end
+
+        dimension 'user', type: :four do
+          references :user_account_state
+          column 'tenant_id', index: true, natural_key: true
+          column 'user_id', index: true, natural_key: true
+          column 'preferences', type: :key_value, null: true
+        end
+      end
     end
 
-    let(:dimension) do
-      Masamune::Schema::Dimension.new id: 'user', type: :four, references: [Masamune::Schema::TableReference.new(mini_dimension)],
-        columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', index: true, natural_key: true),
-          Masamune::Schema::Column.new(id: 'user_id', index: true, natural_key: true),
-          Masamune::Schema::Column.new(id: 'preferences', type: :key_value, null: true)
-        ]
-    end
+    let(:table) { registry.postgres.user_dimension }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc

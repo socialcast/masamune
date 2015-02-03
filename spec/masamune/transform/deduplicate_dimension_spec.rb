@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 describe Masamune::Transform::DeduplicateDimension do
+  let(:transform) { Object.new.extend(described_class) }
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -21,9 +22,8 @@ describe Masamune::Transform::DeduplicateDimension do
   end
 
   let(:target) { registry.postgres.user_dimension }
-  let(:transform) { Object.new.extend(described_class) }
 
-  describe '#deduplicate_dimension' do
+  context 'with postgres dimension' do
     subject(:result) { transform.deduplicate_dimension(target.stage_table('consolidated'), target.stage_table('deduplicated')).to_s }
 
     it 'should render deduplicate_dimension template' do

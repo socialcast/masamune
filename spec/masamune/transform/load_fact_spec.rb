@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe Masamune::Transform::LoadFact do
   let(:transform) { Object.new.extend(described_class) }
-
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -59,7 +58,7 @@ describe Masamune::Transform::LoadFact do
   let(:source) { registry.postgres.visits_file }
   let(:source_table) { source.as_table(target) }
 
-  describe '#load_fact' do
+  context 'for postgres fact' do
     subject(:result) { transform.load_fact(files, source, target, date).to_s }
 
     it 'should render combined template' do

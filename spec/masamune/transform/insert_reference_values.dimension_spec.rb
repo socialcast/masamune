@@ -1,8 +1,7 @@
 require 'spec_helper'
 
-describe 'Masamune::Transform::InsertReferenceValues with Masamune::Schema::Dimension' do
-  let(:transform) { Object.new.extend(Masamune::Transform::InsertReferenceValues) }
-
+describe Masamune::Transform::InsertReferenceValues do
+  let(:transform) { Object.new.extend(described_class) }
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -36,7 +35,7 @@ describe 'Masamune::Transform::InsertReferenceValues with Masamune::Schema::Dime
   let(:target) { registry.postgres.user_dimension.ledger_table }
   let(:source) { registry.postgres.user_file.as_table(target) }
 
-  describe '#insert_reference_values' do
+  context 'for postgres dimension' do
     subject(:result) { transform.insert_reference_values(source, target).to_s }
 
     it 'should eq render insert_reference_values template' do

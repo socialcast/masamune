@@ -1,8 +1,7 @@
 require 'spec_helper'
 
-describe 'Masamune::Transform::InsertReferenceValues with Masamune::Schema::Fact' do
-  let(:transform) { Object.new.extend(Masamune::Transform::InsertReferenceValues) }
-
+describe Masamune::Transform::InsertReferenceValues do
+  let(:transform) { Object.new.extend(described_class) }
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -56,7 +55,7 @@ describe 'Masamune::Transform::InsertReferenceValues with Masamune::Schema::Fact
   let(:target) { registry.postgres.visits_fact }
   let(:source) { registry.postgres.visits_file.as_table(target) }
 
-  describe '#insert_reference_values' do
+  context 'with postgres fact' do
     subject(:result) { transform.insert_reference_values(source, target).to_s }
 
     it 'should eq render insert_reference_values template' do

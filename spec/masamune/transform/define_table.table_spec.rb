@@ -1,19 +1,27 @@
 require 'spec_helper'
 
-describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
-  let(:transform) { Object.new.extend(Masamune::Transform::DefineTable) }
+describe Masamune::Transform::DefineTable do
+  let(:transform) { Object.new.extend(described_class) }
+  let(:environment) { double }
+  let(:registry) { Masamune::Schema::Registry.new(environment) }
 
-  let(:target) { table }
   subject { transform.define_table(target).to_s }
 
-  context 'with columns' do
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user',
-        columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id'),
-          Masamune::Schema::Column.new(id: 'user_id')
-        ]
+  after do
+    registry.clear!
+  end
+
+  context 'for postgres table with columns' do
+    before do
+      registry.schema :postgres do
+        table 'user' do
+          column 'tenant_id'
+          column 'user_id'
+        end
+      end
     end
+
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -27,14 +35,17 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with index columns' do
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user',
-        columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', index: true),
-          Masamune::Schema::Column.new(id: 'user_id', index: true)
-        ]
+  context 'for postgres table with index columns' do
+    before do
+      registry.schema :postgres do
+        table 'user' do
+          column 'tenant_id', index: true
+          column 'user_id', index: true
+        end
+      end
     end
+
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -58,14 +69,17 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with multiple index columns' do
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user',
-        columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', index: ['tenant_id', 'shared']),
-          Masamune::Schema::Column.new(id: 'user_id', index: ['user_id', 'shared'])
-        ]
+  context 'for postgres table with multiple index columns' do
+    before do
+      registry.schema :postgres do
+        table 'user' do
+          column 'tenant_id', index: ['tenant_id', 'shared']
+          column 'user_id', index: ['user_id', 'shared']
+        end
+      end
     end
+
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -94,14 +108,17 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with multiple unique columns' do
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user',
-        columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', unique: ['shared']),
-          Masamune::Schema::Column.new(id: 'user_id', unique: ['user_id', 'shared'])
-        ]
+  context 'for postgres table with multiple unique columns' do
+    before do
+      registry.schema :postgres do
+        table 'user' do
+          column 'tenant_id', unique: ['shared']
+          column 'user_id', unique: ['user_id', 'shared']
+        end
+      end
     end
+
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -125,15 +142,18 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with enum column' do
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user',
-        columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id'),
-          Masamune::Schema::Column.new(id: 'user_id'),
-          Masamune::Schema::Column.new(id: 'state', type: :enum, sub_type: :user_state, values: %w(active inactive terminated), default: 'active')
-        ]
+  context 'for postgres table with enum column' do
+    before do
+      registry.schema :postgres do
+        table 'user' do
+          column 'tenant_id'
+          column 'user_id'
+          column 'state', type: :enum, sub_type: :user_state, values: %w(active inactive terminated), default: 'active'
+        end
+      end
     end
+
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -153,7 +173,7 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
 
     context '#stage_table' do
-      let(:target) { table.stage_table }
+      let(:target) { registry.postgres.user_table.stage_table }
 
       it 'should render table template' do
         is_expected.to eq <<-EOS.strip_heredoc
@@ -169,14 +189,17 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with surrogate_key columns override' do
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user',
-        columns: [
-          Masamune::Schema::Column.new(id: 'identifier', type: :uuid, surrogate_key: true),
-          Masamune::Schema::Column.new(id: 'name', type: :string)
-        ]
+  context 'for postgres table with surrogate_key columns override' do
+    before do
+      registry.schema :postgres do
+        table 'user' do
+          column 'identifier', type: :uuid, surrogate_key: true
+          column 'name', type: :string
+        end
+      end
     end
+
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -189,23 +212,19 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with partial values' do
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user',
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string),
-          Masamune::Schema::Column.new(id: 'description', type: :string)
-        ],
-        rows: [
-          Masamune::Schema::Row.new(values: {
-            name: 'registered',
-            description: 'Registered'
-          }),
-          Masamune::Schema::Row.new(values: {
-            name: 'active'
-          })
-        ]
+  context 'for postgres table with partial values' do
+    before do
+      registry.schema :postgres do
+        table 'user' do
+          column 'name', type: :string
+          column 'description', type: :string
+          row name: 'registered', description: 'Registered'
+          row name: 'active'
+        end
+      end
     end
+
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -227,14 +246,17 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with shared unique index' do
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user',
-        columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, unique: 'tenant_and_user', index: 'tenant_and_user'),
-          Masamune::Schema::Column.new(id: 'user_id', type: :integer, unique: 'tenant_and_user', index: 'tenant_and_user')
-        ]
+  context 'for postgres table with shared unique index' do
+    before do
+      registry.schema :postgres do
+        table 'user' do
+          column 'tenant_id', unique: 'tenant_and_user', index: 'tenant_and_user'
+          column 'user_id', unique: 'tenant_and_user', index: 'tenant_and_user'
+        end
+      end
     end
+
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -258,25 +280,20 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with multiple default and named rows' do
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user',
-        columns: [
-          Masamune::Schema::Column.new(id: 'uuid', type: :uuid, surrogate_key: true),
-          Masamune::Schema::Column.new(id: 'tenant_id', type: :integer, natural_key: true),
-          Masamune::Schema::Column.new(id: 'user_id', type: :integer, natural_key: true)
-        ],
-        rows: [
-          Masamune::Schema::Row.new(values: {
-            tenant_id: 'default_tenant_id()',
-            user_id: -1,
-          }, default: true),
-          Masamune::Schema::Row.new(values: {
-            tenant_id: 'default_tenant_id()',
-            user_id: -2,
-          }, id: 'unknown')
-        ]
+  context 'for postgres table with multiple default and named rows' do
+    before do
+      registry.schema :postgres do
+        table 'user' do
+          column 'uuid', type: :uuid, surrogate_key: true
+          column 'tenant_id', type: :integer, natural_key: true
+          column 'user_id', type: :integer, natural_key: true
+          row tenant_id: 'default_tenant_id()', user_id: -1, attributes: {default: true}
+          row tenant_id: 'default_tenant_id()', user_id: -2, attributes: {id: 'unknown'}
+        end
+      end
     end
+
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -323,35 +340,25 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with referenced tables' do
-    let(:mini_table) do
-      Masamune::Schema::Table.new id: 'user_account_state',
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(id: 'description', type: :string)
-        ],
-        rows: [
-          Masamune::Schema::Row.new(values: {
-            name: 'registered',
-            description: 'Registered'
-          }),
-          Masamune::Schema::Row.new(values: {
-            name: 'active',
-            description: 'Active',
-          }, default: true),
-          Masamune::Schema::Row.new(values: {
-            name: 'inactive',
-            description: 'Inactive'
-          })
-        ]
+  context 'for postgres table with referenced tables' do
+    before do
+      registry.schema :postgres do
+        table 'user_account_state' do
+          column 'name', type: :string, unique: true
+          column 'description', type: :string
+          row name: 'registered', description: 'Registered'
+          row name: 'active', description: 'Active', attributes: { default: true }
+          row name: 'inactive', description: 'Inactive'
+        end
+
+        table 'user' do
+          references :user_account_state
+          column 'name', type: :string
+        end
+      end
     end
 
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user', references: [Masamune::Schema::TableReference.new(mini_table)],
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string)
-        ]
-    end
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -370,27 +377,24 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
     end
   end
 
-  context 'with labeled referenced table' do
-    let(:mini_table) do
-      Masamune::Schema::Table.new id: 'user_account_state',
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(id: 'description', type: :string)
-        ],
-        rows: [
-          Masamune::Schema::Row.new(values: {name: 'active'}, default: true)
-        ]
+  context 'for postgres table with labeled referenced table' do
+    before do
+      registry.schema :postgres do
+        table 'user_account_state' do
+          column 'name', type: :string, unique: true
+          column 'description', type: :string
+          row name: 'active', description: 'Active', attributes: { default: true }
+        end
+
+        table 'user' do
+          references :user_account_state
+          references :user_account_state, label: 'hr', null: true, default: :null
+          column 'name', type: :string
+        end
+      end
     end
 
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user', references: [
-          Masamune::Schema::TableReference.new(mini_table),
-          Masamune::Schema::TableReference.new(mini_table, label: 'actor', null: true, default: :null)
-        ],
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string)
-        ]
-    end
+    let(:target) { registry.postgres.user_table }
 
     it 'should render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -398,7 +402,7 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
         (
           uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
           user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid) DEFAULT default_user_account_state_table_uuid(),
-          actor_user_account_state_table_uuid UUID REFERENCES user_account_state_table(uuid),
+          hr_user_account_state_table_uuid UUID REFERENCES user_account_state_table(uuid),
           name VARCHAR NOT NULL
         );
 
@@ -408,64 +412,49 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_actor_user_account_state_table_uuid_index') THEN
-        CREATE INDEX user_table_actor_user_account_state_table_uuid_index ON user_table (actor_user_account_state_table_uuid);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_hr_user_account_state_table_uuid_index') THEN
+        CREATE INDEX user_table_hr_user_account_state_table_uuid_index ON user_table (hr_user_account_state_table_uuid);
         END IF; END $$;
       EOS
     end
-  end
 
-  context 'stage table' do
-    let(:mini_table) do
-      Masamune::Schema::Table.new id: 'user_account_state',
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(id: 'description', type: :string)
-        ]
-    end
+    context '#stage_table' do
+      let(:target) { registry.postgres.user_table.stage_table }
 
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user', references: [Masamune::Schema::TableReference.new(mini_table)],
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string)
-        ]
-    end
+      it 'should render table template' do
+        is_expected.to eq <<-EOS.strip_heredoc
+          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
+          (
+            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            user_account_state_table_uuid UUID DEFAULT default_user_account_state_table_uuid(),
+            hr_user_account_state_table_uuid UUID,
+            name VARCHAR
+          );
 
-    let(:target) { table.stage_table }
-
-    it 'should render table template' do
-      is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
-        (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          user_account_state_table_uuid UUID,
-          name VARCHAR
-        );
-
-        CREATE INDEX user_table_stage_user_account_state_table_uuid_index ON user_table_stage (user_account_state_table_uuid);
-      EOS
+          CREATE INDEX user_table_stage_user_account_state_table_uuid_index ON user_table_stage (user_account_state_table_uuid);
+          CREATE INDEX user_table_stage_hr_user_account_state_table_uuid_index ON user_table_stage (hr_user_account_state_table_uuid);
+        EOS
+      end
     end
   end
 
   context '#as_file' do
-    let(:mini_table) do
-      Masamune::Schema::Table.new id: 'user_account_state',
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(id: 'description', type: :string)
-        ]
+    before do
+      registry.schema :postgres do
+        table 'user_account_state' do
+          column 'name', type: :string, unique: true
+          column 'description', type: :string
+        end
+
+        table 'user' do
+          references :user_account_state
+          references :user_account_state, label: 'hr'
+          column 'name', type: :string
+        end
+      end
     end
 
-    let(:table) do
-      Masamune::Schema::Table.new id: 'user', references: [
-          Masamune::Schema::TableReference.new(mini_table),
-          Masamune::Schema::TableReference.new(mini_table, label: :hr)
-        ],
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string)
-        ]
-    end
-
+    let(:table) { registry.postgres.user_table }
     let(:file) { table.as_file(columns) }
     let(:target) { file.as_table(table) }
 
@@ -488,7 +477,7 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
       end
     end
 
-    context 'with all specified columns' do
+    context 'for postgres table with all specified columns' do
       let(:columns) { %w(uuid hr_user_account_state_table_uuid user_account_state_table_uuid name) }
 
       it 'should render table template' do
@@ -507,7 +496,7 @@ describe 'Masamune::Transform::DefineTable with Masamune::Schema::Table' do
       end
     end
 
-    context 'with all specified columns in denormalized form' do
+    context 'for postgres table with all specified columns in denormalized form' do
       let(:columns) { %w(uuid hr_user_account_state.name user_account_state.name name) }
 
       it 'should render table template' do

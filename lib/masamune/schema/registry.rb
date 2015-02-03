@@ -30,7 +30,10 @@ module Masamune::Schema
 
     # TODO break out, set Table parent as store and derive 'kind' from Store
     class Store
+      SUPPORTED_TYPES = %(table dimension fact file event)
+
       attr_accessor :kind
+      attr_accessor :tables
       attr_accessor :dimensions
       attr_accessor :facts
       attr_accessor :files
@@ -39,6 +42,7 @@ module Masamune::Schema
 
       def initialize(kind)
         @kind       = kind
+        @tables     = {}.with_indifferent_access
         @dimensions = {}.with_indifferent_access
         @facts      = {}.with_indifferent_access
         @files      = {}.with_indifferent_access
@@ -52,7 +56,7 @@ module Masamune::Schema
           files[method]
         else
           *name, type = method.to_s.split('_')
-          raise ArgumentError, "unknown type '#{type}'" unless %(dimension fact file event).include?(type)
+          raise ArgumentError, "unknown type '#{type}'" unless SUPPORTED_TYPES.include?(type)
           self.send(type.pluralize)[name.join('_')]
         end
       end
@@ -120,6 +124,10 @@ module Masamune::Schema
       @context = nil
     end
 
+    def clear!
+      @catalog.clear
+    end
+
     def schema(*args, &block)
       options = args.last.is_a?(Hash) ? args.pop : {}
       raise ArgumentError, 'data store arguments required' unless args.any?
@@ -146,6 +154,15 @@ module Masamune::Schema
       @catalog[store_id.to_sym]
     end
 
+    def table(id, options = {}, &block)
+      @context.push(options)
+      yield if block_given?
+      @context.tables[id] ||= Masamune::Schema::Table.new(options.merge(@context.options).merge(id: id))
+      @context.references[id] ||= Masamune::Schema::TableReference.new(@context.tables[id])
+    ensure
+      @context.pop
+    end
+
     def dimension(id, options = {}, &block)
       @context.push(options)
       yield if block_given?
@@ -159,8 +176,9 @@ module Masamune::Schema
       @context.options[:columns] << dereference_column(id, options)
     end
 
+    # FIXME: references should not be ambiguous, e.g. references :user, should be references :user_dimension
     def references(id, options = {})
-      reference = Masamune::Schema::TableReference.new(@context.dimensions[id], options)
+      reference = Masamune::Schema::TableReference.new(@context.tables[id] || @context.dimensions[id], options)
       @context.references[reference.id] = reference
       @context.options[:references] << reference
     end

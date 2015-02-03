@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe Masamune::Transform::StageDimension do
   let(:transform) { Object.new.extend(described_class) }
-
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -58,7 +57,7 @@ describe Masamune::Transform::StageDimension do
   let(:target) { registry.postgres.user_dimension.ledger_table }
   let(:source) { registry.postgres.user_file.as_table(target) }
 
-  describe '#stage_dimension' do
+  context 'for postgres dimension' do
     subject(:result) { transform.stage_dimension(source, target).to_s }
 
     it 'should eq render stage_dimension template' do

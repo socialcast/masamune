@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe Masamune::Transform::ConsolidateDimension do
   let(:transform) { Object.new.extend(described_class) }
-
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -24,7 +23,7 @@ describe Masamune::Transform::ConsolidateDimension do
 
   let(:target) { registry.postgres.user_dimension }
 
-  describe '#consolidate_dimension' do
+  context 'with postgres dimension' do
     subject(:result) { transform.consolidate_dimension(target).to_s }
 
     it 'should render combined template' do

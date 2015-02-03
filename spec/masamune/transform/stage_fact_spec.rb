@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe Masamune::Transform::StageFact do
   let(:transform) { Object.new.extend(described_class) }
-
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -57,7 +56,7 @@ describe Masamune::Transform::StageFact do
   let(:target) { registry.postgres.visits_fact }
   let(:source) { registry.postgres.visits_file.as_table(target) }
 
-  describe '#stage_fact' do
+  context 'with postgres fact' do
     subject(:result) { transform.stage_fact(source, target, date).to_s }
 
     it 'should eq render stage_fact template' do

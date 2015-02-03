@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe Masamune::Transform::DefineSchema do
   let(:transform) { Object.new.extend(described_class) }
-
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -33,15 +32,13 @@ describe Masamune::Transform::DefineSchema do
       end
     end
 
-    describe '#define_schema' do
-      subject(:result) { transform.define_schema(registry, :postgres).to_s }
+    subject(:result) { transform.define_schema(registry, :postgres).to_s }
 
-      it 'should render combined template' do
-        is_expected.to eq Masamune::Template.combine \
-          Masamune::Transform::Operator.new('define_schema', source: registry.postgres),
-          transform.define_table(registry.postgres.dimensions['user_account_state']),
-          transform.define_table(registry.postgres.dimensions['user'])
-      end
+    it 'should render combined template' do
+      is_expected.to eq Masamune::Template.combine \
+        Masamune::Transform::Operator.new('define_schema', source: registry.postgres),
+        transform.define_table(registry.postgres.dimensions['user_account_state']),
+        transform.define_table(registry.postgres.dimensions['user'])
     end
   end
 
@@ -57,14 +54,12 @@ describe Masamune::Transform::DefineSchema do
       end
     end
 
-    describe '#define_schema' do
-      subject(:result) { transform.define_schema(registry, :hive).to_s }
+    subject(:result) { transform.define_schema(registry, :hive).to_s }
 
-      it 'should render combined template' do
-        is_expected.to eq Masamune::Template.combine \
-          Masamune::Transform::Operator.new('define_schema', source: registry.hive),
-          transform.define_event_view(registry.hive.events['tenant'])
-      end
+    it 'should render combined template' do
+      is_expected.to eq Masamune::Template.combine \
+        Masamune::Transform::Operator.new('define_schema', source: registry.hive),
+        transform.define_event_view(registry.hive.events['tenant'])
     end
   end
 end

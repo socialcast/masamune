@@ -1,8 +1,7 @@
 require 'spec_helper'
 
-describe 'Masamune::Transform::BulkUpsert with Masamune::Schema::Dimension' do
-  let(:transform) { Object.new.extend(Masamune::Transform::BulkUpsert) }
-
+describe Masamune::Transform::BulkUpsert do
+  let(:transform) { Object.new.extend(described_class) }
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -57,7 +56,7 @@ describe 'Masamune::Transform::BulkUpsert with Masamune::Schema::Dimension' do
 
   let(:target) { registry.postgres.user_dimension }
 
-  describe '#bulk_upsert with dimension' do
+  context 'for postgres dimension' do
     subject(:result) { transform.bulk_upsert(target.stage_table, target).to_s }
 
     it 'should render bulk_upsert template' do
@@ -116,7 +115,7 @@ describe 'Masamune::Transform::BulkUpsert with Masamune::Schema::Dimension' do
     end
   end
 
-  describe '#bulk_upsert with dimension ledger' do
+  context 'for postgres dimension ledger' do
     subject(:result) { transform.bulk_upsert(target.ledger_table.stage_table, target.ledger_table).to_s }
 
     it 'should render bulk_upsert template' do

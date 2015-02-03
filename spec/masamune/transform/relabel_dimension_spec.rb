@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 describe Masamune::Transform::RelabelDimension do
+  let(:transform) { Object.new.extend(described_class) }
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -21,9 +22,8 @@ describe Masamune::Transform::RelabelDimension do
   end
 
   let(:target) { registry.postgres.user_dimension }
-  let(:transform) { Object.new.extend(described_class) }
 
-  describe '#relabel_dimension' do
+  context 'for postgres dimension' do
     subject(:result) { transform.relabel_dimension(target).to_s }
 
     it 'should eq render relabel_dimension template' do

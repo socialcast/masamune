@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe Masamune::Transform::DefineEventView do
   let(:transform) { Object.new.extend(described_class) }
-
   let(:environment) { double }
   let(:registry) { Masamune::Schema::Registry.new(environment) }
 
@@ -19,7 +18,7 @@ describe Masamune::Transform::DefineEventView do
 
   let(:target) { registry.hive.tenant_event }
 
-  describe '#define_event_view' do
+  context 'with hive event' do
     subject(:result) { transform.define_event_view(target).to_s }
 
     it 'should render define_event_view template' do
