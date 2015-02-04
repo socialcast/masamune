@@ -14,8 +14,9 @@ module Masamune::Transform
 
     private
 
-    class Postgres < Presenter
+    class Postgres < SimpleDelegator
       include BulkUpsert
+      include Masamune::LastElement
 
       def insert_columns(source)
         source.shared_columns(stage_table).map { |_, columns| columns.first.name }

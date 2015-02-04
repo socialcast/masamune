@@ -12,7 +12,7 @@ module Masamune::Schema
     attr_accessor :events
     attr_accessor :references
 
-    def initialize(type)
+    def initialize(type, options = {})
       @type       = type
       @tables     = {}.with_indifferent_access
       @dimensions = {}.with_indifferent_access

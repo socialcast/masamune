@@ -6,20 +6,12 @@ module Masamune::Schema
 
     SUPPORTED_STORES = [:postgres, :hive, :files]
 
-    class HasMap < Delegator
+    class HasMap < SimpleDelegator
       attr_accessor :maps
 
-      def initialize(delegate)
-        @delegate = delegate
+      def initialize(*args)
+        super
         @maps = {}
-      end
-
-      def __getobj__
-        @delegate
-      end
-
-      def __setobj__(obj)
-        @delegate = obj
       end
 
       def map(options = {})
@@ -27,22 +19,15 @@ module Masamune::Schema
       end
     end
 
-    class Context < Delegator
+    class Context < SimpleDelegator
       attr_accessor :options
 
-      def initialize(delegate, options = {})
-        @delegate = delegate
+      def initialize(store, options = {})
+        super store
+        @store = store
         @options  = Hash.new { |h,k| h[k] = [] }
-        @options.merge!(store: @delegate)
+        @options.merge!(store: @store)
         @options.merge!(options)
-      end
-
-      def __getobj__
-        @delegate
-      end
-
-      def __setobj__(obj)
-        @delegate = obj
       end
 
       def push(options = {})

@@ -1,5 +1,3 @@
-require 'masamune/transform/presenter'
-
 module Masamune::Transform
   module DefineEventView
     extend ActiveSupport::Concern
@@ -12,7 +10,7 @@ module Masamune::Transform
 
     private
 
-    class Hive < Presenter
+    class Hive < SimpleDelegator
       def view_name
         "#{id}_events"
       end

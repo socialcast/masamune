@@ -1,7 +1,6 @@
 module Masamune
   module Transform
     require 'masamune/transform/operator'
-    require 'masamune/transform/presenter'
 
     require 'masamune/transform/define_table'
     require 'masamune/transform/define_event_view'

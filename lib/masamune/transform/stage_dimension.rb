@@ -8,7 +8,9 @@ module Masamune::Transform
 
     private
 
-    class Postgres < Presenter
+    class Postgres < SimpleDelegator
+      include Masamune::LastElement
+
       def insert_columns(source)
         shared_columns(source).values.map do |columns|
           column = columns.first

@@ -1,11 +1,9 @@
-require 'delegate'
-
 module Masamune
-  class CachedFilesystem < Delegator
+  class CachedFilesystem < SimpleDelegator
     include Masamune::Accumulate
 
     def initialize(filesystem)
-      super
+      super filesystem
       @filesystem = filesystem
       clear!
     end
@@ -45,14 +43,6 @@ module Masamune
         clear!
         @filesystem.send(method, *args)
       end
-    end
-
-    def __getobj__
-      @filesystem
-    end
-
-    def __setobj__(obj)
-      @filesystem = obj
     end
 
     private

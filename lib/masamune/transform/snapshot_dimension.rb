@@ -8,7 +8,9 @@ module Masamune::Transform
 
     private
 
-    class Postgres < Presenter
+    class Postgres < SimpleDelegator
+      include Masamune::LastElement
+
       def insert_columns(source = nil)
         consolidated_columns.map { |_, column| column.name }
       end

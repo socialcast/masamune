@@ -8,7 +8,7 @@ module Masamune::Transform
 
     private
 
-    class Postgres < Presenter
+    class Postgres < SimpleDelegator
       def window(*extra)
         (columns.values.select { |column| extra.delete(column.name) || column.natural_key || column.auto_reference }.map(&:name) + extra).uniq
       end
