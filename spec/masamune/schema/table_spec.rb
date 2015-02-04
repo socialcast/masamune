@@ -6,6 +6,14 @@ describe Masamune::Schema::Table do
     it { expect { table }.to raise_error ArgumentError }
   end
 
+  context 'with name' do
+    let(:table) do
+      described_class.new id: 'user', name: 'account_table'
+    end
+
+    it { expect(table.name).to eq('account_table') }
+  end
+
   context 'with columns' do
     let(:table) do
       described_class.new id: 'user',

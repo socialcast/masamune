@@ -7,6 +7,7 @@ module Masamune::Schema
     DEFAULT_ATTRIBUTES =
     {
       id:              nil,
+      name:            nil,
       type:            :table,
       store:           nil,
       parent:          nil,
@@ -71,7 +72,7 @@ module Masamune::Schema
     end
 
     def name
-      "#{id}_#{suffix}"
+      @name || "#{id}_#{suffix}"
     end
 
     def suffix
