@@ -1,8 +1,7 @@
-require 'masamune/proxy_delegate'
+require 'delegate'
 
 module Masamune::Commands
-  class PostgresAdmin
-    include Masamune::ProxyDelegate
+  class PostgresAdmin < SimpleDelegator
     include Masamune::Commands::PostgresCommon
 
     DEFAULT_ATTRIBUTES =
@@ -18,7 +17,7 @@ module Masamune::Commands
     }
 
     def initialize(delegate, attrs = {})
-      @delegate = delegate
+      super delegate
       DEFAULT_ATTRIBUTES.merge(configuration.postgres).merge(configuration.postgres_admin).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end

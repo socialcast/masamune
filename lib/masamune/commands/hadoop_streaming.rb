@@ -1,11 +1,8 @@
+require 'delegate'
 require 'active_support/core_ext/array'
 
-require 'masamune/proxy_delegate'
-
 module Masamune::Commands
-  class HadoopStreaming
-    include Masamune::ProxyDelegate
-
+  class HadoopStreaming < SimpleDelegator
     def self.default_hadoop_streaming_jar
       @default_hadoop_streaming_jar ||=
       case RUBY_PLATFORM
@@ -35,7 +32,7 @@ module Masamune::Commands
     attr_reader :input
 
     def initialize(delegate, attrs = {})
-      @delegate = delegate
+      super delegate
       DEFAULT_ATTRIBUTES.merge(configuration.hadoop_streaming).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end

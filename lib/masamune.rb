@@ -15,7 +15,6 @@ module Masamune
   require 'masamune/filesystem'
   require 'masamune/cached_filesystem'
   require 'masamune/method_logger'
-  require 'masamune/proxy_delegate'
   require 'masamune/after_initialize_callbacks'
   require 'masamune/schema'
   require 'masamune/transform'

@@ -1,9 +1,9 @@
-require 'masamune/proxy_delegate'
+require 'delegate'
+
 require 'masamune/string_format'
 
 module Masamune::Commands
-  class Postgres
-    include Masamune::ProxyDelegate
+  class Postgres < SimpleDelegator
     include Masamune::StringFormat
     include Masamune::Commands::PostgresCommon
 
@@ -28,7 +28,7 @@ module Masamune::Commands
     }
 
     def initialize(delegate, attrs = {})
-      @delegate = delegate
+      super delegate
       DEFAULT_ATTRIBUTES.merge(configuration.postgres).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end

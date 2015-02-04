@@ -4,9 +4,8 @@ module Masamune::Actions
       opts = args.last.is_a?(Hash) ? args.pop : {}
       opts = opts.to_hash.symbolize_keys
 
-      klass = Class.new
+      klass = Class.new(SimpleDelegator)
       klass.class_eval do
-        include Masamune::HasEnvironment
         define_method(:command_args) do
           args
         end
@@ -24,8 +23,7 @@ module Masamune::Actions
         end
       end if block_given?
 
-      command = Masamune::Commands::Shell.new(klass.new, {fail_fast: false}.merge(opts))
-      command.environment = environment
+      command = Masamune::Commands::Shell.new(klass.new(self), {fail_fast: false}.merge(opts))
       command.execute
     end
   end

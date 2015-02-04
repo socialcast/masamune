@@ -1,12 +1,12 @@
-require 'masamune/proxy_delegate'
-require 'masamune/string_format'
-require 'masamune/commands/shell'
+require 'delegate'
 require 'csv'
 
+require 'masamune/string_format'
+require 'masamune/commands/shell'
+
 module Masamune::Commands
-  class Hive
+  class Hive < SimpleDelegator
     include Masamune::StringFormat
-    include Masamune::ProxyDelegate
 
     PROMPT = 'hive>'
 
@@ -31,7 +31,7 @@ module Masamune::Commands
     }
 
     def initialize(delegate, attrs = {})
-      @delegate = delegate
+      super delegate
       DEFAULT_ATTRIBUTES.merge(configuration.hive).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end

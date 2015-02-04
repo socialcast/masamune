@@ -1,11 +1,10 @@
-require 'masamune/proxy_delegate'
+require 'delegate'
 
 module Masamune::Commands
-  class Interactive
-    include Masamune::ProxyDelegate
+  class Interactive < SimpleDelegator
 
     def initialize(delegate, attrs = {})
-      @delegate = delegate
+      super delegate
       @interactive = attrs.fetch(:interactive, false)
     end
 
