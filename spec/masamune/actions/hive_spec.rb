@@ -9,13 +9,17 @@ describe Masamune::Actions::Hive do
     end
   end
 
+  let(:filesystem) { Masamune::MockFilesystem.new }
   let(:instance) { klass.new }
   let(:configuration) { {database: 'test'} }
 
   before do
+    filesystem.add_path(:tmp_dir, File.join(Dir.tmpdir, SecureRandom.hex))
+    allow(instance).to receive(:filesystem) { filesystem }
     allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({})
     allow(instance).to receive_message_chain(:configuration, :hive).and_return(configuration)
     allow(instance).to receive_message_chain(:define_schema, :to_file) { 'schema.hql' }
+    allow_any_instance_of(Masamune::MockFilesystem).to receive(:copy_file_to_dir)
   end
 
   describe '.hive' do
