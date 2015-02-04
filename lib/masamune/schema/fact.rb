@@ -1,10 +1,15 @@
 module Masamune::Schema
   class Fact < Table
+    SUPPORTED_GRAINS = %(hourly daily monthly)
+
+    attr_accessor :grain
     attr_accessor :partition
     attr_accessor :range
 
     def initialize(opts = {})
       opts.symbolize_keys!
+      self.grain = opts.delete(:grain)
+      raise ArgumentError, "unknown grain '#{grain}'" unless SUPPORTED_GRAINS.include?(grain.to_s)
       @partition = opts.delete(:partition)
       super opts.reverse_merge(type: :fact)
       initialize_fact_columns!
@@ -15,6 +20,15 @@ module Masamune::Schema
     end
 
     alias_method :measures, :columns
+
+    def id
+      [@id, grain].compact.join('_').to_sym
+    end
+
+    def suffix
+      inherited = super
+      [*inherited.split('_'), range.try(:suffix)].compact.uniq.join('_')
+    end
 
     def time_key
       columns.values.detect { |column| column.id == :time_key }
@@ -33,7 +47,7 @@ module Masamune::Schema
     def partition_table(date)
       partition_range = partition_rule.bind_date(date)
       @partition_tables ||= {}
-      @partition_tables[partition_range] ||= self.class.new id: id, store: store, columns: partition_table_columns, parent: self, range: partition_range, suffix: partition_range.suffix
+      @partition_tables[partition_range] ||= self.class.new id: id, store: store, columns: partition_table_columns, parent: self, range: partition_range
     end
 
     def constraints

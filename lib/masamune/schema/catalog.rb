@@ -112,8 +112,12 @@ module Masamune::Schema
 
     def fact(id, options = {}, &block)
       @context.push(options)
-      yield if block_given?
-      @context.facts[id] ||= Masamune::Schema::Fact.new(options.merge(@context.options).merge(id: id))
+      grain = options.delete(:grain) || []
+      fact_attributes(grain).each do |attributes|
+        yield if block_given?
+        table = Masamune::Schema::Fact.new(options.merge(@context.options).merge(id: id).merge(attributes))
+        @context.facts[table.id] ||= table
+      end
     ensure
       @context.pop
     end
@@ -186,6 +190,11 @@ module Masamune::Schema
 
     def valid_store?(store)
       SUPPORTED_STORES.include?(store.to_sym)
+    end
+
+    def fact_attributes(grain = [])
+      return [{}] unless grain.any?
+      grain.map { |x| { grain: x } }
     end
   end
 end
