@@ -58,16 +58,16 @@ module Masamune::Schema
       initialize_surrogate_key_column! unless columns.any? { |column| column.surrogate_key }
       initialize_foreign_key_columns!
       columns.each do |column|
-        column.parent = self
-        @columns[column.name] = column
+        @columns[column.name] = column.dup
+        @columns[column.name].parent = self
       end
     end
 
     def rows=(rows)
       @rows = []
       rows.each do |row|
-        row.parent = self
-        @rows << row
+        @rows << row.dup
+        @rows.last.parent = self
       end
     end
 

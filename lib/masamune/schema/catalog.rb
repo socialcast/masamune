@@ -113,7 +113,7 @@ module Masamune::Schema
 
     def fact(id, options = {}, &block)
       @context.push(options)
-      grain = options.delete(:grain) || []
+      grain = Array.wrap(options.delete(:grain) || [])
       fact_attributes(grain).each do |attributes|
         yield if block_given?
         table = Masamune::Schema::Fact.new(@context.options.merge(id: id).merge(attributes))

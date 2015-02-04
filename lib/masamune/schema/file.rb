@@ -30,8 +30,8 @@ module Masamune::Schema
       @columns  = {}
       columns = (instance.is_a?(Hash) ? instance.values : instance).compact
       columns.each do |column|
-        column.parent = self
-        @columns[column.name] = column
+        @columns[column.name] = column.dup
+        @columns[column.name].parent = self
       end
     end
 

@@ -207,7 +207,28 @@ describe Masamune::Schema::Catalog do
       it { expect(fact_one.measures).to include :measure_one }
     end
 
-    context 'when schema contains fact with grain' do
+    context 'when schema contains fact with a single grain' do
+      before do
+        instance.schema :postgres do
+          dimension 'user', type: :two do
+            column 'user_id'
+          end
+
+          fact 'visits', grain: 'hourly' do
+            references :user
+            measure 'count'
+          end
+        end
+      end
+
+      let(:visits_hourly) { postgres.visits_hourly_fact }
+
+      it { expect(visits_hourly.name).to eq('visits_hourly_fact') }
+      it { expect(visits_hourly.references).to include :user }
+      it { expect(visits_hourly.measures).to include :count }
+    end
+
+    context 'when schema contains fact with multiple grain' do
       before do
         instance.schema :postgres do
           dimension 'user', type: :two do
