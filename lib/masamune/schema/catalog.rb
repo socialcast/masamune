@@ -166,10 +166,6 @@ module Masamune::Schema
       @context.options[:fields][id] ||= id
     end
 
-    def maps(options = {})
-      @context.maps[options[:from]][options[:to]]
-    end
-
     def load(file)
       case file
       when /\.rb\Z/
