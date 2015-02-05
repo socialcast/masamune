@@ -56,7 +56,7 @@ class Masamune::DataPlan::Elem
         yield rule.bind_input(new_path)
       end
     elsif rule.for_table_with_partition?
-      yield table if rule.engine.postgres_helper.table_exists?(table)
+      yield self if exists?
     end
   end
   method_accumulate :explode
