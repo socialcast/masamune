@@ -124,7 +124,7 @@ module Masamune::Schema
     end
 
     def measure(id, options = {}, &block)
-      @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id))
+      @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id, measure: true))
     end
 
     def file(id, options = {}, &block)

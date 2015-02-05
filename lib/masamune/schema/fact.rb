@@ -19,8 +19,6 @@ module Masamune::Schema
       time_key.index << time_key.name
     end
 
-    alias_method :measures, :columns
-
     def id
       [@id, grain].compact.join('_').to_sym
     end
@@ -50,6 +48,10 @@ module Masamune::Schema
       @partition_tables[partition_range] ||= self.class.new id: id, store: store, columns: partition_table_columns, parent: self, range: partition_range
     end
 
+    def measures
+      columns.select { |_, column| column.measure }
+    end
+
     def constraints
       return unless range
       "CHECK (time_key >= #{range.start_time.to_i} AND time_key < #{range.stop_time.to_i})"
@@ -63,7 +65,7 @@ module Masamune::Schema
     def initialize_fact_columns!
       case type
       when :fact
-        initialize_column! id: 'time_key', type: :integer, index: true
+        initialize_column! id: 'time_key', type: :integer, index: true, aggregate: :min
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       end
     end

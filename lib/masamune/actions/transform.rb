@@ -6,6 +6,7 @@ require 'masamune/transform/load_dimension'
 require 'masamune/transform/consolidate_dimension'
 require 'masamune/transform/relabel_dimension'
 require 'masamune/transform/load_fact'
+require 'masamune/transform/rollup_fact'
 
 module Masamune::Actions
   module Transform
@@ -20,6 +21,7 @@ module Masamune::Actions
       extend Masamune::Transform::ConsolidateDimension
       extend Masamune::Transform::RelabelDimension
       extend Masamune::Transform::LoadFact
+      extend Masamune::Transform::RollupFact
     end
 
     FILE_MODE = 0777 - File.umask
@@ -55,6 +57,11 @@ module Masamune::Actions
 
     def load_fact(source_files, source, target, date)
       transform = Wrapper.load_fact(source_files, source, target, date)
+      postgres file: transform.to_file, debug: (source.debug || target.debug)
+    end
+
+    def rollup_fact(source, target, date)
+      transform = Wrapper.rollup_fact(source, target, date)
       postgres file: transform.to_file, debug: (source.debug || target.debug)
     end
   end

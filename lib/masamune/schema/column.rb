@@ -18,6 +18,8 @@ module Masamune::Schema
       surrogate_key:       false,
       natural_key:         false,
       degenerate_key:      false,
+      measure:             false,
+      aggregate:           nil,
       reference:           nil,
       parent:              nil,
       debug:               false
@@ -187,6 +189,20 @@ module Masamune::Schema
         end
       else
         value
+      end
+    end
+
+    def aggregate_value
+      return qualified_name unless aggregate
+      case aggregate
+      when :min
+        "MIN(#{qualified_name})"
+      when :max
+        "MAX(#{qualified_name})"
+      when :sum
+        "SUM(#{qualified_name})"
+      when :average
+        "AVG(#{qualified_name})"
       end
     end
 
