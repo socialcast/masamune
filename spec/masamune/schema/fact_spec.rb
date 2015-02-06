@@ -3,7 +3,14 @@ require 'spec_helper'
 describe Masamune::Schema::Fact do
   let(:store) { double(id: 'store') }
 
-  let(:dimension) do
+  let(:date_dimension) do
+    Masamune::Schema::Dimension.new id: 'date', type: :date,
+      columns: [
+        Masamune::Schema::Column.new(id: 'date_id')
+      ]
+  end
+
+  let(:user_dimension) do
     Masamune::Schema::Dimension.new id: 'user', type: :two,
       columns: [
         Masamune::Schema::Column.new(id: 'tenant_id', index: true),
@@ -13,7 +20,10 @@ describe Masamune::Schema::Fact do
 
   let(:fact) do
     described_class.new id: 'visits', store: store, partition: 'y%Ym%m',
-      references: [Masamune::Schema::TableReference.new(dimension)],
+      references: [
+        Masamune::Schema::TableReference.new(date_dimension),
+        Masamune::Schema::TableReference.new(user_dimension)
+      ],
       columns: [
         Masamune::Schema::Column.new(id: 'total', type: :integer)
       ]
@@ -50,7 +60,10 @@ describe Masamune::Schema::Fact do
   context 'fact with :hourly grain' do
     let(:fact) do
       described_class.new id: 'visits', store: store, grain: :hourly, partition: 'y%Ym%m',
-        references: [Masamune::Schema::TableReference.new(dimension)],
+        references: [
+          Masamune::Schema::TableReference.new(date_dimension),
+          Masamune::Schema::TableReference.new(user_dimension)
+        ],
         columns: [
           Masamune::Schema::Column.new(id: 'total', type: :integer)
         ]

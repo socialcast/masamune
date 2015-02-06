@@ -9,7 +9,7 @@ module Masamune::Schema
       suffix = case type
       when :mini
         'type'
-      when :one, :two, :four
+      when :one, :two, :four, :date
         'dimension'
       else
         type.to_s
@@ -38,7 +38,7 @@ module Masamune::Schema
     def reserved_column_ids
       @reserved_column_ids ||=
       case type
-      when :one
+      when :one, :date
         [:last_modified_at]
       when :two
         [:start_at, :end_at, :version, :last_modified_at]
@@ -77,14 +77,14 @@ module Masamune::Schema
       case type
       when :mini
         initialize_column! id: 'id', type: :integer, surrogate_key: true
-      when :one, :two, :four, :ledger
+      when :one, :two, :four, :ledger, :date
         initialize_column! id: 'uuid', type: :uuid, surrogate_key: true
       end
     end
 
     def initialize_dimension_columns!
       case type
-      when :one
+      when :one, :date
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :two
         initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'natural'
