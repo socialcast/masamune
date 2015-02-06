@@ -40,6 +40,7 @@ module Masamune::Schema
     {
       source:  nil,
       target:  nil,
+      store:   nil,
       fields:  {},
       debug:   false
     }

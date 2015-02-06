@@ -70,7 +70,7 @@ class Masamune::DataPlan::Engine
   def targets_for_source(rule, source, &block)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
-    source_instance = source.is_a?(Masamune::DataPlan::Elem) ? source : source_template.bind_input(source)
+    source_instance = source_template.bind_input(source)
     source_template.generate_via_unify(source_instance, target_template) do |target|
       yield target
     end
@@ -80,7 +80,7 @@ class Masamune::DataPlan::Engine
   def sources_for_target(rule, target, &block)
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
-    target_instance = target.is_a?(Masamune::DataPlan::Elem) ? target : target_template.bind_input(target)
+    target_instance = target_template.bind_input(target)
     target_template.generate_via_unify(target_instance, source_template) do |source|
       yield source
     end

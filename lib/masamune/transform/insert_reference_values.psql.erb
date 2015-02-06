@@ -17,5 +17,5 @@ WHERE
 <%- end -%>
 ;
 
-<%= render 'bulk_upsert.psql.erb', target: target, source: target.stage_table %>
+<%= target.bulk_upsert(target.stage_table, target) %>
 <%- end -%>

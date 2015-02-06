@@ -1,9 +1,9 @@
-require 'masamune/proxy_delegate'
+require 'delegate'
+
 require 'masamune/string_format'
 
 module Masamune::Commands
-  class Postgres
-    include Masamune::ProxyDelegate
+  class Postgres < SimpleDelegator
     include Masamune::StringFormat
     include Masamune::Commands::PostgresCommon
 
@@ -28,7 +28,7 @@ module Masamune::Commands
     }
 
     def initialize(delegate, attrs = {})
-      @delegate = delegate
+      super delegate
       DEFAULT_ATTRIBUTES.merge(configuration.postgres).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
@@ -66,6 +66,9 @@ module Masamune::Commands
 
     def before_execute
       console("psql with file #{@file}") if @file
+      if @debug and output = @rendered_file || @file
+        logger.debug("#{output}:\n" + File.read(output))
+      end
     end
 
     def handle_stdout(line, line_no)
@@ -88,7 +91,6 @@ module Masamune::Commands
     end
 
     def command_args_for_simple_file
-      logger.debug("#{@file}:\n" + File.read(@file)) if @debug
       ['--file=%s' % @file].tap do |args|
         @variables.each do |key, val|
           args << '--set=%s' % "#{key.to_s}='#{val.to_s}'"
@@ -97,9 +99,8 @@ module Masamune::Commands
     end
 
     def command_args_for_template
-      rendered_file = Masamune::Template.render_to_file(@file, @variables)
-      logger.debug("#{@file}:\n" + File.read(rendered_file)) if @debug
-      ['--file=%s' % rendered_file]
+      @rendered_file = Masamune::Template.render_to_file(@file, @variables)
+      ['--file=%s' % @rendered_file]
     end
   end
 end

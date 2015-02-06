@@ -6,6 +6,7 @@ module Masamune::Tasks
   class ShellThor < Thor
     include Masamune::Thor
     include Masamune::Actions::DataFlow
+    include Masamune::Transform::DefineSchema
 
     # FIXME need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
@@ -18,7 +19,7 @@ module Masamune::Tasks
     class_option :start, :aliases => '-a', :desc => 'Start time', default: '1 month ago'
     def shell_exec
       if options[:dump]
-        print_registry
+        print_catalog
         exit
       end
 
@@ -28,12 +29,12 @@ module Masamune::Tasks
 
     private
 
-    def print_registry
+    def print_catalog
       case options[:type]
       when 'psql'
-        puts registry.as_psql
+        puts define_schema(catalog, :postgres)
       when 'hql'
-        puts registry.as_hql
+        puts define_schema(catalog, :hive)
       end
     end
   end

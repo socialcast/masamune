@@ -1,8 +1,0 @@
-<%- table.unique_constraints.each do |column_names| -%>
-<%- constraint_name = "#{table.name}_#{column_names.join('_')}_key" -%>
-DO $$ BEGIN
-IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= constraint_name %>') THEN
-ALTER TABLE <%= table.name %> ADD CONSTRAINT <%= constraint_name %> UNIQUE(<%= column_names.join(', ') %>);
-END IF; END $$;
-
-<%- end -%>

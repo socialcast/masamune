@@ -1,13 +1,12 @@
+require 'delegate'
 require 'active_support/concern'
 
 module Masamune::MockCommand
   extend ActiveSupport::Concern
 
-  class CommandMatcher
-    require 'masamune/proxy_delegate'
-    include Masamune::ProxyDelegate
-
+  class CommandMatcher < SimpleDelegator
     def initialize(delegate)
+      super delegate
       @delegate = delegate
     end
 

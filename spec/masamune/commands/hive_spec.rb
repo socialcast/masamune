@@ -66,24 +66,6 @@ describe Masamune::Commands::Hive do
       it { is_expected.to eq([*default_command, '-i', 'setup_a.hql', '-i', 'setup_b.hql']) }
     end
 
-    context 'with schema files' do
-      before do
-        filesystem.touch!('schema_a.hql', 'schema_b.hql')
-      end
-
-      let(:attrs) { {schema_files: ['schema_a.hql', 'schema_b.hql']} }
-      it { is_expected.to eq([*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql']) }
-    end
-
-    context 'with schema files that are globs' do
-      before do
-        filesystem.touch!('schema_a.hql', 'schema_b.hql')
-      end
-
-      let(:attrs) { {schema_files: ['schema*.hql']} }
-      it { is_expected.to eq([*default_command, '-i', 'schema_a.hql', '-i', 'schema_b.hql']) }
-    end
-
     context 'with template file' do
       let(:attrs) { {file: 'zomg.hql.erb'} }
       before do

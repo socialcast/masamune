@@ -11,6 +11,10 @@ describe Masamune::Actions::HadoopStreaming do
   let(:extra) { [] }
   let(:instance) { klass.new }
 
+  before do
+    instance.environment = MasamuneExampleGroup
+  end
+
   describe '.hadoop_streaming' do
     before do
       mock_command(/\Ahadoop/, mock_success)

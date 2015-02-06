@@ -1,9 +1,7 @@
-require 'masamune/proxy_delegate'
+require 'delegate'
 
 module Masamune::Commands
-  class HadoopFilesystem
-    include Masamune::ProxyDelegate
-
+  class HadoopFilesystem < SimpleDelegator
     DEFAULT_ATTRIBUTES =
     {
       :path         => 'hadoop',
@@ -14,7 +12,7 @@ module Masamune::Commands
     }
 
     def initialize(delegate, attrs = {})
-      @delegate = delegate
+      super delegate
       DEFAULT_ATTRIBUTES.merge(configuration.hadoop_filesystem).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end

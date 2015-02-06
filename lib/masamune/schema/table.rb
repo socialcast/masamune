@@ -8,6 +8,7 @@ module Masamune::Schema
     {
       id:              nil,
       type:            :table,
+      store:           nil,
       parent:          nil,
       suffix:          nil,
       references:      {},
@@ -30,10 +31,6 @@ module Masamune::Schema
       end
       @children = Set.new
       inherit_column_attributes! if inherit
-    end
-
-    def kind
-      :psql
     end
 
     def format
@@ -163,7 +160,7 @@ module Masamune::Schema
     def stage_table(suffix = nil)
       stage_id = [id, suffix].compact.join('_')
       @stage_tables ||= {}
-      @stage_tables[stage_id] ||= self.class.new id: stage_id, type: :stage, columns: stage_table_columns, parent: self
+      @stage_tables[stage_id] ||= self.class.new id: stage_id, type: :stage, store: store, columns: stage_table_columns, parent: self
     end
 
     def shared_columns(other)
@@ -174,10 +171,6 @@ module Masamune::Schema
           end
         end
       end
-    end
-
-    def as_psql(extra = {})
-      Masamune::Template.render_to_string(table_template, extra.merge(table: self))
     end
 
     def select_columns(selected_columns = [])
@@ -197,7 +190,7 @@ module Masamune::Schema
     end
 
     def as_file(selected_columns = [])
-      File.new(id: id, columns: select_columns(selected_columns), headers: headers)
+      File.new(id: id, store: store, columns: select_columns(selected_columns), headers: headers)
     end
 
     protected

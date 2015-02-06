@@ -1,5 +1,5 @@
 module Masamune::Schema
-  class TableReference < Delegator
+  class TableReference < SimpleDelegator
     DEFAULT_ATTRIBUTES =
     {
       label:           nil,
@@ -14,18 +14,11 @@ module Masamune::Schema
     end
 
     def initialize(table, opts = {})
+      super table
       @table = table
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         public_send("#{name}=", value)
       end
-    end
-
-    def __getobj__
-      @table
-    end
-
-    def __setobj__(obj)
-      @table = obj
     end
 
     def id

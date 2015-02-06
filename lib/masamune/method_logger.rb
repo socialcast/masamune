@@ -1,18 +1,10 @@
 # FIXME refactor as Command
 module Masamune
-  class MethodLogger < Delegator
+  class MethodLogger < SimpleDelegator
     def initialize(target, *methods)
-      super(target)
+      super target
       @target = target
       @methods = methods
-    end
-
-    def __getobj__
-      @target
-    end
-
-    def __setobj__(obj)
-      @target = obj
     end
 
     def method_missing(method_name, *args, &block)

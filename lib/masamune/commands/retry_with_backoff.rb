@@ -1,12 +1,11 @@
-require 'masamune/proxy_delegate'
+require 'delegate'
 
 module Masamune::Commands
-  class RetryWithBackoff
-    include Masamune::ProxyDelegate
-
+  class RetryWithBackoff < SimpleDelegator
     MAX_RETRY_EXIT_STATUS = 8
 
     def initialize(delegate, attrs = {})
+      super delegate
       @delegate     = delegate
       @retries      = attrs.fetch(:retries, configuration.retries)
       @backoff      = attrs.fetch(:backoff, configuration.backoff)

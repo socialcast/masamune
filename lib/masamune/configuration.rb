@@ -59,16 +59,16 @@ class Masamune::Configuration
         end
       end
       logger.debug("Loaded configuration #{file}")
-      load_registry(configuration.postgres[:schema_files] || [])
+      load_catalog(configuration.postgres.fetch(:schema_files, []) + configuration.hive.fetch(:schema_files, []))
       true
     end
   end
 
-  def load_registry(paths = [])
+  def load_catalog(paths = [])
     paths.each do |path|
       filesystem.glob_sort(path, order: :basename).each do |file|
         configuration.with_quiet do
-          registry.load(file)
+          catalog.load(file)
         end
       end
     end

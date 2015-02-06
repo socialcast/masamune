@@ -763,6 +763,14 @@ shared_examples_for 'Filesystem' do
       it { is_expected.to eq(true) }
     end
 
+    context 'local file to same local dir' do
+      before do
+        instance.copy_file_to_dir(old_file, old_dir)
+      end
+
+      it { is_expected.to eq(false) }
+    end
+
     context 'local file to s3 dir' do
       before do
         expect(filesystem).to receive(:s3cmd).with('put', old_file, 's3://bucket/new_dir/')

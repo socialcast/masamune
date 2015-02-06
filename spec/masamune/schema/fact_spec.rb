@@ -1,7 +1,8 @@
 require 'spec_helper'
-require 'active_support/core_ext/string/strip'
 
 describe Masamune::Schema::Fact do
+  let(:store) { double }
+
   let(:dimension) do
     Masamune::Schema::Dimension.new id: 'user', type: :two,
       columns: [
@@ -11,50 +12,28 @@ describe Masamune::Schema::Fact do
   end
 
   let(:fact) do
-    described_class.new id: 'visits', partition: 'y%Ym%m',
+    described_class.new id: 'visits', store: store, partition: 'y%Ym%m',
       references: [Masamune::Schema::TableReference.new(dimension)],
       columns: [
         Masamune::Schema::Column.new(id: 'total', type: :integer)
       ]
   end
 
-  describe '#as_psql' do
-    subject { fact.as_psql }
-
-    it 'should eq template' do
-      is_expected.to eq <<-EOS.strip_heredoc
-        CREATE TABLE IF NOT EXISTS visits_fact
-        (
-          user_dimension_uuid UUID NOT NULL REFERENCES user_dimension(uuid),
-          total INTEGER NOT NULL,
-          time_key INTEGER NOT NULL,
-          last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
-        );
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_user_dimension_uuid_index') THEN
-        CREATE INDEX visits_fact_user_dimension_uuid_index ON visits_fact (user_dimension_uuid);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_time_key_index') THEN
-        CREATE INDEX visits_fact_time_key_index ON visits_fact (time_key);
-        END IF; END $$;
-      EOS
-    end
-  end
+  it { expect(fact.name).to eq('visits_fact') }
 
   describe '#partition_table' do
     let(:date) { Chronic.parse('2015-01-01') }
 
     subject(:partition_table) { fact.partition_table(date) }
 
+    it { expect(partition_table.store).to eq(store) }
     it { expect(partition_table.name).to eq('visits_fact_y2015m01') }
     it { expect(partition_table.range.start_date).to eq(date.utc.to_date) }
 
     describe '#stage_table' do
       subject(:stage_table) { partition_table.stage_table }
 
+      it { expect(stage_table.store).to eq(store) }
       it { expect(stage_table.name).to eq('visits_fact_y2015m01_stage') }
       it { expect(stage_table.range.start_date).to eq(date.utc.to_date) }
     end

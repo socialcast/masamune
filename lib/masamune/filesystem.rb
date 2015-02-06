@@ -238,6 +238,7 @@ module Masamune
     def copy_file_to_dir(src, dst)
       check_immutable_path!(dst)
       mkdir!(dst) unless type(dst) == :s3
+      return false if dirname(src) == dst
       copy_file_helper(src, dst, true)
     end
 

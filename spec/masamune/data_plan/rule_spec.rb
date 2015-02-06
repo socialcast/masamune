@@ -95,6 +95,12 @@ describe Masamune::DataPlan::Rule do
         it { is_expected.to eq(output_date.to_time + 1.hour) }
       end
     end
+
+    context 'with previously bound input' do
+      let(:prev_input) { 'report/2013-04-05/23' }
+      let(:input) { instance.bind_input(prev_input) }
+      it { is_expected.to eq(input) }
+    end
   end
 
   describe '#unify' do

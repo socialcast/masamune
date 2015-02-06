@@ -1,12 +1,12 @@
-require 'masamune/proxy_delegate'
-require 'masamune/string_format'
-require 'masamune/commands/shell'
+require 'delegate'
 require 'csv'
 
+require 'masamune/string_format'
+require 'masamune/commands/shell'
+
 module Masamune::Commands
-  class Hive
+  class Hive < SimpleDelegator
     include Masamune::StringFormat
-    include Masamune::ProxyDelegate
 
     PROMPT = 'hive>'
 
@@ -31,7 +31,7 @@ module Masamune::Commands
     }
 
     def initialize(delegate, attrs = {})
-      @delegate = delegate
+      super delegate
       DEFAULT_ATTRIBUTES.merge(configuration.hive).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
@@ -56,7 +56,7 @@ module Masamune::Commands
       args << @path
       args << ['--database', @database] if @database
       args << @options.map(&:to_a)
-      args << load_setup_and_schema_files.map(&:to_a)
+      args << load_setup_files.map(&:to_a)
       args << command_args_for_file if @file
       args.flatten
     end
@@ -64,6 +64,10 @@ module Masamune::Commands
     def before_execute
       if @file
         console("hive with file #{@file}")
+      end
+
+      if @debug and output = @rendered_file || @file
+        logger.debug("#{output}:\n" + File.read(output))
       end
 
       if @exec
@@ -107,9 +111,9 @@ module Masamune::Commands
       row unless row == 'NULL' || row == ''
     end
 
-    def load_setup_and_schema_files
+    def load_setup_files
       files = []
-      (@setup_files + @schema_files).each do |path|
+      @setup_files.each do |path|
         filesystem.glob_sort(path, order: :basename).each do |file|
           files << file
         end
@@ -131,10 +135,9 @@ module Masamune::Commands
     end
 
     def command_args_for_template
-      rendered_file = Masamune::Template.render_to_file(@file, @variables)
-      logger.debug("#{@file}:\n" + File.read(rendered_file)) if @debug
-      filesystem.copy_file_to_dir(rendered_file, filesystem.get_path(:tmp_dir))
-      ['-f', filesystem.get_path(:tmp_dir, File.basename(rendered_file))]
+      @rendered_file = Masamune::Template.render_to_file(@file, @variables)
+      filesystem.copy_file_to_dir(@rendered_file, filesystem.get_path(:tmp_dir))
+      ['-f', filesystem.get_path(:tmp_dir, File.basename(@rendered_file))]
     end
   end
 end

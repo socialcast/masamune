@@ -1,9 +1,9 @@
-require 'masamune/proxy_delegate'
+require 'delegate'
+
 require 'masamune/actions/execute'
 
 module Masamune::Commands
-  class ElasticMapReduce
-    include Masamune::ProxyDelegate
+  class ElasticMapReduce < SimpleDelegator
     include Masamune::Actions::Execute
 
     DEFAULT_ATTRIBUTES =
@@ -16,6 +16,7 @@ module Masamune::Commands
     }
 
     def initialize(delegate, attrs = {})
+      super delegate
       @delegate = delegate
       DEFAULT_ATTRIBUTES.merge(configuration.elastic_mapreduce).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)

@@ -1,19 +1,17 @@
 require 'open3'
 require 'readline'
 require 'ostruct'
-
-require 'masamune/proxy_delegate'
+require 'delegate'
 
 module Masamune::Commands
-  class Shell
+  class Shell < SimpleDelegator
     SIGINT_EXIT_STATUS = 130
     PIPE_TIMEOUT = 10
-
-    include Masamune::ProxyDelegate
 
     attr_accessor :safe, :fail_fast
 
     def initialize(delegate, opts = {})
+      super delegate
       @delegate       = delegate
       self.safe       = opts.fetch(:safe, false)
       self.fail_fast  = opts.fetch(:fail_fast, true)

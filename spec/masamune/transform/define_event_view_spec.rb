@@ -1,12 +1,8 @@
 require 'spec_helper'
-require 'active_support/core_ext/string/strip'
 
 describe Masamune::Transform::DefineEventView do
-  let(:environment) { double }
-  let(:registry) { Masamune::Schema::Registry.new(environment) }
-
   before do
-    registry.schema do
+    catalog.schema :hive do
       event 'tenant' do
         attribute 'tenant_id', type: :integer, immutable: true
         attribute 'account_state', type: :string
@@ -16,15 +12,12 @@ describe Masamune::Transform::DefineEventView do
     end
   end
 
-  let(:target) { registry.events[:tenant] }
-  let(:source) { double('event_store') }
+  let(:target) { catalog.hive.tenant_event }
 
-  let(:transform) { described_class.new source, target }
+  context 'with hive event' do
+    subject(:result) { transform.define_event_view(target).to_s }
 
-  describe '#as_hql' do
-    subject(:result) { transform.as_hql }
-
-    it 'should eq render template' do
+    it 'should render define_event_view template' do
       is_expected.to eq <<-EOS.strip_heredoc
         DROP VIEW IF EXISTS tenant_events;
         CREATE VIEW IF NOT EXISTS tenant_events (

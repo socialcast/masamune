@@ -2,10 +2,10 @@ require 'spec_helper'
 
 describe Masamune::Actions::Transform do
   let(:environment) { double }
-  let(:registry) { Masamune::Schema::Registry.new(environment) }
+  let(:catalog) { Masamune::Schema::Catalog.new(environment) }
 
   before do
-    registry.schema do
+    catalog.schema :postgres do
       dimension 'user', type: :four do
         column 'tenant_id', type: :integer, index: true
         column 'user_id',   type: :integer, index: true, surrogate_key: true
@@ -17,7 +17,7 @@ describe Masamune::Actions::Transform do
         column 'updated_at', type: :timestamp
       end
 
-      map from: files[:user], to: dimensions[:user] do
+      map from: postgres.user_file, to: postgres.user_dimension do
         field 'user_id', 'id'
         field 'tenant_id'
         field 'source_kind', 'users'
@@ -39,7 +39,7 @@ describe Masamune::Actions::Transform do
     end
   end
 
-  let(:source_file) { Tempfile.new('masamune').path }
+  let(:source_file) { Tempfile.new('masamune') }
 
   let(:klass) do
     Class.new do
@@ -49,6 +49,7 @@ describe Masamune::Actions::Transform do
   end
 
   let(:instance) { klass.new }
+  let(:postgres) { catalog.postgres }
 
   before do
     instance.environment = MasamuneExampleGroup
@@ -59,20 +60,39 @@ describe Masamune::Actions::Transform do
       mock_command(/\Apsql/, mock_success)
     end
 
-    subject { instance.load_dimension(source_file, registry.files[:user], registry.dimensions[:user]) }
+    subject { instance.load_dimension(source_file, postgres.user_file, postgres.user_dimension) }
 
     it { is_expected.to be_success }
   end
 
   describe '.load_fact' do
     let(:date) { DateTime.civil(2014, 8) }
-    let(:data) { Masamune::DataPlan::Set.new(source_file) }
 
     before do
       mock_command(/\Apsql/, mock_success)
     end
 
-    subject { instance.load_fact(data, registry.files[:visits], registry.facts[:visits], date) }
+    subject { instance.load_fact(source_file, postgres.visits_file, postgres.visits_fact, date) }
+
+    it { is_expected.to be_success }
+  end
+
+  describe '.relabel_dimension' do
+    before do
+      mock_command(/\Apsql/, mock_success)
+    end
+
+    subject { instance.relabel_dimension(postgres.user_dimension) }
+
+    it { is_expected.to be_success }
+  end
+
+  describe '.consolidate_dimension' do
+    before do
+      mock_command(/\Apsql/, mock_success)
+    end
+
+    subject { instance.consolidate_dimension(postgres.user_dimension) }
 
     it { is_expected.to be_success }
   end
