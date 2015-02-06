@@ -18,6 +18,12 @@ SELECT
   <%- end -%>
 FROM
   <%= source.name %>
+<%- target.join_conditions(source).each do |table, conditions| -%>
+JOIN
+  <%= table %>
+ON
+  <%= conditions.join(" AND\n  ") %>
+<%- end -%>
 GROUP BY
   <%- target.group_by(source).each do |value, last| -%>
   <%= value %><%= ',' unless last %>

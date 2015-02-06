@@ -3,6 +3,8 @@ module Masamune::Transform
     extend ActiveSupport::Concern
 
     def rollup_fact(source, target, date)
+      raise ArgumentError, "#{source.name} must have date_column to rollup" unless source.date_column
+      raise ArgumentError, "#{target.name} must have date_column to rollup" unless target.date_column
       Operator.new __method__, source: source.partition_table(date), target: target.partition_table(date), presenters: { postgres: Postgres }
     end
 
@@ -16,36 +18,86 @@ module Masamune::Transform
           next if column.id == :last_modified_at
           column.name
         end.compact
-=begin
-        shared_columns(source).values.map do |columns|
-          columns.first.name
-        end + source.measures.values.map(&:name)
-=end
       end
 
       def insert_values(source)
-        source.columns.map do |_, column|
-          next if column.id == :last_modified_at
-          column.aggregate_value
-        end.compact
-=begin
-        shared_columns(source).values.map do |columns|
-          columns.first.qualified_name
-        end + source.measures.values.map(&:aggregate_value)
-=end
+        values = []
+        values << "(#{first_date_surrogate_key})"
+        source.columns.each do |_, column|
+          next unless column.reference
+          next if column.reference.type == :date
+          values << column.qualified_name
+        end
+        source.measures.each do |_ ,measure|
+          values << measure.aggregate_value
+        end
+        values << "(#{first_date_time_key})"
+        values
       end
       method_with_last_element :insert_values
 
+      def join_conditions(source)
+        {
+          source.date_column.reference.name => [
+            "#{source.date_column.reference.surrogate_key.qualified_name} = #{source.date_column.qualified_name}"
+          ]
+        }
+      end
+
       def group_by(source)
-        source.columns.map do |_, column|
+        group_by = []
+        group_by << date_column.reference.columns[rollup_key].qualified_name
+        source.columns.each do |_, column|
           next unless column.reference
-          column.qualified_name
-        end.compact
+          next if column.reference.type == :date
+          group_by << column.qualified_name
+        end
+        group_by
       end
       method_with_last_element :group_by
 
-      def join_conditions(source)
-        [[source.columns[:date].qualified_name, source.columns[:date].qualified_name]]
+      private
+
+      def rollup_key
+        case grain
+        when :hourly
+        when :daily
+          :date_epoch
+        when :monthly
+          :month_epoch
+        end
+      end
+
+      def date_key
+        :date_id
+      end
+
+      def first_date_surrogate_key
+        <<-EOS.gsub(/\s+/, ' ').strip
+          SELECT
+            #{date_column.reference.surrogate_key.name}
+          FROM
+            #{date_column.reference.name} d
+          WHERE
+            d.#{rollup_key} = #{date_column.reference.columns[rollup_key].qualified_name}
+          ORDER BY
+            d.#{date_key}
+          LIMIT 1
+        EOS
+      end
+
+      def first_date_time_key
+        <<-EOS.gsub(/\s+/, ' ').strip
+          SELECT
+            #{rollup_key}
+          FROM
+            #{date_column.reference.name} d
+          WHERE
+            d.#{rollup_key} = #{date_column.reference.columns[rollup_key].qualified_name}
+          ORDER BY
+            d.#{date_key}
+          LIMIT 1
+        EOS
       end
     end
   end

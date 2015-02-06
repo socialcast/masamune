@@ -6,6 +6,13 @@ describe Masamune::Actions::Transform do
 
   before do
     catalog.schema :postgres do
+      dimension 'date', type: :date do
+        column 'date_id', type: :integer, unique: true, index: true, natural_key: true
+        column 'date_epoch', type: :integer
+        column 'month_epoch', type: :integer
+        column 'year_epoch', type: :integer
+      end
+
       dimension 'user', type: :four do
         column 'tenant_id', type: :integer, index: true
         column 'user_id',   type: :integer, index: true, surrogate_key: true
@@ -26,7 +33,9 @@ describe Masamune::Actions::Transform do
       end
 
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
+        references :date
         references :user
+
         measure 'total', type: :integer
       end
 

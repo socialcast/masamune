@@ -71,5 +71,25 @@ describe Masamune::Schema::Fact do
 
     it { expect(fact.id).to eq(:visits_hourly) }
     it { expect(fact.name).to eq('visits_hourly_fact') }
+
+    describe '#partition_table' do
+      let(:date) { Chronic.parse('2015-01-01') }
+
+      subject(:partition_table) { fact.partition_table(date) }
+
+      it { expect(partition_table.store.id).to eq(store.id) }
+      it { expect(partition_table.name).to eq('visits_hourly_fact_y2015m01') }
+      it { expect(partition_table.grain).to eq(fact.grain) }
+      it { expect(partition_table.range.start_date).to eq(date.utc.to_date) }
+
+      describe '#stage_table' do
+        subject(:stage_table) { partition_table.stage_table }
+
+        it { expect(stage_table.store.id).to eq(store.id) }
+        it { expect(stage_table.name).to eq('visits_hourly_fact_y2015m01_stage') }
+        it { expect(stage_table.grain).to eq(fact.grain) }
+        it { expect(stage_table.range.start_date).to eq(date.utc.to_date) }
+      end
+    end
   end
 end
