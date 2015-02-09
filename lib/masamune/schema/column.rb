@@ -117,6 +117,8 @@ module Masamune::Schema
         'VARCHAR'
       when :uuid
         'UUID'
+      when :date
+        'DATE'
       when :timestamp
         'TIMESTAMP'
       when :boolean
@@ -151,6 +153,8 @@ module Masamune::Schema
         value.to_h.to_yaml
       when :json, :key_value
         value.to_h.to_json
+      when :date
+        value.to_s
       else
         value
       end
@@ -166,6 +170,15 @@ module Masamune::Schema
           false
         when true, 1, '1', "'1'", /\Atrue\z/i
           true
+        end
+      when :date
+        case value
+        when Date
+          value
+        when String
+          Date.parse(value)
+        when nil
+          nil
         end
       when :integer
         value.nil? ? nil : value.to_i

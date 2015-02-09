@@ -141,6 +141,30 @@ describe Masamune::Schema::Column do
       end
     end
 
+    context 'with type :date' do
+      let(:column) { described_class.new(id: 'date', type: :date) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to be(nil) }
+      end
+
+      context 'when Date' do
+        let(:value) { Date.civil(2015,01,01) }
+        it { is_expected.to eq(value) }
+      end
+
+      context 'when YYYY-mm-dd' do
+        let(:value) { '2015-01-01' }
+        it { is_expected.to eq(Date.civil(2015,01,01)) }
+      end
+
+      context 'when ISO8601' do
+        let(:value) { Date.parse('2015-01-01').iso8601 }
+        it { is_expected.to eq(Date.civil(2015,01,01)) }
+      end
+    end
+
     context 'with type :yaml and sub_type :boolean' do
       let(:column) { described_class.new(id: 'yaml', type: :yaml, sub_type: :boolean) }
       let(:value) do
