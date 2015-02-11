@@ -211,6 +211,39 @@ describe Masamune::Schema::Catalog do
       it { expect(fact_two.measures[:measure_two].aggregate).to eq(:average) }
     end
 
+    context 'when schema contains fact with partition table' do
+      before do
+        instance.schema :hive do
+          fact 'visits', partition: 'y%Ym%m' do
+            measure 'count', aggregate: :sum
+          end
+        end
+      end
+
+      it { expect(hive.visits_fact.partition).to eq('y%Ym%m') }
+      it { expect(hive.visits_fact.measures).to include :count }
+      it { expect(hive.visits_fact.measures[:count].aggregate).to eq(:sum) }
+    end
+
+    context 'when schema contains fact with partition columns' do
+      before do
+        instance.schema :hive do
+          fact 'visits' do
+            partition 'y', type: :integer
+            partition 'm', type: :integer
+            partition 'd', type: :integer
+            measure 'count', aggregate: :sum
+          end
+        end
+      end
+
+      it { expect(hive.visits_fact.partitions).to include :y }
+      it { expect(hive.visits_fact.partitions).to include :m }
+      it { expect(hive.visits_fact.partitions).to include :d }
+      it { expect(hive.visits_fact.measures).to include :count }
+      it { expect(hive.visits_fact.measures[:count].aggregate).to eq(:sum) }
+    end
+
     context 'when schema contains fact with a single grain' do
       before do
         instance.schema :postgres do
@@ -446,7 +479,7 @@ describe Masamune::Schema::Catalog do
     context 'when schema addressed with symbols' do
       before do
         instance.schema :postgres do
-          dimension 'user' do; end
+          dimension 'user', type: :one do; end
           file 'users' do; end
 
           map from: postgres.files[:users], to: postgres.dimensions[:user] do
@@ -465,7 +498,7 @@ describe Masamune::Schema::Catalog do
     context 'when schema addressed with strings' do
       before do
         instance.schema :postgres do
-          dimension 'user' do; end
+          dimension 'user', type: :one do; end
           file 'users' do; end
 
           map from: postgres.files['users'], to: postgres.dimensions['user'] do

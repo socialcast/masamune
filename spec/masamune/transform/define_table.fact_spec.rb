@@ -46,13 +46,36 @@ describe Masamune::Transform::DefineTable do
         column 'total', type: :integer
       end
     end
+
+    catalog.schema :hive do
+      dimension 'date', type: :date, implicit: true do
+        column 'date_id', type: :integer, natural_key: true
+      end
+
+      dimension 'user', type: :two, implicit: true do
+        column 'user_id', type: :integer, natural_key: true
+      end
+
+      dimension 'user_agent', type: :mini do
+        column 'name', type: :string
+        column 'version', type: :string
+      end
+
+      fact 'visits', grain: :hourly do
+        partition :y
+        partition :m
+        partition :d
+        references :date
+        references :user
+        references :user_agent, denormalize: true
+        measure 'total'
+      end
+    end
   end
 
-  let(:files) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
-  let(:target) { catalog.postgres.visits_fact }
-  let(:source) { catalog.postgres.visits_file }
-
   context 'for postgres fact' do
+    let(:target) { catalog.postgres.visits_fact }
+
     subject(:result) { transform.define_table(target).to_s }
 
     it 'should eq render table template' do
@@ -103,6 +126,10 @@ describe Masamune::Transform::DefineTable do
   end
 
   describe 'for fact table from file with sources files' do
+    let(:files) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
+    let(:target) { catalog.postgres.visits_fact }
+    let(:source) { catalog.postgres.visits_file }
+
     subject(:result) { transform.define_table(source.as_table(target), files).to_s }
 
     it 'should eq render table template' do
@@ -145,6 +172,27 @@ describe Masamune::Transform::DefineTable do
       it 'should eq render table template' do
         is_expected.to_not be_nil
       end
+    end
+  end
+
+  context 'for hive fact' do
+    let(:target) { catalog.hive.visits_hourly_fact }
+
+    subject(:result) { transform.define_table(target).to_s }
+
+    it 'should eq render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS visits_hourly_fact
+        (
+          date_dimension_date_id INT,
+          user_dimension_user_id INT,
+          user_agent_type_name VARCHAR,
+          user_agent_type_version VARCHAR,
+          total INT,
+          time_key INT
+        )
+        PARTITIONED BY (y INT, m INT, d INT);
+      EOS
     end
   end
 end

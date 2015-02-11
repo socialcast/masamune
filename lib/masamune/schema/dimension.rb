@@ -3,6 +3,7 @@ module Masamune::Schema
     def initialize(opts = {})
       super
       initialize_dimension_columns!
+      raise ArgumentError, "#{name} requires surrogate_key column" if require_surrogate_key? && !surrogate_key
     end
 
     def suffix
@@ -14,7 +15,7 @@ module Masamune::Schema
       else
         type.to_s
       end
-      parent ? "#{parent.suffix}_#{suffix}" : suffix
+      parent ? [parent.suffix, suffix].compact.join('_') : suffix
     end
 
     def start_key
@@ -54,6 +55,10 @@ module Masamune::Schema
     end
 
     private
+
+    def require_surrogate_key?
+      !implicit && type != :file
+    end
 
     def ledger_table_columns
       columns.values.map do |column|

@@ -100,7 +100,8 @@ module Masamune::Schema
 
     # FIXME: references should not be ambiguous, e.g. references :user, should be references :user_dimension
     def references(id, options = {})
-      reference = Masamune::Schema::TableReference.new(@context.tables[id] || @context.dimensions[id], options)
+      table = @context.tables[id] || @context.dimensions[id]
+      reference = Masamune::Schema::TableReference.new(table, options.reverse_merge(denormalize: table.implicit))
       @context.references[reference.id] = reference
       @context.options[:references] << reference
     end
@@ -121,6 +122,10 @@ module Masamune::Schema
       end
     ensure
       @context.pop
+    end
+
+    def partition(id, options = {}, &block)
+      @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id, partition: true))
     end
 
     def measure(id, options = {}, &block)

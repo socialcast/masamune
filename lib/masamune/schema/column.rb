@@ -19,6 +19,7 @@ module Masamune::Schema
       natural_key:         false,
       degenerate_key:      false,
       measure:             false,
+      partition:           false,
       aggregate:           nil,
       reference:           nil,
       parent:              nil,
@@ -44,10 +45,10 @@ module Masamune::Schema
     end
 
     def name
-      if reference && reference.columns.include?(@id)
-        [reference.label, reference.name, @id].compact.join('_').to_sym
+      if reference && reference.columns.include?(id)
+        [reference.label, reference.name, id].compact.join('_').to_sym
       else
-        @id
+        id
       end
     end
 
@@ -129,6 +130,15 @@ module Masamune::Schema
         parent.type == :file ? 'JSON' : 'HSTORE'
       when :json, :yaml
         'JSON'
+      end
+    end
+
+    def hql_type
+      case type
+      when :integer
+        'INT'
+      else
+        sql_type
       end
     end
 

@@ -59,6 +59,10 @@ module Masamune::Schema
       @partition_tables[partition_range] ||= self.class.new id: @id, store: store, columns: partition_table_columns, parent: self, range: partition_range, grain: grain
     end
 
+    def partitions
+      columns.select { |_, column| column.partition }
+    end
+
     def measures
       columns.select { |_, column| column.measure }
     end
@@ -77,7 +81,7 @@ module Masamune::Schema
       case type
       when :fact
         initialize_column! id: 'time_key', type: :integer, index: true
-        initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
+        initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()' unless store.type == :hive
       end
     end
 

@@ -3,6 +3,22 @@ require 'spec_helper'
 describe Masamune::Transform::DefineTable do
   subject { transform.define_table(table).to_s }
 
+  context 'for hive implicit dimension' do
+    before do
+      catalog.schema :hive do
+        dimension 'user', implicit: true do
+          column 'user_id', natural_key: true
+        end
+      end
+    end
+
+    let(:table) { catalog.hive.user_dimension }
+
+    it 'should not render table template' do
+      is_expected.to eq ''
+    end
+  end
+
   context 'for postgres dimension type: one' do
     before do
       catalog.schema :postgres do

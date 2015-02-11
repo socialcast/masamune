@@ -12,6 +12,7 @@ module Masamune::Schema
       store:           nil,
       parent:          nil,
       suffix:          nil,
+      implicit:        false,
       references:      {},
       headers:         true,
       columns:         {},
@@ -56,7 +57,7 @@ module Masamune::Schema
       raise ArgumentError, "table #{name} contains reserved columns" if columns.any? { |column| reserved_column_ids.include?(column.id) }
 
       initialize_surrogate_key_column! unless columns.any? { |column| column.surrogate_key }
-      initialize_foreign_key_columns!
+      initialize_reference_columns!
       columns.each do |column|
         @columns[column.name] = column.dup
         @columns[column.name].parent = self
@@ -72,7 +73,7 @@ module Masamune::Schema
     end
 
     def name
-      @name || "#{id}_#{suffix}"
+      @name || [id, suffix].compact.join('_')
     end
 
     def suffix
@@ -134,8 +135,12 @@ module Masamune::Schema
     end
     method_with_last_element :upsert_unique_columns
 
-    def foreign_key_columns
+    def reference_columns
       columns.values.select { | column| column.reference }
+    end
+
+    def foreign_key_columns
+      columns.values.select { | column| column.reference && column.reference.foreign_key }
     end
 
     def insert_rows
@@ -213,9 +218,16 @@ module Masamune::Schema
       end
     end
 
-    def initialize_foreign_key_columns!
+    def initialize_reference_columns!
       references.map do |_, reference|
-        initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
+        if reference.denormalize
+          reference.unreserved_columns.each do |_, column|
+            next if column.surrogate_key
+            initialize_column! id: column.id, type: column.type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
+          end
+        elsif reference.foreign_key
+          initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
+        end
       end
     end
 
