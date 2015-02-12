@@ -264,6 +264,8 @@ describe Masamune::Schema::Table do
   end
 
   context '#as_file' do
+    let(:store) { double(type: :postgres, headers: true) }
+
     let(:mini_table) do
       described_class.new id: 'user_account_state',
         columns: [
@@ -273,7 +275,7 @@ describe Masamune::Schema::Table do
     end
 
     let(:table) do
-      described_class.new id: 'user', references: [
+      described_class.new id: 'user', store: store, references: [
           Masamune::Schema::TableReference.new(mini_table),
           Masamune::Schema::TableReference.new(mini_table, label: :hr)
         ],

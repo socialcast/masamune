@@ -41,14 +41,6 @@ module Masamune::Schema
       end
     end
 
-    def headers
-      false
-    end
-
-    def format
-      :tsv
-    end
-
     def columns
       @columns ||= {}.tap do |columns|
         columns[:uuid] = Column.new id: :uuid, type: :uuid, parent: self

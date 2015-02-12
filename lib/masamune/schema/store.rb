@@ -4,7 +4,18 @@ module Masamune::Schema
   class Store
     SUPPORTED_ATTRIBUTES = %(table dimension fact file event)
 
-    attr_accessor :type
+    DEFAULT_ATTRIBUTES =
+    {
+      type:            nil,
+      format:          ->(store) { store.type == :postgres ? :csv : :tsv },
+      headers:         ->(store) { store.type == :postgres ? true : false },
+      debug:           false
+    }
+
+    DEFAULT_ATTRIBUTES.keys.each do |attr|
+      attr_accessor attr
+    end
+
     attr_accessor :tables
     attr_accessor :dimensions
     attr_accessor :facts
@@ -12,8 +23,20 @@ module Masamune::Schema
     attr_accessor :events
     attr_accessor :references
 
-    def initialize(type, options = {})
-      @type       = type
+    class << self
+      def types
+        [:postgres, :hive, :files]
+      end
+    end
+
+    def initialize(opts = {})
+      opts.symbolize_keys!
+      raise ArgumentError, 'required parameter type: missing' unless opts.key?(:type)
+      raise ArgumentError, "unknown type: '#{opts[:type]}'" unless self.class.types.include?(opts[:type])
+      DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
+        public_send("#{name}=", value.respond_to?(:call) ? value.call(self) : value)
+      end
+
       @tables     = {}.with_indifferent_access
       @dimensions = {}.with_indifferent_access
       @facts      = {}.with_indifferent_access

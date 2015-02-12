@@ -14,7 +14,6 @@ module Masamune::Schema
       suffix:          nil,
       implicit:        false,
       references:      {},
-      headers:         true,
       columns:         {},
       rows:            [],
       inherit:         false,
@@ -33,10 +32,6 @@ module Masamune::Schema
       end
       @children = Set.new
       inherit_column_attributes! if inherit
-    end
-
-    def format
-      :csv
     end
 
     def id=(id)
@@ -196,7 +191,7 @@ module Masamune::Schema
     end
 
     def as_file(selected_columns = [])
-      File.new(id: id, store: store, columns: select_columns(selected_columns), headers: headers)
+      File.new(id: id, store: store, columns: select_columns(selected_columns), headers: store.headers)
     end
 
     protected

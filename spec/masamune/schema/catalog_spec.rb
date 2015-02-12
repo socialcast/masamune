@@ -30,7 +30,7 @@ describe Masamune::Schema::Catalog do
     end
     context 'with :mysql' do
       subject { instance[:mysql] }
-      it { expect { subject }.to raise_error ArgumentError, "unknown data store 'mysql'" }
+      it { expect { subject }.to raise_error ArgumentError, "unknown type: 'mysql'" }
     end
   end
 
@@ -67,7 +67,7 @@ describe Masamune::Schema::Catalog do
         end
       end
 
-      it { expect { schema }.to raise_error ArgumentError, "data store arguments required" }
+      it { expect { schema }.to raise_error ArgumentError, "schema store arguments required" }
     end
 
     context 'when schema defines unknown store' do
@@ -78,7 +78,7 @@ describe Masamune::Schema::Catalog do
         end
       end
 
-      it { expect { schema }.to raise_error ArgumentError, "unknown data store 'mysql'" }
+      it { expect { schema }.to raise_error ArgumentError, "unknown type: 'mysql'" }
     end
 
     context 'when schema contains dimensions' do

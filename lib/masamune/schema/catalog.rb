@@ -1,10 +1,10 @@
 require 'active_support/core_ext/hash'
 
+require 'masamune/schema/store'
+
 module Masamune::Schema
   class Catalog
     include Masamune::HasEnvironment
-
-    SUPPORTED_STORES = [:postgres, :hive, :files]
 
     class HasMap < SimpleDelegator
       attr_accessor :maps
@@ -24,7 +24,7 @@ module Masamune::Schema
 
       def initialize(store, options = {})
         super store
-        @store = store
+        @store    = store
         @options  = Hash.new { |h,k| h[k] = [] }
         @options.merge!(store: @store)
         @options.merge!(options)
@@ -42,7 +42,7 @@ module Masamune::Schema
 
     def initialize(environment)
       self.environment = environment
-      @catalog = Hash.new { |h,k| h[k] = Masamune::Schema::Store.new(k) }
+      @catalog = Hash.new { |h,k| h[k] = Masamune::Schema::Store.new(type: k) }
       @context = nil
     end
 
@@ -52,10 +52,9 @@ module Masamune::Schema
 
     def schema(*args, &block)
       options = args.last.is_a?(Hash) ? args.pop : {}
-      raise ArgumentError, 'data store arguments required' unless args.any?
+      raise ArgumentError, 'schema store arguments required' unless args.any?
       stores = args.map(&:to_sym)
       stores.each do |id|
-        raise ArgumentError, "unknown data store '#{id}'" unless valid_store?(id)
         begin
           @context = Context.new(@catalog[id], options)
           instance_eval &block
@@ -65,14 +64,13 @@ module Masamune::Schema
       end
     end
 
-    SUPPORTED_STORES.each do |store|
+    Masamune::Schema::Store.types.each do |store|
       define_method(store) do
         @catalog[store]
       end
     end
 
     def [](store_id)
-      raise ArgumentError, "unknown data store '#{store_id}'" unless valid_store?(store_id)
       @catalog[store_id.to_sym]
     end
 
@@ -185,13 +183,9 @@ module Masamune::Schema
     private
 
     def dereference_column(id, options = {})
-      store_id = id.split(/\./).reverse.last
-      context = store_id && valid_store?(store_id) ? @catalog[store_id.to_sym] : @context
+      store_id = id.split(/\./).reverse.last.try(:to_sym)
+      context = store_id && @catalog.key?(store_id) ? @catalog[store_id] : @context
       context.dereference_column(*id, options)
-    end
-
-    def valid_store?(store)
-      SUPPORTED_STORES.include?(store.to_sym)
     end
 
     def fact_attributes(grain = [])

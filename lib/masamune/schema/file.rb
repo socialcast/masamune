@@ -26,6 +26,10 @@ module Masamune::Schema
       :file
     end
 
+    def store
+      OpenStruct.new(format: format, headers: headers, type: @store.type)
+    end
+
     def columns=(instance)
       @columns  = {}
       columns = (instance.is_a?(Hash) ? instance.values : instance).compact
@@ -36,7 +40,7 @@ module Masamune::Schema
     end
 
     def as_table(table)
-      table.class.new(id: id, type: :file, store: store, columns: columns.values, parent: table, inherit: true, headers: headers)
+      table.class.new(id: id, type: :file, store: store, columns: columns.values, parent: table, inherit: true)
     end
 
     def as_file(columns = [])

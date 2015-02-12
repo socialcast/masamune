@@ -8,27 +8,28 @@ module Masamune::Schema
       def_delegators :@store, :headers, :format
       def_delegators :@io, :flush, :path
 
-      def initialize(store, io)
-        @store  = store
+      def initialize(table, io)
+        @table  = table
+        @store  = table.store
         @io     = io.set_encoding('binary', 'UTF-8', undef: :replace)
       end
 
       def each(&block)
-        CSV.parse(@io, options.merge(headers: @store.headers || @store.columns.keys)) do |data|
-          row = Masamune::Schema::Row.new(parent: @store, values: data.to_hash, strict: false)
+        CSV.parse(@io, options.merge(headers: @store.headers || @table.columns.keys)) do |data|
+          row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
           yield row.to_hash
         end
       end
 
       def append(data)
-        row = Masamune::Schema::Row.new(parent: @store, values: data.to_hash)
+        row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash)
         @io ||= Tempfile.new('masamune')
-        @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: headers))
+        @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: @store.headers))
         @csv << row.serialize
       end
 
       def options
-        if format == :tsv
+        if @store.format == :tsv
           { col_sep: "\t" }
         else
           {}
