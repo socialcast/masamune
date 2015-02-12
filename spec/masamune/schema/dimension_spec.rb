@@ -100,4 +100,16 @@ describe Masamune::Schema::Dimension do
       end
     end
   end
+
+  context 'for type :date' do
+    let(:dimension) do
+      described_class.new id: 'date', type: :date,
+        columns: [
+          Masamune::Schema::Column.new(id: 'date_id')
+        ]
+    end
+
+    it { expect(dimension.name).to eq('date_dimension') }
+    it { expect(dimension.type).to eq(:date) }
+  end
 end

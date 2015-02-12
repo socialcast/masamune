@@ -32,6 +32,7 @@ module Masamune::Schema
 
       def push(options = {})
         @prev_options = @options.dup
+        @options.merge!(options)
       end
 
       def pop
@@ -78,7 +79,7 @@ module Masamune::Schema
     def table(id, options = {}, &block)
       @context.push(options)
       yield if block_given?
-      @context.tables[id] ||= Masamune::Schema::Table.new(options.merge(@context.options).merge(id: id))
+      @context.tables[id] ||= Masamune::Schema::Table.new(@context.options.merge(id: id))
       @context.references[id] ||= Masamune::Schema::TableReference.new(@context.tables[id])
     ensure
       @context.pop
@@ -87,7 +88,7 @@ module Masamune::Schema
     def dimension(id, options = {}, &block)
       @context.push(options)
       yield if block_given?
-      @context.dimensions[id] ||= Masamune::Schema::Dimension.new(options.merge(@context.options).merge(id: id))
+      @context.dimensions[id] ||= Masamune::Schema::Dimension.new(@context.options.merge(id: id))
       @context.references[id] ||= Masamune::Schema::TableReference.new(@context.dimensions[id])
     ensure
       @context.pop
@@ -112,20 +113,24 @@ module Masamune::Schema
 
     def fact(id, options = {}, &block)
       @context.push(options)
-      yield if block_given?
-      @context.facts[id] ||= Masamune::Schema::Fact.new(options.merge(@context.options).merge(id: id))
+      grain = Array.wrap(options.delete(:grain) || [])
+      fact_attributes(grain).each do |attributes|
+        yield if block_given?
+        table = Masamune::Schema::Fact.new(@context.options.merge(id: id).merge(attributes))
+        @context.facts[table.id] ||= table
+      end
     ensure
       @context.pop
     end
 
     def measure(id, options = {}, &block)
-      @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id))
+      @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id, measure: true))
     end
 
     def file(id, options = {}, &block)
       @context.push(options)
       yield if block_given?
-      @context.files[id] = HasMap.new Masamune::Schema::File.new(options.merge(@context.options).merge(id: id))
+      @context.files[id] = HasMap.new Masamune::Schema::File.new(@context.options.merge(id: id))
     ensure
       @context.pop
     end
@@ -133,7 +138,7 @@ module Masamune::Schema
     def event(id, options = {}, &block)
       @context.push(options)
       yield if block_given?
-      @context.events[id] = HasMap.new Masamune::Schema::Event.new(options.merge(@context.options).merge(id: id))
+      @context.events[id] = HasMap.new Masamune::Schema::Event.new(@context.options.merge(id: id))
     ensure
       @context.pop
     end
@@ -143,14 +148,14 @@ module Masamune::Schema
     end
 
     def map(options = {}, &block)
-      @context.push(options)
       raise ArgumentError, "invalid map, from: is missing" unless options.is_a?(Hash)
       from, to = options.delete(:from), options.delete(:to)
       raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
       raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
+      @context.push(options)
       @context.options[:fields] = {}.with_indifferent_access
       yield if block_given?
-      from.maps[to] ||= Masamune::Schema::Map.new(options.merge(@context.options).merge(source: from, target: to))
+      from.maps[to] ||= Masamune::Schema::Map.new(@context.options.merge(source: from, target: to))
     ensure
       @context.pop
     end
@@ -159,10 +164,6 @@ module Masamune::Schema
       @context.options[:fields][id] = value
       @context.options[:fields][id] ||= block.to_proc if block_given?
       @context.options[:fields][id] ||= id
-    end
-
-    def maps(options = {})
-      @context.maps[options[:from]][options[:to]]
     end
 
     def load(file)
@@ -186,6 +187,11 @@ module Masamune::Schema
 
     def valid_store?(store)
       SUPPORTED_STORES.include?(store.to_sym)
+    end
+
+    def fact_attributes(grain = [])
+      return [{}] unless grain.any?
+      grain.map { |x| { grain: x } }
     end
   end
 end

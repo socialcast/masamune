@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Masamune::Transform::LoadFact do
   before do
     catalog.schema :postgres do
-      dimension 'date', type: :one do
+      dimension 'date', type: :date do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
 

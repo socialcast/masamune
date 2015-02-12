@@ -190,12 +190,12 @@ describe Masamune::Schema::Catalog do
 
           fact 'fact_one' do
             references :dimension_one
-            measure 'measure_one'
+            measure 'measure_one', aggregate: :sum
           end
 
           fact 'fact_two' do
             references :dimension_one
-            measure 'measure_two'
+            measure 'measure_two', aggregate: :average
           end
         end
       end
@@ -205,6 +205,60 @@ describe Masamune::Schema::Catalog do
 
       it { expect(fact_one.references).to include :dimension_one}
       it { expect(fact_one.measures).to include :measure_one }
+      it { expect(fact_one.measures[:measure_one].aggregate).to eq(:sum) }
+      it { expect(fact_two.references).to include :dimension_one}
+      it { expect(fact_two.measures).to include :measure_two }
+      it { expect(fact_two.measures[:measure_two].aggregate).to eq(:average) }
+    end
+
+    context 'when schema contains fact with a single grain' do
+      before do
+        instance.schema :postgres do
+          dimension 'user', type: :two do
+            column 'user_id'
+          end
+
+          fact 'visits', grain: 'hourly' do
+            references :user
+            measure 'count'
+          end
+        end
+      end
+
+      let(:visits_hourly) { postgres.visits_hourly_fact }
+
+      it { expect(visits_hourly.name).to eq('visits_hourly_fact') }
+      it { expect(visits_hourly.references).to include :user }
+      it { expect(visits_hourly.measures).to include :count }
+    end
+
+    context 'when schema contains fact with multiple grain' do
+      before do
+        instance.schema :postgres do
+          dimension 'user', type: :two do
+            column 'user_id'
+          end
+
+          fact 'visits', grain: %w(hourly daily monthly) do
+            references :user
+            measure 'count'
+          end
+        end
+      end
+
+      let(:visits_hourly) { postgres.visits_hourly_fact }
+      let(:visits_daily) { postgres.visits_daily_fact }
+      let(:visits_monthly) { postgres.visits_monthly_fact }
+
+      it { expect(visits_hourly.name).to eq('visits_hourly_fact') }
+      it { expect(visits_hourly.references).to include :user }
+      it { expect(visits_hourly.measures).to include :count }
+      it { expect(visits_daily.name).to eq('visits_daily_fact') }
+      it { expect(visits_daily.references).to include :user }
+      it { expect(visits_daily.measures).to include :count }
+      it { expect(visits_monthly.name).to eq('visits_monthly_fact') }
+      it { expect(visits_monthly.references).to include :user }
+      it { expect(visits_monthly.measures).to include :count }
     end
 
     context 'when schema contains events' do

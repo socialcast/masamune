@@ -19,5 +19,7 @@ module Masamune
     require 'masamune/transform/deduplicate_dimension'
     require 'masamune/transform/consolidate_dimension'
     require 'masamune/transform/relabel_dimension'
+
+    require 'masamune/transform/rollup_fact'
   end
 end
