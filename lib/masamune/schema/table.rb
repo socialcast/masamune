@@ -223,6 +223,7 @@ module Masamune::Schema
         if reference.denormalize
           reference.unreserved_columns.each do |_, column|
             next if column.surrogate_key
+            next if column.ignore
             initialize_column! id: column.id, type: column.type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
           end
         elsif reference.foreign_key

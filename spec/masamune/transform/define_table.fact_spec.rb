@@ -59,6 +59,7 @@ describe Masamune::Transform::DefineTable do
       dimension 'user_agent', type: :mini do
         column 'name', type: :string
         column 'version', type: :string
+        column 'description', type: :string, ignore: true
       end
 
       fact 'visits', grain: :hourly do
