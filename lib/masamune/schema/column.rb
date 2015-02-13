@@ -7,6 +7,7 @@ module Masamune::Schema
       id:                  nil,
       type:                :integer,
       sub_type:            nil,
+      array:               false,
       values:              [],
       null:                false,
       strict:              true,
@@ -134,12 +135,14 @@ module Masamune::Schema
     end
 
     def hql_type
+      elem =
       case type
       when :integer
         'INT'
       else
         sql_type
       end
+      array_value? ? "ARRAY<#{elem}>" : elem
     end
 
     def sql_value(value)
@@ -170,9 +173,10 @@ module Masamune::Schema
       end
     end
 
-    def ruby_value(value)
+    def ruby_value(value, recursive = true)
       value = nil if null_value?(value)
       return value if sql_function?(value)
+      return ruby_array(value) if recursive && array_value?
       case type
       when :boolean
         case value
@@ -230,6 +234,9 @@ module Masamune::Schema
     end
 
     def null_value?(value)
+      if type == :json || array_value?
+        return true if value == 'NULL'
+      end
       return false unless parent && parent.store
       case parent.store.type
       when :hive
@@ -241,6 +248,10 @@ module Masamune::Schema
 
     def sql_function?(value)
       value =~ /\(\)\Z/
+    end
+
+    def array_value?
+      !!(array || (reference && reference.multiple))
     end
 
     def as_psql
@@ -344,6 +355,17 @@ module Masamune::Schema
     def initialize_default_attributes!
       self.default = 'uuid_generate_v4()' if surrogate_key && type == :uuid
       self.unique = 'natural' if natural_key
+    end
+
+    def ruby_array(value)
+      case value
+      when Array
+        value
+      when String
+        Array.wrap(JSON.load(value)).map { |elem| ruby_value(elem, false) }.compact
+      when nil
+        []
+      end
     end
 
     def ruby_key_value(hash)

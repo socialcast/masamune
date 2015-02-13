@@ -165,6 +165,55 @@ describe Masamune::Schema::Column do
       end
     end
 
+    context 'with type :integer and :array' do
+      let(:column) { described_class.new(id: 'int[]', type: :integer, array: true) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq([]) }
+      end
+
+      context "when 'NULL'" do
+        let(:value) { 'NULL' }
+        it { is_expected.to eq([]) }
+      end
+
+      context 'when scalar' do
+        let(:value) { '1' }
+        it { is_expected.to eq([1]) }
+      end
+
+      context 'when array' do
+        let(:value) { '[1,2]' }
+        it { is_expected.to eq([1,2]) }
+      end
+    end
+
+    context 'with type :json' do
+      let(:column) { described_class.new(id: 'json', type: :json) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq({}) }
+      end
+
+      context "when 'NULL'" do
+        let(:value) { 'NULL' }
+        it { is_expected.to eq({}) }
+      end
+
+      context 'when scalar' do
+        let(:value) { '1' }
+        it { is_expected.to eq(1) }
+      end
+
+      context 'when array' do
+        let(:value) { '{"k":"v"}' }
+        it { is_expected.to eq({"k" => "v"}) }
+      end
+    end
+
+
     context 'with type :yaml and sub_type :boolean' do
       let(:column) { described_class.new(id: 'yaml', type: :yaml, sub_type: :boolean) }
       let(:value) do

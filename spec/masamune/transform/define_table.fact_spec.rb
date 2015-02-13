@@ -56,6 +56,10 @@ describe Masamune::Transform::DefineTable do
         column 'user_id', type: :integer, natural_key: true
       end
 
+      dimension 'group', type: :two, implicit: true do
+        column 'group_id', type: :integer, natural_key: true
+      end
+
       dimension 'user_agent', type: :mini do
         column 'name', type: :string
         column 'version', type: :string
@@ -68,6 +72,7 @@ describe Masamune::Transform::DefineTable do
         partition :d
         references :date
         references :user
+        references :group, multiple: true
         references :user_agent, denormalize: true
         measure 'total'
       end
@@ -187,6 +192,7 @@ describe Masamune::Transform::DefineTable do
         (
           date_dimension_date_id INT,
           user_dimension_user_id INT,
+          group_dimension_group_id ARRAY<INT>,
           user_agent_type_name VARCHAR,
           user_agent_type_version VARCHAR,
           total INT,
