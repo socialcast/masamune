@@ -160,6 +160,7 @@ module Masamune::Schema
 
     def csv_value(value)
       return value if sql_function?(value)
+      return csv_array(value) if array_value?
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
@@ -215,6 +216,8 @@ module Masamune::Schema
         when nil
           {}
         end
+      when :string
+        value.to_s
       else
         value
       end
@@ -361,9 +364,9 @@ module Masamune::Schema
     def ruby_array(value)
       case value
       when Array
-        value
+        value.map { |elem| ruby_value(elem, false) }
       when String
-        Array.wrap(JSON.load(value)).map { |elem| ruby_value(elem, false) }.compact
+        Array.wrap(JSON.load(value)).map { |elem| ruby_value(elem, false) }
       when nil
         []
       end
@@ -384,6 +387,17 @@ module Masamune::Schema
         [key, true]
       when false, '0', 0
         [key, false]
+      end
+    end
+
+    def csv_array(value)
+      case value
+      when Array
+        ruby_value(value).to_json
+      when nil
+        [].to_json
+      else
+        [ruby_value(value, false)].to_json
       end
     end
   end

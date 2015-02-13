@@ -237,7 +237,6 @@ describe Masamune::Schema::Column do
       end
     end
 
-
     context 'with type :yaml and sub_type :boolean' do
       let(:column) { described_class.new(id: 'yaml', type: :yaml, sub_type: :boolean) }
       let(:value) do
@@ -260,6 +259,82 @@ describe Masamune::Schema::Column do
         expect(result['one_integer']).to eq(true)
         expect(result['zero_integer']).to eq(false)
         expect(result.key?('string')).to eq(false)
+      end
+    end
+  end
+
+  describe '#csv_value' do
+    subject(:result) { column.csv_value(value) }
+
+    context 'with type :boolean' do
+      let(:column) { described_class.new(id: 'bool', type: :boolean) }
+
+      context 'when true' do
+        let(:value) { true }
+        it { is_expected.to eq('TRUE') }
+      end
+
+      context 'when false' do
+        let(:value) { false }
+        it { is_expected.to eq('FALSE') }
+      end
+    end
+
+    context 'with type :integer and :array' do
+      let(:column) { described_class.new(id: 'int[]', type: :integer, array: true) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq('[]') }
+      end
+
+      context 'when scalar integer' do
+        let(:value) { 1 }
+        it { is_expected.to eq('[1]') }
+      end
+
+      context 'when scalar string' do
+        let(:value) { '1' }
+        it { is_expected.to eq('[1]') }
+      end
+
+      context 'when array of integer' do
+        let(:value) { [1,2] }
+        it { is_expected.to eq('[1,2]') }
+      end
+
+      context 'when array of string' do
+        let(:value) { ['1','2'] }
+        it { is_expected.to eq('[1,2]') }
+      end
+    end
+
+    context 'with type :string and :array' do
+      let(:column) { described_class.new(id: 'string[]', type: :string, array: true) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq('[]') }
+      end
+
+      context 'when scalar string' do
+        let(:value) { '1' }
+        it { is_expected.to eq('["1"]') }
+      end
+
+      context 'when scalar integer' do
+        let(:value) { 1 }
+        it { is_expected.to eq('["1"]') }
+      end
+
+      context 'when array of string' do
+        let(:value) { ['1','2'] }
+        it { is_expected.to eq('["1","2"]') }
+      end
+
+      context 'when array of integer' do
+        let(:value) { [1,2] }
+        it { is_expected.to eq('["1","2"]') }
       end
     end
   end
