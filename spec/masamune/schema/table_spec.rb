@@ -231,23 +231,28 @@ describe Masamune::Schema::Table do
     end
 
     let(:table) do
-      described_class.new id: 'user', references: [Masamune::Schema::TableReference.new(mini_table)],
+      described_class.new id: 'user', references: [
+          Masamune::Schema::TableReference.new(mini_table),
+          Masamune::Schema::TableReference.new(mini_table, label: 'hr')
+        ],
         columns: [
           Masamune::Schema::Column.new(id: 'name', type: :string)
         ]
     end
 
-    let!(:stage_table) { table.stage_table }
+    context 'without suffix or selected columns' do
+      let!(:stage_table) { table.stage_table }
 
-    it 'should duplicate columns' do
-      expect(table.parent).to be_nil
-      expect(table.columns[:name].parent).to eq(table)
-      expect(stage_table.parent).to eq(table)
-      expect(stage_table.columns[:name].parent).to eq(stage_table)
+      it 'should duplicate columns' do
+        expect(table.parent).to be_nil
+        expect(table.columns[:name].parent).to eq(table)
+        expect(stage_table.parent).to eq(table)
+        expect(stage_table.columns[:name].parent).to eq(stage_table)
+      end
     end
 
-    context 'stage_table with optional suffix' do
-      let!(:stage_table) { table.stage_table('actor') }
+    context 'with optional suffix' do
+      let!(:stage_table) { table.stage_table(suffix: 'actor') }
 
       it 'should append suffix to id' do
         expect(stage_table.id).to eq(:user_actor)
@@ -261,45 +266,71 @@ describe Masamune::Schema::Table do
         expect(stage_table.columns[:name].parent).to eq(stage_table)
       end
     end
-  end
 
-  context '#as_file' do
-    let(:store) { double(type: :postgres, headers: true) }
+    context 'with specified columns' do
+      subject(:stage_table) { table.stage_table(columns: %w(uuid name user_account_state.uuid hr_user_account_state.uuid)) }
 
-    let(:mini_table) do
-      described_class.new id: 'user_account_state',
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
-          Masamune::Schema::Column.new(id: 'description', type: :string)
-        ]
+      it 'should stage table' do
+        expect(stage_table.name).to eq('user_table_stage')
+        expect(stage_table.columns).to include :name
+        expect(stage_table.columns).to include :user_account_state_table_uuid 
+        expect(stage_table.columns).to include :hr_user_account_state_table_uuid 
+        expect(stage_table.columns.size).to eq(3)
+      end
     end
 
-    let(:table) do
-      described_class.new id: 'user', store: store, references: [
-          Masamune::Schema::TableReference.new(mini_table),
-          Masamune::Schema::TableReference.new(mini_table, label: :hr)
-        ],
-        columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string)
-        ]
+    context 'with specified columns (denormalized)' do
+      subject(:stage_table) { table.stage_table(columns: %w(uuid name user_account_state.name hr_user_account_state.name)) }
+
+      it 'should stage table' do
+        expect(stage_table.name).to eq('user_table_stage')
+        expect(stage_table.columns).to include :name
+        expect(stage_table.columns).to include :user_account_state_table_name
+        expect(stage_table.columns).to include :hr_user_account_state_table_name
+        expect(stage_table.columns.size).to eq(3)
+      end
     end
 
-    context 'without specified columns' do
-      let(:file) { table.as_file }
+    context 'with specified target table' do
+      let(:target) do
+        described_class.new id: 'user',
+          columns: [
+            Masamune::Schema::Column.new(id: 'name', type: :string),
+            Masamune::Schema::Column.new(id: 'user_account_state.name', type: :string),
+            Masamune::Schema::Column.new(id: 'hr_user_account_state.name', type: :string)
+          ]
+      end
 
-      it { expect(file.as_table(table).name).to eq('user_table_file') }
+      subject(:stage_table) { table.stage_table(target: target) }
+
+      it 'should stage table' do
+        expect(stage_table.name).to eq('user_table_stage')
+        expect(stage_table.columns).to include :name
+        expect(stage_table.columns).to include :user_account_state_table_name
+        expect(stage_table.columns).to include :hr_user_account_state_table_name
+        expect(stage_table.columns.size).to eq(3)
+      end
     end
 
-    context 'with all specified columns' do
-      let(:file) { table.as_file(%w(uuid hr_user_account_state_table_uuid user_account_state_table_uuid name)) }
+    context 'with specified target table (reference)' do
+      let(:target) do
+        described_class.new id: 'user', type: :stage,
+          columns: [
+            Masamune::Schema::Column.new(id: 'name', type: :string),
+            Masamune::Schema::Column.new(id: 'name', type: :string, reference: Masamune::Schema::TableReference.new(mini_table)),
+            Masamune::Schema::Column.new(id: 'name', type: :string, reference: Masamune::Schema::TableReference.new(mini_table, label: 'hr'))
+          ]
+      end
 
-      it { expect(file.as_table(table).name).to eq('user_table_file') }
-    end
+      subject(:stage_table) { table.stage_table(target: target) }
 
-    context 'with all specified columns in denormalized form' do
-      let(:file) { table.as_file(%w(uuid hr_user_account_state.name user_account_state.name name)) }
-
-      it { expect(file.as_table(table).name).to eq('user_table_file') }
+      it 'should stage table' do
+        expect(stage_table.name).to eq('user_table_stage')
+        expect(stage_table.columns).to include :name
+        expect(stage_table.columns).to include :user_account_state_table_name
+        expect(stage_table.columns).to include :hr_user_account_state_table_name
+        expect(stage_table.columns.size).to eq(3)
+      end
     end
   end
 end

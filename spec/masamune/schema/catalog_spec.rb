@@ -381,14 +381,14 @@ describe Masamune::Schema::Catalog do
             column 'deleted_at', type: :timestamp
           end
 
-          map from: files.users, to: postgres.user_dimension do
-            field 'tenant_id'
-            field 'user_id', 'id'
-            field 'user_account_state.name' do |row|
-              row[:deleted_at] ? 'deleted' : 'active'
-            end
-            field 'start_at', 'updated_at'
-            field 'delta', 0
+          map from: files.users, to: postgres.user_dimension do |row|
+            {
+              'tenant_id':                row[:tenant_id],
+              'user_id':                  row[:id],
+              'user_account_state.name':  row[:deleted_at] ? 'deleted' :  'active',
+              'start_at':                 row[:updated_at],
+              'delta':                    0
+            }
           end
         end
       end
@@ -396,11 +396,7 @@ describe Masamune::Schema::Catalog do
       subject(:map) { files.users.map(to: postgres.user_dimension) }
 
       it 'constructs map' do
-        expect(map.fields[:tenant_id]).to eq('tenant_id')
-        expect(map.fields[:user_id]).to eq('id')
-        expect(map.fields[:'user_account_state.name']).to be_a(Proc)
-        expect(map.fields[:start_at]).to eq('updated_at')
-        expect(map.fields[:delta]).to eq(0)
+        expect(map.function).to_not be_nil
       end
     end
 
@@ -417,9 +413,11 @@ describe Masamune::Schema::Catalog do
             attribute 'name', type: :string
           end
 
-          map from: postgres.users_event, to: postgres.user_dimension do
-            field 'user_id', 'id'
-            field 'name', 'name_now'
+          map from: postgres.users_event, to: postgres.user_dimension do |row|
+            {
+              'user_id':   row[:id],
+              'name':      row[:name_now]
+            }
           end
         end
       end
@@ -427,8 +425,7 @@ describe Masamune::Schema::Catalog do
       subject(:map) { postgres.users_event.map(to: postgres.user_dimension) }
 
       it 'constructs map' do
-        expect(map.fields[:user_id]).to eq('id')
-        expect(map.fields[:name]).to eq('name_now')
+        expect(map.function).to_not be_nil
       end
     end
 

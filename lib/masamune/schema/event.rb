@@ -84,7 +84,8 @@ module Masamune::Schema
       @delete_type ||= "#{id}_delete"
     end
 
-    def as_table(parent)
+    def dereference_column_name(name)
+      columns[name.to_sym]
     end
   end
 end

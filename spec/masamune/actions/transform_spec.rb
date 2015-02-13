@@ -18,7 +18,7 @@ describe Masamune::Actions::Transform do
         column 'user_id',   type: :integer, index: true, surrogate_key: true
       end
 
-      file 'user', format: :csv, headers: true do
+      file 'user' do
         column 'id', type: :integer
         column 'tenant_id', type: :integer
         column 'updated_at', type: :timestamp

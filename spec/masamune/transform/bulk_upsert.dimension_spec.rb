@@ -36,7 +36,7 @@ describe Masamune::Transform::BulkUpsert do
         column 'preferences', type: :key_value, null: true
       end
 
-      file 'user', headers: true do
+      file 'user' do
         column 'tenant_id', type: :integer
         column 'user_id', type: :integer
         column 'department.department_id', type: :integer

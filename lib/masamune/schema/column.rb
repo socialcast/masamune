@@ -127,7 +127,7 @@ module Masamune::Schema
       when :enum
         "#{sub_type}_TYPE".upcase
       when :key_value
-        parent.type == :file ? 'JSON' : 'HSTORE'
+        parent.type == :stage ? 'JSON' : 'HSTORE'
       when :json, :yaml
         'JSON'
       end
@@ -280,7 +280,7 @@ module Masamune::Schema
     class << self
       def dereference_column_name(name)
         return unless name
-        if name =~ /\./
+        if name.to_s =~ /\./
           reference_name, column_name = name.to_s.split('.')
           [reference_name.to_sym, column_name.to_sym]
         else

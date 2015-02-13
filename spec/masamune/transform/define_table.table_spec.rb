@@ -163,22 +163,6 @@ describe Masamune::Transform::DefineTable do
         );
       EOS
     end
-
-    context '#stage_table' do
-      let(:target) { catalog.postgres.user_table.stage_table }
-
-      it 'should render table template' do
-        is_expected.to eq <<-EOS.strip_heredoc
-          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
-          (
-            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            tenant_id INTEGER,
-            user_id INTEGER,
-            state USER_STATE_TYPE DEFAULT 'active'
-          );
-        EOS
-      end
-    end
   end
 
   context 'for postgres table with surrogate_key columns override' do
@@ -409,28 +393,9 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
       EOS
     end
-
-    context '#stage_table' do
-      let(:target) { catalog.postgres.user_table.stage_table }
-
-      it 'should render table template' do
-        is_expected.to eq <<-EOS.strip_heredoc
-          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
-          (
-            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            user_account_state_table_uuid UUID DEFAULT default_user_account_state_table_uuid(),
-            hr_user_account_state_table_uuid UUID,
-            name VARCHAR
-          );
-
-          CREATE INDEX user_table_stage_user_account_state_table_uuid_index ON user_table_stage (user_account_state_table_uuid);
-          CREATE INDEX user_table_stage_hr_user_account_state_table_uuid_index ON user_table_stage (hr_user_account_state_table_uuid);
-        EOS
-      end
-    end
   end
 
-  context '#as_file' do
+  context '#stage_table' do
     before do
       catalog.schema :postgres do
         table 'user_account_state' do
@@ -447,55 +412,51 @@ describe Masamune::Transform::DefineTable do
     end
 
     let(:table) { catalog.postgres.user_table }
-    let(:file) { table.as_file(columns) }
-    let(:target) { file.as_table(table) }
+    let(:target) { table.stage_table(columns: columns) }
 
     context 'without specified columns' do
       let(:columns) { [] }
 
       it 'should render table template' do
         is_expected.to eq <<-EOS.strip_heredoc
-          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_file
+          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
           (
-            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             user_account_state_table_uuid UUID,
             hr_user_account_state_table_uuid UUID,
             name VARCHAR
           );
 
-          CREATE INDEX user_table_file_user_account_state_table_uuid_index ON user_table_file (user_account_state_table_uuid);
-          CREATE INDEX user_table_file_hr_user_account_state_table_uuid_index ON user_table_file (hr_user_account_state_table_uuid);
+          CREATE INDEX user_table_stage_user_account_state_table_uuid_index ON user_table_stage (user_account_state_table_uuid);
+          CREATE INDEX user_table_stage_hr_user_account_state_table_uuid_index ON user_table_stage (hr_user_account_state_table_uuid);
         EOS
       end
     end
 
     context 'for postgres table with all specified columns' do
-      let(:columns) { %w(uuid hr_user_account_state_table_uuid user_account_state_table_uuid name) }
+      let(:columns) { %w(hr_user_account_state_table_uuid user_account_state_table_uuid name) }
 
       it 'should render table template' do
         is_expected.to eq <<-EOS.strip_heredoc
-          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_file
+          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
           (
-            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             hr_user_account_state_table_uuid UUID,
             user_account_state_table_uuid UUID,
             name VARCHAR
           );
 
-          CREATE INDEX user_table_file_hr_user_account_state_table_uuid_index ON user_table_file (hr_user_account_state_table_uuid);
-          CREATE INDEX user_table_file_user_account_state_table_uuid_index ON user_table_file (user_account_state_table_uuid);
+          CREATE INDEX user_table_stage_hr_user_account_state_table_uuid_index ON user_table_stage (hr_user_account_state_table_uuid);
+          CREATE INDEX user_table_stage_user_account_state_table_uuid_index ON user_table_stage (user_account_state_table_uuid);
         EOS
       end
     end
 
     context 'for postgres table with all specified columns in denormalized form' do
-      let(:columns) { %w(uuid hr_user_account_state.name user_account_state.name name) }
+      let(:columns) { %w(hr_user_account_state.name user_account_state.name name) }
 
       it 'should render table template' do
         is_expected.to eq <<-EOS.strip_heredoc
-          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_file
+          CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
           (
-            uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             hr_user_account_state_table_name VARCHAR,
             user_account_state_table_name VARCHAR,
             name VARCHAR

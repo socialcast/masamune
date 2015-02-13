@@ -57,7 +57,7 @@ module Masamune::Schema
     end
 
     def dereference_column(id, options = {})
-      column_id, reference_id = id.split(/\./).reverse
+      column_id, reference_id = id.to_s.split(/\./).reverse
       column_options = options.dup
       column_options.merge!(id: column_id)
 

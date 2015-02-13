@@ -39,11 +39,11 @@ module Masamune::Schema
 
     DEFAULT_ATTRIBUTES =
     {
-      source:  nil,
-      target:  nil,
-      store:   nil,
-      fields:  {},
-      debug:   false
+      source:    nil,
+      target:    nil,
+      store:     nil,
+      function:  ->(row) { row },
+      debug:     false
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
@@ -59,36 +59,41 @@ module Masamune::Schema
       end
     end
 
+    def source=(source)
+      # TODO ? @source = source.as_file
+      @source = source
+    end
+
+    # FIXME: avoid implict conversions
     def target=(target)
       @target = target.type == :four ? target.ledger_table : target
     end
 
     def columns
-      @fields.symbolize_keys.keys
+      function.call({}).keys
     end
 
-    def apply(input_stream, output_stream)
-      input_buffer, output_buffer = Buffer.new(source, input_stream), Buffer.new(target, output_stream)
-      input_buffer.each do |input|
-        output = {}
-        fields.each do |field, value|
-          case value
-          when String, Symbol
-            if input.key?(value)
-              output[field] = input[value]
-            else
-              output[field] = value
-            end
-          when Proc
-            output[field] = value.call(input)
-          else
-            output[field] = value
-          end
+    def apply(input_file, output_file)
+      ::File.open(input_file, 'r') do |input_stream|
+        ::File.open(output_file, 'a+') do |output_stream|
+          apply_stream(input_stream, output_stream)
         end
-        output_buffer.append output
+      end
+    end
+
+    private
+
+    def apply_stream(input_stream, output_stream)
+      input_buffer = Buffer.new(source, input_stream)
+      intermediate = target.stage_table(columns: columns)
+      output_buffer = Buffer.new(intermediate, output_stream)
+      input_buffer.each do |input|
+        Array.wrap(function.call(input)).each do |output|
+          output_buffer.append output
+        end
       end
       output_buffer.flush
-      @target.as_file(columns)
+      intermediate
     end
   end
 end

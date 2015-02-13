@@ -152,9 +152,9 @@ describe Masamune::Transform::DefineTable do
           total INTEGER
         );
 
-        COPY visits_fact_file FROM 'output_1.csv' WITH (FORMAT 'csv');
-        COPY visits_fact_file FROM 'output_2.csv' WITH (FORMAT 'csv');
-        COPY visits_fact_file FROM 'output_3.csv' WITH (FORMAT 'csv');
+        COPY visits_fact_file FROM 'output_1.csv' WITH (FORMAT 'csv', HEADER true);
+        COPY visits_fact_file FROM 'output_2.csv' WITH (FORMAT 'csv', HEADER true);
+        COPY visits_fact_file FROM 'output_3.csv' WITH (FORMAT 'csv', HEADER true);
 
         CREATE INDEX visits_fact_file_date_dimension_date_id_index ON visits_fact_file (date_dimension_date_id);
         CREATE INDEX visits_fact_file_tenant_dimension_tenant_id_index ON visits_fact_file (tenant_dimension_tenant_id);

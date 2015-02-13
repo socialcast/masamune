@@ -23,7 +23,7 @@ describe Masamune::Transform::LoadDimension do
         column 'preferences', type: :key_value, null: true
       end
 
-      file 'user', headers: true do
+      file 'user' do
         column 'tenant_id', type: :integer
         column 'user_id', type: :integer
         column 'user_account_state.name', type: :string

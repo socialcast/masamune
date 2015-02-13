@@ -52,7 +52,7 @@ module Masamune::Schema
       raise ArgumentError, "table #{name} contains reserved columns" if columns.any? { |column| reserved_column_ids.include?(column.id) }
 
       initialize_surrogate_key_column! unless columns.any? { |column| column.surrogate_key }
-      initialize_reference_columns!
+      initialize_reference_columns!  unless columns.any? { |column| column.reference }
       columns.each do |column|
         @columns[column.name] = column.dup
         @columns[column.name].parent = self
@@ -135,7 +135,7 @@ module Masamune::Schema
     end
 
     def foreign_key_columns
-      columns.values.select { | column| column.reference && column.reference.foreign_key }
+      columns.values.select { | column| column.reference && column.reference.respond_to?(:foreign_key) }
     end
 
     def insert_rows
@@ -158,10 +158,17 @@ module Masamune::Schema
       columns.reject { |_, column| reserved_column_ids.include?(column.id) }
     end
 
-    def stage_table(suffix = nil)
-      stage_id = [id, suffix].compact.join('_')
+    def stage_table(options = {})
+      selected = options[:columns] if options[:columns]
+      selected ||= options[:target].columns.values.map(&:compact_name) if options[:target]
+      selected ||= []
+      stage_id = [id, options[:suffix]].compact.join('_')
       @stage_tables ||= {}
-      @stage_tables[stage_id] ||= self.class.new id: stage_id, type: :stage, store: store, columns: stage_table_columns, parent: self
+      @stage_tables[[stage_id, *selected]] ||= self.class.new id: stage_id, type: :stage, store: store, columns: stage_table_columns(selected), references: references, parent: self
+    end
+
+    def as_table(table)
+      table.class.new(id: id, type: :file, store: store, columns: columns.values, parent: table, inherit: true)
     end
 
     def shared_columns(other)
@@ -174,27 +181,14 @@ module Masamune::Schema
       end
     end
 
-    def select_columns(selected_columns = [])
-      return columns.values unless selected_columns.any?
-      [].tap do |result|
-        selected_columns.map(&:to_sym).each do |name|
-          reference_name, column_name = Column::dereference_column_name(name)
-          if reference = references[reference_name]
-            if reference.columns[column_name]
-              result << reference.columns[column_name].dup.tap { |column| column.reference = reference }
-            end
-          elsif columns[column_name]
-            result << columns[column_name]
-          end
-        end
+    def dereference_column_name(name)
+      reference_name, column_name = Column::dereference_column_name(name)
+      if reference = references[reference_name]
+        reference.columns[column_name].dup.tap { |column| column.reference = reference }
+      elsif column = columns[column_name]
+        column
       end
     end
-
-    def as_file(selected_columns = [])
-      File.new(id: id, store: store, columns: select_columns(selected_columns), headers: store.headers)
-    end
-
-    protected
 
     def reserved_column_ids
       @reserved_column_ids ||= []
@@ -202,8 +196,17 @@ module Masamune::Schema
 
     private
 
-    def stage_table_columns
-      unreserved_columns.map { |_, column| column.dup }
+    def stage_table_columns(selected = [])
+      selected = columns.keys if selected.empty?
+      {}.tap do |result|
+        selected.each do |name|
+          column = dereference_column_name(name)
+          next unless column
+          next if reserved_column_ids.include?(column.id)
+          next if column.surrogate_key
+          result[name] = column
+        end
+      end
     end
 
     def initialize_surrogate_key_column!
@@ -263,10 +266,6 @@ module Masamune::Schema
 
     def reverse_unique_constraints_map
       @reverse_unique_constraints_map ||= unique_constraints_map.to_a.map { |k,v| [v.sort, k] }.to_h
-    end
-
-    def table_template
-      @table_template ||= ::File.expand_path(::File.join(__FILE__, '..', 'table.psql.erb'))
     end
   end
 end

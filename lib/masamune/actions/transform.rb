@@ -24,25 +24,10 @@ module Masamune::Actions
       extend Masamune::Transform::RollupFact
     end
 
-    FILE_MODE = 0777 - File.umask
-
     def load_dimension(source_file, source, target)
-      input = File.open(source_file)
-      output = Tempfile.new('masamune')
-      FileUtils.chmod(FILE_MODE, output.path)
-
-      if source.respond_to?(:map) and map = source.map(to: target)
-        result = map.apply(input, output)
-      else
-        result = input
-      end
-      logger.debug(File.read(output)) if source.debug
-
-      transform = Wrapper.load_dimension(output, result, target)
+      logger.debug(File.read(source_file)) if source.debug
+      transform = Wrapper.load_dimension(source_file, source, target)
       postgres file: transform.to_file, debug: (source.debug || target.debug)
-    ensure
-      input.close
-      output.unlink
     end
 
     def consolidate_dimension(target)

@@ -17,7 +17,7 @@ describe Masamune::Transform::InsertReferenceValues do
         column 'name', type: :string
       end
 
-      file 'user', headers: true do
+      file 'user' do
         column 'tenant_id', type: :integer
         column 'user_id', type: :integer
         column 'department.department_id', type: :integer
@@ -26,7 +26,7 @@ describe Masamune::Transform::InsertReferenceValues do
         column 'delta', type: :integer
       end
 
-      file 'misc', headers: true do
+      file 'misc' do
       end
     end
   end

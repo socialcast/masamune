@@ -20,7 +20,7 @@ describe Masamune::Transform::DeduplicateDimension do
   let(:target) { catalog.postgres.user_dimension }
 
   context 'with postgres dimension' do
-    subject(:result) { transform.deduplicate_dimension(target.stage_table('consolidated'), target.stage_table('deduplicated')).to_s }
+    subject(:result) { transform.deduplicate_dimension(target.stage_table(suffix: 'consolidated'), target.stage_table(suffix: 'deduplicated')).to_s }
 
     it 'should render deduplicate_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc

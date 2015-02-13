@@ -133,7 +133,7 @@ module Masamune::Schema
     def file(id, options = {}, &block)
       @context.push(options)
       yield if block_given?
-      @context.files[id] = HasMap.new Masamune::Schema::File.new(@context.options.merge(id: id))
+      @context.files[id] = HasMap.new Masamune::Schema::Table.new(@context.options.merge(id: id, type: :stage))
     ensure
       @context.pop
     end
@@ -156,17 +156,10 @@ module Masamune::Schema
       raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
       raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
       @context.push(options)
-      @context.options[:fields] = {}.with_indifferent_access
-      yield if block_given?
+      @context.options[:function] = block.to_proc
       from.maps[to] ||= Masamune::Schema::Map.new(@context.options.merge(source: from, target: to))
     ensure
       @context.pop
-    end
-
-    def field(id, value = nil, &block)
-      @context.options[:fields][id] = value
-      @context.options[:fields][id] ||= block.to_proc if block_given?
-      @context.options[:fields][id] ||= id
     end
 
     def load(file)
@@ -185,7 +178,7 @@ module Masamune::Schema
     def dereference_column(id, options = {})
       store_id = id.split(/\./).reverse.last.try(:to_sym)
       context = store_id && @catalog.key?(store_id) ? @catalog[store_id] : @context
-      context.dereference_column(*id, options)
+      context.dereference_column(id, options)
     end
 
     def fact_attributes(grain = [])

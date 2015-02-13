@@ -11,14 +11,23 @@ module Masamune::Transform
 
     private
 
+    def convert_file(file)
+      if file.respond_to?(:path)
+        file.flush if file.respond_to?(:flush)
+        file.path
+      else
+        file
+      end
+    end
+
     def convert_files(files)
       case files
       when Set
-        files.to_a
+        files.map { |file| convert_file(file) }.to_a
       when Array
-        files
+        files.map { |file| convert_file(file) }.to_a
       else
-        Array.wrap(files)
+        [convert_file(files)]
       end
     end
 

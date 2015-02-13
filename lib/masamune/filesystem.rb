@@ -123,6 +123,7 @@ module Masamune
           end
         when :local
           FileUtils.touch(file_set, file_util_args)
+          FileUtils.chmod(FILE_MODE, file_set, file_util_args)
         end
       end
     end
