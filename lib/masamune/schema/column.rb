@@ -18,7 +18,6 @@ module Masamune::Schema
       ignore:              false,
       surrogate_key:       false,
       natural_key:         false,
-      degenerate_key:      false,
       measure:             false,
       partition:           false,
       aggregate:           nil,
@@ -139,6 +138,8 @@ module Masamune::Schema
       case type
       when :integer
         'INT'
+      when :string
+        'STRING'
       else
         sql_type
       end

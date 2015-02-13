@@ -193,8 +193,8 @@ describe Masamune::Transform::DefineTable do
           date_dimension_date_id INT,
           user_dimension_user_id INT,
           group_dimension_group_id ARRAY<INT>,
-          user_agent_type_name VARCHAR,
-          user_agent_type_version VARCHAR,
+          user_agent_type_name STRING,
+          user_agent_type_version STRING,
           total INT,
           time_key INT
         )
