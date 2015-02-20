@@ -266,6 +266,25 @@ describe Masamune::Schema::Column do
   describe '#csv_value' do
     subject(:result) { column.csv_value(value) }
 
+    context 'with type :string' do
+      let(:column) { described_class.new(id: 'string', type: :string) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq(nil) }
+      end
+
+      context 'when blank' do
+        let(:value) { '' }
+        it { is_expected.to eq(nil) }
+      end
+
+      context 'when present' do
+        let(:value) { 'value' }
+        it { is_expected.to eq('value') }
+      end
+    end
+
     context 'with type :boolean' do
       let(:column) { described_class.new(id: 'bool', type: :boolean) }
 

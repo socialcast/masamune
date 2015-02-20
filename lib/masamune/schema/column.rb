@@ -166,6 +166,7 @@ module Masamune::Schema
     def csv_value(value)
       return value if sql_function?(value)
       return csv_array(value) if array_value?
+      return nil if value.nil?
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
@@ -175,6 +176,8 @@ module Masamune::Schema
         value.to_h.to_json
       when :date
         value.to_s
+      when :string
+        value.empty? ? nil : value
       else
         value
       end

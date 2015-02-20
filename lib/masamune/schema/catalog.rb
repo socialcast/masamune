@@ -19,6 +19,21 @@ module Masamune::Schema
       end
     end
 
+    class HasFormat < SimpleDelegator
+      def initialize(store, options = {})
+        super store
+        @options = options
+      end
+
+      def format
+        @options.key?(:format) ? @options[:format] : super
+      end
+
+      def headers
+        @options.key?(:headers) ? @options[:headers] : super
+      end
+    end
+
     class Context < SimpleDelegator
       attr_accessor :options
 
@@ -132,9 +147,11 @@ module Masamune::Schema
 
     # TODO use delegator to override store :headers, :format
     def file(id, options = {}, &block)
+      format_options = options.extract!(:format, :headers)
       @context.push(options)
       yield if block_given?
-      @context.files[id] = HasMap.new Masamune::Schema::Table.new(@context.options.merge(id: id, type: :stage))
+      store = HasFormat.new(@context, format_options)
+      @context.files[id] = HasMap.new Masamune::Schema::Table.new(@context.options.merge(id: id, type: :stage, store: store))
     ensure
       @context.pop
     end

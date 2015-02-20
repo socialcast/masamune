@@ -344,6 +344,24 @@ describe Masamune::Schema::Catalog do
       end
     end
 
+    context 'when schema contains file with headers & format override' do
+      before do
+        instance.schema :postgres do
+          file 'override', headers: false, format: :tsv do; end
+          file 'default' do; end
+        end
+      end
+
+      it 'should override store format' do
+        expect(postgres.headers).to eq(true)
+        expect(postgres.format).to eq(:csv)
+        expect(postgres.override_file.store.headers).to eq(false)
+        expect(postgres.override_file.store.format).to eq(:tsv)
+        expect(postgres.default_file.store.headers).to eq(true)
+        expect(postgres.default_file.store.format).to eq(:csv)
+      end
+    end
+
     context 'when schema contains file with invalid reference' do
       subject(:schema) do
         instance.schema :postgres do
