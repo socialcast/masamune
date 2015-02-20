@@ -56,7 +56,7 @@ module Masamune::Schema
     def partition_table(date)
       partition_range = partition_rule.bind_date(date)
       @partition_tables ||= {}
-      @partition_tables[partition_range] ||= self.class.new id: @id, store: store, columns: partition_table_columns, parent: self, range: partition_range, grain: grain
+      @partition_tables[partition_range] ||= self.class.new(id: @id, store: store, columns: partition_table_columns, parent: self, range: partition_range, grain: grain, inherit: true)
     end
 
     def partitions
@@ -72,6 +72,15 @@ module Masamune::Schema
       "CHECK (time_key >= #{range.start_time.to_i} AND time_key < #{range.stop_time.to_i})"
     end
 
+    def reserved_column_ids
+      case type
+      when :fact
+        [:time_key, :last_modified_at]
+      else
+        super
+      end
+    end
+
     private
 
     def initialize_surrogate_key_column!
@@ -82,6 +91,12 @@ module Masamune::Schema
       when :fact
         initialize_column! id: 'time_key', type: :integer, index: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()' unless store.type == :hive
+      when :stage
+        if inherit
+          parent.reserved_columns.each do |_, column|
+            initialize_column! column.as_hash
+          end
+        end
       end
     end
 

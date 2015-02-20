@@ -221,7 +221,7 @@ describe Masamune::Schema::Table do
     it { expect(table.name).to eq('user_table') }
   end
 
-  context 'stage table' do
+  context '#stage_table' do
     let(:mini_table) do
       described_class.new id: 'user_account_state',
         columns: [
@@ -236,7 +236,9 @@ describe Masamune::Schema::Table do
           Masamune::Schema::TableReference.new(mini_table, label: 'hr')
         ],
         columns: [
-          Masamune::Schema::Column.new(id: 'name', type: :string)
+          Masamune::Schema::Column.new(id: 'user_id', type: :integer),
+          Masamune::Schema::Column.new(id: 'name', type: :string),
+          Masamune::Schema::Column.new(id: 'last_modified_at', type: :timestamp)
         ]
     end
 
@@ -272,10 +274,8 @@ describe Masamune::Schema::Table do
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns).to include :name
-        expect(stage_table.columns).to include :user_account_state_table_uuid 
-        expect(stage_table.columns).to include :hr_user_account_state_table_uuid 
-        expect(stage_table.columns.size).to eq(3)
+        expect(stage_table.columns.keys).to eq([:name, :user_account_state_table_uuid, :hr_user_account_state_table_uuid])
+        expect(stage_table.references.keys).to eq([:user_account_state, :hr_user_account_state])
       end
     end
 
@@ -284,10 +284,8 @@ describe Masamune::Schema::Table do
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns).to include :name
-        expect(stage_table.columns).to include :user_account_state_table_name
-        expect(stage_table.columns).to include :hr_user_account_state_table_name
-        expect(stage_table.columns.size).to eq(3)
+        expect(stage_table.columns.keys).to eq([:name, :user_account_state_table_name, :hr_user_account_state_table_name])
+        expect(stage_table.references.keys).to eq([:user_account_state, :hr_user_account_state])
       end
     end
 
@@ -305,19 +303,17 @@ describe Masamune::Schema::Table do
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns).to include :name
-        expect(stage_table.columns).to include :user_account_state_table_name
-        expect(stage_table.columns).to include :hr_user_account_state_table_name
-        expect(stage_table.columns.size).to eq(3)
+        expect(stage_table.columns.keys).to eq([:name, :user_account_state_table_name, :hr_user_account_state_table_name])
+        expect(stage_table.references.keys).to eq([:user_account_state, :hr_user_account_state])
       end
     end
 
-    context 'with specified target table (reference)' do
+    context 'with specified target table (referenced columns)' do
       let(:target) do
         described_class.new id: 'user', type: :stage,
           columns: [
+            Masamune::Schema::Column.new(id: 'user_id', type: :integer),
             Masamune::Schema::Column.new(id: 'name', type: :string),
-            Masamune::Schema::Column.new(id: 'name', type: :string, reference: Masamune::Schema::TableReference.new(mini_table)),
             Masamune::Schema::Column.new(id: 'name', type: :string, reference: Masamune::Schema::TableReference.new(mini_table, label: 'hr'))
           ]
       end
@@ -326,10 +322,28 @@ describe Masamune::Schema::Table do
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns).to include :name
-        expect(stage_table.columns).to include :user_account_state_table_name
-        expect(stage_table.columns).to include :hr_user_account_state_table_name
-        expect(stage_table.columns.size).to eq(3)
+        expect(stage_table.columns.keys).to eq([:user_id, :name, :hr_user_account_state_table_name])
+        expect(stage_table.references.keys).to eq([:hr_user_account_state])
+      end
+    end
+
+    context 'with specified target table (referenced tables)' do
+      let(:target) do
+        described_class.new id: 'user_data', references: [
+            Masamune::Schema::TableReference.new(mini_table, label: 'hr')
+          ],
+          columns: [
+            Masamune::Schema::Column.new(id: 'user_id', type: :integer),
+            Masamune::Schema::Column.new(id: 'name', type: :string)
+          ]
+      end
+
+      subject(:stage_table) { table.stage_table(target: target) }
+
+      it 'should stage table' do
+        expect(stage_table.name).to eq('user_table_stage')
+        expect(stage_table.columns.keys).to eq([:hr_user_account_state_table_uuid, :user_id, :name])
+        expect(stage_table.references.keys).to eq([:hr_user_account_state])
       end
     end
   end

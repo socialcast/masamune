@@ -94,7 +94,12 @@ module Masamune::Schema
 
     def compact_name
       if reference
-        "#{reference.id}.#{@id}".to_sym
+        # XXX once columns only reference columns, this can be cleaned up
+        if @id == reference.surrogate_key.reference_name(reference.label)
+          "#{reference.id}.#{reference.surrogate_key.id}".to_sym
+        else
+          "#{reference.id}.#{@id}".to_sym
+        end
       else
         @id
       end
@@ -323,11 +328,14 @@ module Masamune::Schema
       reference && reference.surrogate_key.auto && !reference.insert
     end
 
+    # XXX hack to work around columns not being able to reference columns
     def references?(other)
       return false unless other
       if reference && other.reference && reference.id == other.reference.id
         true
       elsif parent && other.parent && parent.id == other.parent.id
+        self == other
+      elsif parent && other.parent && other.parent.parent && parent.id == other.parent.parent.id
         self == other
       elsif reference && other.parent && reference.id == other.parent.id
         self == other

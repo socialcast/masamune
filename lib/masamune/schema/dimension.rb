@@ -34,7 +34,6 @@ module Masamune::Schema
     end
 
     def reserved_column_ids
-      @reserved_column_ids ||=
       case type
       when :one, :date
         [:last_modified_at]
@@ -44,8 +43,6 @@ module Masamune::Schema
         [:parent_uuid, :record_uuid, :start_at, :end_at, :version, :last_modified_at]
       when :ledger
         [:source_kind, :source_uuid, :start_at, :last_modified_at, :delta]
-      when :stage
-        parent.reserved_column_ids
       else
         super
       end
@@ -104,8 +101,10 @@ module Masamune::Schema
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
         initialize_column! id: 'delta', type: :integer
       when :stage
-        parent.reserved_columns.each do |_, column|
-          initialize_column! column.as_hash
+        if inherit
+          parent.reserved_columns.each do |_, column|
+            initialize_column! column.as_hash
+          end
         end
       end
     end

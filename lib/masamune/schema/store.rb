@@ -74,7 +74,7 @@ module Masamune::Schema
       return @extra unless order
       result = Set.new
       @extra.each do |file|
-        filename = ::File.basename(file)
+        filename = File.basename(file)
         if filename =~ /\A\d+_/
           number = filename.split('_').first.to_i
           result << file if number <= 0 && order == :pre

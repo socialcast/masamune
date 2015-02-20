@@ -31,7 +31,8 @@ module Masamune::Schema
         public_send("#{name}=", value)
       end
       @children = Set.new
-      inherit_column_attributes! if inherit
+      # XXX still trying to unravel this
+      # inherit_column_attributes! if inherit
     end
 
     def id=(id)
@@ -42,6 +43,7 @@ module Masamune::Schema
       @references = {}
       references = (instance.is_a?(Hash) ? instance.values : instance).compact
       references.each do |reference|
+        raise ArgumentError, "table #{name} contains invalid table references" unless reference.is_a?(TableReference)
         @references[reference.id] = reference
       end
     end
@@ -54,6 +56,7 @@ module Masamune::Schema
       initialize_surrogate_key_column! unless columns.any? { |column| column.surrogate_key }
       initialize_reference_columns!  unless columns.any? { |column| column.reference }
       columns.each do |column|
+        raise ArgumentError, "table #{name} contains invalid columns" unless column.is_a?(Column)
         @columns[column.name] = column.dup
         @columns[column.name].parent = self
       end
@@ -76,7 +79,7 @@ module Masamune::Schema
     end
 
     def temporary?
-      type == :stage || type == :file
+      type == :stage
     end
 
     def surrogate_key
@@ -163,12 +166,10 @@ module Masamune::Schema
       selected ||= options[:target].columns.values.map(&:compact_name) if options[:target]
       selected ||= []
       stage_id = [id, options[:suffix]].compact.join('_')
+      parent = options[:table] ? options[:table] : self
+      type = options[:type] ? options[:type] : :stage
       @stage_tables ||= {}
-      @stage_tables[[stage_id, *selected]] ||= self.class.new id: stage_id, type: :stage, store: store, columns: stage_table_columns(selected), references: references, parent: self
-    end
-
-    def as_table(table)
-      table.class.new(id: id, type: :file, store: store, columns: columns.values, parent: table, inherit: true)
+      @stage_tables[options] ||= parent.class.new id: stage_id, type: type, store: store, columns: stage_table_columns(parent, selected, options.fetch(:inherit, true)), references: stage_table_references(parent, selected), parent: parent, inherit: options.fetch(:inherit, true)
     end
 
     def shared_columns(other)
@@ -184,27 +185,51 @@ module Masamune::Schema
     def dereference_column_name(name)
       reference_name, column_name = Column::dereference_column_name(name)
       if reference = references[reference_name]
-        reference.columns[column_name].dup.tap { |column| column.reference = reference }
+        if column = reference.columns[column_name]
+          dereference_column(column.dup, reference)
+        end
       elsif column = columns[column_name]
         column
       end
     end
 
+    def dereference_column(column, reference)
+      column.surrogate_key = false
+      column.reference = reference
+      column
+    end
+
     def reserved_column_ids
-      @reserved_column_ids ||= []
+      inherit ? parent.reserved_column_ids : []
     end
 
     private
 
-    def stage_table_columns(selected = [])
+    def stage_table_columns(parent, selected = [], inherit = true)
       selected = columns.keys if selected.empty?
       {}.tap do |result|
         selected.each do |name|
           column = dereference_column_name(name)
           next unless column
-          next if reserved_column_ids.include?(column.id)
-          next if column.surrogate_key
-          result[name] = column
+          next if inherit && parent.reserved_column_ids.include?(column.id)
+          if column.parent == self
+            next if column.surrogate_key
+            result[name] = column
+          else
+            result[name] = column
+          end
+        end
+      end
+    end
+
+    def stage_table_references(parent, selected = [])
+      selected = references.keys if selected.empty?
+      {}.tap do |result|
+        selected.each do |name|
+          column = dereference_column_name(name)
+          next unless column
+          next if column.parent == self
+          result[name] = column.reference
         end
       end
     end
@@ -225,6 +250,7 @@ module Masamune::Schema
             initialize_column! id: column.id, type: column.type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
           end
         elsif reference.foreign_key
+          # FIXME column.reference should point to reference.surrogate_key, only allow column references to Columns
           initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
         end
       end

@@ -130,6 +130,7 @@ module Masamune::Schema
       @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id, measure: true))
     end
 
+    # TODO use delegator to override store :headers, :format
     def file(id, options = {}, &block)
       @context.push(options)
       yield if block_given?
@@ -165,7 +166,7 @@ module Masamune::Schema
     def load(file)
       case file
       when /\.rb\Z/
-        instance_eval(::File.read(file), file)
+        instance_eval(File.read(file), file)
       when /\.psql\Z/
         @catalog[:postgres].extra << file
       when /\.hql\Z/

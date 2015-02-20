@@ -60,7 +60,6 @@ module Masamune::Schema
     end
 
     def source=(source)
-      # TODO ? @source = source.as_file
       @source = source
     end
 
@@ -73,19 +72,25 @@ module Masamune::Schema
       function.call({}).keys
     end
 
-    def apply(input_file, output_file)
-      ::File.open(input_file, 'r') do |input_stream|
-        ::File.open(output_file, 'a+') do |output_stream|
-          apply_stream(input_stream, output_stream)
+    def intermediate
+      target.stage_table(columns: columns, inherit: false)
+    end
+
+    def apply(input_files, output_file)
+      Array.wrap(input_files).each do |input_file|
+        File.open(input_file, 'r') do |input_stream|
+          File.open(output_file, 'a+') do |output_stream|
+            apply_stream(input_stream, output_stream)
+          end
         end
       end
+      intermediate
     end
 
     private
 
     def apply_stream(input_stream, output_stream)
       input_buffer = Buffer.new(source, input_stream)
-      intermediate = target.stage_table(columns: columns)
       output_buffer = Buffer.new(intermediate, output_stream)
       input_buffer.each do |input|
         Array.wrap(function.call(input)).each do |output|
@@ -93,7 +98,6 @@ module Masamune::Schema
         end
       end
       output_buffer.flush
-      intermediate
     end
   end
 end

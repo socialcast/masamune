@@ -34,7 +34,7 @@ describe Masamune::Transform::InsertReferenceValues do
   let(:target) { catalog.postgres.user_dimension.ledger_table }
 
   context 'for postgres dimension with file containing references' do
-    let(:source) { catalog.postgres.user_file.as_table(target) }
+    let(:source) { catalog.postgres.user_file.stage_table(table: target) }
     subject(:result) { transform.insert_reference_values(source, target).to_s }
 
     it 'should render insert_reference_values template' do
@@ -47,7 +47,7 @@ describe Masamune::Transform::InsertReferenceValues do
           tenant_id,
           department_type_department_id
         FROM
-          user_dimension_ledger_file
+          user_dimension_ledger_stage
         WHERE
           tenant_id IS NOT NULL AND
           department_type_department_id IS NOT NULL
@@ -79,7 +79,7 @@ describe Masamune::Transform::InsertReferenceValues do
   end
 
   context 'for postgres dimension with file missing references' do
-    let(:source) { catalog.postgres.misc_file.as_table(target) }
+    let(:source) { catalog.postgres.misc_file.stage_table(table: target) }
 
     subject(:result) { transform.insert_reference_values(source, target).to_s }
 

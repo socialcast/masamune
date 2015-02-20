@@ -432,8 +432,10 @@ describe Masamune::Schema::Catalog do
     context 'when schema contains map missing the from: field' do
       subject(:schema) do
         instance.schema :postgres do
-          map do
-            field 'tenant_id'
+          map do |row|
+            {
+              id: row[:id]
+            }
           end
         end
       end
@@ -446,8 +448,10 @@ describe Masamune::Schema::Catalog do
     context 'when schema contains map with invalid options' do
       subject(:schema) do
         instance.schema :postgres do
-          map :x do
-            field 'tenant_id'
+          map :x do |row|
+            {
+              id: row[:id]
+            }
           end
         end
       end
