@@ -132,7 +132,11 @@ module Masamune::Schema
       when :enum
         "#{sub_type}_TYPE".upcase
       when :key_value
-        parent.type == :stage ? 'JSON' : 'HSTORE'
+        if parent.type == :stage && !parent.inherit
+          'JSON'
+        else
+          'HSTORE'
+        end
       when :json, :yaml
         'JSON'
       end

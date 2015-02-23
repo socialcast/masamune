@@ -216,4 +216,50 @@ describe Masamune::Transform::DefineTable do
       EOS
     end
   end
+
+  context 'for postgres dimension type: four stage table' do
+    before do
+      catalog.schema :postgres do
+        dimension 'user_account_state', type: :mini do
+          column 'name', type: :string, unique: true
+          column 'description', type: :string
+          row name: 'active', description: 'Active', attributes: {default: true}
+        end
+
+        dimension 'user', type: :four do
+          references :user_account_state
+          column 'tenant_id', index: true, natural_key: true
+          column 'user_id', index: true, natural_key: true
+          column 'preferences', type: :key_value, null: true
+        end
+      end
+    end
+
+    let(:table) { catalog.postgres.user_dimension.stage_table(suffix: 'consolidated_forward') }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TEMPORARY TABLE IF NOT EXISTS user_consolidated_forward_dimension_stage
+        (
+          user_account_state_type_id INTEGER DEFAULT default_user_account_state_type_id(),
+          tenant_id INTEGER,
+          user_id INTEGER,
+          preferences HSTORE,
+          parent_uuid UUID,
+          record_uuid UUID,
+          start_at TIMESTAMP DEFAULT TO_TIMESTAMP(0),
+          end_at TIMESTAMP,
+          version INTEGER DEFAULT 1,
+          last_modified_at TIMESTAMP DEFAULT NOW()
+        );
+
+        CREATE INDEX user_consolidated_forward_dimension_stage_user_account_state_type_id_index ON user_consolidated_forward_dimension_stage (user_account_state_type_id);
+        CREATE INDEX user_consolidated_forward_dimension_stage_tenant_id_index ON user_consolidated_forward_dimension_stage (tenant_id);
+        CREATE INDEX user_consolidated_forward_dimension_stage_user_id_index ON user_consolidated_forward_dimension_stage (user_id);
+        CREATE INDEX user_consolidated_forward_dimension_stage_start_at_index ON user_consolidated_forward_dimension_stage (start_at);
+        CREATE INDEX user_consolidated_forward_dimension_stage_end_at_index ON user_consolidated_forward_dimension_stage (end_at);
+        CREATE INDEX user_consolidated_forward_dimension_stage_version_index ON user_consolidated_forward_dimension_stage (version);
+      EOS
+    end
+  end
 end

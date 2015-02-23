@@ -75,6 +75,7 @@ module Masamune::Schema
       @target = target.type == :four ? target.ledger_table : target
     end
 
+    # TODO: pass a default hash to function with expected default ruby value types, e.g, h[k] = {} for :key_value
     def columns
       function.call({}).keys
     end
