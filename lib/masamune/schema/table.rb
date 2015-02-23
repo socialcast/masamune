@@ -118,21 +118,6 @@ module Masamune::Schema
       columns.select { |_, column| column.type == :enum }
     end
 
-    def upsert_update_columns
-      columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.surrogate_key || column.natural_key || column.unique.any? || column.auto_reference || column.ignore }
-    end
-    method_with_last_element :upsert_update_columns
-
-    def upsert_insert_columns
-      columns.values.reject { |column| column.surrogate_key || column.auto_reference || column.ignore }
-    end
-    method_with_last_element :upsert_insert_columns
-
-    def upsert_unique_columns
-      columns.values.select { |column| column.unique.any? && !column.null }
-    end
-    method_with_last_element :upsert_unique_columns
-
     def reference_columns
       columns.values.select { | column| column.reference }
     end
