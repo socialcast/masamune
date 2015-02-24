@@ -145,7 +145,6 @@ module Masamune::Schema
       @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id, measure: true))
     end
 
-    # TODO use delegator to override store :headers, :format
     def file(id, options = {}, &block)
       format_options = options.extract!(:format, :headers)
       @context.push(options)

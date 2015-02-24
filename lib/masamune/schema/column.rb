@@ -180,6 +180,8 @@ module Masamune::Schema
         value.to_h.to_json
       when :date
         value.to_s
+      when :timestamp
+        value.to_time.utc.iso8601
       when :string
         value.empty? ? nil : value
       else
@@ -204,7 +206,18 @@ module Masamune::Schema
         when Date
           value
         when String
-          Date.parse(value)
+          Date.parse(value.to_s)
+        when nil
+          nil
+        end
+      when :timestamp
+        case value
+        when Time
+          value
+        when DateTime
+          value.to_time
+        when String
+          Time.parse(value.to_s)
         when nil
           nil
         end
@@ -254,6 +267,7 @@ module Masamune::Schema
         return true if value == 'NULL'
       end
       return false unless parent && parent.store
+      return false unless value
       case parent.store.type
       when :hive
         value == '\N'

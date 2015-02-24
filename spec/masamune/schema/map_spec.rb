@@ -311,18 +311,18 @@ describe Masamune::Schema::Map do
 
       let(:source_data) do
         <<-EOS.strip_heredoc
-          X	user_create	3	10	0	1	"{""enabled"":true}"	\\N	\\N	1
-          Y	user_update	3	10	0	1	"{""enabled"":true}"	\\N	\\N	2
-          Z	user_delete	3	10	0	1	"{""enabled"":true}"	\\N	\\N	3
+          X	user_create	3	10	0	1	"{""enabled"":true}"	\\N	\\N	2015-01-01T00:10:00Z
+          Y	user_update	3	10	0	1	"{""enabled"":true}"	\\N	\\N	2015-01-01T00:20:00Z
+          Z	user_delete	3	10	0	1	"{""enabled"":true}"	\\N	\\N	2015-01-01T00:30:00Z
         EOS
       end
 
       let(:target_data) do
         <<-EOS.strip_heredoc
-          10	1	1
-          10	0	2
-          10	0	2
-          10	-1	3
+          10	1	1420071000
+          10	0	1420071600
+          10	0	1420071600
+          10	-1	1420072200
         EOS
       end
 

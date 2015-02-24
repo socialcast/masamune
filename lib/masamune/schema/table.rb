@@ -31,8 +31,6 @@ module Masamune::Schema
         public_send("#{name}=", value)
       end
       @children = Set.new
-      # XXX still trying to unravel this
-      # inherit_column_attributes! if inherit
     end
 
     def id=(id)
@@ -244,15 +242,6 @@ module Masamune::Schema
     def initialize_column!(options = {})
       column = Masamune::Schema::Column.new(options.merge(parent: self))
       @columns[column.name.to_sym] = column
-    end
-
-    def inherit_column_attributes!
-      return unless parent
-      columns.each do |_, column|
-        parent.columns.each do |_, parent_column|
-          column.index += parent_column.index if column == parent_column
-        end
-      end
     end
 
     def index_column_map

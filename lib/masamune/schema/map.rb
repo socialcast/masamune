@@ -102,7 +102,8 @@ module Masamune::Schema
     # FIXME spec coverage
     def open_stream(file, mode, &block)
       case file
-      when IO
+      when IO, StringIO
+        file.flush
         yield file
       when String, Tempfile
         File.open(file, mode) do |io|
