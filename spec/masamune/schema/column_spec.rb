@@ -74,6 +74,30 @@ describe Masamune::Schema::Column do
     end
   end
 
+  describe '#sql_type' do
+    subject(:result) { column.sql_type }
+
+    context 'with type :integer' do
+      let(:column) { described_class.new(id: 'integer', type: :integer) }
+      it { is_expected.to eq('INTEGER') }
+    end
+
+    context 'with type :integer and :array' do
+      let(:column) { described_class.new(id: 'integer', type: :integer, array: true) }
+      it { is_expected.to eq('INTEGER[]') }
+    end
+
+    context 'with type :string' do
+      let(:column) { described_class.new(id: 'string', type: :string) }
+      it { is_expected.to eq('VARCHAR') }
+    end
+
+    context 'with type :string and :array' do
+      let(:column) { described_class.new(id: 'string', type: :string, array: true) }
+      it { is_expected.to eq('VARCHAR[]') }
+    end
+  end
+
   describe '#hql_type' do
     subject(:result) { column.hql_type }
 

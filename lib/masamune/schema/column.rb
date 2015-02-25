@@ -114,6 +114,7 @@ module Masamune::Schema
     end
 
     def sql_type(for_surrogate_key = false)
+      elem =
       case type
       when :integer
         for_surrogate_key ? 'SERIAL' : 'INTEGER'
@@ -140,6 +141,7 @@ module Masamune::Schema
       when :json, :yaml
         'JSON'
       end
+      array_value? ? "#{elem}[]" : elem
     end
 
     def hql_type
