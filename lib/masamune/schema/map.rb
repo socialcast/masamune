@@ -77,7 +77,7 @@ module Masamune::Schema
 
     # TODO: pass a default hash to function with expected default ruby value types, e.g, h[k] = {} for :key_value
     def columns
-      function.call({}).keys
+      Array.wrap(function.call({})).first.keys
     end
 
     def intermediate
