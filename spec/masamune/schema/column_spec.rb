@@ -189,6 +189,40 @@ describe Masamune::Schema::Column do
       end
     end
 
+    context 'with type :timestamp' do
+      let(:column) { described_class.new(id: 'timestamp', type: :timestamp) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to be(nil) }
+      end
+
+      context 'when Date' do
+        let(:value) { Date.civil(2015,01,01) }
+        it { is_expected.to eq(value.to_time) }
+      end
+
+      context 'when DateTime' do
+        let(:value) { DateTime.civil(2015,01,01) }
+        it { is_expected.to eq(value.to_time) }
+      end
+
+      context 'when Time' do
+        let(:value) { Time.now }
+        it { is_expected.to eq(value) }
+      end
+
+      context 'when YYYY-mm-dd' do
+        let(:value) { '2015-01-01' }
+        it { is_expected.to eq(Time.parse(value)) }
+      end
+
+      context 'when ISO8601' do
+        let(:value) { Date.parse('2015-01-01').to_time.iso8601 }
+        it { is_expected.to eq(Date.civil(2015,01,01).to_time) }
+      end
+    end
+
     context 'with type :integer and :array' do
       let(:column) { described_class.new(id: 'int[]', type: :integer, array: true) }
 
@@ -354,6 +388,20 @@ describe Masamune::Schema::Column do
       context 'when array of integer' do
         let(:value) { [1,2] }
         it { is_expected.to eq('["1","2"]') }
+      end
+    end
+
+    context 'with type :timestamp' do
+      let(:column) { described_class.new(id: 'bool', type: :timestamp) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to be_nil }
+      end
+
+      context 'when Time' do
+        let(:value) { Time.now }
+        it { is_expected.to eq(value.utc.iso8601(3)) }
       end
     end
   end

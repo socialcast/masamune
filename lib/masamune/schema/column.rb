@@ -181,7 +181,7 @@ module Masamune::Schema
       when :date
         value.to_s
       when :timestamp
-        value.to_time.utc.iso8601
+        value.to_time.utc.iso8601(3)
       when :string
         value.empty? ? nil : value
       else
@@ -214,7 +214,7 @@ module Masamune::Schema
         case value
         when Time
           value
-        when DateTime
+        when Date, DateTime
           value.to_time
         when String
           Time.parse(value.to_s)
@@ -270,7 +270,7 @@ module Masamune::Schema
       return false unless value
       case parent.store.type
       when :hive
-        value == '\N'
+        value.to_s == '\N'
       when :postgres
         false
       end

@@ -217,7 +217,7 @@ describe Masamune::Schema::Map do
       let(:target_data) do
         <<-EOS.strip_heredoc
           1	30		FALSE	{}
-          2	40	2014-02-26T18:15:51Z	FALSE	"{""enabled"":true}"
+          2	40	2014-02-26T18:15:51.000Z	FALSE	"{""enabled"":true}"
         EOS
       end
 
@@ -262,7 +262,7 @@ describe Masamune::Schema::Map do
           id,tenant_id,deleted_at,admin,preferences
           1,30,,FALSE,"--- {}
           "
-          2,40,2014-02-26T18:15:51Z,FALSE,"---
+          2,40,2014-02-26T18:15:51.000Z,FALSE,"---
           enabled: true
           "
         EOS
