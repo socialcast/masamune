@@ -385,6 +385,12 @@ module Masamune
       end
     end
 
+    def mktempdir!(path)
+      get_path(path, SecureRandom.base64).tap do |dir|
+        mkdir!(dir)
+      end
+    end
+
     def glob_split(input, recursive: false)
       [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input, recursive: recursive) ]
     end
