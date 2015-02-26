@@ -26,10 +26,15 @@ describe Masamune::Transform::DefineTable do
         column 'user_id', type: :integer, index: true, natural_key: true
       end
 
+      dimension 'group', type: :two do
+        column 'group_id', type: :integer, natural_key: true
+      end
+
       fact 'visits', partition: 'y%Ym%m' do
         references :date
         references :tenant
         references :user
+        references :group, multiple: true
         references :user_agent, insert: true
         references :feature, insert: true
         measure 'total', type: :integer
@@ -91,6 +96,7 @@ describe Masamune::Transform::DefineTable do
           date_dimension_uuid UUID NOT NULL REFERENCES date_dimension(uuid),
           tenant_dimension_uuid UUID NOT NULL REFERENCES tenant_dimension(uuid),
           user_dimension_uuid UUID NOT NULL REFERENCES user_dimension(uuid),
+          group_dimension_uuid UUID[] NOT NULL,
           user_agent_type_id INTEGER NOT NULL REFERENCES user_agent_type(id),
           feature_type_id INTEGER NOT NULL REFERENCES feature_type(id),
           total INTEGER NOT NULL,
@@ -111,6 +117,11 @@ describe Masamune::Transform::DefineTable do
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_user_dimension_uuid_index') THEN
         CREATE INDEX visits_fact_user_dimension_uuid_index ON visits_fact (user_dimension_uuid);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_group_dimension_uuid_index') THEN
+        CREATE INDEX visits_fact_group_dimension_uuid_index ON visits_fact (group_dimension_uuid);
         END IF; END $$;
 
         DO $$ BEGIN

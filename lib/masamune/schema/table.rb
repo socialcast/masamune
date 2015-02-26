@@ -100,6 +100,8 @@ module Masamune::Schema
       end
     end
 
+    # TODO: Add optional USING
+    # TODO: Default to GIN for array columns
     def index_columns
       index_column_map.map do |_, column_names|
         [column_names, reverse_unique_constraints_map.key?(column_names.sort)]

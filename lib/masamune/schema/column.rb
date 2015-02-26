@@ -283,7 +283,7 @@ module Masamune::Schema
     end
 
     def array_value?
-      !!(array || (reference && reference.multiple))
+      !!(array || (reference && reference.respond_to?(:multiple) && reference.multiple))
     end
 
     def as_psql
@@ -298,8 +298,10 @@ module Masamune::Schema
       end
     end
 
+    # TODO: Add ELEMENT REFERENCES
     def reference_constraint
       return if parent.temporary?
+      return if array_value?
       if reference && reference.surrogate_key.type == type
         "REFERENCES #{reference.name}(#{reference.surrogate_key.name})"
       end
