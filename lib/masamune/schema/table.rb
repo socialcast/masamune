@@ -123,7 +123,7 @@ module Masamune::Schema
     end
 
     def foreign_key_columns
-      columns.values.select { | column| column.reference && column.reference.respond_to?(:foreign_key) }
+      columns.values.select { | column| column.reference && column.reference.foreign_key }
     end
 
     def insert_rows

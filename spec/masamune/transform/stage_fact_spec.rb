@@ -26,10 +26,15 @@ describe Masamune::Transform::StageFact do
         column 'user_id', type: :integer, index: true, natural_key: true
       end
 
+      dimension 'group', type: :two do
+        column 'group_id', type: :integer, index: true, natural_key: true
+      end
+
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
         references :date
         references :tenant
         references :user
+        references :group, multiple: true
         references :user_agent, insert: true
         references :feature, insert: true
         measure 'total', type: :integer
@@ -109,6 +114,7 @@ describe Masamune::Transform::StageFact do
         CREATE INDEX visits_hourly_fact_y2014m08_stage_date_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (date_dimension_uuid);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (tenant_dimension_uuid);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_user_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (user_dimension_uuid);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_group_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (group_dimension_uuid);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index ON visits_hourly_fact_y2014m08_stage (user_agent_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index ON visits_hourly_fact_y2014m08_stage (feature_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_time_key_index ON visits_hourly_fact_y2014m08_stage (time_key);
@@ -131,6 +137,7 @@ describe Masamune::Transform::StageFact do
         ALTER INDEX visits_hourly_fact_y2014m08_stage_date_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_date_dimension_uuid_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_tenant_dimension_uuid_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_user_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_user_dimension_uuid_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_group_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_group_dimension_uuid_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index RENAME TO visits_hourly_fact_y2014m08_user_agent_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index RENAME TO visits_hourly_fact_y2014m08_feature_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_time_key_index RENAME TO visits_hourly_fact_y2014m08_time_key_index;
