@@ -25,6 +25,7 @@ module Masamune::Commands
       :block          => nil,
       :variables      => {},
       :buffer         => nil,
+      :service        => false,
       :delimiter      => "\001",
       :csv            => false,
       :debug          => false
@@ -54,10 +55,14 @@ module Masamune::Commands
     def command_args
       args = []
       args << @path
-      args << ['--database', @database] if @database
-      args << @options.map(&:to_a)
-      args << load_setup_files.map(&:to_a)
-      args << command_args_for_file if @file
+      if @service
+        args << ['--service', 'hiveserver']
+      else
+        args << ['--database', @database] if @database && !@service
+        args << @options.map(&:to_a)
+        args << load_setup_files.map(&:to_a)
+        args << command_args_for_file if @file
+      end
       args.flatten
     end
 
