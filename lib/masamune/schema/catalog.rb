@@ -57,12 +57,12 @@ module Masamune::Schema
 
     def initialize(environment)
       self.environment = environment
-      @catalog = Hash.new { |h,k| h[k] = Masamune::Schema::Store.new(type: k) }
-      @context = nil
+      @stores   = Hash.new { |h,k| h[k] = Masamune::Schema::Store.new(type: k) }
+      @context  = nil
     end
 
     def clear!
-      @catalog.clear
+      @stores.clear
     end
 
     def schema(*args, &block)
@@ -71,7 +71,7 @@ module Masamune::Schema
       stores = args.map(&:to_sym)
       stores.each do |id|
         begin
-          @context = Context.new(@catalog[id], options)
+          @context = Context.new(@stores[id], options)
           instance_eval &block
         ensure
           @context = nil
@@ -81,12 +81,12 @@ module Masamune::Schema
 
     Masamune::Schema::Store.types.each do |store|
       define_method(store) do
-        @catalog[store]
+        @stores[store]
       end
     end
 
     def [](store_id)
-      @catalog[store_id.to_sym]
+      @stores[store_id.to_sym]
     end
 
     def table(id, options = {}, &block)
@@ -184,9 +184,9 @@ module Masamune::Schema
       when /\.rb\Z/
         instance_eval(File.read(file), file)
       when /\.psql\Z/
-        @catalog[:postgres].extra << file
+        @stores[:postgres].extra << file
       when /\.hql\Z/
-        @catalog[:hive].extra << file
+        @stores[:hive].extra << file
       end
     end
 
@@ -194,7 +194,7 @@ module Masamune::Schema
 
     def dereference_column(id, options = {})
       store_id = id.split(/\./).reverse.last.try(:to_sym)
-      context = store_id && @catalog.key?(store_id) ? @catalog[store_id] : @context
+      context = store_id && @stores.key?(store_id) ? @stores[store_id] : @context
       context.dereference_column(id, options)
     end
 

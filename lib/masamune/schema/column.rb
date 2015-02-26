@@ -189,6 +189,8 @@ module Masamune::Schema
       else
         value
       end
+    rescue
+      raise ArgumentError, "Could not coerce '#{value}' into :#{type}"
     end
 
     def ruby_value(value, recursive = true)
@@ -248,6 +250,8 @@ module Masamune::Schema
       else
         value
       end
+    rescue
+      raise ArgumentError, "Could not coerce '#{value}' into :#{type}"
     end
 
     def aggregate_value

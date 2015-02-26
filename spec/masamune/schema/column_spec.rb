@@ -197,6 +197,11 @@ describe Masamune::Schema::Column do
         it { is_expected.to be(nil) }
       end
 
+      context 'when unknown' do
+        let(:value) { 'unknown' }
+        it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :date" }
+      end
+
       context 'when Date' do
         let(:value) { Date.civil(2015,01,01) }
         it { is_expected.to eq(value) }
@@ -426,6 +431,11 @@ describe Masamune::Schema::Column do
       context 'when Time' do
         let(:value) { Time.now }
         it { is_expected.to eq(value.utc.iso8601(3)) }
+      end
+
+      context 'when unknown' do
+        let(:value) { 'unknown' }
+        it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :timestamp" }
       end
     end
   end
