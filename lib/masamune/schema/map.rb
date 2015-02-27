@@ -112,7 +112,6 @@ module Masamune::Schema
       end
     end
 
-    # FIXME DRY up
     class << self
       def convert_file(file)
         if file.respond_to?(:path)
