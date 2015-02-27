@@ -89,6 +89,30 @@ describe Masamune::Schema::Map do
       output.readlines.join
     end
 
+    shared_examples_for 'apply input/output' do
+      context 'with IO' do
+        subject do
+          io = File.open(output, 'a+')
+          map.apply(File.open(input), io)
+          io.rewind
+          io.readlines.join
+        end
+        it 'should match target data' do
+          is_expected.to eq(target_data)
+        end
+      end
+
+      context 'with String' do
+        subject do
+          map.apply(input.path, output.path)
+          File.readlines(output.path).join
+        end
+        it 'should match target data' do
+          is_expected.to eq(target_data)
+        end
+      end
+    end
+
     context 'from csv file to dimension' do
       before do
         catalog.schema :files do
@@ -136,6 +160,8 @@ describe Masamune::Schema::Map do
       it 'should match target data' do
         is_expected.to eq(target_data)
       end
+
+      it_behaves_like 'apply input/output'
     end
 
     context 'from event to postgres dimension' do
@@ -182,6 +208,8 @@ describe Masamune::Schema::Map do
       it 'should match target data' do
         is_expected.to eq(target_data)
       end
+
+      it_behaves_like 'apply input/output'
     end
 
     context 'from event to tsv file' do
@@ -225,6 +253,8 @@ describe Masamune::Schema::Map do
       it 'should match target data' do
         is_expected.to eq(target_data)
       end
+
+      it_behaves_like 'apply input/output'
     end
 
     context 'from event to csv file' do
@@ -271,6 +301,8 @@ describe Masamune::Schema::Map do
       it 'should match target data' do
         is_expected.to eq(target_data)
       end
+
+      it_behaves_like 'apply input/output'
     end
 
     context 'from event to fact' do
@@ -329,6 +361,8 @@ describe Masamune::Schema::Map do
       it 'should match target data' do
         is_expected.to eq(target_data)
       end
+
+      it_behaves_like 'apply input/output'
     end
   end
 end

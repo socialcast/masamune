@@ -99,7 +99,6 @@ module Masamune::Schema
       intermediate
     end
 
-    # FIXME spec coverage
     def open_stream(file, mode, &block)
       case file
       when IO, StringIO
