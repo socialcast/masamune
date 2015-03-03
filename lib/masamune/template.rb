@@ -57,18 +57,18 @@ module Masamune
       def render_to_string(template, parameters = {})
         raise IOError, "File not found: #{template}" unless File.exists?(template)
         instance = Template.new(File.dirname(template))
-        combine strip_comment(instance.render(template, parameters), /^--.*$/)
+        combine instance.render(template, parameters)
       end
 
       def combine(*a)
-        strip_newlines(a.join("\n")) + "\n"
+        strip_newlines(strip_comments(a.join("\n"), /^--.*$/)) + "\n"
       end
 
       def strip_newlines(s)
         s.gsub(/^\n+/, "\n").lstrip.strip
       end
 
-      def strip_comment(s, comment)
+      def strip_comments(s, comment)
         strip_newlines s.gsub(comment, '')
       end
     end
