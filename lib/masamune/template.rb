@@ -8,7 +8,7 @@ module Masamune
 
     def render(template, parameters = {})
       resolved_template = resolve_file(template)
-      Tilt.new(resolved_template, nil, trim: '->').render(self, parameters)
+      self.class.combine Tilt.new(resolved_template, nil, trim: '->').render(self, parameters)
     end
 
     private
@@ -39,11 +39,15 @@ module Masamune
       end
 
       def combine(*a)
-        a.join("\n").gsub(/^\n+/, "\n").strip + "\n"
+        strip_newlines(a.join("\n")) + "\n"
+      end
+
+      def strip_newlines(s)
+        s.gsub(/^\n+/, "\n").lstrip.strip
       end
 
       def strip_comment(s, comment)
-        s.gsub(comment, '')
+        strip_newlines s.gsub(comment, '')
       end
     end
   end
