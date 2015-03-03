@@ -25,6 +25,11 @@ describe Masamune::Template do
       it { is_expected.to eq("SELECT * FROM zombo;\n") }
     end
 
+    context 'with template with comments' do
+      let(:template) { File.expand_path('../../fixtures/comment.sql.erb', __FILE__) }
+      it { is_expected.to eq("SELECT 1;\n") }
+    end
+
     context 'with template with unnecessary whitespace' do
       let(:template) { File.expand_path('../../fixtures/whitespace.sql.erb', __FILE__) }
 
