@@ -18,18 +18,20 @@ describe Masamune::Actions::Transform do
         column 'user_id',   type: :integer, index: true, surrogate_key: true
       end
 
-      file 'user', format: :csv, headers: true do
+      file 'user' do
         column 'id', type: :integer
         column 'tenant_id', type: :integer
         column 'updated_at', type: :timestamp
       end
 
-      map from: postgres.user_file, to: postgres.user_dimension do
-        field 'user_id', 'id'
-        field 'tenant_id'
-        field 'source_kind', 'users'
-        field 'start_at', 'updated_at'
-        field 'delta', 1
+      map from: postgres.user_file, to: postgres.user_dimension do |row|
+        {
+          user_id: row[:id],
+          tenant_id: row[:tenant_id],
+          source_kind: 'users',
+          start_at: row[:updated_at],
+          delta: 1
+        }
       end
 
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do

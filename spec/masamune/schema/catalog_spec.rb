@@ -30,7 +30,7 @@ describe Masamune::Schema::Catalog do
     end
     context 'with :mysql' do
       subject { instance[:mysql] }
-      it { expect { subject }.to raise_error ArgumentError, "unknown data store 'mysql'" }
+      it { expect { subject }.to raise_error ArgumentError, "unknown type: 'mysql'" }
     end
   end
 
@@ -67,7 +67,7 @@ describe Masamune::Schema::Catalog do
         end
       end
 
-      it { expect { schema }.to raise_error ArgumentError, "data store arguments required" }
+      it { expect { schema }.to raise_error ArgumentError, "schema store arguments required" }
     end
 
     context 'when schema defines unknown store' do
@@ -78,7 +78,7 @@ describe Masamune::Schema::Catalog do
         end
       end
 
-      it { expect { schema }.to raise_error ArgumentError, "unknown data store 'mysql'" }
+      it { expect { schema }.to raise_error ArgumentError, "unknown type: 'mysql'" }
     end
 
     context 'when schema contains dimensions' do
@@ -211,6 +211,39 @@ describe Masamune::Schema::Catalog do
       it { expect(fact_two.measures[:measure_two].aggregate).to eq(:average) }
     end
 
+    context 'when schema contains fact with partition table' do
+      before do
+        instance.schema :hive do
+          fact 'visits', partition: 'y%Ym%m' do
+            measure 'count', aggregate: :sum
+          end
+        end
+      end
+
+      it { expect(hive.visits_fact.partition).to eq('y%Ym%m') }
+      it { expect(hive.visits_fact.measures).to include :count }
+      it { expect(hive.visits_fact.measures[:count].aggregate).to eq(:sum) }
+    end
+
+    context 'when schema contains fact with partition columns' do
+      before do
+        instance.schema :hive do
+          fact 'visits' do
+            partition 'y', type: :integer
+            partition 'm', type: :integer
+            partition 'd', type: :integer
+            measure 'count', aggregate: :sum
+          end
+        end
+      end
+
+      it { expect(hive.visits_fact.partitions).to include :y }
+      it { expect(hive.visits_fact.partitions).to include :m }
+      it { expect(hive.visits_fact.partitions).to include :d }
+      it { expect(hive.visits_fact.measures).to include :count }
+      it { expect(hive.visits_fact.measures[:count].aggregate).to eq(:sum) }
+    end
+
     context 'when schema contains fact with a single grain' do
       before do
         instance.schema :postgres do
@@ -311,6 +344,24 @@ describe Masamune::Schema::Catalog do
       end
     end
 
+    context 'when schema contains file with headers & format override' do
+      before do
+        instance.schema :postgres do
+          file 'override', headers: false, format: :tsv do; end
+          file 'default' do; end
+        end
+      end
+
+      it 'should override store format' do
+        expect(postgres.headers).to eq(true)
+        expect(postgres.format).to eq(:csv)
+        expect(postgres.override_file.store.headers).to eq(false)
+        expect(postgres.override_file.store.format).to eq(:tsv)
+        expect(postgres.default_file.store.headers).to eq(true)
+        expect(postgres.default_file.store.format).to eq(:csv)
+      end
+    end
+
     context 'when schema contains file with invalid reference' do
       subject(:schema) do
         instance.schema :postgres do
@@ -348,14 +399,14 @@ describe Masamune::Schema::Catalog do
             column 'deleted_at', type: :timestamp
           end
 
-          map from: files.users, to: postgres.user_dimension do
-            field 'tenant_id'
-            field 'user_id', 'id'
-            field 'user_account_state.name' do |row|
-              row[:deleted_at] ? 'deleted' : 'active'
-            end
-            field 'start_at', 'updated_at'
-            field 'delta', 0
+          map from: files.users, to: postgres.user_dimension do |row|
+            {
+              'tenant_id':                row[:tenant_id],
+              'user_id':                  row[:id],
+              'user_account_state.name':  row[:deleted_at] ? 'deleted' :  'active',
+              'start_at':                 row[:updated_at],
+              'delta':                    0
+            }
           end
         end
       end
@@ -363,11 +414,7 @@ describe Masamune::Schema::Catalog do
       subject(:map) { files.users.map(to: postgres.user_dimension) }
 
       it 'constructs map' do
-        expect(map.fields[:tenant_id]).to eq('tenant_id')
-        expect(map.fields[:user_id]).to eq('id')
-        expect(map.fields[:'user_account_state.name']).to be_a(Proc)
-        expect(map.fields[:start_at]).to eq('updated_at')
-        expect(map.fields[:delta]).to eq(0)
+        expect(map.function).to_not be_nil
       end
     end
 
@@ -384,9 +431,11 @@ describe Masamune::Schema::Catalog do
             attribute 'name', type: :string
           end
 
-          map from: postgres.users_event, to: postgres.user_dimension do
-            field 'user_id', 'id'
-            field 'name', 'name_now'
+          map from: postgres.users_event, to: postgres.user_dimension do |row|
+            {
+              'user_id':   row[:id],
+              'name':      row[:name_now]
+            }
           end
         end
       end
@@ -394,16 +443,17 @@ describe Masamune::Schema::Catalog do
       subject(:map) { postgres.users_event.map(to: postgres.user_dimension) }
 
       it 'constructs map' do
-        expect(map.fields[:user_id]).to eq('id')
-        expect(map.fields[:name]).to eq('name_now')
+        expect(map.function).to_not be_nil
       end
     end
 
     context 'when schema contains map missing the from: field' do
       subject(:schema) do
         instance.schema :postgres do
-          map do
-            field 'tenant_id'
+          map do |row|
+            {
+              id: row[:id]
+            }
           end
         end
       end
@@ -416,8 +466,10 @@ describe Masamune::Schema::Catalog do
     context 'when schema contains map with invalid options' do
       subject(:schema) do
         instance.schema :postgres do
-          map :x do
-            field 'tenant_id'
+          map :x do |row|
+            {
+              id: row[:id]
+            }
           end
         end
       end
@@ -446,7 +498,7 @@ describe Masamune::Schema::Catalog do
     context 'when schema addressed with symbols' do
       before do
         instance.schema :postgres do
-          dimension 'user' do; end
+          dimension 'user', type: :one do; end
           file 'users' do; end
 
           map from: postgres.files[:users], to: postgres.dimensions[:user] do
@@ -465,7 +517,7 @@ describe Masamune::Schema::Catalog do
     context 'when schema addressed with strings' do
       before do
         instance.schema :postgres do
-          dimension 'user' do; end
+          dimension 'user', type: :one do; end
           file 'users' do; end
 
           map from: postgres.files['users'], to: postgres.dimensions['user'] do

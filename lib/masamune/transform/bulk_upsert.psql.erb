@@ -1,27 +1,27 @@
 BEGIN;
 LOCK TABLE <%= target.name %> IN EXCLUSIVE MODE;
 
-<%- if target.upsert_update_columns.any? -%>
+<%- if target.update_columns.any? -%>
 UPDATE
   <%= target.name %>
 SET
-  <%- target.upsert_update_columns.each do |column, last| -%>
+  <%- target.update_columns.each do |column, last| -%>
   <%= column.name %> = <%= source.name %>.<%= column.name %><%= ',' unless last %>
   <%- end -%>
 FROM
   <%= source.name %>
 WHERE
-  <%- target.upsert_unique_columns.each do |column, last| -%>
+  <%- target.unique_columns.each do |column, last| -%>
   <%= target.name %>.<%= column.name %> = <%= source.name %>.<%= column.name %><%= ' AND' unless last %>
   <%- end -%>
 ;
 <%- end -%>
 
-<%- if target.upsert_unique_columns.any? -%>
+<%- if target.unique_columns.any? -%>
 INSERT INTO
-  <%= target.name %> (<%= target.upsert_insert_columns.map { |column,_| column.name }.join(', ') %>)
+  <%= target.name %> (<%= target.insert_columns.map { |column,_| column.name }.join(', ') %>)
 SELECT
-  <%- target.upsert_insert_columns.each do |column, last| -%>
+  <%- target.insert_columns.each do |column, last| -%>
   <%= source.name %>.<%= column.name %><%= ',' unless last %>
   <%- end -%>
 FROM
@@ -29,11 +29,11 @@ FROM
 LEFT OUTER JOIN
   <%= target.name %>
 ON
-  <%- target.upsert_unique_columns.each do |column, last| -%>
+  <%- target.unique_columns.each do |column, last| -%>
   <%= target.name %>.<%= column.name %> = <%= source.name %>.<%= column.name %><%= ' AND' unless last %>
   <%- end -%>
 WHERE
-  <%- target.upsert_unique_columns.each do |column, last| -%>
+  <%- target.unique_columns.each do |column, last| -%>
   <%= target.name %>.<%= column.name %> IS NULL<%= ' AND' unless last %>
   <%- end -%>
 ;

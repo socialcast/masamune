@@ -8,7 +8,9 @@ CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.name %> INC
 
 ALTER TABLE <%= target_stage.name %> ADD CONSTRAINT <%= target_stage.name %>_time_key_check <%= target_stage.constraints %>;
 <%- target.foreign_key_columns.each do |column| -%>
+<%- if column.reference_constraint -%>
 ALTER TABLE <%= target_stage.name %> ADD CONSTRAINT <%= target_stage.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %>;
+<%- end -%>
 <%- end -%>
 
 INSERT INTO
@@ -42,7 +44,9 @@ ALTER TABLE <%= target_stage.name %> RENAME TO <%= target_partition.name %>;
 ALTER TABLE <%= target_partition.name %> INHERIT <%= target.name %>;
 ALTER TABLE <%= target_partition.name %> ADD CONSTRAINT <%= target_partition.name %>_time_key_check <%= target_partition.constraints %> NOT VALID;
 <%- target.foreign_key_columns.each do |column| -%>
+<%- if column.reference_constraint -%>
 ALTER TABLE <%= target_partition.name %> ADD CONSTRAINT <%= target_partition.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %> NOT VALID;
+<%- end -%>
 <%- end -%>
 
 <%- target.index_columns.each do |column_names, unique| -%>

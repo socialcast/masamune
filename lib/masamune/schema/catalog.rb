@@ -1,10 +1,10 @@
 require 'active_support/core_ext/hash'
 
+require 'masamune/schema/store'
+
 module Masamune::Schema
   class Catalog
     include Masamune::HasEnvironment
-
-    SUPPORTED_STORES = [:postgres, :hive, :files]
 
     class HasMap < SimpleDelegator
       attr_accessor :maps
@@ -19,12 +19,27 @@ module Masamune::Schema
       end
     end
 
+    class HasFormat < SimpleDelegator
+      def initialize(store, options = {})
+        super store
+        @options = options
+      end
+
+      def format
+        @options.key?(:format) ? @options[:format] : super
+      end
+
+      def headers
+        @options.key?(:headers) ? @options[:headers] : super
+      end
+    end
+
     class Context < SimpleDelegator
       attr_accessor :options
 
       def initialize(store, options = {})
         super store
-        @store = store
+        @store    = store
         @options  = Hash.new { |h,k| h[k] = [] }
         @options.merge!(store: @store)
         @options.merge!(options)
@@ -42,22 +57,21 @@ module Masamune::Schema
 
     def initialize(environment)
       self.environment = environment
-      @catalog = Hash.new { |h,k| h[k] = Masamune::Schema::Store.new(k) }
-      @context = nil
+      @stores   = Hash.new { |h,k| h[k] = Masamune::Schema::Store.new(type: k) }
+      @context  = nil
     end
 
     def clear!
-      @catalog.clear
+      @stores.clear
     end
 
     def schema(*args, &block)
       options = args.last.is_a?(Hash) ? args.pop : {}
-      raise ArgumentError, 'data store arguments required' unless args.any?
+      raise ArgumentError, 'schema store arguments required' unless args.any?
       stores = args.map(&:to_sym)
       stores.each do |id|
-        raise ArgumentError, "unknown data store '#{id}'" unless valid_store?(id)
         begin
-          @context = Context.new(@catalog[id], options)
+          @context = Context.new(@stores[id], options)
           instance_eval &block
         ensure
           @context = nil
@@ -65,15 +79,14 @@ module Masamune::Schema
       end
     end
 
-    SUPPORTED_STORES.each do |store|
+    Masamune::Schema::Store.types.each do |store|
       define_method(store) do
-        @catalog[store]
+        @stores[store]
       end
     end
 
     def [](store_id)
-      raise ArgumentError, "unknown data store '#{store_id}'" unless valid_store?(store_id)
-      @catalog[store_id.to_sym]
+      @stores[store_id.to_sym]
     end
 
     def table(id, options = {}, &block)
@@ -100,7 +113,8 @@ module Masamune::Schema
 
     # FIXME: references should not be ambiguous, e.g. references :user, should be references :user_dimension
     def references(id, options = {})
-      reference = Masamune::Schema::TableReference.new(@context.tables[id] || @context.dimensions[id], options)
+      table = @context.tables[id] || @context.dimensions[id]
+      reference = Masamune::Schema::TableReference.new(table, options.reverse_merge(denormalize: table.implicit))
       @context.references[reference.id] = reference
       @context.options[:references] << reference
     end
@@ -123,14 +137,20 @@ module Masamune::Schema
       @context.pop
     end
 
+    def partition(id, options = {}, &block)
+      @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id, partition: true))
+    end
+
     def measure(id, options = {}, &block)
       @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id, measure: true))
     end
 
     def file(id, options = {}, &block)
+      format_options = options.extract!(:format, :headers)
       @context.push(options)
       yield if block_given?
-      @context.files[id] = HasMap.new Masamune::Schema::File.new(@context.options.merge(id: id))
+      store = HasFormat.new(@context, format_options)
+      @context.files[id] = HasMap.new Masamune::Schema::Table.new(@context.options.merge(id: id, type: :stage, store: store))
     ensure
       @context.pop
     end
@@ -153,40 +173,29 @@ module Masamune::Schema
       raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
       raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
       @context.push(options)
-      @context.options[:fields] = {}.with_indifferent_access
-      yield if block_given?
+      @context.options[:function] = block.to_proc
       from.maps[to] ||= Masamune::Schema::Map.new(@context.options.merge(source: from, target: to))
     ensure
       @context.pop
     end
 
-    def field(id, value = nil, &block)
-      @context.options[:fields][id] = value
-      @context.options[:fields][id] ||= block.to_proc if block_given?
-      @context.options[:fields][id] ||= id
-    end
-
     def load(file)
       case file
       when /\.rb\Z/
-        instance_eval(::File.read(file), file)
+        instance_eval(File.read(file), file)
       when /\.psql\Z/
-        @catalog[:postgres].extra << file
+        @stores[:postgres].extra << file
       when /\.hql\Z/
-        @catalog[:hive].extra << file
+        @stores[:hive].extra << file
       end
     end
 
     private
 
     def dereference_column(id, options = {})
-      store_id = id.split(/\./).reverse.last
-      context = store_id && valid_store?(store_id) ? @catalog[store_id.to_sym] : @context
-      context.dereference_column(*id, options)
-    end
-
-    def valid_store?(store)
-      SUPPORTED_STORES.include?(store.to_sym)
+      store_id = id.split(/\./).reverse.last.try(:to_sym)
+      context = store_id && @stores.key?(store_id) ? @stores[store_id] : @context
+      context.dereference_column(id, options)
     end
 
     def fact_attributes(grain = [])

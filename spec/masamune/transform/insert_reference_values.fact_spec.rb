@@ -49,7 +49,7 @@ describe Masamune::Transform::InsertReferenceValues do
   end
 
   let(:target) { catalog.postgres.visits_fact }
-  let(:source) { catalog.postgres.visits_file.as_table(target) }
+  let(:source) { catalog.postgres.visits_file.stage_table(table: target) }
 
   context 'with postgres fact' do
     subject(:result) { transform.insert_reference_values(source, target).to_s }
@@ -64,7 +64,7 @@ describe Masamune::Transform::InsertReferenceValues do
           user_agent_type_name,
           COALESCE(user_agent_type_version, 'Unknown')
         FROM
-          visits_fact_file
+          visits_fact_stage
         WHERE
           user_agent_type_name IS NOT NULL
         ;
@@ -98,7 +98,7 @@ describe Masamune::Transform::InsertReferenceValues do
         SELECT DISTINCT
           feature_type_name
         FROM
-          visits_fact_file
+          visits_fact_stage
         WHERE
           feature_type_name IS NOT NULL
         ;

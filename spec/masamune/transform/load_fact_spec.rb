@@ -52,7 +52,7 @@ describe Masamune::Transform::LoadFact do
   let(:date) { DateTime.civil(2014,8) }
   let(:target) { catalog.postgres.visits_fact }
   let(:source) { catalog.postgres.visits_file }
-  let(:source_table) { source.as_table(target) }
+  let(:source_table) { source.stage_table(suffix: 'file', table: target, inherit: false) }
 
   context 'for postgres fact' do
     subject(:result) { transform.load_fact(files, source, target, date).to_s }

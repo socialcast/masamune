@@ -26,10 +26,15 @@ describe Masamune::Transform::StageFact do
         column 'user_id', type: :integer, index: true, natural_key: true
       end
 
+      dimension 'group', type: :two do
+        column 'group_id', type: :integer, index: true, natural_key: true
+      end
+
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
         references :date
         references :tenant
         references :user
+        references :group, multiple: true
         references :user_agent, insert: true
         references :feature, insert: true
         measure 'total', type: :integer
@@ -50,7 +55,7 @@ describe Masamune::Transform::StageFact do
 
   let(:date) { DateTime.civil(2014,8) }
   let(:target) { catalog.postgres.visits_hourly_fact }
-  let(:source) { catalog.postgres.visits_hourly_file.as_table(target) }
+  let(:source) { catalog.postgres.visits_hourly_file.stage_table(suffix: 'file', table: target, inherit: false) }
 
   context 'with postgres fact' do
     subject(:result) { transform.stage_fact(source, target, date).to_s }
@@ -77,38 +82,39 @@ describe Masamune::Transform::StageFact do
           user_dimension.uuid,
           user_agent_type.id,
           feature_type.id,
-          visits_hourly_fact_file.total,
-          visits_hourly_fact_file.time_key
+          visits_hourly_file_fact_stage.total,
+          visits_hourly_file_fact_stage.time_key
         FROM
-          visits_hourly_fact_file
+          visits_hourly_file_fact_stage
         JOIN
           date_dimension
         ON
-          date_dimension.date_id = visits_hourly_fact_file.date_dimension_date_id
+          date_dimension.date_id = visits_hourly_file_fact_stage.date_dimension_date_id
         JOIN
           user_dimension
         ON
-          user_dimension.user_id = visits_hourly_fact_file.user_dimension_user_id AND
-          ((TO_TIMESTAMP(visits_hourly_fact_file.time_key) BETWEEN user_dimension.start_at AND COALESCE(user_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_fact_file.time_key) < user_dimension.start_at AND user_dimension.version = 1))
+          user_dimension.user_id = visits_hourly_file_fact_stage.user_dimension_user_id AND
+          ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN user_dimension.start_at AND COALESCE(user_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < user_dimension.start_at AND user_dimension.version = 1))
         JOIN
           tenant_dimension
         ON
-          tenant_dimension.tenant_id = COALESCE(visits_hourly_fact_file.tenant_dimension_tenant_id, user_dimension.tenant_id) AND
-          ((TO_TIMESTAMP(visits_hourly_fact_file.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_fact_file.time_key) < tenant_dimension.start_at AND tenant_dimension.version = 1))
+          tenant_dimension.tenant_id = COALESCE(visits_hourly_file_fact_stage.tenant_dimension_tenant_id, user_dimension.tenant_id) AND
+          ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < tenant_dimension.start_at AND tenant_dimension.version = 1))
         JOIN
           user_agent_type
         ON
-          user_agent_type.name = visits_hourly_fact_file.user_agent_type_name AND
-          user_agent_type.version = COALESCE(visits_hourly_fact_file.user_agent_type_version, 'Unknown')
+          user_agent_type.name = visits_hourly_file_fact_stage.user_agent_type_name AND
+          user_agent_type.version = COALESCE(visits_hourly_file_fact_stage.user_agent_type_version, 'Unknown')
         JOIN
           feature_type
         ON
-          feature_type.name = visits_hourly_fact_file.feature_type_name
+          feature_type.name = visits_hourly_file_fact_stage.feature_type_name
         ;
 
         CREATE INDEX visits_hourly_fact_y2014m08_stage_date_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (date_dimension_uuid);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (tenant_dimension_uuid);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_user_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (user_dimension_uuid);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_group_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (group_dimension_uuid);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index ON visits_hourly_fact_y2014m08_stage (user_agent_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index ON visits_hourly_fact_y2014m08_stage (feature_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_time_key_index ON visits_hourly_fact_y2014m08_stage (time_key);
@@ -131,6 +137,7 @@ describe Masamune::Transform::StageFact do
         ALTER INDEX visits_hourly_fact_y2014m08_stage_date_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_date_dimension_uuid_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_tenant_dimension_uuid_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_user_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_user_dimension_uuid_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_group_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_group_dimension_uuid_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index RENAME TO visits_hourly_fact_y2014m08_user_agent_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index RENAME TO visits_hourly_fact_y2014m08_feature_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_time_key_index RENAME TO visits_hourly_fact_y2014m08_time_key_index;

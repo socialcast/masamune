@@ -74,6 +74,54 @@ describe Masamune::Schema::Column do
     end
   end
 
+  describe '#sql_type' do
+    subject(:result) { column.sql_type }
+
+    context 'with type :integer' do
+      let(:column) { described_class.new(id: 'integer', type: :integer) }
+      it { is_expected.to eq('INTEGER') }
+    end
+
+    context 'with type :integer and :array' do
+      let(:column) { described_class.new(id: 'integer', type: :integer, array: true) }
+      it { is_expected.to eq('INTEGER[]') }
+    end
+
+    context 'with type :string' do
+      let(:column) { described_class.new(id: 'string', type: :string) }
+      it { is_expected.to eq('VARCHAR') }
+    end
+
+    context 'with type :string and :array' do
+      let(:column) { described_class.new(id: 'string', type: :string, array: true) }
+      it { is_expected.to eq('VARCHAR[]') }
+    end
+  end
+
+  describe '#hql_type' do
+    subject(:result) { column.hql_type }
+
+    context 'with type :integer' do
+      let(:column) { described_class.new(id: 'integer', type: :integer) }
+      it { is_expected.to eq('INT') }
+    end
+
+    context 'with type :integer and :array' do
+      let(:column) { described_class.new(id: 'integer', type: :integer, array: true) }
+      it { is_expected.to eq('ARRAY<INT>') }
+    end
+
+    context 'with type :string' do
+      let(:column) { described_class.new(id: 'string', type: :string) }
+      it { is_expected.to eq('STRING') }
+    end
+
+    context 'with type :string and :array' do
+      let(:column) { described_class.new(id: 'string', type: :string, array: true) }
+      it { is_expected.to eq('ARRAY<STRING>') }
+    end
+  end
+
   describe '#ruby_value' do
     subject(:result) { column.ruby_value(value) }
 
@@ -141,6 +189,117 @@ describe Masamune::Schema::Column do
       end
     end
 
+    context 'with type :date' do
+      let(:column) { described_class.new(id: 'date', type: :date) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to be(nil) }
+      end
+
+      context 'when unknown' do
+        let(:value) { 'unknown' }
+        it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :date" }
+      end
+
+      context 'when Date' do
+        let(:value) { Date.civil(2015,01,01) }
+        it { is_expected.to eq(value) }
+      end
+
+      context 'when YYYY-mm-dd' do
+        let(:value) { '2015-01-01' }
+        it { is_expected.to eq(Date.civil(2015,01,01)) }
+      end
+
+      context 'when ISO8601' do
+        let(:value) { Date.parse('2015-01-01').iso8601 }
+        it { is_expected.to eq(Date.civil(2015,01,01)) }
+      end
+    end
+
+    context 'with type :timestamp' do
+      let(:column) { described_class.new(id: 'timestamp', type: :timestamp) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to be(nil) }
+      end
+
+      context 'when Date' do
+        let(:value) { Date.civil(2015,01,01) }
+        it { is_expected.to eq(value.to_time) }
+      end
+
+      context 'when DateTime' do
+        let(:value) { DateTime.civil(2015,01,01) }
+        it { is_expected.to eq(value.to_time) }
+      end
+
+      context 'when Time' do
+        let(:value) { Time.now }
+        it { is_expected.to eq(value) }
+      end
+
+      context 'when YYYY-mm-dd' do
+        let(:value) { '2015-01-01' }
+        it { is_expected.to eq(Time.parse(value)) }
+      end
+
+      context 'when ISO8601' do
+        let(:value) { Date.parse('2015-01-01').to_time.iso8601 }
+        it { is_expected.to eq(Date.civil(2015,01,01).to_time) }
+      end
+    end
+
+    context 'with type :integer and :array' do
+      let(:column) { described_class.new(id: 'int[]', type: :integer, array: true) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq([]) }
+      end
+
+      context "when 'NULL'" do
+        let(:value) { 'NULL' }
+        it { is_expected.to eq([]) }
+      end
+
+      context 'when scalar' do
+        let(:value) { '1' }
+        it { is_expected.to eq([1]) }
+      end
+
+      context 'when array' do
+        let(:value) { '[1,2]' }
+        it { is_expected.to eq([1,2]) }
+      end
+    end
+
+    context 'with type :json' do
+      let(:column) { described_class.new(id: 'json', type: :json) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq({}) }
+      end
+
+      context "when 'NULL'" do
+        let(:value) { 'NULL' }
+        it { is_expected.to eq({}) }
+      end
+
+      context 'when scalar' do
+        let(:value) { '1' }
+        it { is_expected.to eq(1) }
+      end
+
+      context 'when array' do
+        let(:value) { '{"k":"v"}' }
+        it { is_expected.to eq({"k" => "v"}) }
+      end
+    end
+
     context 'with type :yaml and sub_type :boolean' do
       let(:column) { described_class.new(id: 'yaml', type: :yaml, sub_type: :boolean) }
       let(:value) do
@@ -163,6 +322,120 @@ describe Masamune::Schema::Column do
         expect(result['one_integer']).to eq(true)
         expect(result['zero_integer']).to eq(false)
         expect(result.key?('string')).to eq(false)
+      end
+    end
+  end
+
+  describe '#csv_value' do
+    subject(:result) { column.csv_value(value) }
+
+    context 'with type :string' do
+      let(:column) { described_class.new(id: 'string', type: :string) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq(nil) }
+      end
+
+      context 'when blank' do
+        let(:value) { '' }
+        it { is_expected.to eq(nil) }
+      end
+
+      context 'when present' do
+        let(:value) { 'value' }
+        it { is_expected.to eq('value') }
+      end
+    end
+
+    context 'with type :boolean' do
+      let(:column) { described_class.new(id: 'bool', type: :boolean) }
+
+      context 'when true' do
+        let(:value) { true }
+        it { is_expected.to eq('TRUE') }
+      end
+
+      context 'when false' do
+        let(:value) { false }
+        it { is_expected.to eq('FALSE') }
+      end
+    end
+
+    context 'with type :integer and :array' do
+      let(:column) { described_class.new(id: 'int[]', type: :integer, array: true) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq('[]') }
+      end
+
+      context 'when scalar integer' do
+        let(:value) { 1 }
+        it { is_expected.to eq('[1]') }
+      end
+
+      context 'when scalar string' do
+        let(:value) { '1' }
+        it { is_expected.to eq('[1]') }
+      end
+
+      context 'when array of integer' do
+        let(:value) { [1,2] }
+        it { is_expected.to eq('[1,2]') }
+      end
+
+      context 'when array of string' do
+        let(:value) { ['1','2'] }
+        it { is_expected.to eq('[1,2]') }
+      end
+    end
+
+    context 'with type :string and :array' do
+      let(:column) { described_class.new(id: 'string[]', type: :string, array: true) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to eq('[]') }
+      end
+
+      context 'when scalar string' do
+        let(:value) { '1' }
+        it { is_expected.to eq('["1"]') }
+      end
+
+      context 'when scalar integer' do
+        let(:value) { 1 }
+        it { is_expected.to eq('["1"]') }
+      end
+
+      context 'when array of string' do
+        let(:value) { ['1','2'] }
+        it { is_expected.to eq('["1","2"]') }
+      end
+
+      context 'when array of integer' do
+        let(:value) { [1,2] }
+        it { is_expected.to eq('["1","2"]') }
+      end
+    end
+
+    context 'with type :timestamp' do
+      let(:column) { described_class.new(id: 'bool', type: :timestamp) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to be_nil }
+      end
+
+      context 'when Time' do
+        let(:value) { Time.now }
+        it { is_expected.to eq(value.utc.iso8601(3)) }
+      end
+
+      context 'when unknown' do
+        let(:value) { 'unknown' }
+        it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :timestamp" }
       end
     end
   end

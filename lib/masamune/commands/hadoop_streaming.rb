@@ -7,7 +7,7 @@ module Masamune::Commands
       @default_hadoop_streaming_jar ||=
       case RUBY_PLATFORM
       when /darwin/
-        Dir.glob('/usr/local/Cellar/hadoop/*/libexec/contrib/streaming/hadoop-streaming-*.jar').first
+        Dir.glob('/usr/local/Cellar/hadoop/**/hadoop-streaming-*.jar').first
       when /linux/
         '/usr/lib/hadoop-mapreduce/hadoop-streaming.jar'
       else
@@ -49,8 +49,8 @@ module Masamune::Commands
       args << ['-input', *@input] if @input
       args << ['-mapper', @mapper]
       args << ['-file', @mapper] if @upload
-      args << ['-reducer', @reducer]
-      args << ['-file', @reducer] if @upload
+      args << ['-reducer', @reducer] if @reducer
+      args << ['-file', @reducer] if @upload && @reducer
       args << ['-output', @output]
       args.flatten
     end

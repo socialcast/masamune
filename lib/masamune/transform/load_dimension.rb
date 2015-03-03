@@ -12,11 +12,11 @@ module Masamune::Transform
 
     extend ActiveSupport::Concern
 
-    def load_dimension(file, source, target)
+    def load_dimension(files, source, target)
       target = target.type == :four ? target.ledger_table : target
-      source = source.as_table(target)
+      source = source.stage_table(suffix: 'file', table: target, inherit: false)
       Operator.new \
-        define_table(source, file),
+        define_table(source, files),
         insert_reference_values(source, target),
         stage_dimension(source, target),
         bulk_upsert(target.stage_table, target)

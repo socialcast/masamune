@@ -85,13 +85,7 @@ module Masamune::Schema
       @columns = {}
       values.each do |key, value|
         next unless key
-        reference_name, column_name = Column::dereference_column_name(key)
-        if reference_name && reference = parent.references[reference_name]
-          if column = reference.columns[column_name]
-            @columns[column.reference_name(reference.label)] = column
-            result[column.reference_name(reference.label)] = column.ruby_value(value)
-          end
-        elsif column = parent.columns[column_name]
+        if column = parent.dereference_column_name(key)
           @columns[column.name] = column
           result[column.name] = column.ruby_value(value)
         elsif strict

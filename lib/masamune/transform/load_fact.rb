@@ -13,7 +13,7 @@ module Masamune::Transform
     extend ActiveSupport::Concern
 
     def load_fact(files, source, target, date)
-      source = source.as_table(target)
+      source = source.stage_table(suffix: 'file', table: target, inherit: false)
       Operator.new \
         define_table(source, files),
         insert_reference_values(source, target),

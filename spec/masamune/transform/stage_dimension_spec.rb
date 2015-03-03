@@ -36,7 +36,7 @@ describe Masamune::Transform::StageDimension do
         column 'preferences', type: :key_value, null: true
       end
 
-      file 'user', headers: true do
+      file 'user' do
         column 'tenant_id', type: :integer
         column 'user_id', type: :integer
         column 'department.department_id', type: :integer
@@ -51,7 +51,7 @@ describe Masamune::Transform::StageDimension do
   end
 
   let(:target) { catalog.postgres.user_dimension.ledger_table }
-  let(:source) { catalog.postgres.user_file.as_table(target) }
+  let(:source) { catalog.postgres.user_file.stage_table(suffix: 'file', table: target, inherit: false) }
 
   context 'for postgres dimension' do
     subject(:result) { transform.stage_dimension(source, target).to_s }
@@ -66,27 +66,27 @@ describe Masamune::Transform::StageDimension do
           department_type.uuid,
           user_account_state_type.id,
           hr_user_account_state_type.id,
-          user_dimension_ledger_file.tenant_id,
-          user_dimension_ledger_file.user_id,
-          json_to_hstore(user_dimension_ledger_file.preferences_now),
-          user_dimension_ledger_file.source_kind,
-          user_dimension_ledger_file.start_at,
-          user_dimension_ledger_file.delta
+          user_file_dimension_ledger_stage.tenant_id,
+          user_file_dimension_ledger_stage.user_id,
+          json_to_hstore(user_file_dimension_ledger_stage.preferences_now),
+          user_file_dimension_ledger_stage.source_kind,
+          user_file_dimension_ledger_stage.start_at,
+          user_file_dimension_ledger_stage.delta
         FROM
-          user_dimension_ledger_file
+          user_file_dimension_ledger_stage
         LEFT JOIN
           department_type AS department_type
         ON
-          department_type.department_id = user_dimension_ledger_file.department_type_department_id AND
-          department_type.tenant_id = user_dimension_ledger_file.tenant_id
+          department_type.department_id = user_file_dimension_ledger_stage.department_type_department_id AND
+          department_type.tenant_id = user_file_dimension_ledger_stage.tenant_id
         LEFT JOIN
           user_account_state_type AS user_account_state_type
         ON
-          user_account_state_type.name = user_dimension_ledger_file.user_account_state_type_name
+          user_account_state_type.name = user_file_dimension_ledger_stage.user_account_state_type_name
         LEFT JOIN
           user_account_state_type AS hr_user_account_state_type
         ON
-          hr_user_account_state_type.name = user_dimension_ledger_file.hr_user_account_state_type_name
+          hr_user_account_state_type.name = user_file_dimension_ledger_stage.hr_user_account_state_type_name
         ;
       EOS
     end

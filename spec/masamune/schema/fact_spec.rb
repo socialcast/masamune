@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Masamune::Schema::Fact do
-  let(:store) { double(id: 'store') }
+  let(:store) { double(id: 'store', type: :postgres) }
 
   let(:date_dimension) do
     Masamune::Schema::Dimension.new id: 'date', type: :date,

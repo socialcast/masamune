@@ -25,11 +25,11 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
 <%- files.each do |file| -%>
 <%-
   copy_options = []
-  copy_options << "FORMAT 'csv'" if target.format == :csv
-  copy_options << "DELIMITER '\t'" if target.format == :tsv
-  copy_options << "HEADER true" if target.headers
+  copy_options << "FORMAT 'csv'" if target.store.format == :csv
+  copy_options << "DELIMITER '\t'" if target.store.format == :tsv
+  copy_options << "HEADER true" if target.store.headers
 -%>
-COPY <%= target.name %> FROM '<%= file.path %>' WITH (<%= copy_options.join(", ") %>);
+COPY <%= target.name %> FROM '<%= file %>' WITH (<%= copy_options.join(", ") %>);
 <%- end -%>
 
 <%= render 'define_unique.psql.erb', target: target %>

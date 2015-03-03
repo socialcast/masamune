@@ -8,7 +8,6 @@ module Masamune
     require 'masamune/schema/fact'
     require 'masamune/schema/column'
     require 'masamune/schema/row'
-    require 'masamune/schema/file'
     require 'masamune/schema/event'
     require 'masamune/schema/map'
   end

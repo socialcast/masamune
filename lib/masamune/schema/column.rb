@@ -7,6 +7,7 @@ module Masamune::Schema
       id:                  nil,
       type:                :integer,
       sub_type:            nil,
+      array:               false,
       values:              [],
       null:                false,
       strict:              true,
@@ -17,8 +18,8 @@ module Masamune::Schema
       ignore:              false,
       surrogate_key:       false,
       natural_key:         false,
-      degenerate_key:      false,
       measure:             false,
+      partition:           false,
       aggregate:           nil,
       reference:           nil,
       parent:              nil,
@@ -44,10 +45,10 @@ module Masamune::Schema
     end
 
     def name
-      if reference && reference.columns.include?(@id)
-        [reference.label, reference.name, @id].compact.join('_').to_sym
+      if reference && reference.columns.include?(id)
+        [reference.label, reference.name, id].compact.join('_').to_sym
       else
-        @id
+        id
       end
     end
 
@@ -93,7 +94,12 @@ module Masamune::Schema
 
     def compact_name
       if reference
-        "#{reference.id}.#{@id}".to_sym
+        # XXX once columns only reference columns, this can be cleaned up
+        if @id == reference.surrogate_key.reference_name(reference.label)
+          "#{reference.id}.#{reference.surrogate_key.id}".to_sym
+        else
+          "#{reference.id}.#{@id}".to_sym
+        end
       else
         @id
       end
@@ -108,6 +114,7 @@ module Masamune::Schema
     end
 
     def sql_type(for_surrogate_key = false)
+      elem =
       case type
       when :integer
         for_surrogate_key ? 'SERIAL' : 'INTEGER'
@@ -117,6 +124,8 @@ module Masamune::Schema
         'VARCHAR'
       when :uuid
         'UUID'
+      when :date
+        'DATE'
       when :timestamp
         'TIMESTAMP'
       when :boolean
@@ -124,10 +133,28 @@ module Masamune::Schema
       when :enum
         "#{sub_type}_TYPE".upcase
       when :key_value
-        parent.type == :file ? 'JSON' : 'HSTORE'
+        if parent.type == :stage && !parent.inherit
+          'JSON'
+        else
+          'HSTORE'
+        end
       when :json, :yaml
         'JSON'
       end
+      array_value? ? "#{elem}[]" : elem
+    end
+
+    def hql_type
+      elem =
+      case type
+      when :integer
+        'INT'
+      when :string
+        'STRING'
+      else
+        sql_type
+      end
+      array_value? ? "ARRAY<#{elem}>" : elem
     end
 
     def sql_value(value)
@@ -144,6 +171,8 @@ module Masamune::Schema
 
     def csv_value(value)
       return value if sql_function?(value)
+      return csv_array(value) if array_value?
+      return nil if value.nil?
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
@@ -151,14 +180,23 @@ module Masamune::Schema
         value.to_h.to_yaml
       when :json, :key_value
         value.to_h.to_json
+      when :date
+        value.to_s
+      when :timestamp
+        value.to_time.utc.iso8601(3)
+      when :string
+        value.empty? ? nil : value
       else
         value
       end
+    rescue
+      raise ArgumentError, "Could not coerce '#{value}' into :#{type}"
     end
 
-    def ruby_value(value)
+    def ruby_value(value, recursive = true)
       value = nil if null_value?(value)
       return value if sql_function?(value)
+      return ruby_array(value) if recursive && array_value?
       case type
       when :boolean
         case value
@@ -166,6 +204,26 @@ module Masamune::Schema
           false
         when true, 1, '1', "'1'", /\Atrue\z/i
           true
+        end
+      when :date
+        case value
+        when Date
+          value
+        when String
+          Date.parse(value.to_s)
+        when nil
+          nil
+        end
+      when :timestamp
+        case value
+        when Time
+          value
+        when Date, DateTime
+          value.to_time
+        when String
+          Time.parse(value.to_s)
+        when nil
+          nil
         end
       when :integer
         value.nil? ? nil : value.to_i
@@ -187,9 +245,13 @@ module Masamune::Schema
         when nil
           {}
         end
+      when :string
+        value.to_s
       else
         value
       end
+    rescue
+      raise ArgumentError, "Could not coerce '#{value}' into :#{type}"
     end
 
     def aggregate_value
@@ -207,10 +269,14 @@ module Masamune::Schema
     end
 
     def null_value?(value)
+      if type == :json || array_value?
+        return true if value == 'NULL'
+      end
       return false unless parent && parent.store
+      return false unless value
       case parent.store.type
       when :hive
-        value == '\N'
+        value.to_s == '\N'
       when :postgres
         false
       end
@@ -218,6 +284,10 @@ module Masamune::Schema
 
     def sql_function?(value)
       value =~ /\(\)\Z/
+    end
+
+    def array_value?
+      !!(array || (reference && reference.respond_to?(:multiple) && reference.multiple))
     end
 
     def as_psql
@@ -232,8 +302,10 @@ module Masamune::Schema
       end
     end
 
+    # TODO: Add ELEMENT REFERENCES
     def reference_constraint
       return if parent.temporary?
+      return if array_value?
       if reference && reference.surrogate_key.type == type
         "REFERENCES #{reference.name}(#{reference.surrogate_key.name})"
       end
@@ -242,7 +314,7 @@ module Masamune::Schema
     class << self
       def dereference_column_name(name)
         return unless name
-        if name =~ /\./
+        if name.to_s =~ /\./
           reference_name, column_name = name.to_s.split('.')
           [reference_name.to_sym, column_name.to_sym]
         else
@@ -285,11 +357,14 @@ module Masamune::Schema
       reference && reference.surrogate_key.auto && !reference.insert
     end
 
+    # XXX hack to work around columns not being able to reference columns
     def references?(other)
       return false unless other
       if reference && other.reference && reference.id == other.reference.id
         true
       elsif parent && other.parent && parent.id == other.parent.id
+        self == other
+      elsif parent && other.parent && other.parent.parent && parent.id == other.parent.parent.id
         self == other
       elsif reference && other.parent && reference.id == other.parent.id
         self == other
@@ -323,6 +398,17 @@ module Masamune::Schema
       self.unique = 'natural' if natural_key
     end
 
+    def ruby_array(value)
+      case value
+      when Array
+        value.map { |elem| ruby_value(elem, false) }
+      when String
+        Array.wrap(JSON.load(value)).map { |elem| ruby_value(elem, false) }
+      when nil
+        []
+      end
+    end
+
     def ruby_key_value(hash)
       case sub_type
       when :boolean
@@ -338,6 +424,17 @@ module Masamune::Schema
         [key, true]
       when false, '0', 0
         [key, false]
+      end
+    end
+
+    def csv_array(value)
+      case value
+      when Array
+        ruby_value(value).to_json
+      when nil
+        [].to_json
+      else
+        [ruby_value(value, false)].to_json
       end
     end
   end

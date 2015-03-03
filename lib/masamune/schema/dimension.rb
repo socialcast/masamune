@@ -14,7 +14,7 @@ module Masamune::Schema
       else
         type.to_s
       end
-      parent ? "#{parent.suffix}_#{suffix}" : suffix
+      parent ? [parent.suffix, suffix].compact.join('_') : suffix
     end
 
     def start_key
@@ -33,10 +33,7 @@ module Masamune::Schema
       @ledger_table ||= self.class.new(id: id, type: :ledger, store: store, columns: ledger_table_columns, references: references.values, parent: self)
     end
 
-    protected
-
     def reserved_column_ids
-      @reserved_column_ids ||=
       case type
       when :one, :date
         [:last_modified_at]
@@ -46,8 +43,6 @@ module Masamune::Schema
         [:parent_uuid, :record_uuid, :start_at, :end_at, :version, :last_modified_at]
       when :ledger
         [:source_kind, :source_uuid, :start_at, :last_modified_at, :delta]
-      when :stage
-        parent.reserved_column_ids
       else
         super
       end
@@ -106,8 +101,10 @@ module Masamune::Schema
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
         initialize_column! id: 'delta', type: :integer
       when :stage
-        parent.reserved_columns.each do |_, column|
-          initialize_column! column.as_hash
+        if inherit
+          parent.reserved_columns.each do |_, column|
+            initialize_column! column.as_hash
+          end
         end
       end
     end

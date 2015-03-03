@@ -19,6 +19,7 @@ module Masamune::Tasks
     method_option :csv, :type => :boolean, :desc => 'Report SQL output in CSV format', :default => false
     method_option :variables, :aliases => '-D', :type => :hash, :desc => 'Variables to substitute in SQL', :default => {}
     method_option :retry, :type => :boolean, :desc => 'Retry SQL query in event of failure', :default => false
+    method_option :service, :desc => 'Start as a service', :default => false
     def hive_exec
       hive_options = options.dup
       hive_options.merge!(print: true)

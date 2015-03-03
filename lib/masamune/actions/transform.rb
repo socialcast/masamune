@@ -26,22 +26,21 @@ module Masamune::Actions
 
     FILE_MODE = 0777 - File.umask
 
-    def load_dimension(source_file, source, target)
-      input = File.open(source_file)
+    def load_dimension(source_files, source, target)
       output = Tempfile.new('masamune')
       FileUtils.chmod(FILE_MODE, output.path)
 
       if source.respond_to?(:map) and map = source.map(to: target)
-        result = map.apply(input, output)
+        result = map.apply(source_files, output)
       else
-        result = input
+        output = source_files
+        result = source
       end
-      logger.debug(File.read(output)) if source.debug
 
       transform = Wrapper.load_dimension(output, result, target)
-      postgres file: transform.to_file, debug: (source.debug || target.debug)
+      logger.debug(File.read(output)) if (source.debug || map.debug)
+      postgres file: transform.to_file, debug: (source.debug || target.debug || map.debug)
     ensure
-      input.close
       output.unlink
     end
 

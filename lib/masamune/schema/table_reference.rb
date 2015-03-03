@@ -6,7 +6,9 @@ module Masamune::Schema
       insert:          false,
       null:            false,
       default:         nil,
-      natural_key:     false
+      natural_key:     false,
+      denormalize:     false,
+      multiple:        false
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
@@ -29,12 +31,16 @@ module Masamune::Schema
       [label, @table.name].compact.join('_')
     end
 
+    def foreign_key
+      @table.surrogate_key
+    end
+
     def foreign_key_name
-      [label, @table.name, @table.surrogate_key.try(:name)].compact.join('_').to_sym
+      [label, @table.name, foreign_key.name].compact.join('_').to_sym
     end
 
     def foreign_key_type
-      @table.surrogate_key.type
+      foreign_key.type
     end
 
     def default
