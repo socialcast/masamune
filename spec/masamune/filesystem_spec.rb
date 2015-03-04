@@ -30,7 +30,7 @@ shared_examples_for 'Filesystem' do
   let(:filesystem) { Masamune::Filesystem.new }
 
   let(:tmp_dir) { File.join(Dir.tmpdir, SecureRandom.hex, SecureRandom.hex) }
-  let(:old_dir) { File.join(tmp_dir, SecureRandom.hex) }
+  let!(:old_dir) { File.join(tmp_dir, SecureRandom.hex) }
   let(:new_dir) { File.join(tmp_dir, SecureRandom.hex) }
   let(:other_new_dir) { File.join(tmp_dir, SecureRandom.hex) }
   let(:new_file) { File.join(old_dir, SecureRandom.hex) }
@@ -337,9 +337,11 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + old_dir).once
+        expect(filesystem).to receive(:hadoop_fs).with('-touchz', 'file://' + new_file, 'file://' + other_new_file).once
         instance.touch!('file://' + new_file, 'file://' + other_new_file)
       end
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 's3' do
@@ -360,6 +362,11 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs missing file' do
+      before do
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}")
+        expect(filesystem).to receive(:hadoop_fs).with('-test', '-e', 'file://' + new_file, safe: true).at_most(:once).and_return(mock_failure)
+      end
       subject { instance.exists?('file://' + new_file) }
       it { is_expected.to eq(false) }
     end
@@ -370,6 +377,12 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs existing file' do
+      before do
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}").
+          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-test', '-e', 'file://' + old_file, safe: true).at_most(:once).and_return(mock_success)
+      end
       subject { instance.exists?('file://' + old_file) }
       it { is_expected.to eq(true) }
     end
@@ -413,6 +426,16 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs missing file' do
+      before do
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+          and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_dir + '/*', safe: true).at_most(:once).
+          and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + new_file + '/*', safe: true).at_most(:once).
+          and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + new_file, safe: true).at_most(:once).
+          and_yield('')
+      end
       let(:result) { instance.stat('file://' + new_file) }
       it { is_expected.to be_nil }
     end
@@ -438,10 +461,6 @@ shared_examples_for 'Filesystem' do
       describe '#mtime' do
         subject { stat.mtime }
         it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
-      end
-
-      describe '#mtime' do
-        subject { stat.mtime }
         it { is_expected.to be_a(Time) }
       end
 
@@ -462,6 +481,14 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs existing file' do
+      before do
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}").
+          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_file, safe: true).at_most(:once).
+          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+      end
+
       let(:result) { instance.stat('file://' + old_file) }
 
       describe '#name' do
@@ -471,17 +498,13 @@ shared_examples_for 'Filesystem' do
 
       describe '#mtime' do
         subject { stat.mtime }
-        it { is_expected.to eq(File.stat(old_file).mtime.at_beginning_of_minute.utc) }
-      end
-
-      describe '#mtime' do
-        subject { stat.mtime }
+        it { is_expected.to eq(Time.parse('2015-02-24 12:09:00 +0000')) }
         it { is_expected.to be_a(Time) }
       end
 
       describe '#size' do
         subject { stat.size }
-        it { is_expected.to be_an(Integer) }
+        it { is_expected.to eq(68) }
       end
     end
 
@@ -500,10 +523,6 @@ shared_examples_for 'Filesystem' do
       describe '#mtime' do
         subject { stat.mtime }
         it { is_expected.to eq(Time.parse('2013-05-24 18:52:00 +0000')) }
-      end
-
-      describe '#mtime' do
-        subject { stat.mtime }
         it { is_expected.to be_a(Time) }
       end
 
@@ -529,10 +548,6 @@ shared_examples_for 'Filesystem' do
       describe '#mtime' do
         subject { stat.mtime }
         it { is_expected.to eq(Time.parse('2013-05-24 18:52:00 +0000')) }
-      end
-
-      describe '#mtime' do
-        subject { stat.mtime }
         it { is_expected.to be_a(Time) }
       end
 
@@ -557,9 +572,10 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs directory' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir, 'file://' + other_new_dir).once
         instance.mkdir!('file://' + new_dir, 'file://' + other_new_dir)
       end
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 's3 directory' do
@@ -610,12 +626,28 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs no matches' do
+      before do
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', 'file://' + new_dir + '/*', safe: true).at_most(:once).
+          and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + new_dir + '/*', safe: true).at_most(:once).
+          and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(new_dir) + '/*', safe: true).at_most(:once).
+          and_yield('')
+      end
       let(:pattern) { File.join(new_dir, '*') }
       it { is_expected.to be_empty }
       it { expect { |b| instance.glob('file://' + pattern, &b) }.to_not yield_control }
     end
 
     context 'hdfs one matches' do
+      before do
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', 'file://' + old_dir + '/*', safe: true).at_most(:once).
+          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_dir + '/*', safe: true).at_most(:once).
+          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+      end
       let(:pattern) { File.join(File.dirname(old_file), '*') }
       it { is_expected.not_to be_empty }
       it { expect { |b| instance.glob('file://' + pattern, &b) }.to yield_with_args('file://' + old_file) }
@@ -710,26 +742,31 @@ shared_examples_for 'Filesystem' do
 
     context 'local file to hdfs file' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-copyFromLocal', 'file://' + old_file, 'file://' + result_file)
         instance.copy_file_to_file(old_file, 'file://' + result_file)
       end
 
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to hdfs file' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 'file://' + result_file)
         instance.copy_file_to_file('file://' + old_file, 'file://' + result_file)
       end
 
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to local file' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, 'file://' + result_file)
         instance.copy_file_to_file('file://' + old_file, result_file)
       end
 
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to s3 file' do
@@ -804,26 +841,31 @@ shared_examples_for 'Filesystem' do
 
     context 'local file to hdfs dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-copyFromLocal', 'file://' + old_file, 'file://' + new_dir)
         instance.copy_file_to_dir(old_file, 'file://' + new_dir)
       end
 
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to hdfs dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 'file://' + new_dir)
         instance.copy_file_to_dir('file://' + old_file, 'file://' + new_dir)
       end
 
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to local dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, 'file://' + new_dir)
         instance.copy_file_to_dir('file://' + old_file, new_dir)
       end
 
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to s3 dir' do
@@ -888,26 +930,31 @@ shared_examples_for 'Filesystem' do
 
     context 'local dir to hdfs dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-copyFromLocal', 'file://' + old_dir, 'file://' + new_dir)
         instance.copy_dir(old_dir, 'file://' + new_dir)
       end
 
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to hdfs dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 'file://' + new_dir)
         instance.copy_dir('file://' + old_dir, 'file://' + new_dir)
       end
 
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to local dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_dir, 'file://' + new_dir)
         instance.copy_dir('file://' + old_dir, new_dir)
       end
 
-      it { is_expected.to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to s3 dir' do
@@ -963,10 +1010,11 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs file' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.remove_file('file://' + old_file)
       end
 
-      it { is_expected.to eq(false)}
+      it 'meets expectations' do; end
     end
 
     context 's3 file' do
@@ -1004,10 +1052,11 @@ shared_examples_for 'Filesystem' do
     context 'hdfs dir' do
       before do
         expect(filesystem).to receive(:root_path?).once.and_return(false)
+        expect(filesystem).to receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
         instance.remove_dir('file://' + old_dir)
       end
 
-      it { is_expected.to eq(false)}
+      it 'meets expectations' do; end
     end
 
     context 'hdfs root dir' do
@@ -1070,29 +1119,32 @@ shared_examples_for 'Filesystem' do
 
     context 'local file to hdfs file' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + old_dir).once
+        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', old_file, 'file://' + new_file)
         instance.move_file_to_file(old_file, 'file://' + new_file)
       end
 
-      it { expect(removes_old_file).to eq(true) }
-      it { expect(creates_new_file).to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to hdfs file' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + old_dir).once
+        expect(filesystem).to receive(:hadoop_fs).with('-mv', 'file://' + old_file, 'file://' + new_file)
         instance.move_file_to_file('file://' + old_file, 'file://' + new_file)
       end
 
-      it { expect(removes_old_file).to eq(true) }
-      it { expect(creates_new_file).to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to local file' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, new_file)
+        expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file_to_file('file://' + old_file, new_file)
       end
 
-      it { expect(removes_old_file).to eq(true) }
-      it { expect(creates_new_file).to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to s3 file' do
@@ -1170,29 +1222,32 @@ shared_examples_for 'Filesystem' do
 
     context 'local file to hdfs dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir).once
+        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', old_file, 'file://' + new_dir)
         instance.move_file_to_dir(old_file, 'file://' + new_dir)
       end
 
-      it { expect(removes_old_file).to eq(true) }
-      it { expect(creates_new_file).to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to hdfs dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir).once
+        expect(filesystem).to receive(:hadoop_fs).with('-mv', 'file://' + old_file, 'file://' + new_dir)
         instance.move_file_to_dir('file://' + old_file, 'file://' + new_dir)
       end
 
-      it { expect(removes_old_file).to eq(true) }
-      it { expect(creates_new_file).to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to local dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file_to_dir('file://' + old_file, new_dir)
       end
 
-      it { expect(removes_old_file).to eq(true) }
-      it { expect(creates_new_file).to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs file to s3 dir' do
@@ -1265,29 +1320,32 @@ shared_examples_for 'Filesystem' do
 
     context 'local dir to hdfs dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + File.dirname(new_dir)).once
+        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', old_dir, 'file://' + new_dir)
         instance.move_dir(old_dir, 'file://' + new_dir)
       end
 
-      it { expect(removes_old_dir).to eq(true) }
-      it { expect(creates_new_dir).to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to hdfs dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + File.dirname(new_dir)).once
+        expect(filesystem).to receive(:hadoop_fs).with('-mv', 'file://' + old_dir, 'file://' + new_dir)
         instance.move_dir('file://' + old_dir, 'file://' + new_dir)
       end
 
-      it { expect(removes_old_dir).to eq(true) }
-      it { expect(creates_new_dir).to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to local dir' do
       before do
+        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_dir, 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
         instance.move_dir('file://' + old_dir, new_dir)
       end
 
-      it { expect(removes_old_dir).to eq(true) }
-      it { expect(creates_new_dir).to eq(true) }
+      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to s3 dir' do
@@ -1419,9 +1477,14 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs' do
+      before do
+        expect(filesystem).to receive(:hadoop_fs).with('-chown', '-R', instance_of(String), 'file://' + old_file).once
+      end
+
       subject(:operation) do
         instance.chown!('file://' + old_file)
       end
+
       it { expect { operation }.to_not raise_error }
     end
   end
