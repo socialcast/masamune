@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/socialcast/masamune.png?branch=master)](http://travis-ci.org/socialcast/masamune)
+
 Masamune
 ========
 A Dataflow Programming Library.
