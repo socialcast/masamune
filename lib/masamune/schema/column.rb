@@ -212,7 +212,7 @@ module Masamune::Schema
         value
       end
     rescue
-      raise ArgumentError, "Could not coerce '#{value}' into :#{type}"
+      raise ArgumentError, "Could not coerce '#{value}' into :#{type} for column '#{name}'"
     end
 
     def ruby_value(value, recursive = true)
@@ -273,7 +273,20 @@ module Masamune::Schema
         value
       end
     rescue
-      raise ArgumentError, "Could not coerce '#{value}' into :#{type}"
+      raise ArgumentError, "Could not coerce '#{value}' into :#{type} for column '#{name}'"
+    end
+
+    def default_ruby_value
+      return [] if array_value?
+      return {} if hash_value?
+      case type
+      when :date
+        Date.new(0)
+      when :timestamp
+        Time.new(0)
+      else
+        nil
+      end
     end
 
     def aggregate_value
@@ -310,6 +323,10 @@ module Masamune::Schema
 
     def array_value?
       !!(array || (reference && reference.respond_to?(:multiple) && reference.multiple))
+    end
+
+    def hash_value?
+      [:key_value, :yaml, :json].include?(type)
     end
 
     def as_psql

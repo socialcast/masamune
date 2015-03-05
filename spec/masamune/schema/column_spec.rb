@@ -221,7 +221,7 @@ describe Masamune::Schema::Column do
 
       context 'when unknown' do
         let(:value) { 'unknown' }
-        it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :date" }
+        it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :date for column 'date'" }
       end
 
       context 'when Date' do
@@ -348,6 +348,39 @@ describe Masamune::Schema::Column do
     end
   end
 
+  describe '#default_ruby_value' do
+    subject(:result) { column.default_ruby_value }
+
+    [:boolean, :integer, :string].each do |type|
+      context "with type :#{type}" do
+        let(:column) { described_class.new(id: 'column', type: type) }
+        it { is_expected.to be_nil }
+      end
+    end
+
+    context 'with type :date' do
+      let(:column) { described_class.new(id: 'column', type: :date) }
+      it { is_expected.to eq(Date.new(0)) }
+    end
+
+    context 'with type :timestamp' do
+      let(:column) { described_class.new(id: 'column', type: :timestamp) }
+      it { is_expected.to eq(Time.new(0)) }
+    end
+
+    [:json, :yaml, :key_value].each do |type|
+      context "with type :#{type}" do
+        let(:column) { described_class.new(id: 'column', type: type) }
+        it { is_expected.to eq({}) }
+      end
+    end
+
+    context 'with array' do
+      let(:column) { described_class.new(id: 'column', type: :integer, array: true) }
+      it { is_expected.to eq([]) }
+    end
+  end
+
   describe '#csv_value' do
     subject(:result) { column.csv_value(value) }
 
@@ -443,7 +476,7 @@ describe Masamune::Schema::Column do
     end
 
     context 'with type :timestamp' do
-      let(:column) { described_class.new(id: 'bool', type: :timestamp) }
+      let(:column) { described_class.new(id: 'timestamp', type: :timestamp) }
 
       context 'when nil' do
         let(:value) { nil }
@@ -457,7 +490,7 @@ describe Masamune::Schema::Column do
 
       context 'when unknown' do
         let(:value) { 'unknown' }
-        it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :timestamp" }
+        it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :timestamp for column 'timestamp'" }
       end
     end
   end

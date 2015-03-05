@@ -135,6 +135,22 @@ describe Masamune::Schema::Map do
       end
     end
 
+    context 'with undefined function' do
+      let(:source) { catalog.hive.user_event }
+      let(:target) { catalog.hive.user_fact }
+      let(:source_data) { '' }
+      let(:target_data) { '' }
+
+      before do
+        catalog.schema :hive do
+          map from: hive.user_event, to: hive.user_fact do |row|
+          end
+        end
+      end
+
+      it { expect { subject }.to raise_error ArgumentError, /function for map between .* does not return output for default input/ }
+    end
+
     context 'from csv file to dimension' do
       before do
         catalog.schema :files do
@@ -377,6 +393,85 @@ describe Masamune::Schema::Map do
           10	0	1420071600
           10	0	1420071600
           10	-1	1420072200
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+
+      it_behaves_like 'apply input/output'
+    end
+
+    context 'from event with array attribute to fact' do
+      before do
+        catalog.clear!
+        catalog.schema :hive do
+          event 'user' do
+            attribute 'id', type: :integer, immutable: true
+            attribute 'group_id', type: :integer, array: true
+          end
+
+          dimension 'group', type: :two, implicit: true do
+            column 'group_id'
+          end
+
+          fact 'user' do
+            references :group
+            column 'junk'
+            measure 'total'
+          end
+
+          map from: hive.user_event, to: hive.user_fact, columns: %w(group.group_id total time_key) do |row|
+            result = []
+            (row[:group_id_now] - row[:group_id_was]).each do |group_id|
+              result <<
+                {
+                  'group.group_id':  group_id,
+                  'total':           1,
+                  'time_key':        row[:created_at]
+                }
+            end
+            (row[:group_id_was] - row[:group_id_now]).each do |group_id|
+              result <<
+                {
+                  'group.group_id':  group_id,
+                  'total':           -1,
+                  'time_key':        row[:created_at]
+                }
+            end
+            result
+          end
+        end
+      end
+
+      let(:source) do
+        catalog.hive.user_event
+      end
+
+      let(:target) do
+        catalog.hive.user_fact
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          # new lines and comments should be skipped
+
+          X	user_create	3	[1,2]	[]	0	2015-01-01T00:10:00Z
+          Y	user_update	3	[1,2,3]	[1,2]	1	2015-01-01T00:20:00Z
+          Y	user_update	3	[1,2]	[1,2,3]	1	2015-01-01T00:30:00Z
+          Z	user_delete	3	[]	[1,2]	0	2015-01-01T00:40:00Z
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          1	1	1420071000
+          2	1	1420071000
+          3	1	1420071600
+          3	-1	1420072200
+          1	-1	1420072800
+          2	-1	1420072800
         EOS
       end
 
