@@ -231,7 +231,8 @@ describe Masamune::Transform::DefineTable do
           total INT,
           time_key INT
         )
-        PARTITIONED BY (y INT, m INT, d INT);
+        PARTITIONED BY (y INT, m INT, d INT)
+        TBLPROPERTIES ('serialization.null.format' = '');
       EOS
     end
   end

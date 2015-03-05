@@ -30,4 +30,5 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
   <%- end -%>
   <%= target.time_key.name %> <%= target.time_key.hql_type %>
 )
-PARTITIONED BY (<%= target.partition_by %>);
+PARTITIONED BY (<%= target.partition_by %>)
+TBLPROPERTIES ('serialization.null.format' = '');
