@@ -39,7 +39,7 @@ module Masamune::Tasks
     method_option :output, :aliases => '-o', :desc => 'Save SQL output to file'
     method_option :delimiter, :desc => 'Hive row format delimiter', :default => "\001"
     method_option :csv, :type => :boolean, :desc => 'Report SQL output in CSV format', :default => false
-    method_option :variables, :aliases => '-D', :type => :hash, :desc => 'Variables to substitute in SQL', :default => {}
+    method_option :variables, :aliases => '-X', :type => :hash, :desc => 'Variables to substitute in SQL', :default => {}
     method_option :retry, :type => :boolean, :desc => 'Retry SQL query in event of failure', :default => false
     method_option :service, :desc => 'Start as a service', :default => false
     def hive_exec

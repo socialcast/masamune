@@ -28,17 +28,43 @@ require 'masamune/tasks/hive_thor'
 describe Masamune::Tasks::HiveThor do
   context 'with help command ' do
     let(:command) { 'help' }
+    before do
+      expect_any_instance_of(described_class).to receive(:hive).never
+    end
     it_behaves_like 'command usage'
   end
 
-  context 'with --file' do
-    let(:options) { ['--file=zombo.hql'] }
+  context 'with command options' do
     before do
       expect_any_instance_of(described_class).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS masamune;', database: nil).and_return(mock_success)
-      expect_any_instance_of(described_class).to receive(:hive).with(file: instance_of(String)).once.and_return(mock_success)
-      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: 'zombo.hql')).once.and_return(mock_success)
-      cli_invocation
+      expect_any_instance_of(described_class).to receive(:hive).with(file: instance_of(String)).and_return(mock_success)
     end
-    it 'meets expectations' do; end
+
+    context 'with --file' do
+      let(:options) { ['--file=zombo.hql'] }
+      before do
+        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: 'zombo.hql')).once.and_return(mock_success)
+        cli_invocation
+      end
+      it 'meets expectations' do; end
+    end
+
+    context 'with --variables=YEAR:2015 MONTH:1' do
+      let(:options) { ['--variables=YEAR:2015', 'MONTH:1'] }
+      before do
+        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
+        cli_invocation
+      end
+      it 'meets expectations' do; end
+    end
+
+    context 'with -X YEAR:2015 MONTH:1' do
+      let(:options) { ['-X', 'YEAR:2015', 'MONTH:1'] }
+      before do
+        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
+        cli_invocation
+      end
+      it 'meets expectations' do; end
+    end
   end
 end
