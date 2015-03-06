@@ -38,7 +38,7 @@ module Masamune::Tasks
     method_option :output, :aliases => '-o', :desc => 'Save SQL output to file'
     method_option :csv, :type => :boolean, :desc => 'Report SQL output in CSV format', :default => false
     def psql_exec
-      postgres_options = options.dup
+      postgres_options = options.dup.with_indifferent_access
       postgres_options.merge!(print: true)
       postgres(postgres_options)
     end

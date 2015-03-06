@@ -36,7 +36,7 @@ describe Masamune::Tasks::HiveThor do
     before do
       expect_any_instance_of(described_class).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS masamune;', database: nil).and_return(mock_success)
       expect_any_instance_of(described_class).to receive(:hive).with(file: instance_of(String)).once.and_return(mock_success)
-      expect_any_instance_of(described_class).to receive(:hive).with(hash_including('file' => 'zombo.hql')).once.and_return(mock_success)
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: 'zombo.hql')).once.and_return(mock_success)
       cli_invocation
     end
     it 'meets expectations' do; end
