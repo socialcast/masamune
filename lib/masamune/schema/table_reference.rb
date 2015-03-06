@@ -30,7 +30,8 @@ module Masamune::Schema
       default:         nil,
       natural_key:     false,
       denormalize:     false,
-      multiple:        false
+      multiple:        false,
+      degenerate:      false
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|

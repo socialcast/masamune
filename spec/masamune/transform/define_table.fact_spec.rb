@@ -214,6 +214,44 @@ describe Masamune::Transform::DefineTable do
     end
   end
 
+  context 'for postgres fact with degenerate reference' do
+    before do
+      catalog.clear!
+      catalog.schema :postgres do
+        fact 'visits' do
+          references :message_kind, degenerate: true
+          measure 'count', aggregate: :sum
+        end
+      end
+    end
+
+    let(:target) { catalog.postgres.visits_fact }
+
+    subject(:result) { transform.define_table(target).to_s }
+
+    it 'should eq render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS visits_fact
+        (
+          message_kind_type_id INTEGER,
+          count INTEGER NOT NULL,
+          time_key INTEGER NOT NULL,
+          last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_message_kind_type_id_index') THEN
+        CREATE INDEX visits_fact_message_kind_type_id_index ON visits_fact (message_kind_type_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_time_key_index') THEN
+        CREATE INDEX visits_fact_time_key_index ON visits_fact (time_key);
+        END IF; END $$;
+      EOS
+    end
+  end
+
   context 'for hive fact' do
     let(:target) { catalog.hive.visits_hourly_fact }
 

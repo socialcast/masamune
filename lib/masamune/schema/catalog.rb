@@ -136,6 +136,7 @@ module Masamune::Schema
     # FIXME: references should not be ambiguous, e.g. references :user, should be references :user_dimension
     def references(id, options = {})
       table = @context.tables[id] || @context.dimensions[id]
+      table ||= Masamune::Schema::Dimension.new(id: id, type: :mini) if options[:degenerate]
       reference = Masamune::Schema::TableReference.new(table, options.reverse_merge(denormalize: table.implicit))
       @context.references[reference.id] = reference
       @context.options[:references] << reference

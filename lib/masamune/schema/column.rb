@@ -344,6 +344,7 @@ module Masamune::Schema
     # TODO: Add ELEMENT REFERENCES
     def reference_constraint
       return if parent.temporary?
+      return if degenerate?
       return if array_value?
       if reference && reference.surrogate_key.type == type
         "REFERENCES #{reference.name}(#{reference.surrogate_key.name})"
@@ -414,6 +415,10 @@ module Masamune::Schema
       end
     end
 
+    def degenerate?
+      reference && reference.respond_to?(:degenerate) && reference.degenerate
+    end
+
     def adjacent
       return unless reference
       reference.columns[id]
@@ -423,7 +428,7 @@ module Masamune::Schema
 
     def sql_constraints
       [].tap do |constraints|
-        constraints << 'NOT NULL' unless null || surrogate_key || !strict || parent.temporary?
+        constraints << 'NOT NULL' unless null || surrogate_key || !strict || parent.temporary? || degenerate?
         constraints << 'PRIMARY KEY' if surrogate_key
       end
     end
