@@ -46,13 +46,7 @@ module Masamune::Tasks
       hive_options = options.dup
       hive_options.merge!(print: true)
       hive_options.merge!(retries: 0) unless options[:retry]
-
-      if options[:file]
-        remote_file = fs.path(:tmp_dir, File.basename(options[:file]))
-        fs.copy_file_to_dir(options[:file], fs.path(:tmp_dir)) unless options[:file] == remote_file
-        hive_options.merge!(file: remote_file)
-      end
-
+      hive_options.merge!(file: options[:file])
       hive(hive_options)
     end
     default_task :hive_exec
