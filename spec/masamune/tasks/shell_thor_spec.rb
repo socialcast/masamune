@@ -23,38 +23,30 @@
 require 'spec_helper'
 require 'thor'
 
-require 'masamune/tasks/elastic_mapreduce_thor'
+require 'masamune/tasks/shell_thor'
 
-describe Masamune::Tasks::ElasticMapreduceThor do
+describe Masamune::Tasks::ShellThor do
   context 'with help command ' do
     let(:command) { 'help' }
     it_behaves_like 'command usage'
   end
 
-  context 'with -j' do
-    let(:options) { ['-j', 'j-XYZ'] }
+  context 'with no arguments' do
     before do
-      expect_any_instance_of(described_class).to receive(:elastic_mapreduce).with(hash_including(jobflow: 'j-XYZ', extra: ['--ssh'])).once.and_return(mock_success)
+      expect(Pry).to receive(:start)
       cli_invocation
     end
     it 'meets expectations' do; end
   end
 
-  context 'with --jobflow' do
-    let(:options) { ['--jobflow=j-XYZ'] }
-    before do
-      expect_any_instance_of(described_class).to receive(:elastic_mapreduce).with(hash_including(jobflow: 'j-XYZ', extra: ['--ssh'])).once.and_return(mock_success)
-      cli_invocation
-    end
-    it 'meets expectations' do; end
-  end
+  context 'with --dump' do
+    let(:options) { ['--dump'] }
 
-  context 'with -- --list' do
-    let(:options) { ['--', '--list'] }
-    before do
-      expect_any_instance_of(described_class).to receive(:elastic_mapreduce).with(hash_including(extra: ['--list'])).once.and_return(mock_success)
-      cli_invocation
+    it 'exits with status code 0 and prints catalog' do
+      expect { cli_invocation }.to raise_error { |e|
+        expect(e).to be_a(SystemExit)
+        expect(e.status).to eq(0)
+      }
     end
-    it 'meets expectations' do; end
   end
 end
