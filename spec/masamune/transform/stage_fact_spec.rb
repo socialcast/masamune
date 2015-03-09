@@ -50,13 +50,14 @@ describe Masamune::Transform::StageFact do
 
       dimension 'group', type: :two do
         column 'group_id', type: :integer, index: true, natural_key: true
+        row group_id: -1, attributes: {id: :missing}
       end
 
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
         references :date
         references :tenant
         references :user
-        references :group, multiple: true
+        references :group, default: :missing
         references :user_agent, insert: true
         references :feature, insert: true
         references :session, degenerate: true
@@ -67,6 +68,7 @@ describe Masamune::Transform::StageFact do
         column 'date.date_id', type: :integer
         column 'tenant.tenant_id', type: :integer
         column 'user.user_id', type: :integer
+        column 'group.group_id', type: :integer
         column 'user_agent.name', type: :string
         column 'user_agent.version', type: :string
         column 'feature.name', type: :string
@@ -95,15 +97,17 @@ describe Masamune::Transform::StageFact do
         ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_date_dimension_uuid_fkey FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid);
         ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_tenant_dimension_uuid_fkey FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid);
         ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_user_dimension_uuid_fkey FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_group_dimension_uuid_fkey FOREIGN KEY (group_dimension_uuid) REFERENCES group_dimension(uuid);
         ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id);
         ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
 
         INSERT INTO
-          visits_hourly_fact_y2014m08_stage (date_dimension_uuid, tenant_dimension_uuid, user_dimension_uuid, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
+          visits_hourly_fact_y2014m08_stage (date_dimension_uuid, tenant_dimension_uuid, user_dimension_uuid, group_dimension_uuid, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
         SELECT
           date_dimension.uuid,
           tenant_dimension.uuid,
           user_dimension.uuid,
+          group_dimension.uuid,
           user_agent_type.id,
           feature_type.id,
           visits_hourly_file_fact_stage.session_type_id,
@@ -125,6 +129,11 @@ describe Masamune::Transform::StageFact do
         ON
           tenant_dimension.tenant_id = COALESCE(visits_hourly_file_fact_stage.tenant_dimension_tenant_id, user_dimension.tenant_id) AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < tenant_dimension.start_at AND tenant_dimension.version = 1))
+        JOIN
+          group_dimension
+        ON
+          group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_id, missing_group_id()) AND
+          ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN group_dimension.start_at AND COALESCE(group_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < group_dimension.start_at AND group_dimension.version = 1))
         JOIN
           user_agent_type
         ON
@@ -157,6 +166,7 @@ describe Masamune::Transform::StageFact do
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_date_dimension_uuid_fkey FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid) NOT VALID;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_tenant_dimension_uuid_fkey FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid) NOT VALID;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_dimension_uuid_fkey FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid) NOT VALID;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_group_dimension_uuid_fkey FOREIGN KEY (group_dimension_uuid) REFERENCES group_dimension(uuid) NOT VALID;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id) NOT VALID;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id) NOT VALID;
 

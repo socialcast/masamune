@@ -79,6 +79,10 @@ module Masamune::Transform
               coalesce_values << column.adjacent.sql_value(column.adjacent.try(:default))
             end
 
+            if column.reference && column.reference.default
+              coalesce_values << column.reference.default(column.adjacent) if column.adjacent.natural_key
+            end
+
             conditions[reference.name] << (coalesce_values.any? ?
               "#{column.foreign_key_name} = COALESCE(#{column.qualified_name}, #{coalesce_values.join(', ')})" :
               "#{column.foreign_key_name} = #{column.qualified_name}")

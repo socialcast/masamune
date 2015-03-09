@@ -22,7 +22,7 @@
 
 module Masamune::Schema
   class Fact < Table
-    SUPPORTED_GRAINS = [:hourly, :daily, :monthly]
+    SUPPORTED_GRAINS = [:transaction, :hourly, :daily, :monthly]
 
     attr_accessor :grain
     attr_accessor :partition
