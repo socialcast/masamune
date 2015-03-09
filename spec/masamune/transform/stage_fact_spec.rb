@@ -59,6 +59,7 @@ describe Masamune::Transform::StageFact do
         references :group, multiple: true
         references :user_agent, insert: true
         references :feature, insert: true
+        references :session, degenerate: true
         measure 'total', type: :integer
       end
 
@@ -69,6 +70,7 @@ describe Masamune::Transform::StageFact do
         column 'user_agent.name', type: :string
         column 'user_agent.version', type: :string
         column 'feature.name', type: :string
+        column 'session.id', type: :integer
         column 'time_key', type: :integer
         column 'total', type: :integer
       end
@@ -97,13 +99,14 @@ describe Masamune::Transform::StageFact do
         ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
 
         INSERT INTO
-          visits_hourly_fact_y2014m08_stage (date_dimension_uuid, tenant_dimension_uuid, user_dimension_uuid, user_agent_type_id, feature_type_id, total, time_key)
+          visits_hourly_fact_y2014m08_stage (date_dimension_uuid, tenant_dimension_uuid, user_dimension_uuid, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
         SELECT
           date_dimension.uuid,
           tenant_dimension.uuid,
           user_dimension.uuid,
           user_agent_type.id,
           feature_type.id,
+          visits_hourly_file_fact_stage.session_type_id,
           visits_hourly_file_fact_stage.total,
           visits_hourly_file_fact_stage.time_key
         FROM
@@ -139,6 +142,7 @@ describe Masamune::Transform::StageFact do
         CREATE INDEX visits_hourly_fact_y2014m08_stage_group_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (group_dimension_uuid);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index ON visits_hourly_fact_y2014m08_stage (user_agent_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index ON visits_hourly_fact_y2014m08_stage (feature_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_session_type_id_index ON visits_hourly_fact_y2014m08_stage (session_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_time_key_index ON visits_hourly_fact_y2014m08_stage (time_key);
 
         COMMIT;
@@ -162,6 +166,7 @@ describe Masamune::Transform::StageFact do
         ALTER INDEX visits_hourly_fact_y2014m08_stage_group_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_group_dimension_uuid_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index RENAME TO visits_hourly_fact_y2014m08_user_agent_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index RENAME TO visits_hourly_fact_y2014m08_feature_type_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_session_type_id_index RENAME TO visits_hourly_fact_y2014m08_session_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_time_key_index RENAME TO visits_hourly_fact_y2014m08_time_key_index;
 
         COMMIT;

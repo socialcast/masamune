@@ -47,7 +47,7 @@ module Masamune::Transform
       def insert_values(source)
         shared_columns(source).values.map do |columns|
           column = columns.first
-          if reference = column.reference
+          if !column.degenerate? && reference = column.reference
             reference.surrogate_key.qualified_name
           else
             column.qualified_name
@@ -65,6 +65,7 @@ module Masamune::Transform
         conditions = Hash.new { |h,k| h[k] = [] }
         join_columns.each do |reference, columns|
           columns.each do |column|
+            next if column.degenerate?
             dependencies[reference.name] = []
             cross_references = cross_references(column)
             coalesce_values = []
