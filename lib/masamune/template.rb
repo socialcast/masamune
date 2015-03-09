@@ -21,6 +21,7 @@
 #  THE SOFTWARE.
 
 require 'tilt'
+require 'pathname'
 
 module Masamune
   class Template

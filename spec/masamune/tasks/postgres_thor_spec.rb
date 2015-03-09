@@ -20,28 +20,24 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'masamune'
+require 'spec_helper'
 require 'thor'
 
-module Masamune::Tasks
-  class PostgresThor < Thor
-    include Masamune::Thor
-    include Masamune::Actions::Postgres
+require 'masamune/tasks/postgres_thor'
 
-    # FIXME need to add an unnecessary namespace until this issue is fixed:
-    # https://github.com/wycats/thor/pull/247
-    namespace :postgres
+describe Masamune::Tasks::PostgresThor do
+  context 'with help command ' do
+    let(:command) { 'help' }
+    it_behaves_like 'command usage'
+  end
 
-    desc 'psql', 'Launch a Postgres session'
-    method_option :file, :aliases => '-f', :desc => 'SQL from files'
-    method_option :exec, :aliases => '-e', :desc => 'SQL from command line'
-    method_option :output, :aliases => '-o', :desc => 'Save SQL output to file'
-    method_option :csv, :type => :boolean, :desc => 'Report SQL output in CSV format', :default => false
-    def psql_exec
-      postgres_options = options.dup.with_indifferent_access
-      postgres_options.merge!(print: true)
-      postgres(postgres_options)
+  context 'with --file' do
+    let(:options) { ['--file=zombo.hql'] }
+    before do
+      expect_any_instance_of(described_class).to receive(:postgres).with(file: instance_of(String)).once.and_return(mock_success)
+      expect_any_instance_of(described_class).to receive(:postgres).with(hash_including(file: 'zombo.hql')).once.and_return(mock_success)
+      cli_invocation
     end
-    default_task :psql_exec
+    it 'meets expectations' do; end
   end
 end
