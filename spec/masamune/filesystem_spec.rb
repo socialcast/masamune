@@ -336,22 +336,19 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + old_dir).once
         expect(filesystem).to receive(:hadoop_fs).with('-touchz', 'file://' + new_file, 'file://' + other_new_file).once
         instance.touch!('file://' + new_file, 'file://' + other_new_file)
       end
-      it 'meets expectations' do; end
     end
 
     context 's3' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/file').at_most(:once)
         expect(filesystem).to receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/other_file').at_most(:once)
         instance.touch!('s3://bucket/file', 's3://bucket/other_file')
       end
-
-      it 'meets expectations' do; end
     end
   end
 
@@ -571,21 +568,18 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs directory' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir, 'file://' + other_new_dir).once
         instance.mkdir!('file://' + new_dir, 'file://' + other_new_dir)
       end
-      it 'meets expectations' do; end
     end
 
     context 's3 directory' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/dir/.not_empty').at_most(:once)
         expect(filesystem).to receive(:s3cmd).with('put', an_instance_of(String), 's3://bucket/other_dir/.not_empty').at_most(:once)
         instance.mkdir!('s3://bucket/dir', 's3://bucket/other_dir')
       end
-
-      it 'meets expectations' do; end
     end
   end
 
@@ -732,78 +726,62 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'local file to s3 file' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('put', old_file, 's3://bucket/new_dir/new_file')
         instance.copy_file_to_file(old_file, 's3://bucket/new_dir/new_file')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'local file to hdfs file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-copyFromLocal', 'file://' + old_file, 'file://' + result_file)
         instance.copy_file_to_file(old_file, 'file://' + result_file)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to hdfs file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 'file://' + result_file)
         instance.copy_file_to_file('file://' + old_file, 'file://' + result_file)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to local file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, 'file://' + result_file)
         instance.copy_file_to_file('file://' + old_file, result_file)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to s3 file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir/new_file')
         instance.copy_file_to_file('file://' + old_file, 's3://bucket/new_dir/new_file')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to s3 file' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('cp', 's3://bucket/old_file', 's3://bucket/new_dir/new_file')
         instance.copy_file_to_file('s3://bucket/old_file', 's3://bucket/new_dir/new_file')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to local file' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('get', 's3://bucket/old_file', new_file)
         instance.copy_file_to_file('s3://bucket/old_file', new_file)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to hdfs file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 's3n://bucket/old_file', 'file://' + result_file)
         instance.copy_file_to_file('s3://bucket/old_file', 'file://' + result_file)
       end
-
-      it 'meets expectations' do; end
     end
   end
 
@@ -831,78 +809,62 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'local file to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('put', old_file, 's3://bucket/new_dir/')
         instance.copy_file_to_dir(old_file, 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'local file to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-copyFromLocal', 'file://' + old_file, 'file://' + new_dir)
         instance.copy_file_to_dir(old_file, 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 'file://' + new_dir)
         instance.copy_file_to_dir('file://' + old_file, 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to local dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, 'file://' + new_dir)
         instance.copy_file_to_dir('file://' + old_file, new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir')
         instance.copy_file_to_dir('file://' + old_file, 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('cp', 's3://bucket/old_file', 's3://bucket/new_dir/')
         instance.copy_file_to_dir('s3://bucket/old_file', 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to local dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('get', 's3://bucket/old_file', new_dir)
         instance.copy_file_to_dir('s3://bucket/old_file', new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 's3n://bucket/old_file', 'file://' + new_dir)
         instance.copy_file_to_dir('s3://bucket/old_file', 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
   end
 
@@ -920,78 +882,62 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'local dir to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('put', '--recursive', old_dir, 's3://bucket/new_dir/')
         instance.copy_dir(old_dir, 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'local dir to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-copyFromLocal', 'file://' + old_dir, 'file://' + new_dir)
         instance.copy_dir(old_dir, 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 'file://' + new_dir)
         instance.copy_dir('file://' + old_dir, 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to local dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_dir, 'file://' + new_dir)
         instance.copy_dir('file://' + old_dir, new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 's3n://bucket/new_dir')
         instance.copy_dir('file://' + old_dir, 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 dir to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('cp', '--recursive', 's3://bucket/old_dir/', 's3://bucket/new_dir/')
         instance.copy_dir('s3://bucket/old_dir', 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 dir to local dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('get', '--recursive', '--skip-existing', 's3://bucket/old_dir/', File.join(new_dir, 'old_dir'))
         instance.copy_dir('s3://bucket/old_dir', new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 dir to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
         instance.copy_dir('s3://bucket/old_dir', 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
   end
 
@@ -1009,21 +955,17 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.remove_file('file://' + old_file)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('del', 's3://bucket/file')
         instance.remove_file('s3://bucket/file')
       end
-
-      it 'meets expectations' do; end
     end
   end
 
@@ -1050,13 +992,11 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:root_path?).once.and_return(false)
         expect(filesystem).to receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
         instance.remove_dir('file://' + old_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs root dir' do
@@ -1068,13 +1008,11 @@ shared_examples_for 'Filesystem' do
     end
 
     context 's3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir/')
         expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/dir_$folder$')
         instance.remove_dir('s3://bucket/dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 root dir' do
@@ -1083,8 +1021,6 @@ shared_examples_for 'Filesystem' do
       end
 
       it { expect { instance.remove_dir('s3://bucket/') }.to raise_error /root path/ }
-
-      it 'meets expectations' do; end
     end
   end
 
@@ -1113,77 +1049,62 @@ shared_examples_for 'Filesystem' do
         instance.move_file_to_file(old_file, 's3://bucket/new_dir/new_file')
       end
 
-      it 'meets expectations' do; end
       it { expect(removes_old_file).to eq(true) }
     end
 
     context 'local file to hdfs file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + old_dir).once
         expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' +  old_file, 'file://' + new_file)
         instance.move_file_to_file(old_file, 'file://' + new_file)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to hdfs file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + old_dir).once
         expect(filesystem).to receive(:hadoop_fs).with('-mv', 'file://' + old_file, 'file://' + new_file)
         instance.move_file_to_file('file://' + old_file, 'file://' + new_file)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to local file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, 'file://' + new_file)
         expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file_to_file('file://' + old_file, new_file)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to s3 file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir/new_file')
         expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file_to_file('file://' + old_file, 's3://bucket/new_dir/new_file')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to s3 file' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('mv', 's3://bucket/old_file', 's3://bucket/new_dir/new_file')
         instance.move_file_to_file('s3://bucket/old_file', 's3://bucket/new_dir/new_file')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to local file' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('get', 's3://bucket/old_file', new_file)
         expect(filesystem).to receive(:s3cmd).with('del', 's3://bucket/old_file')
         instance.move_file_to_file('s3://bucket/old_file', new_file)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to hdfs file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + File.dirname(new_file))
         expect(filesystem).to receive(:hadoop_fs).with('-mv', 's3n://bucket/old_file', 'file://' + new_file)
         instance.move_file_to_file('s3://bucket/old_file', 'file://' + new_file)
       end
-
-      it 'meets expectations' do; end
     end
   end
 
@@ -1216,77 +1137,62 @@ shared_examples_for 'Filesystem' do
         instance.move_file_to_dir(old_file, 's3://bucket/new_dir')
       end
 
-      it 'meets expectations' do; end
       it { expect(removes_old_file).to eq(true) }
     end
 
     context 'local file to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir).once
         expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' +  old_file, 'file://' + new_dir)
         instance.move_file_to_dir(old_file, 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir).once
         expect(filesystem).to receive(:hadoop_fs).with('-mv', 'file://' + old_file, 'file://' + new_dir)
         instance.move_file_to_dir('file://' + old_file, 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to local dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file_to_dir('file://' + old_file, new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs file to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_file, 's3n://bucket/new_dir/')
         expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file_to_dir('file://' + old_file, 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('mv', 's3://bucket/old_file', 's3://bucket/new_dir/')
         instance.move_file_to_dir('s3://bucket/old_file', 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to local dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('get', 's3://bucket/old_file', new_dir)
         expect(filesystem).to receive(:s3cmd).with('del', 's3://bucket/old_file')
         instance.move_file_to_dir('s3://bucket/old_file', new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 file to hdfs file' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-mv', 's3n://bucket/old_file', 'file://' + new_dir)
         instance.move_file_to_dir('s3://bucket/old_file', 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
   end
 
@@ -1314,80 +1220,65 @@ shared_examples_for 'Filesystem' do
         instance.move_dir(old_dir, 's3://bucket/new_dir')
       end
 
-      it 'meets expectations' do; end
       it { expect(removes_old_dir).to eq(true) }
     end
 
     context 'local dir to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + File.dirname(new_dir)).once
         expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' +  old_dir, 'file://' + new_dir)
         instance.move_dir(old_dir, 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + File.dirname(new_dir)).once
         expect(filesystem).to receive(:hadoop_fs).with('-mv', 'file://' + old_dir, 'file://' + new_dir)
         instance.move_dir('file://' + old_dir, 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to local dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_dir, 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
         instance.move_dir('file://' + old_dir, new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 'hdfs dir to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 's3n://bucket/new_dir/')
         expect(filesystem).to receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
         instance.move_dir('file://' + old_dir, 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 dir to s3 dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('mv', '--recursive', 's3://bucket/old_dir/', 's3://bucket/new_dir')
         instance.move_dir('s3://bucket/old_dir', 's3://bucket/new_dir')
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 dir to local dir' do
-      before do
+      it do
         expect(filesystem).to receive(:s3cmd).with('get', '--recursive', 's3://bucket/old_dir/', new_dir)
         expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir/')
         expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir_$folder$')
         instance.move_dir('s3://bucket/old_dir', new_dir)
       end
-
-      it 'meets expectations' do; end
     end
 
     context 's3 dir to hdfs dir' do
-      before do
+      it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 's3n://bucket/old_dir', 'file://' + new_dir)
         expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir/')
         expect(filesystem).to receive(:s3cmd).with('del', '--recursive', 's3://bucket/old_dir_$folder$')
         instance.move_dir('s3://bucket/old_dir', 'file://' + new_dir)
       end
-
-      it 'meets expectations' do; end
     end
   end
 

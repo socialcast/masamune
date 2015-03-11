@@ -33,11 +33,10 @@ describe Masamune::Tasks::PostgresThor do
 
   context 'with --file' do
     let(:options) { ['--file=zombo.hql'] }
-    before do
+    it do
       expect_any_instance_of(described_class).to receive(:postgres).with(file: instance_of(String)).once.and_return(mock_success)
       expect_any_instance_of(described_class).to receive(:postgres).with(hash_including(file: 'zombo.hql')).once.and_return(mock_success)
       cli_invocation
     end
-    it 'meets expectations' do; end
   end
 end
