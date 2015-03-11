@@ -30,7 +30,8 @@ module Masamune::Schema
       default:         nil,
       natural_key:     false,
       denormalize:     false,
-      multiple:        false
+      multiple:        false,
+      degenerate:      false
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
@@ -65,9 +66,11 @@ module Masamune::Schema
       foreign_key.type
     end
 
-    def default
+    def default(column = nil)
       return if @default == :null
-      @default || @table.rows.detect { |row| row.default }.try(:name)
+      if default_row = @table.rows.detect { |row| @default ? row.id == @default : row.default }
+        default_row.name(column)
+      end
     end
   end
 end

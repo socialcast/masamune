@@ -266,6 +266,22 @@ describe Masamune::Schema::Catalog do
       it { expect(hive.visits_fact.measures[:count].aggregate).to eq(:sum) }
     end
 
+    context 'when schema contains fact with degenerate dimension references' do
+      before do
+        instance.schema :hive do
+          fact 'visits' do
+            references :message_kind, degenerate: true
+            measure 'count', aggregate: :sum
+          end
+        end
+      end
+
+      it { expect(hive.visits_fact.references).to include :message_kind }
+      it { expect(hive.visits_fact.columns).to include :message_kind_type_id }
+      it { expect(hive.visits_fact.measures).to include :count }
+      it { expect(hive.visits_fact.measures[:count].aggregate).to eq(:sum) }
+    end
+
     context 'when schema contains fact with a single grain' do
       before do
         instance.schema :postgres do

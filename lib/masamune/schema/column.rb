@@ -212,7 +212,7 @@ module Masamune::Schema
         value
       end
     rescue
-      raise ArgumentError, "Could not coerce '#{value}' into :#{type}"
+      raise ArgumentError, "Could not coerce '#{value}' into :#{type} for column '#{name}'"
     end
 
     def ruby_value(value, recursive = true)
@@ -273,7 +273,20 @@ module Masamune::Schema
         value
       end
     rescue
-      raise ArgumentError, "Could not coerce '#{value}' into :#{type}"
+      raise ArgumentError, "Could not coerce '#{value}' into :#{type} for column '#{name}'"
+    end
+
+    def default_ruby_value
+      return [] if array_value?
+      return {} if hash_value?
+      case type
+      when :date
+        Date.new(0)
+      when :timestamp
+        Time.new(0)
+      else
+        nil
+      end
     end
 
     def aggregate_value
@@ -312,6 +325,10 @@ module Masamune::Schema
       !!(array || (reference && reference.respond_to?(:multiple) && reference.multiple))
     end
 
+    def hash_value?
+      [:key_value, :yaml, :json].include?(type)
+    end
+
     def as_psql
       [name, sql_type(surrogate_key), *sql_constraints, reference_constraint, sql_default].compact.join(' ')
     end
@@ -327,6 +344,7 @@ module Masamune::Schema
     # TODO: Add ELEMENT REFERENCES
     def reference_constraint
       return if parent.temporary?
+      return if degenerate?
       return if array_value?
       if reference && reference.surrogate_key.type == type
         "REFERENCES #{reference.name}(#{reference.surrogate_key.name})"
@@ -397,6 +415,10 @@ module Masamune::Schema
       end
     end
 
+    def degenerate?
+      reference && reference.respond_to?(:degenerate) && reference.degenerate
+    end
+
     def adjacent
       return unless reference
       reference.columns[id]
@@ -406,7 +428,7 @@ module Masamune::Schema
 
     def sql_constraints
       [].tap do |constraints|
-        constraints << 'NOT NULL' unless null || surrogate_key || !strict || parent.temporary?
+        constraints << 'NOT NULL' unless null || surrogate_key || !strict || parent.temporary? || degenerate?
         constraints << 'PRIMARY KEY' if surrogate_key
       end
     end

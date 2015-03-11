@@ -43,6 +43,7 @@ module Masamune::Schema
       def each(&block)
         raise 'must call Buffer#bind first' unless @io
         CSV.parse(@io, options.merge(headers: @store.headers || @table.columns.keys)) do |data|
+          next if data.to_s =~ /\A#/
           row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
           yield row.to_hash
         end
@@ -59,9 +60,9 @@ module Masamune::Schema
 
       def options
         if @store.format == :tsv
-          { col_sep: "\t" }
+          { skip_blanks: true, col_sep: "\t" }
         else
-          {}
+          { skip_blanks: true }
         end
       end
     end
@@ -70,6 +71,7 @@ module Masamune::Schema
     {
       source:    nil,
       target:    nil,
+      columns:   nil,
       store:     nil,
       function:  ->(row) { row },
       debug:     false
@@ -97,13 +99,15 @@ module Masamune::Schema
       @target = target.type == :four ? target.ledger_table : target
     end
 
-    # TODO: pass a default hash to function with expected default ruby value types, e.g, h[k] = {} for :key_value
-    def columns
-      Array.wrap(function.call({})).first.keys
+    def intermediate_columns
+      output = function.call(default_row(source.columns))
+      example = Array.wrap(output).first
+      raise ArgumentError, "function for map between '#{source.name}' and '#{target.name}' does not return output for default input" unless example
+      example.keys
     end
 
     def intermediate
-      target.stage_table(columns: columns, inherit: false)
+      target.stage_table(columns: columns || intermediate_columns, inherit: false)
     end
 
     def apply(input_files, output_file)
@@ -156,6 +160,14 @@ module Masamune::Schema
     end
 
     private
+
+    def default_row(columns)
+      {}.tap do |row|
+        columns.each do |_, column|
+          row[column.name] = column.default_ruby_value
+        end
+      end
+    end
 
     def apply_buffer(input_buffer, output_buffer)
       input_buffer.each do |input|

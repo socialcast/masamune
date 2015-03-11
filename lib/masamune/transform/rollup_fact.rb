@@ -36,16 +36,24 @@ module Masamune::Transform
       include Masamune::LastElement
 
       def insert_columns(source)
-        source.columns.map do |_, column|
+        values = []
+        shared_columns(source).values.map do |columns|
+          column = columns.first
           next if column.id == :last_modified_at
-          column.name
-        end.compact
+          values << column.name
+        end
+        measures.each do |_ ,measure|
+          values << measure.name
+        end
+        values << time_key.name
+        values.compact
       end
 
       def insert_values(source)
         values = []
         values << "(#{first_date_surrogate_key})"
-        source.columns.each do |_, column|
+        shared_columns(source).values.map do |columns|
+          column = columns.first
           next unless column.reference
           next if column.reference.type == :date
           values << column.qualified_name
@@ -53,7 +61,7 @@ module Masamune::Transform
         source.measures.each do |_ ,measure|
           values << measure.aggregate_value
         end
-        values << "(#{first_date_time_key})"
+        values << "(#{floor_time_key(source)})"
         values
       end
       method_with_last_element :insert_values
@@ -69,11 +77,13 @@ module Masamune::Transform
       def group_by(source)
         group_by = []
         group_by << date_column.reference.columns[rollup_key].qualified_name
-        source.columns.each do |_, column|
+        shared_columns(source).values.map do |columns|
+          column = columns.first
           next unless column.reference
           next if column.reference.type == :date
           group_by << column.qualified_name
         end
+        group_by << "(#{floor_time_key(source)})" if grain == :hourly
         group_by
       end
       method_with_last_element :group_by
@@ -83,6 +93,7 @@ module Masamune::Transform
       def rollup_key
         case grain
         when :hourly
+          :date_epoch
         when :daily
           :date_epoch
         when :monthly
@@ -106,6 +117,15 @@ module Masamune::Transform
             d.#{date_key}
           LIMIT 1
         EOS
+      end
+
+      def floor_time_key(source)
+        case grain
+        when :hourly
+          "#{source.time_key.qualified_name} - (#{source.time_key.qualified_name} % #{1.hour.seconds})"
+        when :daily, :monthly
+          first_date_time_key
+        end
       end
 
       def first_date_time_key
