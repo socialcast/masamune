@@ -85,7 +85,7 @@ describe Masamune::Actions::Transform do
   let(:postgres) { catalog.postgres }
 
   before do
-    instance.environment = MasamuneExampleGroup
+    instance.environment = Masamune::ExampleGroup
   end
 
   describe '.load_dimension' do
