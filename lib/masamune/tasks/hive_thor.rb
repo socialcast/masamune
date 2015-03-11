@@ -39,20 +39,14 @@ module Masamune::Tasks
     method_option :output, :aliases => '-o', :desc => 'Save SQL output to file'
     method_option :delimiter, :desc => 'Hive row format delimiter', :default => "\001"
     method_option :csv, :type => :boolean, :desc => 'Report SQL output in CSV format', :default => false
-    method_option :variables, :aliases => '-D', :type => :hash, :desc => 'Variables to substitute in SQL', :default => {}
+    method_option :variables, :aliases => '-X', :type => :hash, :desc => 'Variables to substitute in SQL', :default => {}
     method_option :retry, :type => :boolean, :desc => 'Retry SQL query in event of failure', :default => false
     method_option :service, :desc => 'Start as a service', :default => false
     def hive_exec
-      hive_options = options.dup
+      hive_options = options.dup.with_indifferent_access
       hive_options.merge!(print: true)
       hive_options.merge!(retries: 0) unless options[:retry]
-
-      if options[:file]
-        remote_file = fs.path(:tmp_dir, File.basename(options[:file]))
-        fs.copy_file_to_dir(options[:file], fs.path(:tmp_dir)) unless options[:file] == remote_file
-        hive_options.merge!(file: remote_file)
-      end
-
+      hive_options.merge!(file: options[:file])
       hive(hive_options)
     end
     default_task :hive_exec

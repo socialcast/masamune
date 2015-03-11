@@ -36,7 +36,10 @@ module Masamune::Tasks
     class_option :template, :type => :string, :aliases => '-t', :desc => 'Execute named template command'
     class_option :params, :type => :hash, :aliases => '-p', :desc => 'Bind params to named template command', :default => {}
     def elastic_mapreduce_exec
-      elastic_mapreduce(options.merge(interactive: true, extra: extra_or_ssh))
+      elastic_mapreduce_options = options.dup.with_indifferent_access
+      elastic_mapreduce_options.merge!(interactive: true)
+      elastic_mapreduce_options.merge!(extra: extra_or_ssh)
+      elastic_mapreduce(elastic_mapreduce_options)
     end
     default_task :elastic_mapreduce_exec
 

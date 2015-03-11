@@ -1,4 +1,5 @@
 [![Build Status](https://secure.travis-ci.org/socialcast/masamune.png?branch=master)](http://travis-ci.org/socialcast/masamune)
+[![License](http://img.shields.io/license/MIT.png?color=green)](http://opensource.org/licenses/MIT)
 
 Masamune
 ========

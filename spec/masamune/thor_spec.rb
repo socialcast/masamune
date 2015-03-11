@@ -23,21 +23,11 @@
 require 'spec_helper'
 require 'thor'
 
-ENV['THOR_DEBUG'] = '1'
 describe Masamune::Thor do
-  def capture(stdout, stderr, &block)
-    tmp_stdout, $stdout = $stdout, stdout
-    tmp_stderr, $stderr = $stderr, stderr
-    yield
-  ensure
-    $stdout, $stderr = tmp_stdout, tmp_stderr
-  end
-
-  let(:klass) do
+  let(:thor_class) do
     Class.new(Thor) do
       include Masamune::Thor
       include Masamune::Actions::DataFlow
-      include Masamune::ThorMute
 
       desc 'command', 'command'
       target path: "target/%Y-%m-%d"
@@ -56,43 +46,20 @@ describe Masamune::Thor do
   end
 
   before do
-    allow_any_instance_of(klass).to receive(:top_level?).and_return(true)
+    allow_any_instance_of(thor_class).to receive(:top_level?).and_return(true)
   end
 
   context 'CLI' do
-    let(:command) { nil }
-    let(:options) { {} }
-
-    let!(:stdout) { StringIO.new }
-    let!(:stderr) { StringIO.new }
-
-    subject(:cli_invocation) do
-      capture(stdout, stderr) do
-        klass.start([command, *options].compact)
-      end
-    end
-
     context 'ouside of top level' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
 
       before do
-        allow_any_instance_of(klass).to receive(:top_level?).and_return(false)
+        allow_any_instance_of(thor_class).to receive(:top_level?).and_return(false)
       end
 
       it 'continues execution' do
         expect { cli_invocation }.to_not raise_error
-      end
-    end
-
-    shared_examples 'general usage' do
-      it 'exits with status code 0 and prints general usage' do
-        expect { cli_invocation }.to raise_error { |e|
-          expect(e).to be_a(SystemExit)
-          expect(e.status).to eq(0)
-        }
-        expect(stdout.string).to match(/^Commands:/)
-        expect(stderr.string).to be_blank
       end
     end
 
@@ -103,18 +70,6 @@ describe Masamune::Thor do
     context 'with help command ' do
       let(:command) { 'help' }
       it_behaves_like 'general usage'
-    end
-
-    shared_examples 'command usage' do
-      it 'exits with status code 0 and prints command usage' do
-        expect { cli_invocation }.to raise_error { |e|
-          expect(e).to be_a(SystemExit)
-          expect(e.status).to eq(0)
-        }
-        expect(stdout.string).to match(/^Usage:/)
-        expect(stdout.string).to match(/--zombo/)
-        expect(stderr.string).to be_blank
-      end
     end
 
     context 'with --help option' do
@@ -196,7 +151,7 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--', '--extra', '--args'] }
       before do
-        expect_any_instance_of(klass).to receive(:extra=).with(['--extra', '--args'])
+        expect_any_instance_of(thor_class).to receive(:extra=).with(['--extra', '--args'])
       end
       it do
         expect { cli_invocation }.to raise_error SystemExit
@@ -234,7 +189,7 @@ describe Masamune::Thor do
       let(:options) { ['--start', '2013-01-01'] }
       before do
         expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
-        allow(klass).to receive(:dispatch).and_raise('random exception')
+        allow(thor_class).to receive(:dispatch).and_raise('random exception')
       end
       it { expect { cli_invocation }.to raise_error /random exception/ }
     end
@@ -244,7 +199,7 @@ describe Masamune::Thor do
       let(:options) { ['--start', '2013-01-01'] }
       before do
         expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
-        allow(klass).to receive(:after_initialize_invoke).and_raise('random exception')
+        allow(thor_class).to receive(:after_initialize_invoke).and_raise('random exception')
       end
       it { expect { cli_invocation }.to raise_error /random exception/ }
     end
@@ -252,7 +207,7 @@ describe Masamune::Thor do
 
   context '.parse_extra' do
     subject do
-      klass.parse_extra(argv)
+      thor_class.parse_extra(argv)
     end
 
     context 'without --' do
