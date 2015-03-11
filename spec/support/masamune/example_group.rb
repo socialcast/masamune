@@ -23,13 +23,13 @@
 require 'masamune/has_environment'
 
 # Separate environment for test harness itself
-module MasamuneExampleGroup
+module Masamune::ExampleGroup
   include Masamune::HasEnvironment
   extend self
 
   def self.included(base)
     base.before(:all) do
-      self.filesystem.environment = self.environment = MasamuneExampleGroup.environment
+      self.filesystem.environment = self.environment = Masamune::ExampleGroup.environment
       Thor.send(:include, Masamune::ThorMute)
     end
   end

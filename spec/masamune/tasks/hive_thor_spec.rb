@@ -42,29 +42,26 @@ describe Masamune::Tasks::HiveThor do
 
     context 'with --file' do
       let(:options) { ['--file=zombo.hql'] }
-      before do
+      it do
         expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: 'zombo.hql')).once.and_return(mock_success)
         cli_invocation
       end
-      it 'meets expectations' do; end
     end
 
     context 'with --variables=YEAR:2015 MONTH:1' do
       let(:options) { ['--variables=YEAR:2015', 'MONTH:1'] }
-      before do
+      it do
         expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
         cli_invocation
       end
-      it 'meets expectations' do; end
     end
 
     context 'with -X YEAR:2015 MONTH:1' do
       let(:options) { ['-X', 'YEAR:2015', 'MONTH:1'] }
-      before do
+      it do
         expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
         cli_invocation
       end
-      it 'meets expectations' do; end
     end
   end
 end

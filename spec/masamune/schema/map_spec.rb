@@ -156,14 +156,14 @@ describe Masamune::Schema::Map do
         catalog.schema :files do
           map from: postgres.user_file, to: postgres.user_dimension do |row|
             {
-              'tenant_id':                   row[:tenant_id],
-              'user_id':                     row[:id],
-              'user_account_state.name':     row[:deleted_at] ? 'deleted' :  'active',
-              'hr_user_account_state.name':  row[:deleted_at] ? 'deleted' :  'active',
-              'admin':                       row[:admin],
-              'preferences_now':             row[:preferences],
-              'source':                      'users_file',
-              'cluster_id':                  100
+              'tenant_id'                  => row[:tenant_id],
+              'user_id'                    => row[:id],
+              'user_account_state.name'    => row[:deleted_at] ? 'deleted' :  'active',
+              'hr_user_account_state.name' => row[:deleted_at] ? 'deleted' :  'active',
+              'admin'                      => row[:admin],
+              'preferences_now'            => row[:preferences],
+              'source'                     => 'users_file',
+              'cluster_id'                 => 100
             }
           end
         end
@@ -207,14 +207,14 @@ describe Masamune::Schema::Map do
         catalog.schema :files do
           map from: hive.user_event, to: postgres.user_dimension do |row|
             {
-              'tenant_id':                   row[:tenant_id],
-              'user_id':                     row[:id],
-              'user_account_state.name':     row[:type] =~ /delete/ ? 'deleted' : 'active',
-              'admin':                       row[:type] =~ /delete/ ? row[:admin_was] : row[:admin_now],
-              'preferences_now':             row[:preferences_now],
-              'preferences_was':             row[:preferences_was],
-              'source':                      'user_event',
-              'cluster_id':                  100
+              'tenant_id'               => row[:tenant_id],
+              'user_id'                 => row[:id],
+              'user_account_state.name' => row[:type] =~ /delete/ ? 'deleted' : 'active',
+              'admin'                   => row[:type] =~ /delete/ ? row[:admin_was] : row[:admin_now],
+              'preferences_now'         => row[:preferences_now],
+              'preferences_was'         => row[:preferences_was],
+              'source'                  => 'user_event',
+              'cluster_id'              => 100
             }
           end
         end
@@ -255,11 +255,11 @@ describe Masamune::Schema::Map do
         catalog.schema :files do
           map from: hive.user_event, to: hive.user_file do |row|
             {
-              'id':           row[:id],
-              'tenant_id':    row[:tenant_id],
-              'deleted_at':   row[:type] =~ /delete/ ? row[:created_at] : nil,
-              'admin':        row[:admin_now],
-              'preferences':  row[:preferences_now]
+              'id'          => row[:id],
+              'tenant_id'   => row[:tenant_id],
+              'deleted_at'  => row[:type] =~ /delete/ ? row[:created_at] : nil,
+              'admin'       => row[:admin_now],
+              'preferences' => row[:preferences_now]
             }
           end
         end
@@ -300,11 +300,11 @@ describe Masamune::Schema::Map do
         catalog.schema :files do
           map from: hive.user_event, to: postgres.user_file do |row|
             {
-              'id':           row[:id],
-              'tenant_id':    row[:tenant_id],
-              'deleted_at':   row[:type] =~ /delete/ ? row[:created_at] : nil,
-              'admin':        row[:admin_now],
-              'preferences':  row[:preferences_now]
+              'id'          => row[:id],
+              'tenant_id'   => row[:tenant_id],
+              'deleted_at'  => row[:type] =~ /delete/ ? row[:created_at] : nil,
+              'admin'       => row[:admin_now],
+              'preferences' => row[:preferences_now]
             }
           end
         end
@@ -350,21 +350,21 @@ describe Masamune::Schema::Map do
             if row[:type] =~ /update/
               [
                 {
-                  'tenant.tenant_id':  row[:tenant_id],
-                  'delta':             0,
-                  'time_key':          row[:created_at]
+                  'tenant.tenant_id' => row[:tenant_id],
+                  'delta'            => 0,
+                  'time_key'         => row[:created_at]
                 },
                 {
-                  'tenant.tenant_id':  row[:tenant_id],
-                  'delta':             0,
-                  'time_key':          row[:created_at]
+                  'tenant.tenant_id' => row[:tenant_id],
+                  'delta'            => 0,
+                  'time_key'         => row[:created_at]
                 }
               ]
             else
               {
-                'tenant.tenant_id':  row[:tenant_id],
-                'delta':             row[:type] =~ /create/ ? 1 :  -1,
-                'time_key':          row[:created_at]
+                'tenant.tenant_id' => row[:tenant_id],
+                'delta'            => row[:type] =~ /create/ ? 1 :  -1,
+                'time_key'         => row[:created_at]
               }
             end
           end
@@ -427,17 +427,17 @@ describe Masamune::Schema::Map do
             (row[:group_id_now] - row[:group_id_was]).each do |group_id|
               result <<
                 {
-                  'group.group_id':  group_id,
-                  'total':           1,
-                  'time_key':        row[:created_at]
+                  'group.group_id' => group_id,
+                  'total'          => 1,
+                  'time_key'       => row[:created_at]
                 }
             end
             (row[:group_id_was] - row[:group_id_now]).each do |group_id|
               result <<
                 {
-                  'group.group_id':  group_id,
-                  'total':           -1,
-                  'time_key':        row[:created_at]
+                  'group.group_id' => group_id,
+                  'total'          => -1,
+                  'time_key'       => row[:created_at]
                 }
             end
             result

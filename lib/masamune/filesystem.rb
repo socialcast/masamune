@@ -133,6 +133,7 @@ module Masamune
     end
 
     def touch!(*files)
+      files.uniq!
       files.group_by { |path| type(path) }.each do |type, file_set|
         mkdir!(*file_set.map { |file| File.dirname(file) }) unless type == :s3
         case type
@@ -169,11 +170,12 @@ module Masamune
     def glob_stat(pattern, &block)
       case type(pattern)
       when :hdfs
-        hadoop_fs('-ls', pattern, safe: true) do |line|
+        hadoop_fs('-ls', '-R', pattern, safe: true) do |line|
           next if line =~ /\AFound \d+ items/
           size, date, time, name = line.split(/\s+/).last(4)
           next unless size && date && time && name
-          yield OpenStruct.new(name: name, mtime: Time.parse("#{date} #{time} +0000").at_beginning_of_minute.utc, size: size.to_i)
+          prefixed_name = remote_prefix(pattern) + name
+          yield OpenStruct.new(name: prefixed_name, mtime: Time.parse("#{date} #{time} +0000").at_beginning_of_minute.utc, size: size.to_i)
         end
       when :s3
         file_glob, file_regexp = glob_split(pattern, recursive: true)
@@ -204,6 +206,7 @@ module Masamune
     end
 
     def mkdir!(*dirs)
+      dirs.uniq!
       dirs.group_by { |path| type(path) }.each do |type, dir_set|
         case type
         when :hdfs
@@ -223,8 +226,10 @@ module Masamune
         hadoop_fs('-ls', pattern, safe: true) do |line|
           next if line =~ /\AFound \d+ items/
           name = line.split(/\s+/).last
-          next unless name && name =~ file_regexp
-          yield q(pattern, name)
+          next unless name
+          prefixed_name = remote_prefix(pattern) + name
+          next unless prefixed_name && prefixed_name =~ file_regexp
+          yield q(pattern, prefixed_name)
         end
       when :s3
         file_glob, file_regexp = glob_split(pattern)
@@ -445,6 +450,11 @@ module Masamune
       dir[%r{\Ahdfs://}]
     end
 
+    def local_prefix(file)
+      return file if remote_prefix(file)
+      "file://#{file}"
+    end
+
     def eager_load_paths?
       @paths.reject { |key,_| key == :root_dir }.any?
     end
@@ -507,7 +517,7 @@ module Masamune
       when [:hdfs, :hdfs]
         hadoop_fs('-cp', src, dst)
       when [:hdfs, :local]
-        hadoop_fs('-copyToLocal', src, dst)
+        hadoop_fs('-copyToLocal', src, local_prefix(dst))
       when [:hdfs, :s3]
         hadoop_fs('-cp', src, s3n(dst))
       when [:s3, :s3]
@@ -519,7 +529,7 @@ module Masamune
       when [:local, :local]
         FileUtils.cp(src, dst, file_util_args)
       when [:local, :hdfs]
-        hadoop_fs('-copyFromLocal', src, dst)
+        hadoop_fs('-copyFromLocal', local_prefix(src), dst)
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: dir))
       end
@@ -530,7 +540,8 @@ module Masamune
       when [:hdfs, :hdfs]
         hadoop_fs('-mv', src, dst)
       when [:hdfs, :local]
-        hadoop_fs('-copyToLocal', src, dst)
+        # NOTE: moveToLocal: Option '-moveToLocal' is not implemented yet
+        hadoop_fs('-copyToLocal', src, local_prefix(dst))
         hadoop_fs('-rm', src)
       when [:hdfs, :s3]
         copy_file_to_file(src, s3n(dst, dir: dir))
@@ -546,7 +557,7 @@ module Masamune
         FileUtils.mv(src, dst, file_util_args)
         FileUtils.chmod(FILE_MODE, dst, file_util_args)
       when [:local, :hdfs]
-        hadoop_fs('-moveFromLocal', src, dst)
+        hadoop_fs('-moveFromLocal', local_prefix(src), dst)
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: dir))
         FileUtils.rm(src, file_util_args)

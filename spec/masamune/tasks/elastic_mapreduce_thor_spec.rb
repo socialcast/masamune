@@ -33,28 +33,25 @@ describe Masamune::Tasks::ElasticMapreduceThor do
 
   context 'with -j' do
     let(:options) { ['-j', 'j-XYZ'] }
-    before do
+    it do
       expect_any_instance_of(described_class).to receive(:elastic_mapreduce).with(hash_including(jobflow: 'j-XYZ', extra: ['--ssh'])).once.and_return(mock_success)
       cli_invocation
     end
-    it 'meets expectations' do; end
   end
 
   context 'with --jobflow' do
     let(:options) { ['--jobflow=j-XYZ'] }
-    before do
+    it do
       expect_any_instance_of(described_class).to receive(:elastic_mapreduce).with(hash_including(jobflow: 'j-XYZ', extra: ['--ssh'])).once.and_return(mock_success)
       cli_invocation
     end
-    it 'meets expectations' do; end
   end
 
   context 'with -- --list' do
     let(:options) { ['--', '--list'] }
-    before do
+    it do
       expect_any_instance_of(described_class).to receive(:elastic_mapreduce).with(hash_including(extra: ['--list'])).once.and_return(mock_success)
       cli_invocation
     end
-    it 'meets expectations' do; end
   end
 end

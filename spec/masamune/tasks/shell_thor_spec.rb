@@ -32,11 +32,10 @@ describe Masamune::Tasks::ShellThor do
   end
 
   context 'with no arguments' do
-    before do
+    it do
       expect(Pry).to receive(:start)
       cli_invocation
     end
-    it 'meets expectations' do; end
   end
 
   context 'with --dump' do

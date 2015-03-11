@@ -269,27 +269,31 @@ module Masamune::Schema
     end
 
     def index_column_map
-      @index_column_map ||= Hash.new { |h,k| h[k] = [] }.tap do |map|
+      @index_column_map ||= begin
+        map = Hash.new { |h,k| h[k] = [] }
         columns.each do |_, column|
           column.index.each do |index|
             map[index] << column.name
           end
         end
-      end.sort_by { |k, v| v.length }.to_h
+        Hash[map.sort_by { |k, v| v.length }]
+      end
     end
 
     def unique_constraints_map
-      @unique_constraints_map ||= Hash.new { |h,k| h[k] = [] }.tap do |map|
+      @unique_constraints_map ||= begin
+        map = Hash.new { |h,k| h[k] = [] }
         columns.each do |_, column|
           column.unique.each do |unique|
             map[unique] << column.name
           end
         end
-      end.sort_by { |k, v| v.length }.to_h
+        Hash[map.sort_by { |k, v| v.length }]
+      end
     end
 
     def reverse_unique_constraints_map
-      @reverse_unique_constraints_map ||= unique_constraints_map.to_a.map { |k,v| [v.sort, k] }.to_h
+      @reverse_unique_constraints_map ||= Hash[unique_constraints_map.to_a.map { |k,v| [v.sort, k] }]
     end
   end
 end

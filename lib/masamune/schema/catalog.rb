@@ -48,11 +48,11 @@ module Masamune::Schema
       end
 
       def format
-        @options.key?(:format) ? @options[:format] : super
+        @options.key?(:format) ? @options[:format] : __getobj__.format
       end
 
       def headers
-        @options.key?(:headers) ? @options[:headers] : super
+        @options.key?(:headers) ? @options[:headers] : __getobj__.headers
       end
     end
 
