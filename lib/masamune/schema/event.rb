@@ -65,6 +65,14 @@ module Masamune::Schema
       end
     end
 
+    def name
+      @name || [id, suffix].compact.join('_')
+    end
+
+    def suffix
+      'event'
+    end
+
     def attributes=(attributes)
       @attributes = {}
       attributes.each do |attribute|
