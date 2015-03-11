@@ -439,11 +439,11 @@ describe Masamune::Schema::Catalog do
 
           map from: files.users, to: postgres.user_dimension do |row|
             {
-              'tenant_id':                row[:tenant_id],
-              'user_id':                  row[:id],
-              'user_account_state.name':  row[:deleted_at] ? 'deleted' :  'active',
-              'start_at':                 row[:updated_at],
-              'delta':                    0
+              'tenant_id'               => row[:tenant_id],
+              'user_id'                 => row[:id],
+              'user_account_state.name' => row[:deleted_at] ? 'deleted' :  'active',
+              'start_at'                => row[:updated_at],
+              'delta'                   => 0
             }
           end
         end
@@ -471,8 +471,8 @@ describe Masamune::Schema::Catalog do
 
           map from: postgres.users_event, to: postgres.user_dimension do |row|
             {
-              'user_id':   row[:id],
-              'name':      row[:name_now]
+              'user_id' => row[:id],
+              'name'    => row[:name_now]
             }
           end
         end
