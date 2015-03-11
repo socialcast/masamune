@@ -1120,7 +1120,7 @@ shared_examples_for 'Filesystem' do
     context 'local file to hdfs file' do
       before do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + old_dir).once
-        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', old_file, 'file://' + new_file)
+        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' +  old_file, 'file://' + new_file)
         instance.move_file_to_file(old_file, 'file://' + new_file)
       end
 
@@ -1139,7 +1139,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs file to local file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, new_file)
+        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, 'file://' + new_file)
         expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file_to_file('file://' + old_file, new_file)
       end
@@ -1223,7 +1223,7 @@ shared_examples_for 'Filesystem' do
     context 'local file to hdfs dir' do
       before do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir).once
-        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', old_file, 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' +  old_file, 'file://' + new_dir)
         instance.move_file_to_dir(old_file, 'file://' + new_dir)
       end
 
@@ -1242,7 +1242,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs file to local dir' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_file, 'file://' + new_dir)
         expect(filesystem).to receive(:hadoop_fs).with('-rm', 'file://' + old_file)
         instance.move_file_to_dir('file://' + old_file, new_dir)
       end
@@ -1321,7 +1321,7 @@ shared_examples_for 'Filesystem' do
     context 'local dir to hdfs dir' do
       before do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + File.dirname(new_dir)).once
-        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', old_dir, 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' +  old_dir, 'file://' + new_dir)
         instance.move_dir(old_dir, 'file://' + new_dir)
       end
 

@@ -450,6 +450,11 @@ module Masamune
       dir[%r{\Ahdfs://}]
     end
 
+    def local_prefix(file)
+      return file if remote_prefix(file)
+      "file://#{file}"
+    end
+
     def eager_load_paths?
       @paths.reject { |key,_| key == :root_dir }.any?
     end
@@ -512,8 +517,7 @@ module Masamune
       when [:hdfs, :hdfs]
         hadoop_fs('-cp', src, dst)
       when [:hdfs, :local]
-        # TODO encapsulate prefix
-        hadoop_fs('-copyToLocal', src, 'file://' + dst)
+        hadoop_fs('-copyToLocal', src, local_prefix(dst))
       when [:hdfs, :s3]
         hadoop_fs('-cp', src, s3n(dst))
       when [:s3, :s3]
@@ -525,8 +529,7 @@ module Masamune
       when [:local, :local]
         FileUtils.cp(src, dst, file_util_args)
       when [:local, :hdfs]
-        # TODO encapsulate prefix
-        hadoop_fs('-copyFromLocal', 'file://' + src, dst)
+        hadoop_fs('-copyFromLocal', local_prefix(src), dst)
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: dir))
       end
@@ -538,7 +541,7 @@ module Masamune
         hadoop_fs('-mv', src, dst)
       when [:hdfs, :local]
         # NOTE: moveToLocal: Option '-moveToLocal' is not implemented yet
-        hadoop_fs('-copyToLocal', src, dst)
+        hadoop_fs('-copyToLocal', src, local_prefix(dst))
         hadoop_fs('-rm', src)
       when [:hdfs, :s3]
         copy_file_to_file(src, s3n(dst, dir: dir))
@@ -554,7 +557,7 @@ module Masamune
         FileUtils.mv(src, dst, file_util_args)
         FileUtils.chmod(FILE_MODE, dst, file_util_args)
       when [:local, :hdfs]
-        hadoop_fs('-moveFromLocal', src, dst)
+        hadoop_fs('-moveFromLocal', local_prefix(src), dst)
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: dir))
         FileUtils.rm(src, file_util_args)
