@@ -34,7 +34,7 @@ describe Masamune::Actions::HadoopStreaming do
   let(:instance) { klass.new }
 
   before do
-    instance.environment = MasamuneExampleGroup
+    instance.environment = Masamune::ExampleGroup
   end
 
   describe '.hadoop_streaming' do
