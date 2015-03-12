@@ -243,7 +243,13 @@ module Masamune::Schema
         when Date, DateTime
           value.to_time
         when String
-          Time.parse(value.to_s)
+          if value =~ /^\d+$/
+            Time.at(value.to_i)
+          else
+            Time.parse(value)
+          end
+        when Integer
+          Time.at(value)
         when nil
           nil
         end
