@@ -202,7 +202,7 @@ describe Masamune::Schema::Map do
       it_behaves_like 'apply input/output'
     end
 
-    context 'from event to postgres dimension' do
+    context 'from event to postgres dimension with quoted json' do
       before do
         catalog.schema :files do
           map from: hive.user_event, to: postgres.user_dimension do |row|
@@ -472,6 +472,54 @@ describe Masamune::Schema::Map do
           3	-1	1420072200
           1	-1	1420072800
           2	-1	1420072800
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+
+      it_behaves_like 'apply input/output'
+    end
+
+    context 'from event to postgres dimension with raw json' do
+      before do
+        catalog.schema :files do
+          map from: hive.user_event, to: postgres.user_dimension do |row|
+            {
+              'tenant_id'               => row[:tenant_id],
+              'user_id'                 => row[:id],
+              'user_account_state.name' => row[:type] =~ /delete/ ? 'deleted' : 'active',
+              'admin'                   => row[:type] =~ /delete/ ? row[:admin_was] : row[:admin_now],
+              'preferences_now'         => row[:preferences_now],
+              'preferences_was'         => row[:preferences_was],
+              'source'                  => 'user_event',
+              'cluster_id'              => 100
+            }
+          end
+        end
+      end
+
+      let(:source) do
+        catalog.hive.user_event
+      end
+
+      let(:target) do
+        catalog.postgres.user_dimension
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          X	user_create	1	30	0	\\N	\\N	\\N
+          Y	user_delete	2	40	0	1	{"enabled":true}	\\N
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          tenant_id,user_id,user_account_state_type_name,admin,preferences_now,preferences_was,source,cluster_id
+          30,1,active,FALSE,{},{},user_event,100
+          40,2,deleted,TRUE,"{""enabled"":true}",{},user_event,100
         EOS
       end
 

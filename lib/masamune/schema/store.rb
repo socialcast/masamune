@@ -30,6 +30,7 @@ module Masamune::Schema
     {
       type:            nil,
       format:          ->(store) { store.type == :postgres ? :csv : :tsv },
+      json_encoding:   ->(store) { store.type == :postgres ? :quoted : :raw },
       headers:         ->(store) { store.type == :postgres ? true : false },
       debug:           false
     }

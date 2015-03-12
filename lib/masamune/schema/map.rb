@@ -24,6 +24,34 @@ require 'csv'
 
 module Masamune::Schema
   class Map
+    class JSONEncoder < SimpleDelegator
+      def initialize(io, store)
+        super io
+        @store = store
+      end
+
+      def gets(*a)
+        line = __getobj__.gets(*a)
+        return unless line
+        return line if skip?
+        encode(line.split(separator)).join(separator)
+      end
+
+      private
+
+      def skip?
+        @store.json_encoding == :quoted
+      end
+
+      def encode(fields = [])
+        fields.map { |field| field =~ /^{|}$/ ? %Q{"#{field.gsub('"', '""')}"} : field }
+      end
+
+      def separator
+        @separator ||= (@store.format == :tsv ? "\t" : ',')
+      end
+    end
+
     class Buffer
       extend Forwardable
 
@@ -42,7 +70,7 @@ module Masamune::Schema
 
       def each(&block)
         raise 'must call Buffer#bind first' unless @io
-        CSV.parse(@io, options.merge(headers: @store.headers || @table.columns.keys)) do |data|
+        CSV.parse(JSONEncoder.new(@io, @store), options.merge(headers: @store.headers || @table.columns.keys)) do |data|
           next if data.to_s =~ /\A#/
           row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
           yield row.to_hash
@@ -59,10 +87,8 @@ module Masamune::Schema
       end
 
       def options
-        if @store.format == :tsv
-          { skip_blanks: true, col_sep: "\t" }
-        else
-          { skip_blanks: true }
+        {skip_blanks: true}.tap do | opts|
+          opts[:col_sep] = "\t" if @store.format == :tsv
         end
       end
     end
