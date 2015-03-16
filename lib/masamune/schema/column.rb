@@ -243,7 +243,7 @@ module Masamune::Schema
         when Date, DateTime
           value.to_time
         when String
-          if value =~ /^\d+$/
+          if value =~ /\A\d+\z/
             Time.at(value.to_i)
           else
             Time.parse(value)
