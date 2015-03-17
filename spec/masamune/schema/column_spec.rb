@@ -263,6 +263,16 @@ describe Masamune::Schema::Column do
         it { is_expected.to eq(value) }
       end
 
+      context 'when Integer' do
+        let(:value) { Time.now.utc.to_i }
+        it { is_expected.to eq(Time.at(value)) }
+      end
+
+      context 'when String encoded Integer' do
+        let(:value) { "#{Time.now.utc.to_i}" }
+        it { is_expected.to eq(Time.at(value.to_i)) }
+      end
+
       context 'when YYYY-mm-dd' do
         let(:value) { '2015-01-01' }
         it { is_expected.to eq(Time.parse(value)) }

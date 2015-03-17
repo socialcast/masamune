@@ -51,6 +51,10 @@ module Masamune::Schema
         @options.key?(:format) ? @options[:format] : __getobj__.format
       end
 
+      def json_encoding
+        @options.key?(:json_encoding) ? @options[:json_encoding] : __getobj__.json_encoding
+      end
+
       def headers
         @options.key?(:headers) ? @options[:headers] : __getobj__.headers
       end

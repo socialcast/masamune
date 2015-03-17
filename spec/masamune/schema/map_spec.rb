@@ -202,7 +202,7 @@ describe Masamune::Schema::Map do
       it_behaves_like 'apply input/output'
     end
 
-    context 'from event to postgres dimension' do
+    context 'from event to postgres dimension with quoted json' do
       before do
         catalog.schema :files do
           map from: hive.user_event, to: postgres.user_dimension do |row|
@@ -480,6 +480,86 @@ describe Masamune::Schema::Map do
       end
 
       it_behaves_like 'apply input/output'
+    end
+
+    context 'from event to postgres dimension with raw json' do
+      before do
+        catalog.schema :files do
+          map from: hive.user_event, to: postgres.user_dimension do |row|
+            {
+              'tenant_id'               => row[:tenant_id],
+              'user_id'                 => row[:id],
+              'user_account_state.name' => row[:type] =~ /delete/ ? 'deleted' : 'active',
+              'admin'                   => row[:type] =~ /delete/ ? row[:admin_was] : row[:admin_now],
+              'preferences_now'         => row[:preferences_now],
+              'preferences_was'         => row[:preferences_was],
+              'source'                  => 'user_event',
+              'cluster_id'              => 100
+            }
+          end
+        end
+      end
+
+      let(:source) do
+        catalog.hive.user_event
+      end
+
+      let(:target) do
+        catalog.postgres.user_dimension
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          X	user_create	1	30	0	\\N	\\N	\\N
+          Y	user_delete	2	40	0	1	{"enabled":true}	\\N
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          tenant_id,user_id,user_account_state_type_name,admin,preferences_now,preferences_was,source,cluster_id
+          30,1,active,FALSE,{},{},user_event,100
+          40,2,deleted,TRUE,"{""enabled"":true}",{},user_event,100
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+
+      it_behaves_like 'apply input/output'
+    end
+  end
+
+  describe Masamune::Schema::Map::JSONEncoder do
+    let(:io) { StringIO.new }
+    let(:store) { double(json_encoding: :raw, format: :csv) }
+    let(:encoder) { described_class.new(io, store) }
+
+    subject { encoder.gets }
+
+    context 'with raw json' do
+      before do
+        io.write '{"enabled":true}'
+        io.rewind
+      end
+      it { is_expected.to eq(%Q{"{""enabled"":true}"}) }
+    end
+
+    context 'with quoted json' do
+      before do
+        io.write '"{""enabled"":true}"'
+        io.rewind
+      end
+      it { is_expected.to eq(%Q{"{""enabled"":true}"}) }
+    end
+
+    context 'with partially quoted json' do
+      before do
+        io.write '{""enabled"":true}'
+        io.rewind
+      end
+      it { is_expected.to eq(%Q{"{""enabled"":true}"}) }
     end
   end
 end
