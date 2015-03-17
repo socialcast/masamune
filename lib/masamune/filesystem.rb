@@ -418,12 +418,12 @@ module Masamune
       end
     end
 
-    def glob_split(input, recursive: false)
-      [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input, recursive: recursive) ]
+    def glob_split(input, options = {})
+      [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input, options) ]
     end
 
-    def glob_to_regexp(input, recursive: false)
-      if input.include?('*') || recursive
+    def glob_to_regexp(input, options = {})
+      if input.include?('*') || options.fetch(:recursive, false)
         %r|\A#{Regexp.escape(input).gsub('\\*', '.*?').gsub(%r{\/\.\*\?\z}, '/?.*?')}|
       else
         /\A#{Regexp.escape(input)}\z/

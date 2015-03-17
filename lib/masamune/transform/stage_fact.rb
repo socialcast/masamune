@@ -57,9 +57,9 @@ module Masamune::Transform
       method_with_last_element :insert_values
 
       def join_conditions(source)
-        join_columns = shared_columns(source).values.flatten.lazy
-        join_columns = join_columns.select { |column| column.reference }.lazy
-        join_columns = join_columns.group_by { |column| column.reference }.lazy
+        join_columns = shared_columns(source).values.flatten
+        join_columns = join_columns.select { |column| column.reference }
+        join_columns = join_columns.group_by { |column| column.reference }
 
         dependencies = Masamune::TopologicalHash.new
         conditions = Hash.new { |h,k| h[k] = [] }

@@ -73,9 +73,10 @@ module Masamune
     CACHE_DEPTH = 1
     EMPTY_SET   = Set.new
 
-    def glob_stat(file_or_glob, depth: 0, &block)
+    def glob_stat(file_or_glob, options = {}, &block)
       return if file_or_glob.blank?
       return if root_path?(file_or_glob)
+      depth = options.fetch(:depth, 0)
       return if depth > MAX_DEPTH || depth > CACHE_DEPTH
 
       glob_stat(dirname(file_or_glob), depth: depth + 1, &block)
@@ -97,7 +98,8 @@ module Masamune
       end if depth == 0
     end
 
-    def recursive_paths(root, path, depth: 0, &block)
+    def recursive_paths(root, path, options = {}, &block)
+      depth = options.fetch(:depth, 0)
       return if depth > MAX_DEPTH
       return if root == path
       yield path

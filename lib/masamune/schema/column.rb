@@ -199,9 +199,9 @@ module Masamune::Schema
       when :boolean
         value ? 'TRUE' : 'FALSE'
       when :yaml
-        value.to_h.to_yaml
+        value.to_hash.to_yaml
       when :json, :key_value
-        value.to_h.to_json
+        value.to_hash.to_json
       when :date
         value.to_s
       when :timestamp
