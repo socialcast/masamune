@@ -530,4 +530,36 @@ describe Masamune::Schema::Map do
       it_behaves_like 'apply input/output'
     end
   end
+
+  describe Masamune::Schema::Map::JSONEncoder do
+    let(:io) { StringIO.new }
+    let(:store) { double(json_encoding: :raw, format: :csv) }
+    let(:encoder) { described_class.new(io, store) }
+
+    subject { encoder.gets }
+
+    context 'with raw json' do
+      before do
+        io.write '{"enabled":true}'
+        io.rewind
+      end
+      it { is_expected.to eq(%Q{"{""enabled"":true}"}) }
+    end
+
+    context 'with quoted json' do
+      before do
+        io.write '"{""enabled"":true}"'
+        io.rewind
+      end
+      it { is_expected.to eq(%Q{"{""enabled"":true}"}) }
+    end
+
+    context 'with partially quoted json' do
+      before do
+        io.write '{""enabled"":true}'
+        io.rewind
+      end
+      it { is_expected.to eq(%Q{"{""enabled"":true}"}) }
+    end
+  end
 end

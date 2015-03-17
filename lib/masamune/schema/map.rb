@@ -44,7 +44,11 @@ module Masamune::Schema
       end
 
       def encode(fields = [])
-        fields.map { |field| field =~ /^{|}$/ ? %Q{"#{field.gsub('"', '""')}"} : field }
+        fields.map { |field| field =~ /^{|}$/ ? quote(field) : field }
+      end
+
+      def quote(field)
+        %Q{"#{field.gsub(/(?<!")"(?!")/, '""')}"}
       end
 
       def separator
