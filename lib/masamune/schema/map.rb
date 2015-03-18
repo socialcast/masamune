@@ -47,7 +47,7 @@ module Masamune::Schema
         fields = []
         buffer = ''
         nested = false
-        line.chomp.each_char do |char|
+        line.strip.each_char do |char|
           case char
           when '{'
             buffer << char
