@@ -34,7 +34,7 @@ module Masamune::Schema
         line = __getobj__.gets(*a)
         return unless line
         return line if skip?
-        encode(line.split(separator)).join(separator)
+        encode(line, separator).join(separator)
       end
 
       private
@@ -43,12 +43,36 @@ module Masamune::Schema
         @store.json_encoding == :quoted
       end
 
-      def encode(fields = [])
-        fields.map { |field| field =~ /^{|}$/ ? quote(field) : field }
+      def encode(line, separator)
+        fields = []
+        buffer = ''
+        nested = false
+        line.strip.each_char do |char|
+          case char
+          when '{'
+            buffer << char
+            nested = true
+          when '}'
+            buffer << char
+            nested = false
+          when separator
+            if nested
+              buffer << char
+            else
+              fields << quote(buffer)
+              buffer = ''
+            end
+          else
+            buffer << char
+          end
+        end
+        fields << quote(buffer)
+        fields.compact
       end
 
-      def quote(field)
-        %Q{"#{field.gsub(/(?<!")"(?!")/, '""')}"}
+      def quote(buffer)
+        return buffer if buffer =~ /\A".*"\z/
+        %Q{"#{buffer.gsub('"', '""')}"}
       end
 
       def separator

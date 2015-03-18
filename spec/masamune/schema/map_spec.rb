@@ -538,28 +538,36 @@ describe Masamune::Schema::Map do
 
     subject { encoder.gets }
 
-    context 'with raw json' do
+    context 'with raw empty json' do
       before do
-        io.write '{"enabled":true}'
+        io.write '{},{}'
         io.rewind
       end
-      it { is_expected.to eq(%Q{"{""enabled"":true}"}) }
+      it { is_expected.to eq(%Q{"{}","{}"}) }
+    end
+
+    context 'with raw quoted json' do
+      before do
+        io.write '"{}","{}"'
+        io.rewind
+      end
+      it { is_expected.to eq(%Q{"{}","{}"}) }
+    end
+
+    context 'with raw json' do
+      before do
+        io.write '{"enabled":true,"state":""}'
+        io.rewind
+      end
+      it { is_expected.to eq(%Q{"{""enabled"":true,""state"":""""}"}) }
     end
 
     context 'with quoted json' do
       before do
-        io.write '"{""enabled"":true}"'
+        io.write '"{""enabled"":true,""state"":""""}"'
         io.rewind
       end
-      it { is_expected.to eq(%Q{"{""enabled"":true}"}) }
-    end
-
-    context 'with partially quoted json' do
-      before do
-        io.write '{""enabled"":true}'
-        io.rewind
-      end
-      it { is_expected.to eq(%Q{"{""enabled"":true}"}) }
+      it { is_expected.to eq(%Q{"{""enabled"":true,""state"":""""}"}) }
     end
   end
 end
