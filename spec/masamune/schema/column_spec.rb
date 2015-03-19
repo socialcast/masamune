@@ -427,6 +427,24 @@ describe Masamune::Schema::Column do
       end
     end
 
+    context 'with type :boolean with store :hive' do
+      let(:column) { described_class.new(id: 'bool', type: :boolean) }
+
+      before do
+        allow(column).to receive_message_chain(:parent, :store, :type).and_return(:hive)
+      end
+
+      context 'when true' do
+        let(:value) { true }
+        it { is_expected.to eq('TRUE') }
+      end
+
+      context 'when false' do
+        let(:value) { false }
+        it { is_expected.to eq(nil) }
+      end
+    end
+
     context 'with type :integer and :array' do
       let(:column) { described_class.new(id: 'int[]', type: :integer, array: true) }
 
