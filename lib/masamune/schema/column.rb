@@ -197,7 +197,7 @@ module Masamune::Schema
       return nil if value.nil?
       case type
       when :boolean
-        value ? 'TRUE' : 'FALSE'
+        value ? 'TRUE' : (hive_encoding? ? nil : 'FALSE')
       when :yaml
         value.to_hash.to_yaml
       when :json, :key_value
@@ -313,12 +313,18 @@ module Masamune::Schema
       if type == :json || array_value?
         return true if value == 'NULL'
       end
-      return false unless parent && parent.store
       return false unless value
-      case parent.store.type
-      when :hive
+      if hive_encoding?
         value.to_s == '\N'
-      when :postgres
+      else
+        false
+      end
+    end
+
+    def hive_encoding?
+      if parent && parent.store
+        parent.store.type == :hive
+      else
         false
       end
     end
