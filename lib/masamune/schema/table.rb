@@ -140,6 +140,11 @@ module Masamune::Schema
       columns.select { |_, column| column.type == :enum }
     end
 
+    def sequence_columns
+      return {} if temporary?
+      columns.select { |_, column| column.reference.nil? && column.type == :sequence }
+    end
+
     def reference_columns
       columns.values.select { | column| column.reference }
     end

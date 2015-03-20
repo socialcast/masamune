@@ -486,4 +486,37 @@ describe Masamune::Transform::DefineTable do
       end
     end
   end
+
+  context 'for postgres table with sequence column' do
+    before do
+      catalog.schema :postgres do
+        table 'user' do
+          column 'id', type: :sequence, surrogate_key: true, sequence_offset: 1024
+          column 'tenant_id'
+          column 'user_id'
+        end
+      end
+    end
+
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_id_seq') THEN
+        CREATE SEQUENCE user_table_id_seq;
+        ALTER SEQUENCE user_table_id_seq RESTART 1024;
+        END IF; END $$;
+
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          id INTEGER PRIMARY KEY DEFAULT nextval('user_table_id_seq'),
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL
+        );
+
+        ALTER SEQUENCE user_table_id_seq OWNED BY user_table.id;
+      EOS
+    end
+  end
 end

@@ -40,6 +40,7 @@ module Masamune::Transform
         shared_columns(source).values.map do |columns|
           column = columns.first
           next if column.id == :last_modified_at
+          next if column.auto_reference
           values << column.name
         end
         measures.each do |_ ,measure|
@@ -56,6 +57,7 @@ module Masamune::Transform
           column = columns.first
           next unless column.reference
           next if column.reference.type == :date
+          next if column.auto_reference
           values << column.qualified_name
         end
         source.measures.each do |_ ,measure|
@@ -81,6 +83,7 @@ module Masamune::Transform
           column = columns.first
           next unless column.reference
           next if column.reference.type == :date
+          next if column.auto_reference
           group_by << column.qualified_name
         end
         group_by << "(#{floor_time_key(source)})" if grain == :hourly

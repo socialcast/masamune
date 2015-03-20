@@ -38,6 +38,7 @@ module Masamune::Schema
       index:               Set.new,
       unique:              Set.new,
       ignore:              false,
+      sequence_offset:     1,
       surrogate_key:       false,
       natural_key:         false,
       measure:             false,
@@ -58,8 +59,6 @@ module Masamune::Schema
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         public_send("#{name}=", value)
       end
-
-      initialize_default_attributes!
     end
 
     def id=(id)
@@ -71,6 +70,16 @@ module Masamune::Schema
         [reference.label, reference.name, id].compact.join('_').to_sym
       else
         id
+      end
+    end
+
+    def default
+      return @default unless @default.nil?
+      case type
+      when :uuid
+        'uuid_generate_v4()'
+      when :sequence
+        "nextval('#{sequence_id}')"
       end
     end
 
@@ -90,6 +99,11 @@ module Masamune::Schema
       else
         raise ArgumentError
       end
+    end
+
+    def unique
+      self.unique = 'natural' if natural_key
+      @unique
     end
 
     def unique=(value)
@@ -152,6 +166,8 @@ module Masamune::Schema
         'TIMESTAMP'
       when :boolean
         'BOOLEAN'
+      when :sequence
+        'INTEGER'
       when :enum
         "#{sub_type}_TYPE".upcase
       when :key_value
@@ -436,22 +452,21 @@ module Masamune::Schema
       reference.columns[id]
     end
 
+    def sequence_id
+      "#{reference_name}_seq" if type == :sequence
+    end
+
     private
 
     def sql_constraints
       [].tap do |constraints|
         constraints << 'NOT NULL' unless null || surrogate_key || !strict || parent.temporary? || degenerate?
-        constraints << 'PRIMARY KEY' if surrogate_key
+        constraints << "PRIMARY KEY" if surrogate_key
       end
     end
 
     def sql_default
       "DEFAULT #{sql_value(default)}" unless default.nil?
-    end
-
-    def initialize_default_attributes!
-      self.default = 'uuid_generate_v4()' if surrogate_key && type == :uuid
-      self.unique = 'natural' if natural_key
     end
 
     def ruby_array(value)

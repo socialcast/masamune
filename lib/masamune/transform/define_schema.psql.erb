@@ -25,10 +25,6 @@ CREATE EXTENSION IF NOT EXISTS hstore;
 
 SET TIMEZONE TO 'UTC';
 
-CREATE OR REPLACE FUNCTION string_to_integer(string VARCHAR) RETURNS INTEGER AS $$
-  SELECT SUM(ascii(a))::INTEGER FROM (SELECT unnest(string_to_array(string, NULL)) as a) s;
-$$ LANGUAGE SQL;
-
 CREATE OR REPLACE FUNCTION json_to_hstore(JSON)
 RETURNS HSTORE AS $$
   SELECT HSTORE(RTRIM(LTRIM(REPLACE($1::TEXT, ':', '=>'), '{'), '}'))

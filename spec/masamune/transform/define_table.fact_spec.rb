@@ -25,6 +25,13 @@ require 'spec_helper'
 describe Masamune::Transform::DefineTable do
   before do
     catalog.schema :postgres do
+      dimension 'cluster', type: :mini do
+        column 'id', type: :sequence, surrogate_key: true, auto: true
+        column 'name', type: :string
+
+        row name: 'current_database()', attributes: {default: true}
+      end
+
       dimension 'date', type: :date do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
       end
@@ -53,6 +60,7 @@ describe Masamune::Transform::DefineTable do
       end
 
       fact 'visits', partition: 'y%Ym%m' do
+        references :cluster
         references :date
         references :tenant
         references :user
@@ -115,6 +123,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS visits_fact
         (
+          cluster_type_id INTEGER NOT NULL REFERENCES cluster_type(id) DEFAULT default_cluster_type_id(),
           date_dimension_id INTEGER NOT NULL REFERENCES date_dimension(id),
           tenant_dimension_id INTEGER NOT NULL REFERENCES tenant_dimension(id),
           user_dimension_id INTEGER NOT NULL REFERENCES user_dimension(id),
@@ -125,6 +134,11 @@ describe Masamune::Transform::DefineTable do
           time_key INTEGER NOT NULL,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_cluster_type_id_index') THEN
+        CREATE INDEX visits_fact_cluster_type_id_index ON visits_fact (cluster_type_id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_date_dimension_id_index') THEN

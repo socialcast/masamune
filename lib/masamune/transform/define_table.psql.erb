@@ -33,6 +33,14 @@ CREATE TYPE <%= column.sql_type %> AS ENUM (<%= column.values.map { |value| "'#{
 END IF; END $$;
 <%- end -%>
 
+<%- target.sequence_columns.each do |_, column| -%>
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= column.sequence_id %>') THEN
+CREATE SEQUENCE <%= column.sequence_id %>;
+ALTER SEQUENCE <%= column.sequence_id %> RESTART <%= column.sequence_offset %>;
+END IF; END $$;
+<%- end -%>
+
 <%- if target.temporary? -%>
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.name %>
 <%- else -%>
@@ -43,6 +51,10 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
   <%= column.as_psql %><%= ',' unless last %>
   <%- end -%>
 );
+
+<%- target.sequence_columns.each do |_, column| -%>
+ALTER SEQUENCE <%= column.sequence_id %> OWNED BY <%= column.qualified_name %>;
+<%- end -%>
 
 <%- files.each do |file| -%>
 <%-

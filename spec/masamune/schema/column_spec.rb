@@ -44,6 +44,22 @@ describe Masamune::Schema::Column do
       it { expect { column }.to raise_error ArgumentError }
     end
 
+    context 'with default: true' do
+      subject(:column) { described_class.new(id: 'boolean', type: :boolean, default: true) }
+      context '#default' do
+        subject { column.default }
+        it { is_expected.to eq(true) }
+      end
+    end
+
+    context 'with default: false' do
+      subject(:column) { described_class.new(id: 'boolean', type: :boolean, default: false) }
+      context '#default' do
+        subject { column.default }
+        it { is_expected.to eq(false) }
+      end
+    end
+
     context 'with index: false' do
       subject(:column) { described_class.new(id: 'id', index: false) }
       context '#index' do
