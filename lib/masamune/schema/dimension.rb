@@ -62,7 +62,7 @@ module Masamune::Schema
       when :two
         [:start_at, :end_at, :version, :last_modified_at]
       when :four
-        [:parent_uuid, :record_uuid, :start_at, :end_at, :version, :last_modified_at]
+        [:parent_id, :record_id, :start_at, :end_at, :version, :last_modified_at]
       when :ledger
         [:source_kind, :source_uuid, :start_at, :last_modified_at, :delta]
       else
@@ -92,10 +92,8 @@ module Masamune::Schema
 
     def initialize_surrogate_key_column!
       case type
-      when :mini
+      when :mini, :one, :two, :four, :ledger, :date
         initialize_column! id: 'id', type: :integer, surrogate_key: true
-      when :one, :two, :four, :ledger, :date
-        initialize_column! id: 'uuid', type: :uuid, surrogate_key: true
       end
     end
 
@@ -110,8 +108,9 @@ module Masamune::Schema
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :four
         children << ledger_table
-        initialize_column! id: 'parent_uuid', type: :uuid, null: true, reference: ledger_table
-        initialize_column! id: 'record_uuid', type: :uuid, null: true, reference: ledger_table
+        # FIXME derive type from from parent
+        initialize_column! id: 'parent_id', type: :integer, null: true, reference: ledger_table
+        initialize_column! id: 'record_id', type: :integer, null: true, reference: ledger_table
         initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'natural'
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
         initialize_column! id: 'version', type: :integer, default: 1, null: true, index: true

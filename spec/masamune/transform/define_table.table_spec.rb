@@ -41,7 +41,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
@@ -65,7 +65,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
@@ -99,7 +99,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
@@ -138,7 +138,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
@@ -178,7 +178,7 @@ describe Masamune::Transform::DefineTable do
 
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           state USER_STATE_TYPE NOT NULL DEFAULT 'active'
@@ -228,7 +228,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           name VARCHAR NOT NULL,
           description VARCHAR NOT NULL
         );
@@ -260,7 +260,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
@@ -282,7 +282,6 @@ describe Masamune::Transform::DefineTable do
     before do
       catalog.schema :postgres do
         table 'user' do
-          column 'uuid', type: :uuid, surrogate_key: true
           column 'tenant_id', type: :integer, natural_key: true
           column 'user_id', type: :integer, natural_key: true
           row tenant_id: 'default_tenant_id()', user_id: -1, attributes: {default: true}
@@ -297,7 +296,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
@@ -320,9 +319,9 @@ describe Masamune::Transform::DefineTable do
           SELECT -1;
         $$ LANGUAGE SQL;
 
-        CREATE OR REPLACE FUNCTION default_user_table_uuid()
-        RETURNS UUID IMMUTABLE AS $$
-          SELECT uuid FROM user_table WHERE tenant_id = default_tenant_id() AND user_id = -1;
+        CREATE OR REPLACE FUNCTION default_user_table_id()
+        RETURNS INTEGER IMMUTABLE AS $$
+          SELECT id FROM user_table WHERE tenant_id = default_tenant_id() AND user_id = -1;
         $$ LANGUAGE SQL;
 
         CREATE OR REPLACE FUNCTION unknown_user_id()
@@ -330,9 +329,9 @@ describe Masamune::Transform::DefineTable do
           SELECT -2;
         $$ LANGUAGE SQL;
 
-        CREATE OR REPLACE FUNCTION unknown_user_table_uuid()
-        RETURNS UUID IMMUTABLE AS $$
-          SELECT uuid FROM user_table WHERE tenant_id = default_tenant_id() AND user_id = -2;
+        CREATE OR REPLACE FUNCTION unknown_user_table_id()
+        RETURNS INTEGER IMMUTABLE AS $$
+          SELECT id FROM user_table WHERE tenant_id = default_tenant_id() AND user_id = -2;
         $$ LANGUAGE SQL;
       EOS
     end
@@ -362,14 +361,14 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid) DEFAULT default_user_account_state_table_uuid(),
+          id SERIAL PRIMARY KEY,
+          user_account_state_table_id INTEGER NOT NULL REFERENCES user_account_state_table(id) DEFAULT default_user_account_state_table_id(),
           name VARCHAR NOT NULL
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_account_state_table_uuid_index') THEN
-        CREATE INDEX user_table_user_account_state_table_uuid_index ON user_table (user_account_state_table_uuid);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_account_state_table_id_index') THEN
+        CREATE INDEX user_table_user_account_state_table_id_index ON user_table (user_account_state_table_id);
         END IF; END $$;
       EOS
     end
@@ -398,20 +397,20 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          user_account_state_table_uuid UUID NOT NULL REFERENCES user_account_state_table(uuid) DEFAULT default_user_account_state_table_uuid(),
-          hr_user_account_state_table_uuid UUID REFERENCES user_account_state_table(uuid),
+          id SERIAL PRIMARY KEY,
+          user_account_state_table_id INTEGER NOT NULL REFERENCES user_account_state_table(id) DEFAULT default_user_account_state_table_id(),
+          hr_user_account_state_table_id INTEGER REFERENCES user_account_state_table(id),
           name VARCHAR NOT NULL
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_account_state_table_uuid_index') THEN
-        CREATE INDEX user_table_user_account_state_table_uuid_index ON user_table (user_account_state_table_uuid);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_account_state_table_id_index') THEN
+        CREATE INDEX user_table_user_account_state_table_id_index ON user_table (user_account_state_table_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_hr_user_account_state_table_uuid_index') THEN
-        CREATE INDEX user_table_hr_user_account_state_table_uuid_index ON user_table (hr_user_account_state_table_uuid);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_hr_user_account_state_table_id_index') THEN
+        CREATE INDEX user_table_hr_user_account_state_table_id_index ON user_table (hr_user_account_state_table_id);
         END IF; END $$;
       EOS
     end
@@ -443,31 +442,31 @@ describe Masamune::Transform::DefineTable do
         is_expected.to eq <<-EOS.strip_heredoc
           CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
           (
-            user_account_state_table_uuid UUID,
-            hr_user_account_state_table_uuid UUID,
+            user_account_state_table_id INTEGER,
+            hr_user_account_state_table_id INTEGER,
             name VARCHAR
           );
 
-          CREATE INDEX user_table_stage_user_account_state_table_uuid_index ON user_table_stage (user_account_state_table_uuid);
-          CREATE INDEX user_table_stage_hr_user_account_state_table_uuid_index ON user_table_stage (hr_user_account_state_table_uuid);
+          CREATE INDEX user_table_stage_user_account_state_table_id_index ON user_table_stage (user_account_state_table_id);
+          CREATE INDEX user_table_stage_hr_user_account_state_table_id_index ON user_table_stage (hr_user_account_state_table_id);
         EOS
       end
     end
 
     context 'for postgres table with all specified columns' do
-      let(:columns) { %w(hr_user_account_state_table_uuid user_account_state_table_uuid name) }
+      let(:columns) { %w(hr_user_account_state_table_id user_account_state_table_id name) }
 
       it 'should render table template' do
         is_expected.to eq <<-EOS.strip_heredoc
           CREATE TEMPORARY TABLE IF NOT EXISTS user_table_stage
           (
-            hr_user_account_state_table_uuid UUID,
-            user_account_state_table_uuid UUID,
+            hr_user_account_state_table_id INTEGER,
+            user_account_state_table_id INTEGER,
             name VARCHAR
           );
 
-          CREATE INDEX user_table_stage_hr_user_account_state_table_uuid_index ON user_table_stage (hr_user_account_state_table_uuid);
-          CREATE INDEX user_table_stage_user_account_state_table_uuid_index ON user_table_stage (user_account_state_table_uuid);
+          CREATE INDEX user_table_stage_hr_user_account_state_table_id_index ON user_table_stage (hr_user_account_state_table_id);
+          CREATE INDEX user_table_stage_user_account_state_table_id_index ON user_table_stage (user_account_state_table_id);
         EOS
       end
     end

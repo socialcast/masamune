@@ -41,7 +41,7 @@ module Masamune::Transform
           else
             column.name
           end
-        end
+        end.compact
       end
 
       def insert_values(source)
@@ -54,7 +54,7 @@ module Masamune::Transform
           else
             column.qualified_name
           end
-        end
+        end.compact
       end
       method_with_last_element :insert_values
 

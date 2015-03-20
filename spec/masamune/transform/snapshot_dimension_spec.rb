@@ -61,14 +61,14 @@ describe Masamune::Transform::SnapshotDimension do
             consolidated.tenant_id,
             consolidated.user_id,
             consolidated.preferences,
-            consolidated.parent_uuid,
-            consolidated.record_uuid,
+            consolidated.parent_id,
+            consolidated.record_id,
             consolidated.start_at
           FROM (
             SELECT DISTINCT ON (tenant_id, user_id, start_at)
-              FIRST_VALUE(uuid) OVER w AS parent_uuid,
+              FIRST_VALUE(id) OVER w AS parent_id,
               FIRST_VALUE(start_at) OVER w AS parent_start_at,
-              uuid AS record_uuid,
+              id AS record_id,
               coalesce_merge(user_account_state_type_id) OVER w AS user_account_state_type_id,
               tenant_id AS tenant_id,
               user_id AS user_id,
@@ -85,14 +85,14 @@ describe Masamune::Transform::SnapshotDimension do
             consolidated.user_id IS NOT NULL
         )
         INSERT INTO
-          user_dimension_stage (user_account_state_type_id, tenant_id, user_id, preferences, parent_uuid, record_uuid, start_at)
+          user_dimension_stage (user_account_state_type_id, tenant_id, user_id, preferences, parent_id, record_id, start_at)
         SELECT
           user_account_state_type_id,
           tenant_id,
           user_id,
           preferences,
-          parent_uuid,
-          record_uuid,
+          parent_id,
+          record_id,
           start_at
         FROM
           snapshot

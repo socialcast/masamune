@@ -21,21 +21,21 @@
 --  THE SOFTWARE.
 
 INSERT INTO
-  <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
+  <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_id, record_id, start_at)
 SELECT DISTINCT
   <%- target.insert_view_values.each do |value| -%>
   <%= value %><%= ',' %>
   <%- end -%>
-  parent_uuid,
-  record_uuid,
+  parent_id,
+  record_id,
   start_at
 FROM (
   SELECT
     <%- target.insert_view_values.each do |value| -%>
     <%= value %><%= ',' %>
     <%- end -%>
-    parent_uuid,
-    record_uuid,
+    parent_id,
+    record_id,
     start_at,
     CASE
     WHEN <%= target.insert_view_values.map { |value| "(LAG(#{value}) OVER w = #{value})" }.join(' AND ') %> THEN

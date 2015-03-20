@@ -33,7 +33,7 @@ SET
 FROM
   (
     SELECT
-      uuid,
+      id,
       <%- target.window.each do |name| -%>
       <%= name %>,
       <%- end -%>
@@ -42,10 +42,10 @@ FROM
     FROM
       <%= target.name %>
     GROUP BY
-      <%= target.window(:uuid, :start_at).join(', ') %>
+      <%= target.window(:id, :start_at).join(', ') %>
    ) AS tmp
 WHERE
-  <%= target.name %>.uuid = tmp.uuid
+  <%= target.name %>.id = tmp.id
 ;
 
 <%-# Relabel end_at column -%>
@@ -58,7 +58,7 @@ SET
 FROM
   (
     SELECT
-      uuid,
+      id,
       start_at,
       <%- target.window.each do |name| -%>
       <%= name %>,
@@ -67,10 +67,10 @@ FROM
     FROM
       <%= target.name %>
     GROUP BY
-      <%= target.window(:uuid, :start_at).join(', ') %>
+      <%= target.window(:id, :start_at).join(', ') %>
    ) AS tmp
 WHERE
-  <%= target.name %>.uuid = tmp.uuid
+  <%= target.name %>.id = tmp.id
 ;
 
 COMMIT;

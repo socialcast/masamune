@@ -115,10 +115,10 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS visits_fact
         (
-          date_dimension_uuid UUID NOT NULL REFERENCES date_dimension(uuid),
-          tenant_dimension_uuid UUID NOT NULL REFERENCES tenant_dimension(uuid),
-          user_dimension_uuid UUID NOT NULL REFERENCES user_dimension(uuid),
-          group_dimension_uuid UUID[] NOT NULL,
+          date_dimension_id INTEGER NOT NULL REFERENCES date_dimension(id),
+          tenant_dimension_id INTEGER NOT NULL REFERENCES tenant_dimension(id),
+          user_dimension_id INTEGER NOT NULL REFERENCES user_dimension(id),
+          group_dimension_id INTEGER[] NOT NULL,
           user_agent_type_id INTEGER NOT NULL REFERENCES user_agent_type(id),
           feature_type_id INTEGER NOT NULL REFERENCES feature_type(id),
           total INTEGER NOT NULL,
@@ -127,23 +127,23 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_date_dimension_uuid_index') THEN
-        CREATE INDEX visits_fact_date_dimension_uuid_index ON visits_fact (date_dimension_uuid);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_date_dimension_id_index') THEN
+        CREATE INDEX visits_fact_date_dimension_id_index ON visits_fact (date_dimension_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_tenant_dimension_uuid_index') THEN
-        CREATE INDEX visits_fact_tenant_dimension_uuid_index ON visits_fact (tenant_dimension_uuid);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_tenant_dimension_id_index') THEN
+        CREATE INDEX visits_fact_tenant_dimension_id_index ON visits_fact (tenant_dimension_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_user_dimension_uuid_index') THEN
-        CREATE INDEX visits_fact_user_dimension_uuid_index ON visits_fact (user_dimension_uuid);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_user_dimension_id_index') THEN
+        CREATE INDEX visits_fact_user_dimension_id_index ON visits_fact (user_dimension_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_group_dimension_uuid_index') THEN
-        CREATE INDEX visits_fact_group_dimension_uuid_index ON visits_fact (group_dimension_uuid);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_group_dimension_id_index') THEN
+        CREATE INDEX visits_fact_group_dimension_id_index ON visits_fact (group_dimension_id);
         END IF; END $$;
 
         DO $$ BEGIN

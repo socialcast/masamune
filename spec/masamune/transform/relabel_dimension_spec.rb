@@ -58,7 +58,7 @@ describe Masamune::Transform::RelabelDimension do
         FROM
           (
             SELECT
-              uuid,
+              id,
               tenant_id,
               user_id,
               start_at,
@@ -66,10 +66,10 @@ describe Masamune::Transform::RelabelDimension do
             FROM
               user_dimension
             GROUP BY
-              uuid, tenant_id, user_id, start_at
+              id, tenant_id, user_id, start_at
            ) AS tmp
         WHERE
-          user_dimension.uuid = tmp.uuid
+          user_dimension.id = tmp.id
         ;
 
         UPDATE user_dimension SET end_at = NULL;
@@ -81,7 +81,7 @@ describe Masamune::Transform::RelabelDimension do
         FROM
           (
             SELECT
-              uuid,
+              id,
               start_at,
               tenant_id,
               user_id,
@@ -89,10 +89,10 @@ describe Masamune::Transform::RelabelDimension do
             FROM
               user_dimension
             GROUP BY
-              uuid, tenant_id, user_id, start_at
+              id, tenant_id, user_id, start_at
            ) AS tmp
         WHERE
-          user_dimension.uuid = tmp.uuid
+          user_dimension.id = tmp.id
         ;
 
         COMMIT;

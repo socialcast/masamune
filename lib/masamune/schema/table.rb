@@ -244,7 +244,7 @@ module Masamune::Schema
     def initialize_surrogate_key_column!
       case type
       when :table
-        initialize_column! id: 'uuid', type: :uuid, surrogate_key: true
+        initialize_column! id: 'id', type: :integer, surrogate_key: true
       end
     end
 
