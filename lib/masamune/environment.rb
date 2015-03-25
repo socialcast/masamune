@@ -94,7 +94,10 @@ module Masamune
           @log_file_name = filesystem.get_path(:log_dir, log_file_template)
           log_file = File.open(@log_file_name, 'a')
           log_file.sync = true
-          FileUtils.ln_s(log_file, filesystem.path(:log_dir, 'latest'), force: true)
+
+          latest = filesystem.path(:log_dir, 'latest')
+          FileUtils.rm(latest) if File.exists?(latest)
+          FileUtils.ln_s(log_file, latest)
           configuration.debug ? Masamune::MultiIO.new($stderr, log_file) : log_file
         else
           configuration.debug ? $stderr : nil
