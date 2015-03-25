@@ -553,7 +553,7 @@ module Masamune
         s3cmd('del', src)
       when [:s3, :hdfs]
         hadoop_fs('-mv', s3n(src), dst)
-      when [:local, :local]
+     when [:local, :local]
         FileUtils.mv(src, dst, file_util_args)
         FileUtils.chmod(FILE_MODE, dst, file_util_args)
       when [:local, :hdfs]
