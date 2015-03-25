@@ -292,17 +292,17 @@ describe Masamune::Schema::Table do
     end
 
     context 'with specified columns' do
-      subject(:stage_table) { table.stage_table(columns: %w(uuid name user_account_state.uuid hr_user_account_state.uuid)) }
+      subject(:stage_table) { table.stage_table(columns: %w(id name user_account_state.id hr_user_account_state.id)) }
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns.keys).to eq([:name, :user_account_state_table_uuid, :hr_user_account_state_table_uuid])
+        expect(stage_table.columns.keys).to eq([:name, :user_account_state_table_id, :hr_user_account_state_table_id])
         expect(stage_table.references.keys).to eq([:user_account_state, :hr_user_account_state])
       end
     end
 
     context 'with specified columns (denormalized)' do
-      subject(:stage_table) { table.stage_table(columns: %w(uuid name user_account_state.name hr_user_account_state.name)) }
+      subject(:stage_table) { table.stage_table(columns: %w(id name user_account_state.name hr_user_account_state.name)) }
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
@@ -364,7 +364,7 @@ describe Masamune::Schema::Table do
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns.keys).to eq([:hr_user_account_state_table_uuid, :user_id, :name])
+        expect(stage_table.columns.keys).to eq([:hr_user_account_state_table_id, :user_id, :name])
         expect(stage_table.references.keys).to eq([:hr_user_account_state])
       end
     end

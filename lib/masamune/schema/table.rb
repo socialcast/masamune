@@ -140,6 +140,11 @@ module Masamune::Schema
       columns.select { |_, column| column.type == :enum }
     end
 
+    def sequence_columns
+      return {} if temporary?
+      columns.select { |_, column| column.reference.nil? && column.type == :sequence }
+    end
+
     def reference_columns
       columns.values.select { | column| column.reference }
     end
@@ -244,7 +249,7 @@ module Masamune::Schema
     def initialize_surrogate_key_column!
       case type
       when :table
-        initialize_column! id: 'uuid', type: :uuid, surrogate_key: true
+        initialize_column! id: 'id', type: :integer, surrogate_key: true
       end
     end
 

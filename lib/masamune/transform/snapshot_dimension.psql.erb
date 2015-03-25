@@ -39,14 +39,14 @@ WITH ranges AS (
     <%- target.insert_view_values.each do |value| -%>
     consolidated.<%= value %><%= ',' %>
     <%- end -%>
-    consolidated.parent_uuid,
-    consolidated.record_uuid,
+    consolidated.parent_id,
+    consolidated.record_id,
     consolidated.start_at
   FROM (
     SELECT DISTINCT ON (<%= target.window('start_at').join(', ') %>)
-      FIRST_VALUE(uuid) OVER w AS parent_uuid,
+      FIRST_VALUE(id) OVER w AS parent_id,
       FIRST_VALUE(start_at) OVER w AS parent_start_at,
-      uuid AS record_uuid,
+      id AS record_id,
       <%- target.insert_values(window: 'w').each do |value, last| -%>
       <%= value %><%= ',' %>
       <%- end -%>
@@ -62,13 +62,13 @@ WITH ranges AS (
     <%- end -%>
 )
 INSERT INTO
-  <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_uuid, record_uuid, start_at)
+  <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_id, record_id, start_at)
 SELECT
   <%- target.insert_view_values.each do |value| -%>
   <%= value %><%= ',' %>
   <%- end -%>
-  parent_uuid,
-  record_uuid,
+  parent_id,
+  record_id,
   start_at
 FROM
   snapshot

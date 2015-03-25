@@ -41,7 +41,6 @@ describe Masamune::Transform::StageDimension do
 
       dimension 'department', type: :mini do
         references :cluster
-        column 'uuid', type: :uuid, surrogate_key: true
         column 'tenant_id', type: :integer, unique: true, natural_key: true
         column 'department_id', type: :integer, unique: true, natural_key: true
         row tenant_id: -1, department_id: -1, attributes: {default: true}
@@ -83,9 +82,9 @@ describe Masamune::Transform::StageDimension do
         CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage (LIKE user_dimension_ledger INCLUDING ALL);
 
         INSERT INTO
-          user_dimension_ledger_stage (department_type_uuid, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, preferences_now, source_kind, start_at, delta)
+          user_dimension_ledger_stage (department_type_id, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, preferences_now, source_kind, start_at, delta)
         SELECT
-          department_type.uuid,
+          department_type.id,
           user_account_state_type.id,
           hr_user_account_state_type.id,
           user_file_dimension_ledger_stage.tenant_id,

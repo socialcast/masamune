@@ -25,6 +25,13 @@ require 'spec_helper'
 describe Masamune::Transform::RollupFact do
   before do
     catalog.schema :postgres do
+      dimension 'cluster', type: :mini do
+        column 'id', type: :sequence, surrogate_key: true, auto: true
+        column 'name', type: :string
+
+        row name: 'current_database()', attributes: {default: true}
+      end
+
       dimension 'date', type: :date do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
         column 'date_epoch', type: :integer
@@ -52,6 +59,7 @@ describe Masamune::Transform::RollupFact do
       end
 
       fact 'visits', partition: 'y%Ym%m', grain: 'transaction' do
+        references :cluster
         references :date
         references :tenant
         references :user
@@ -62,6 +70,7 @@ describe Masamune::Transform::RollupFact do
       end
 
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
+        references :cluster
         references :date
         references :tenant
         references :user
@@ -87,18 +96,19 @@ describe Masamune::Transform::RollupFact do
         CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage (LIKE visits_hourly_fact INCLUDING ALL);
 
         ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_date_dimension_uuid_fkey FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_tenant_dimension_uuid_fkey FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_user_dimension_uuid_fkey FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id);
         ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id);
         ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
 
         INSERT INTO
-          visits_hourly_fact_y2014m08_stage (date_dimension_uuid, tenant_dimension_uuid, user_dimension_uuid, user_agent_type_id, feature_type_id, total, time_key)
+          visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
-          (SELECT uuid FROM date_dimension d WHERE d.date_epoch = date_dimension.date_epoch ORDER BY d.date_id LIMIT 1),
-          visits_transaction_fact_y2014m08.tenant_dimension_uuid,
-          visits_transaction_fact_y2014m08.user_dimension_uuid,
+          (SELECT id FROM date_dimension d WHERE d.date_epoch = date_dimension.date_epoch ORDER BY d.date_id LIMIT 1),
+          visits_transaction_fact_y2014m08.tenant_dimension_id,
+          visits_transaction_fact_y2014m08.user_dimension_id,
           visits_transaction_fact_y2014m08.user_agent_type_id,
           visits_transaction_fact_y2014m08.feature_type_id,
           SUM(visits_transaction_fact_y2014m08.total),
@@ -108,19 +118,20 @@ describe Masamune::Transform::RollupFact do
         JOIN
           date_dimension
         ON
-          date_dimension.uuid = visits_transaction_fact_y2014m08.date_dimension_uuid
+          date_dimension.id = visits_transaction_fact_y2014m08.date_dimension_id
         GROUP BY
           date_dimension.date_epoch,
-          visits_transaction_fact_y2014m08.tenant_dimension_uuid,
-          visits_transaction_fact_y2014m08.user_dimension_uuid,
+          visits_transaction_fact_y2014m08.tenant_dimension_id,
+          visits_transaction_fact_y2014m08.user_dimension_id,
           visits_transaction_fact_y2014m08.user_agent_type_id,
           visits_transaction_fact_y2014m08.feature_type_id,
           (visits_transaction_fact_y2014m08.time_key - (visits_transaction_fact_y2014m08.time_key % 3600))
         ;
 
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_date_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (date_dimension_uuid);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (tenant_dimension_uuid);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_user_dimension_uuid_index ON visits_hourly_fact_y2014m08_stage (user_dimension_uuid);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_cluster_type_id_index ON visits_hourly_fact_y2014m08_stage (cluster_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_date_dimension_id_index ON visits_hourly_fact_y2014m08_stage (date_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_id_index ON visits_hourly_fact_y2014m08_stage (tenant_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_user_dimension_id_index ON visits_hourly_fact_y2014m08_stage (user_dimension_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index ON visits_hourly_fact_y2014m08_stage (user_agent_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index ON visits_hourly_fact_y2014m08_stage (feature_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_time_key_index ON visits_hourly_fact_y2014m08_stage (time_key);
@@ -134,15 +145,17 @@ describe Masamune::Transform::RollupFact do
 
         ALTER TABLE visits_hourly_fact_y2014m08 INHERIT visits_hourly_fact;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600) NOT VALID;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_date_dimension_uuid_fkey FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid) NOT VALID;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_tenant_dimension_uuid_fkey FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid) NOT VALID;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_dimension_uuid_fkey FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid) NOT VALID;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id) NOT VALID;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id) NOT VALID;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id) NOT VALID;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id) NOT VALID;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id) NOT VALID;
 
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_date_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_date_dimension_uuid_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_tenant_dimension_uuid_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_user_dimension_uuid_index RENAME TO visits_hourly_fact_y2014m08_user_dimension_uuid_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_cluster_type_id_index RENAME TO visits_hourly_fact_y2014m08_cluster_type_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_date_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_date_dimension_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_tenant_dimension_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_user_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_user_dimension_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index RENAME TO visits_hourly_fact_y2014m08_user_agent_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index RENAME TO visits_hourly_fact_y2014m08_feature_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_time_key_index RENAME TO visits_hourly_fact_y2014m08_time_key_index;
@@ -167,18 +180,19 @@ describe Masamune::Transform::RollupFact do
         CREATE TABLE IF NOT EXISTS visits_daily_fact_y2014m08_stage (LIKE visits_daily_fact INCLUDING ALL);
 
         ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
-        ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_date_dimension_uuid_fkey FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid);
-        ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_tenant_dimension_uuid_fkey FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid);
-        ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_user_dimension_uuid_fkey FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid);
+        ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
+        ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id);
+        ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id);
+        ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id);
         ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id);
         ALTER TABLE visits_daily_fact_y2014m08_stage ADD CONSTRAINT visits_daily_fact_y2014m08_stage_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
 
         INSERT INTO
-          visits_daily_fact_y2014m08_stage (date_dimension_uuid, tenant_dimension_uuid, user_dimension_uuid, user_agent_type_id, feature_type_id, total, time_key)
+          visits_daily_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
-          (SELECT uuid FROM date_dimension d WHERE d.date_epoch = date_dimension.date_epoch ORDER BY d.date_id LIMIT 1),
-          visits_hourly_fact_y2014m08.tenant_dimension_uuid,
-          visits_hourly_fact_y2014m08.user_dimension_uuid,
+          (SELECT id FROM date_dimension d WHERE d.date_epoch = date_dimension.date_epoch ORDER BY d.date_id LIMIT 1),
+          visits_hourly_fact_y2014m08.tenant_dimension_id,
+          visits_hourly_fact_y2014m08.user_dimension_id,
           visits_hourly_fact_y2014m08.user_agent_type_id,
           visits_hourly_fact_y2014m08.feature_type_id,
           SUM(visits_hourly_fact_y2014m08.total),
@@ -188,18 +202,19 @@ describe Masamune::Transform::RollupFact do
         JOIN
           date_dimension
         ON
-          date_dimension.uuid = visits_hourly_fact_y2014m08.date_dimension_uuid
+          date_dimension.id = visits_hourly_fact_y2014m08.date_dimension_id
         GROUP BY
           date_dimension.date_epoch,
-          visits_hourly_fact_y2014m08.tenant_dimension_uuid,
-          visits_hourly_fact_y2014m08.user_dimension_uuid,
+          visits_hourly_fact_y2014m08.tenant_dimension_id,
+          visits_hourly_fact_y2014m08.user_dimension_id,
           visits_hourly_fact_y2014m08.user_agent_type_id,
           visits_hourly_fact_y2014m08.feature_type_id
         ;
 
-        CREATE INDEX visits_daily_fact_y2014m08_stage_date_dimension_uuid_index ON visits_daily_fact_y2014m08_stage (date_dimension_uuid);
-        CREATE INDEX visits_daily_fact_y2014m08_stage_tenant_dimension_uuid_index ON visits_daily_fact_y2014m08_stage (tenant_dimension_uuid);
-        CREATE INDEX visits_daily_fact_y2014m08_stage_user_dimension_uuid_index ON visits_daily_fact_y2014m08_stage (user_dimension_uuid);
+        CREATE INDEX visits_daily_fact_y2014m08_stage_cluster_type_id_index ON visits_daily_fact_y2014m08_stage (cluster_type_id);
+        CREATE INDEX visits_daily_fact_y2014m08_stage_date_dimension_id_index ON visits_daily_fact_y2014m08_stage (date_dimension_id);
+        CREATE INDEX visits_daily_fact_y2014m08_stage_tenant_dimension_id_index ON visits_daily_fact_y2014m08_stage (tenant_dimension_id);
+        CREATE INDEX visits_daily_fact_y2014m08_stage_user_dimension_id_index ON visits_daily_fact_y2014m08_stage (user_dimension_id);
         CREATE INDEX visits_daily_fact_y2014m08_stage_user_agent_type_id_index ON visits_daily_fact_y2014m08_stage (user_agent_type_id);
         CREATE INDEX visits_daily_fact_y2014m08_stage_feature_type_id_index ON visits_daily_fact_y2014m08_stage (feature_type_id);
         CREATE INDEX visits_daily_fact_y2014m08_stage_time_key_index ON visits_daily_fact_y2014m08_stage (time_key);
@@ -213,15 +228,17 @@ describe Masamune::Transform::RollupFact do
 
         ALTER TABLE visits_daily_fact_y2014m08 INHERIT visits_daily_fact;
         ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600) NOT VALID;
-        ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_date_dimension_uuid_fkey FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid) NOT VALID;
-        ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_tenant_dimension_uuid_fkey FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid) NOT VALID;
-        ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_user_dimension_uuid_fkey FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid) NOT VALID;
+        ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id) NOT VALID;
+        ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID;
+        ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id) NOT VALID;
+        ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id) NOT VALID;
         ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id) NOT VALID;
         ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id) NOT VALID;
 
-        ALTER INDEX visits_daily_fact_y2014m08_stage_date_dimension_uuid_index RENAME TO visits_daily_fact_y2014m08_date_dimension_uuid_index;
-        ALTER INDEX visits_daily_fact_y2014m08_stage_tenant_dimension_uuid_index RENAME TO visits_daily_fact_y2014m08_tenant_dimension_uuid_index;
-        ALTER INDEX visits_daily_fact_y2014m08_stage_user_dimension_uuid_index RENAME TO visits_daily_fact_y2014m08_user_dimension_uuid_index;
+        ALTER INDEX visits_daily_fact_y2014m08_stage_cluster_type_id_index RENAME TO visits_daily_fact_y2014m08_cluster_type_id_index;
+        ALTER INDEX visits_daily_fact_y2014m08_stage_date_dimension_id_index RENAME TO visits_daily_fact_y2014m08_date_dimension_id_index;
+        ALTER INDEX visits_daily_fact_y2014m08_stage_tenant_dimension_id_index RENAME TO visits_daily_fact_y2014m08_tenant_dimension_id_index;
+        ALTER INDEX visits_daily_fact_y2014m08_stage_user_dimension_id_index RENAME TO visits_daily_fact_y2014m08_user_dimension_id_index;
         ALTER INDEX visits_daily_fact_y2014m08_stage_user_agent_type_id_index RENAME TO visits_daily_fact_y2014m08_user_agent_type_id_index;
         ALTER INDEX visits_daily_fact_y2014m08_stage_feature_type_id_index RENAME TO visits_daily_fact_y2014m08_feature_type_id_index;
         ALTER INDEX visits_daily_fact_y2014m08_stage_time_key_index RENAME TO visits_daily_fact_y2014m08_time_key_index;
@@ -246,18 +263,19 @@ describe Masamune::Transform::RollupFact do
         CREATE TABLE IF NOT EXISTS visits_monthly_fact_y2014m08_stage (LIKE visits_monthly_fact INCLUDING ALL);
 
         ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
-        ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_date_dimension_uuid_fkey FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid);
-        ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_tenant_dimension_uuid_fkey FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid);
-        ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_user_dimension_uuid_fkey FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid);
+        ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
+        ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id);
+        ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id);
+        ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id);
         ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id);
         ALTER TABLE visits_monthly_fact_y2014m08_stage ADD CONSTRAINT visits_monthly_fact_y2014m08_stage_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
 
         INSERT INTO
-          visits_monthly_fact_y2014m08_stage (date_dimension_uuid, tenant_dimension_uuid, user_dimension_uuid, user_agent_type_id, feature_type_id, total, time_key)
+          visits_monthly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
-          (SELECT uuid FROM date_dimension d WHERE d.month_epoch = date_dimension.month_epoch ORDER BY d.date_id LIMIT 1),
-          visits_daily_fact_y2014m08.tenant_dimension_uuid,
-          visits_daily_fact_y2014m08.user_dimension_uuid,
+          (SELECT id FROM date_dimension d WHERE d.month_epoch = date_dimension.month_epoch ORDER BY d.date_id LIMIT 1),
+          visits_daily_fact_y2014m08.tenant_dimension_id,
+          visits_daily_fact_y2014m08.user_dimension_id,
           visits_daily_fact_y2014m08.user_agent_type_id,
           visits_daily_fact_y2014m08.feature_type_id,
           SUM(visits_daily_fact_y2014m08.total),
@@ -267,18 +285,19 @@ describe Masamune::Transform::RollupFact do
         JOIN
           date_dimension
         ON
-          date_dimension.uuid = visits_daily_fact_y2014m08.date_dimension_uuid
+          date_dimension.id = visits_daily_fact_y2014m08.date_dimension_id
         GROUP BY
           date_dimension.month_epoch,
-          visits_daily_fact_y2014m08.tenant_dimension_uuid,
-          visits_daily_fact_y2014m08.user_dimension_uuid,
+          visits_daily_fact_y2014m08.tenant_dimension_id,
+          visits_daily_fact_y2014m08.user_dimension_id,
           visits_daily_fact_y2014m08.user_agent_type_id,
           visits_daily_fact_y2014m08.feature_type_id
         ;
 
-        CREATE INDEX visits_monthly_fact_y2014m08_stage_date_dimension_uuid_index ON visits_monthly_fact_y2014m08_stage (date_dimension_uuid);
-        CREATE INDEX visits_monthly_fact_y2014m08_stage_tenant_dimension_uuid_index ON visits_monthly_fact_y2014m08_stage (tenant_dimension_uuid);
-        CREATE INDEX visits_monthly_fact_y2014m08_stage_user_dimension_uuid_index ON visits_monthly_fact_y2014m08_stage (user_dimension_uuid);
+        CREATE INDEX visits_monthly_fact_y2014m08_stage_cluster_type_id_index ON visits_monthly_fact_y2014m08_stage (cluster_type_id);
+        CREATE INDEX visits_monthly_fact_y2014m08_stage_date_dimension_id_index ON visits_monthly_fact_y2014m08_stage (date_dimension_id);
+        CREATE INDEX visits_monthly_fact_y2014m08_stage_tenant_dimension_id_index ON visits_monthly_fact_y2014m08_stage (tenant_dimension_id);
+        CREATE INDEX visits_monthly_fact_y2014m08_stage_user_dimension_id_index ON visits_monthly_fact_y2014m08_stage (user_dimension_id);
         CREATE INDEX visits_monthly_fact_y2014m08_stage_user_agent_type_id_index ON visits_monthly_fact_y2014m08_stage (user_agent_type_id);
         CREATE INDEX visits_monthly_fact_y2014m08_stage_feature_type_id_index ON visits_monthly_fact_y2014m08_stage (feature_type_id);
         CREATE INDEX visits_monthly_fact_y2014m08_stage_time_key_index ON visits_monthly_fact_y2014m08_stage (time_key);
@@ -292,15 +311,17 @@ describe Masamune::Transform::RollupFact do
 
         ALTER TABLE visits_monthly_fact_y2014m08 INHERIT visits_monthly_fact;
         ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600) NOT VALID;
-        ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_date_dimension_uuid_fkey FOREIGN KEY (date_dimension_uuid) REFERENCES date_dimension(uuid) NOT VALID;
-        ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_tenant_dimension_uuid_fkey FOREIGN KEY (tenant_dimension_uuid) REFERENCES tenant_dimension(uuid) NOT VALID;
-        ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_user_dimension_uuid_fkey FOREIGN KEY (user_dimension_uuid) REFERENCES user_dimension(uuid) NOT VALID;
+        ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id) NOT VALID;
+        ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID;
+        ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id) NOT VALID;
+        ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id) NOT VALID;
         ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id) NOT VALID;
         ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id) NOT VALID;
 
-        ALTER INDEX visits_monthly_fact_y2014m08_stage_date_dimension_uuid_index RENAME TO visits_monthly_fact_y2014m08_date_dimension_uuid_index;
-        ALTER INDEX visits_monthly_fact_y2014m08_stage_tenant_dimension_uuid_index RENAME TO visits_monthly_fact_y2014m08_tenant_dimension_uuid_index;
-        ALTER INDEX visits_monthly_fact_y2014m08_stage_user_dimension_uuid_index RENAME TO visits_monthly_fact_y2014m08_user_dimension_uuid_index;
+        ALTER INDEX visits_monthly_fact_y2014m08_stage_cluster_type_id_index RENAME TO visits_monthly_fact_y2014m08_cluster_type_id_index;
+        ALTER INDEX visits_monthly_fact_y2014m08_stage_date_dimension_id_index RENAME TO visits_monthly_fact_y2014m08_date_dimension_id_index;
+        ALTER INDEX visits_monthly_fact_y2014m08_stage_tenant_dimension_id_index RENAME TO visits_monthly_fact_y2014m08_tenant_dimension_id_index;
+        ALTER INDEX visits_monthly_fact_y2014m08_stage_user_dimension_id_index RENAME TO visits_monthly_fact_y2014m08_user_dimension_id_index;
         ALTER INDEX visits_monthly_fact_y2014m08_stage_user_agent_type_id_index RENAME TO visits_monthly_fact_y2014m08_user_agent_type_id_index;
         ALTER INDEX visits_monthly_fact_y2014m08_stage_feature_type_id_index RENAME TO visits_monthly_fact_y2014m08_feature_type_id_index;
         ALTER INDEX visits_monthly_fact_y2014m08_stage_time_key_index RENAME TO visits_monthly_fact_y2014m08_time_key_index;

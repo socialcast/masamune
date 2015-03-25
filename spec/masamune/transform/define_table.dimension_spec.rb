@@ -57,7 +57,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_dimension
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -82,7 +82,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_dimension
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           start_at TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
@@ -148,7 +148,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_dimension_ledger
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           user_account_state_type_id INTEGER REFERENCES user_account_state_type(id) DEFAULT default_user_account_state_type_id(),
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
@@ -188,13 +188,13 @@ describe Masamune::Transform::DefineTable do
 
         CREATE TABLE IF NOT EXISTS user_dimension
         (
-          uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id SERIAL PRIMARY KEY,
           user_account_state_type_id INTEGER NOT NULL REFERENCES user_account_state_type(id) DEFAULT default_user_account_state_type_id(),
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           preferences HSTORE,
-          parent_uuid UUID REFERENCES user_dimension_ledger(uuid),
-          record_uuid UUID REFERENCES user_dimension_ledger(uuid),
+          parent_id INTEGER REFERENCES user_dimension_ledger(id),
+          record_id INTEGER REFERENCES user_dimension_ledger(id),
           start_at TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
           end_at TIMESTAMP,
           version INTEGER DEFAULT 1,
@@ -267,8 +267,8 @@ describe Masamune::Transform::DefineTable do
           tenant_id INTEGER,
           user_id INTEGER,
           preferences HSTORE,
-          parent_uuid UUID,
-          record_uuid UUID,
+          parent_id INTEGER,
+          record_id INTEGER,
           start_at TIMESTAMP DEFAULT TO_TIMESTAMP(0),
           end_at TIMESTAMP,
           version INTEGER DEFAULT 1,
