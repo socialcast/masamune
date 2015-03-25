@@ -46,7 +46,8 @@ module Masamune::Tasks
       hive_options = options.dup.with_indifferent_access
       hive_options.merge!(print: true)
       hive_options.merge!(retries: 0) unless options[:retry]
-      hive_options.merge!(file: options[:file])
+      hive_options.merge!(file: File.expand_path(options[:file])) if options[:file]
+      hive_options.merge!(output: File.expand_path(options[:output])) if options[:output]
       hive(hive_options)
     end
     default_task :hive_exec

@@ -43,7 +43,15 @@ describe Masamune::Tasks::HiveThor do
     context 'with --file' do
       let(:options) { ['--file=zombo.hql'] }
       it do
-        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: 'zombo.hql')).once.and_return(mock_success)
+        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: File.expand_path('zombo.hql'))).once.and_return(mock_success)
+        cli_invocation
+      end
+    end
+
+    context 'with --output' do
+      let(:options) { ['--output=report.txt'] }
+      it do
+        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(output: File.expand_path('report.txt'))).once.and_return(mock_success)
         cli_invocation
       end
     end
