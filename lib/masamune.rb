@@ -26,7 +26,6 @@ module Masamune
   require 'masamune/io'
   require 'masamune/template'
   require 'masamune/commands'
-  require 'masamune/accumulate'
   require 'masamune/last_element'
   require 'masamune/actions'
   require 'masamune/helpers'

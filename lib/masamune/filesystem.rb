@@ -25,7 +25,6 @@ require 'masamune/has_environment'
 module Masamune
   class Filesystem
     include Masamune::HasEnvironment
-    include Masamune::Accumulate
     include Masamune::Actions::S3Cmd
     include Masamune::Actions::HadoopFilesystem
 
@@ -88,7 +87,7 @@ module Masamune
       path[0] != '/'
     end
 
-    def parent_paths(path, &block)
+    def parent_paths(path)
       if prefix = remote_prefix(path)
         node = path.split(prefix).last
       else
@@ -96,25 +95,26 @@ module Masamune
         node = path
       end
 
-      return if prefix.blank? && node.blank?
+      return [] if prefix.blank? && node.blank?
       parent_paths = node ? File.expand_path(node, '/').split('/') : []
       parent_paths.reject! { |x| x.blank? }
       parent_paths.prepend('/') if node =~ %r{\A/}
       tmp = []
+      result = []
       parent_paths.each do |part|
         tmp << part
         current_path = prefix + File.join(tmp)
         break if current_path == path
-        yield current_path
+        result << current_path
       end
+      result
     end
-    method_accumulate :parent_paths
 
     def root_path?(path)
       raise ArgumentError, 'path cannot be nil' if path.nil?
       raise ArgumentError, 'path cannot be blank' if path.blank?
       raise ArgumentError, 'path cannot be relative' if relative_path?(path)
-      parent_paths(path).length < 1
+      parent_paths(path).count < 1
     end
 
     def resolve_file(paths = [])
@@ -168,6 +168,7 @@ module Masamune
     end
 
     def glob_stat(pattern, &block)
+      return Set.new(to_enum(:glob_stat, pattern)) unless block_given?
       case type(pattern)
       when :hdfs
         hadoop_fs('-ls', '-R', pattern, safe: true) do |line|
@@ -193,7 +194,6 @@ module Masamune
         end
       end
     end
-    method_accumulate :glob_stat
 
     def stat(file_or_dir)
       raise ArgumentError, 'cannot contain wildcard' if file_or_dir.include?('*')
@@ -220,6 +220,7 @@ module Masamune
     end
 
     def glob(pattern, &block)
+      return Set.new(to_enum(:glob, pattern)) unless block_given?
       case type(pattern)
       when :hdfs
         file_glob, file_regexp = glob_split(pattern)
@@ -245,7 +246,6 @@ module Masamune
         end
       end
     end
-    method_accumulate :glob
 
     def glob_sort(pattern, options = {})
       result = glob(pattern)

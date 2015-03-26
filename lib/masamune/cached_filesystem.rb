@@ -22,8 +22,6 @@
 
 module Masamune
   class CachedFilesystem < SimpleDelegator
-    include Masamune::Accumulate
-
     def initialize(filesystem)
       super filesystem
       @filesystem = filesystem
@@ -39,11 +37,11 @@ module Masamune
     end
 
     def glob(file_or_glob, &block)
+      return to_enum(:glob, file_or_glob) unless block_given?
       glob_stat(file_or_glob) do |entry|
         yield entry.name unless entry.name == dirname(file_or_glob)
       end
     end
-    method_accumulate :glob
 
     def stat(file_or_dir)
       raise ArgumentError, 'cannot contain wildcard' if file_or_dir.include?('*')

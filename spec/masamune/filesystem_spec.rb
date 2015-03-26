@@ -590,20 +590,20 @@ shared_examples_for 'Filesystem' do
 
     context 'local no matches' do
       let(:pattern) { File.join(new_dir, '*') }
-      it { is_expected.to be_empty }
+      it { expect(subject.count).to eq(0) }
       it { expect { |b| instance.glob(pattern, &b) }.to_not yield_control }
     end
 
     context 'local one matches' do
       let(:pattern) { File.join(File.dirname(old_file), '*') }
-      it { is_expected.not_to be_empty }
+      it { expect(subject.count).to eq(1) }
       it { expect { |b| instance.glob(pattern, &b) }.to yield_with_args(old_file) }
     end
 
     context 'local one matches (recursive)' do
       let(:pattern) { File.join(tmp_dir, '*') }
       it 'has 2 items' do
-        expect(subject.size).to eq(2)
+        expect(subject.count).to eq(2)
       end
       it { is_expected.to include old_dir }
       it { is_expected.to include old_file }
@@ -613,7 +613,7 @@ shared_examples_for 'Filesystem' do
     context 'local one matches (with suffix)' do
       let(:pattern) { File.join(File.dirname(old_file), '*.txt') }
       it 'has 1 item' do
-        expect(subject.size).to eq(1)
+        expect(subject.count).to eq(1)
       end
       it { is_expected.to include old_file }
       it { expect { |b| instance.glob(pattern, &b) }.to yield_with_args(old_file) }
@@ -629,7 +629,7 @@ shared_examples_for 'Filesystem' do
           and_yield('')
       end
       let(:pattern) { File.join(new_dir, '*') }
-      it { is_expected.to be_empty }
+      it { expect(subject.count).to eq(0) }
       it { expect { |b| instance.glob('file://' + pattern, &b) }.to_not yield_control }
     end
 
@@ -643,7 +643,7 @@ shared_examples_for 'Filesystem' do
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
       end
       let(:pattern) { File.join(File.dirname(old_file), '*') }
-      it { is_expected.not_to be_empty }
+      it { expect(subject.count).to eq(1) }
       it { expect { |b| instance.glob('file://' + pattern, &b) }.to yield_with_args('file://' + old_file) }
     end
 
@@ -655,7 +655,7 @@ shared_examples_for 'Filesystem' do
         expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).at_most(:once)
       end
 
-      it { is_expected.to be_empty }
+      it { expect(subject.count).to eq(0) }
     end
 
     context 's3 no matches with implicit glob results' do
@@ -667,7 +667,7 @@ shared_examples_for 'Filesystem' do
           and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/02.txt))
       end
 
-      it { is_expected.to be_empty }
+      it { expect(subject.count).to eq(0) }
     end
 
     context 's3 one matches' do

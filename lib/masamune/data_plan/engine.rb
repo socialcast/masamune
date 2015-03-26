@@ -27,7 +27,6 @@ class Masamune::DataPlan::Engine
   MAX_DEPTH = 10
 
   include Masamune::HasEnvironment
-  include Masamune::Accumulate
 
   def initialize
     @target_rules = Hash.new
@@ -81,15 +80,16 @@ class Masamune::DataPlan::Engine
   end
 
   def targets_for_date_range(rule, start, stop, &block)
+    return Masamune::DataPlan::Set.new(get_target_rule(rule), to_enum(:targets_for_date_range, rule, start, stop)) unless block_given?
     target_template = @target_rules[rule]
     return unless target_template
     target_template.generate(start.to_time.utc, stop.to_time.utc) do |target|
       yield target
     end
   end
-  method_accumulate :targets_for_date_range, lambda { |engine, rule, _, _| Masamune::DataPlan::Set.new(engine.get_target_rule(rule)) }
 
   def targets_for_source(rule, source, &block)
+    return Masamune::DataPlan::Set.new(get_target_rule(rule), to_enum(:targets_for_source, rule, source)) unless block_given?
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     source_instance = source_template.bind_input(source)
@@ -97,9 +97,9 @@ class Masamune::DataPlan::Engine
       yield target
     end
   end
-  method_accumulate :targets_for_source, lambda { |engine, rule, source| Masamune::DataPlan::Set.new(engine.get_target_rule(rule)) }
 
   def sources_for_target(rule, target, &block)
+    return Masamune::DataPlan::Set.new(get_source_rule(rule), to_enum(:sources_for_target, rule, target)) unless block_given?
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     target_instance = target_template.bind_input(target)
@@ -107,7 +107,6 @@ class Masamune::DataPlan::Engine
       yield source
     end
   end
-  method_accumulate :sources_for_target, lambda { |engine, rule, target| Masamune::DataPlan::Set.new(engine.get_source_rule(rule)) }
 
   def targets(rule)
     @set_cache[:targets_for_rule][rule] ||= @targets[rule].union(@sources[rule].targets)
