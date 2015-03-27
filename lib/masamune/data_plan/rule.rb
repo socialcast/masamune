@@ -127,7 +127,7 @@ class Masamune::DataPlan::Rule
   end
 
   def generate(start_time, stop_time, &block)
-    return to_enum(:generate, start_time, stop_time) unless block_given?
+    return Set.new(to_enum(:generate, start_time, stop_time)) unless block_given?
     instance = bind_date(start_time)
 
     begin
@@ -137,7 +137,7 @@ class Masamune::DataPlan::Rule
   end
 
   def generate_via_unify(elem, rule, &block)
-    return to_enum(:generate_via_unify, elem, rule) unless block_given?
+    return Set.new(to_enum(:generate_via_unify, elem, rule)) unless block_given?
     instance = unify(elem, rule)
 
     stop_time = instance.start_time.advance(time_step => 1)
@@ -197,7 +197,7 @@ class Masamune::DataPlan::Rule
   end
 
   def adjacent_matches(instance)
-    return to_enum(:adjacent_matches, instance) unless block_given?
+    return Set.new(to_enum(:adjacent_matches, instance)) unless block_given?
     (-window .. -1).each do |i|
       yield instance.prev(i.abs)
     end

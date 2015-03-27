@@ -54,7 +54,7 @@ class Masamune::DataPlan::Set < Set
   def existing(&block)
     return self.class.new(rule, to_enum(__method__)) unless block_given?
     self.each do |elem|
-      elem.explode do |new_elem|
+      elem.explode.each do |new_elem|
         yield new_elem
       end
     end
@@ -63,7 +63,7 @@ class Masamune::DataPlan::Set < Set
   def adjacent(&block)
     return self.class.new(rule, to_enum(__method__)) unless block_given?
     self.each do |elem|
-      @rule.adjacent_matches(elem) do |adj_elem|
+      @rule.adjacent_matches(elem).each do |adj_elem|
         yield adj_elem
       end
     end

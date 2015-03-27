@@ -83,7 +83,7 @@ class Masamune::DataPlan::Engine
     return Masamune::DataPlan::Set.new(get_target_rule(rule), to_enum(:targets_for_date_range, rule, start, stop)) unless block_given?
     target_template = @target_rules[rule]
     return unless target_template
-    target_template.generate(start.to_time.utc, stop.to_time.utc) do |target|
+    target_template.generate(start.to_time.utc, stop.to_time.utc).each do |target|
       yield target
     end
   end
@@ -93,7 +93,7 @@ class Masamune::DataPlan::Engine
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     source_instance = source_template.bind_input(source)
-    source_template.generate_via_unify(source_instance, target_template) do |target|
+    source_template.generate_via_unify(source_instance, target_template).each do |target|
       yield target
     end
   end
@@ -103,7 +103,7 @@ class Masamune::DataPlan::Engine
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     target_instance = target_template.bind_input(target)
-    target_template.generate_via_unify(target_instance, source_template) do |source|
+    target_template.generate_via_unify(target_instance, source_template).each do |source|
       yield source
     end
   end

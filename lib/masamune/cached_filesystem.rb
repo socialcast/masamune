@@ -37,7 +37,7 @@ module Masamune
     end
 
     def glob(file_or_glob, &block)
-      return to_enum(:glob, file_or_glob) unless block_given?
+      return Set.new(to_enum(:glob, file_or_glob)) unless block_given?
       glob_stat(file_or_glob) do |entry|
         yield entry.name unless entry.name == dirname(file_or_glob)
       end

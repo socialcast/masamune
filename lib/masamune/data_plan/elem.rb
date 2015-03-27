@@ -69,12 +69,12 @@ class Masamune::DataPlan::Elem
   end
 
   def explode(&block)
-    return to_enum(__method__) unless block_given?
+    return Set.new(to_enum(__method__)) unless block_given?
     if rule.for_path?
       file_glob = path
       file_glob += '/' unless path.include?('*') || path.include?('.')
       file_glob += '*' unless path.include?('*')
-      rule.engine.filesystem.glob(file_glob) do |new_path|
+      rule.engine.filesystem.glob(file_glob).each do |new_path|
         yield rule.bind_input(new_path)
       end
     elsif rule.for_table_with_partition?
@@ -85,7 +85,7 @@ class Masamune::DataPlan::Elem
   def targets(&block)
     return Masamune::DataPlan::Set::EMPTY if @rule.for_targets?
     return Masamune::DataPlan::Set.new(rule.engine.get_target_rule(rule.name), to_enum(__method__)) unless block_given?
-    rule.engine.targets_for_source(rule.name, self) do |target|
+    rule.engine.targets_for_source(rule.name, self).each do |target|
       yield target
     end
   end
@@ -97,7 +97,7 @@ class Masamune::DataPlan::Elem
   def sources(&block)
     return Masamune::DataPlan::Set::EMPTY if @rule.for_sources?
     return Masamune::DataPlan::Set.new(rule.engine.get_source_rule(rule.name), to_enum(__method__)) unless block_given?
-    rule.engine.sources_for_target(rule.name, self) do |source|
+    rule.engine.sources_for_target(rule.name, self).each do |source|
       yield source
     end
   end
