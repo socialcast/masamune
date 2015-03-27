@@ -23,24 +23,26 @@
 require 'spec_helper'
 
 describe Masamune::Schema::Store do
+  let(:environment) { double }
+
   context 'without type' do
-    subject(:store) { described_class.new }
+    subject(:store) { described_class.new(environment) }
     it { expect { store }.to raise_error ArgumentError, 'required parameter type: missing' }
   end
 
   context 'with type :unknown' do
-    subject(:store) { described_class.new(type: :unknown) }
+    subject(:store) { described_class.new(environment, type: :unknown) }
     it { expect { store }.to raise_error ArgumentError, "unknown type: 'unknown'" }
   end
 
   context 'with type :postgres' do
-    subject(:store) { described_class.new(type: :postgres) }
+    subject(:store) { described_class.new(environment, type: :postgres) }
     it { expect(store.format).to eq(:csv) }
     it { expect(store.headers).to be_truthy }
   end
 
   context 'with type :hive' do
-    subject(:store) { described_class.new(type: :hive) }
+    subject(:store) { described_class.new(environment, type: :hive) }
     it { expect(store.format).to eq(:tsv) }
     it { expect(store.headers).to be_falsey }
   end
