@@ -102,7 +102,7 @@ module Masamune::Commands
       end
 
       if @output
-        @buffer ||= Tempfile.new('masamune')
+        @buffer = Tempfile.new('masamune')
       end
     end
 
@@ -113,10 +113,12 @@ module Masamune::Commands
     end
 
     def after_execute
-      @buffer.flush if @buffer && @buffer.respond_to?(:flush)
-      @buffer.close if @buffer && @buffer.respond_to?(:close)
+      return unless @buffer
+      @buffer.flush unless @buffer.closed?
+      @buffer.close unless @buffer.closed?
+      return unless @output
 
-      filesystem.move_file_to_file(@buffer.path, @output) if @output && @buffer && @buffer.respond_to?(:path)
+      filesystem.move_file_to_file(@buffer.path, @output)
     end
 
     # FIXME use temporary tables with delimiters for CSV output format
