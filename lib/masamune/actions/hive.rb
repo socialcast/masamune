@@ -53,9 +53,7 @@ module Masamune::Actions
 
     def load_hive_schema
       transform = define_schema(catalog, :hive)
-      rendered_file = transform.to_file
-      filesystem.copy_file_to_dir(rendered_file, filesystem.get_path(:tmp_dir))
-      hive(file: filesystem.get_path(:tmp_dir, File.basename(rendered_file)))
+      hive(file: transform.to_file)
     rescue => e
       logger.error(e)
       logger.error("Could not load schema")
