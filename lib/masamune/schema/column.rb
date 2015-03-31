@@ -456,6 +456,14 @@ module Masamune::Schema
       "#{reference_name}_seq" if type == :sequence
     end
 
+    def required_value?
+      if reference
+        !(reference.null || reference.default)
+      else
+        surrogate_key || natural_key
+      end
+    end
+
     private
 
     def sql_constraints

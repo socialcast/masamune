@@ -100,6 +100,15 @@ module Masamune::Schema
       end
     end
 
+    def missing_required_columns
+      Set.new.tap do |missing|
+        values.select do |key, value|
+          column = @columns[key]
+          missing << column if column.required_value? && value.nil?
+        end
+      end
+    end
+
     private
 
     def normalize_values!

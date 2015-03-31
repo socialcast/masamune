@@ -81,28 +81,16 @@ module Masamune
     end
 
     def reload_logger!
-      @logger = nil
+      @logger = @log_file_name = nil
     end
 
     def log_file_name
-      @log_file_name
+      @log_file_name ||= filesystem.get_path(:log_dir, log_file_template)
     end
 
     def logger
-      @logger ||= begin
-        log_file_io = if filesystem.has_path?(:log_dir)
-          @log_file_name = filesystem.get_path(:log_dir, log_file_template)
-          log_file = File.open(@log_file_name, 'a')
-          log_file.sync = true
-
-          latest = filesystem.path(:log_dir, 'latest')
-          FileUtils.rm(latest) if File.exists?(latest)
-          FileUtils.ln_s(log_file, latest)
-          configuration.debug ? Masamune::MultiIO.new($stderr, log_file) : log_file
-        else
-          configuration.debug ? $stderr : nil
-        end
-        Logger.new(log_file_io)
+      @logger ||= Logger.new(log_file_io).tap do
+        symlink_latest_log
       end
     end
 
@@ -152,6 +140,25 @@ module Masamune
     def lock_file(name)
       path = filesystem.get_path(:run_dir, "#{name}.lock")
       File.open(path, File::CREAT, 0644)
+    end
+
+    def log_file_io
+      if filesystem.has_path?(:log_dir)
+        log_file = File.open(log_file_name, 'a')
+        log_file.sync = true
+        configuration.debug ? Masamune::MultiIO.new($stderr, log_file) : log_file
+      else
+        configuration.debug ? $stderr : nil
+      end
+    end
+
+    def symlink_latest_log
+      return unless filesystem.has_path?(:log_dir)
+      latest = filesystem.path(:log_dir, 'latest')
+      FileUtils.rm(latest) if File.exists?(latest)
+      FileUtils.ln_s(log_file_name, latest)
+    rescue => e
+      logger.error(e)
     end
   end
 end

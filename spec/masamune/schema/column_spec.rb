@@ -560,4 +560,51 @@ describe Masamune::Schema::Column do
       it { is_expected.to eq(false) }
     end
   end
+
+  describe '#required_value?' do
+    subject { column.required_value? }
+
+    context 'by default' do
+      let(:column) { described_class.new id: 'name', type: :string }
+      it { is_expected.to eq(false) }
+    end
+
+    context 'when surrogate_key' do
+      let(:column) { described_class.new id: 'name', type: :string, surrogate_key: true }
+      it { is_expected.to eq(true) }
+
+      context 'when reference allow null' do
+        before do
+          allow(column).to receive(:reference).and_return(double(null: true, default: nil))
+        end
+        it { is_expected.to eq(false) }
+      end
+
+      context 'when reference has default' do
+        before do
+          allow(column).to receive(:reference).and_return(double(null: false, default: 'Unknown'))
+        end
+        it { is_expected.to eq(false) }
+      end
+    end
+
+    context 'when natural_key' do
+      let(:column) { described_class.new id: 'name', type: :string, natural_key: true }
+      it { is_expected.to eq(true) }
+
+      context 'when reference allow null' do
+        before do
+          allow(column).to receive(:reference).and_return(double(null: true, default: nil))
+        end
+        it { is_expected.to eq(false) }
+      end
+
+      context 'when reference has default' do
+        before do
+          allow(column).to receive(:reference).and_return(double(null: false, default: 'Unknown'))
+        end
+        it { is_expected.to eq(false) }
+      end
+    end
+  end
 end
