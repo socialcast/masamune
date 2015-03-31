@@ -101,12 +101,12 @@ module Masamune::Schema
     end
 
     def missing_required_columns
-      missing = Set.new
-      values.select do |key, value|
-        column = @columns[key]
-        missing << column if column.required_value? && value.nil?
+      Set.new.tap do |missing|
+        values.select do |key, value|
+          column = @columns[key]
+          missing << column if column.required_value? && value.nil?
+        end
       end
-      missing
     end
 
     private
