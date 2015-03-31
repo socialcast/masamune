@@ -44,6 +44,7 @@ describe Masamune::Transform::StageFact do
 
       dimension 'feature', type: :mini do
         column 'name', type: :string, unique: true, index: true
+        row name: 'unknown', attributes: {default: true}
       end
 
       dimension 'tenant', type: :two do
