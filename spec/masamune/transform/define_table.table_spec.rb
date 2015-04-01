@@ -181,7 +181,7 @@ describe Masamune::Transform::DefineTable do
           id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
-          state USER_STATE_TYPE NOT NULL DEFAULT 'active'
+          state USER_STATE_TYPE NOT NULL DEFAULT 'active'::USER_STATE_TYPE
         );
       EOS
     end

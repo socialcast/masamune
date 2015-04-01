@@ -80,6 +80,8 @@ module Masamune::Schema
         'uuid_generate_v4()'
       when :sequence
         "nextval('#{sequence_id}')"
+      when :enum
+        values.first
       end
     end
 
@@ -169,7 +171,7 @@ module Masamune::Schema
       when :sequence
         'INTEGER'
       when :enum
-        "#{sub_type}_TYPE".upcase
+        "#{sub_type || id}_TYPE".upcase
       when :key_value
         if parent.type == :stage && !parent.inherit
           'JSON'
