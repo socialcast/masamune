@@ -200,8 +200,10 @@ module Masamune::Schema
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
-      when :string, :enum
+      when :string
         "'#{value}'"
+      when :enum
+        "'#{value}'::#{sql_type}"
       else
         value
       end

@@ -100,6 +100,10 @@ module Masamune::Schema
       end
     end
 
+    def sql_value(column)
+      column.sql_value(values[column.name])
+    end
+
     def missing_required_columns
       Set.new.tap do |missing|
         values.select do |key, value|

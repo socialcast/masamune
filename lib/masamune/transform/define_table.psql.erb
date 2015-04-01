@@ -79,12 +79,14 @@ WHERE NOT EXISTS (SELECT 1 FROM <%= target.name %> WHERE <%= row.insert_constrai
 <%- row.natural_keys.each do |column| -%>
 CREATE OR REPLACE FUNCTION <%= row.name(column) %>
 RETURNS <%= column.sql_type %> IMMUTABLE AS $$
-  SELECT <%= row.values[column.name] %>;
+  SELECT <%= row.sql_value(column) %>;
 $$ LANGUAGE SQL;
+
 <%- end -%>
 
 CREATE OR REPLACE FUNCTION <%= row.name %>
 RETURNS <%= target.surrogate_key.sql_type %> IMMUTABLE AS $$
   SELECT <%= target.surrogate_key.name %> FROM <%= target.name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
 $$ LANGUAGE SQL;
+
 <%- end -%>

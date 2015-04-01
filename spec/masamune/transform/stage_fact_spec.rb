@@ -58,7 +58,8 @@ describe Masamune::Transform::StageFact do
 
       dimension 'group', type: :two do
         column 'group_id', type: :integer, index: true, natural_key: true
-        row group_id: -1, attributes: {id: :missing}
+        column 'group_mode', type: :enum, sub_type: 'group_mode', values: %(missing public private), index: true, natural_key: true, default: 'missing'
+        row group_id: -1, group_mode: 'missing', attributes: {id: :missing}
       end
 
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
@@ -78,6 +79,7 @@ describe Masamune::Transform::StageFact do
         column 'tenant.tenant_id', type: :integer
         column 'user.user_id', type: :integer
         column 'group.group_id', type: :integer
+        column 'group.group_mode', type: :enum, sub_type: 'group_mode'
         column 'user_agent.name', type: :string
         column 'user_agent.version', type: :string
         column 'feature.name', type: :string
@@ -143,6 +145,7 @@ describe Masamune::Transform::StageFact do
           group_dimension
         ON
           group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_id, missing_group_id()) AND
+          group_dimension.group_mode = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_mode, missing_group_mode()) AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN group_dimension.start_at AND COALESCE(group_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < group_dimension.start_at AND group_dimension.version = 1))
         JOIN
           user_agent_type
