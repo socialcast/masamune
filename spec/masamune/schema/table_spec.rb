@@ -185,7 +185,7 @@ describe Masamune::Schema::Table do
     it { expect(table.name).to eq('user_table') }
   end
 
-  context 'with referenced tables' do
+  context 'with referenced tables with default values' do
     let(:mini_table) do
       described_class.new id: 'user_account_state',
         columns: [
@@ -216,6 +216,7 @@ describe Masamune::Schema::Table do
     end
 
     it { expect(table.name).to eq('user_table') }
+    it { expect(table.columns[:user_account_state_table_id].required_value?).to eq(false) }
   end
 
   context 'with labeled referenced table' do
@@ -241,6 +242,28 @@ describe Masamune::Schema::Table do
     end
 
     it { expect(table.name).to eq('user_table') }
+    it { expect(table.columns[:user_account_state_table_id].required_value?).to eq(false) }
+    it { expect(table.columns[:actor_user_account_state_table_id].required_value?).to eq(false) }
+  end
+
+  context 'with referenced tables without default values' do
+    let(:mini_table) do
+      described_class.new id: 'user_account_state',
+        columns: [
+          Masamune::Schema::Column.new(id: 'name', type: :string, unique: true),
+          Masamune::Schema::Column.new(id: 'description', type: :string)
+        ]
+    end
+
+    let(:table) do
+      described_class.new id: 'user', references: [Masamune::Schema::TableReference.new(mini_table)],
+        columns: [
+          Masamune::Schema::Column.new(id: 'name', type: :string)
+        ]
+    end
+
+    it { expect(table.name).to eq('user_table') }
+    it { expect(table.columns[:user_account_state_table_id].required_value?).to eq(true) }
   end
 
   context '#stage_table' do

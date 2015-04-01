@@ -110,7 +110,12 @@ module Masamune::Schema
         row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash)
         write_headers = @store.headers && @lines < 1
         @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: write_headers))
-        @csv << row.serialize
+        if row.missing_required_columns.any?
+          missing_required_column_names = row.missing_required_columns.map(&:name)
+          @store.logger.warn("row '#{row.to_hash}' is missing required columns '#{missing_required_column_names.join(',')}', skipping")
+        else
+          @csv << row.serialize
+        end
         @lines += 1
       end
 

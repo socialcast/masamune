@@ -83,7 +83,7 @@ module Masamune::Schema
 
     def initialize(environment)
       self.environment = environment
-      @stores   = Hash.new { |h,k| h[k] = Masamune::Schema::Store.new(type: k) }
+      @stores   = Hash.new { |h,k| h[k] = Masamune::Schema::Store.new(environment, type: k) }
       @context  = nil
     end
 

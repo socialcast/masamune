@@ -155,8 +155,8 @@ module Masamune::Commands
     end
 
     def command_args_for_simple_file
-      filesystem.copy_file_to_dir(@file, filesystem.get_path(:tmp_dir))
-      ['-f', filesystem.get_path(:tmp_dir, File.basename(@file))].tap do |args|
+      filesystem.copy_file_to_file(@file, remote_file)
+      ['-f', remote_file].tap do |args|
         @variables.each do |key, val|
           args << ['-d', "#{key.to_s}=#{val.to_s}"]
         end
@@ -165,8 +165,14 @@ module Masamune::Commands
 
     def command_args_for_template
       @rendered_file = Masamune::Template.render_to_file(@file, @variables)
-      filesystem.copy_file_to_dir(@rendered_file, filesystem.get_path(:tmp_dir))
-      ['-f', filesystem.get_path(:tmp_dir, File.basename(@rendered_file))]
+      filesystem.copy_file_to_file(@rendered_file, remote_file)
+      ['-f', remote_file]
+    end
+
+    private
+
+    def remote_file
+      @remote_file ||= File.join(filesystem.mktempdir!(:tmp_dir), filesystem.basename(@file)).gsub(/.erb\z/,'')
     end
   end
 end

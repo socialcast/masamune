@@ -49,7 +49,7 @@ describe Masamune::Schema::Map do
         column 'tenant_id', type: :integer
         column 'admin', type: :boolean
         column 'preferences', type: :yaml
-        column 'deleted_at', type: :timestamp
+        column 'deleted_at', type: :timestamp, null: true
       end
     end
 
@@ -75,7 +75,7 @@ describe Masamune::Schema::Map do
         column 'tenant_id', type: :integer
         column 'admin', type: :boolean
         column 'preferences', type: :json
-        column 'deleted_at', type: :timestamp
+        column 'deleted_at', type: :timestamp, null: true
       end
     end
   end
@@ -184,6 +184,8 @@ describe Masamune::Schema::Map do
           2,40,Y,2014-02-26 18:15:51 UTC,1,"---
           :enabled: true
           "
+          # NOTE record is intentionally invalid
+          ,50,X,,0,
         EOS
       end
 
@@ -193,6 +195,10 @@ describe Masamune::Schema::Map do
           30,1,active,active,FALSE,{},users_file,100
           40,2,deleted,deleted,TRUE,"{""enabled"":true}",users_file,100
         EOS
+      end
+
+      before do
+        expect(environment).to receive_message_chain(:logger, :warn).with(/row .* missing required columns 'user_id'/)
       end
 
       it 'should match target data' do

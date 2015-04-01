@@ -32,11 +32,14 @@ describe Masamune::Commands::Hive do
   let(:instance) { described_class.new(delegate, attrs) }
 
   let(:local_file) { File.join(Dir.tmpdir, SecureRandom.hex + '.txt') }
-  let(:remote_file) { filesystem.path(:tmp_dir, File.basename(local_file)) }
+  let(:mock_tmpdir) { 'mock' }
+  let(:remote_file) { filesystem.path(:tmp_dir, mock_tmpdir, File.basename(local_file)) }
 
   before do
     FileUtils.touch(local_file)
     filesystem.add_path(:tmp_dir, File.join(Dir.tmpdir, SecureRandom.hex))
+    allow(filesystem).to receive(:mktempdir!) { filesystem.path(:tmp_dir, mock_tmpdir) }
+
     allow(delegate).to receive(:filesystem) { filesystem }
     allow(delegate).to receive_message_chain(:configuration, :hive).and_return(configuration)
   end
@@ -91,10 +94,10 @@ describe Masamune::Commands::Hive do
     context 'with template file' do
       let(:attrs) { {file: 'zomg.hql.erb'} }
       before do
-        expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
-        expect_any_instance_of(Masamune::MockFilesystem).to receive(:copy_file_to_dir)
+        expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('XXX')
+        expect_any_instance_of(Masamune::MockFilesystem).to receive(:copy_file_to_file)
       end
-      it { is_expected.to eq([*default_command, '-f', filesystem.get_path(:tmp_dir, 'zomg.hql')]) }
+      it { is_expected.to eq([*default_command, '-f', filesystem.get_path(:tmp_dir, mock_tmpdir, 'zomg.hql')]) }
     end
   end
 
