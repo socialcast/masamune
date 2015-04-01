@@ -39,6 +39,7 @@ describe Masamune::Transform::StageFact do
       dimension 'user_agent', type: :mini do
         column 'name', type: :string, unique: true, index: 'shared'
         column 'version', type: :string, unique: true, index: 'shared', default: 'Unknown'
+        column 'mobile', type: :boolean, unique: true, index: 'shared', default: false
         column 'description', type: :string, null: true, ignore: true
       end
 
@@ -81,6 +82,7 @@ describe Masamune::Transform::StageFact do
         column 'group.group_mode', type: :enum, sub_type: 'group_mode'
         column 'user_agent.name', type: :string
         column 'user_agent.version', type: :string
+        column 'user_agent.mobile', type: :boolean
         column 'feature.name', type: :string
         column 'session.id', type: :integer
         column 'time_key', type: :integer
@@ -150,7 +152,8 @@ describe Masamune::Transform::StageFact do
           user_agent_type
         ON
           user_agent_type.name = visits_hourly_file_fact_stage.user_agent_type_name AND
-          user_agent_type.version = COALESCE(visits_hourly_file_fact_stage.user_agent_type_version, 'Unknown')
+          user_agent_type.version = COALESCE(visits_hourly_file_fact_stage.user_agent_type_version, 'Unknown') AND
+          user_agent_type.mobile = COALESCE(visits_hourly_file_fact_stage.user_agent_type_mobile, FALSE)
         JOIN
           feature_type
         ON
