@@ -20,8 +20,8 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
-<%- target.unique_constraints.each do |column_names| -%>
-<%- constraint_name = "#{target.name}_#{column_names.join('_')}_key" -%>
+<%- target.unique_constraints.each do |column_names, id| -%>
+<%- constraint_name = "#{target.name}_#{id}_key" -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= constraint_name %>') THEN
 ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= constraint_name %> UNIQUE(<%= column_names.join(', ') %>);
