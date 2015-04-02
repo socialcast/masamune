@@ -71,13 +71,13 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_index') THEN
-        CREATE INDEX user_table_tenant_id_index ON user_table (tenant_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_3854361_index') THEN
+        CREATE INDEX user_table_3854361_index ON user_table (tenant_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_id_index') THEN
-        CREATE INDEX user_table_user_id_index ON user_table (user_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e8701ad_index') THEN
+        CREATE INDEX user_table_e8701ad_index ON user_table (user_id);
         END IF; END $$;
       EOS
     end
@@ -105,18 +105,18 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_index') THEN
-        CREATE INDEX user_table_tenant_id_index ON user_table (tenant_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_3854361_index') THEN
+        CREATE INDEX user_table_3854361_index ON user_table (tenant_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_id_index') THEN
-        CREATE INDEX user_table_user_id_index ON user_table (user_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e8701ad_index') THEN
+        CREATE INDEX user_table_e8701ad_index ON user_table (user_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_index') THEN
-        CREATE INDEX user_table_tenant_id_user_id_index ON user_table (tenant_id, user_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_index') THEN
+        CREATE INDEX user_table_e0e4295_index ON user_table (tenant_id, user_id);
         END IF; END $$;
       EOS
     end
@@ -144,13 +144,13 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_id_key') THEN
-        ALTER TABLE user_table ADD CONSTRAINT user_table_user_id_key UNIQUE(user_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e8701ad_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_e8701ad_key UNIQUE(user_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_key') THEN
-        ALTER TABLE user_table ADD CONSTRAINT user_table_tenant_id_user_id_key UNIQUE(tenant_id, user_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_e0e4295_key UNIQUE(tenant_id, user_id);
         END IF; END $$;
       EOS
     end
@@ -181,7 +181,7 @@ describe Masamune::Transform::DefineTable do
           id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
-          state USER_STATE_TYPE NOT NULL DEFAULT 'active'
+          state USER_STATE_TYPE NOT NULL DEFAULT 'active'::USER_STATE_TYPE
         );
       EOS
     end
@@ -266,13 +266,13 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_key') THEN
-        ALTER TABLE user_table ADD CONSTRAINT user_table_tenant_id_user_id_key UNIQUE(tenant_id, user_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_e0e4295_key UNIQUE(tenant_id, user_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_index') THEN
-        CREATE UNIQUE INDEX user_table_tenant_id_user_id_index ON user_table (tenant_id, user_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_index') THEN
+        CREATE UNIQUE INDEX user_table_e0e4295_index ON user_table (tenant_id, user_id);
         END IF; END $$;
       EOS
     end
@@ -302,8 +302,8 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_tenant_id_user_id_key') THEN
-        ALTER TABLE user_table ADD CONSTRAINT user_table_tenant_id_user_id_key UNIQUE(tenant_id, user_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_e0e4295_key UNIQUE(tenant_id, user_id);
         END IF; END $$;
 
         INSERT INTO user_table (tenant_id, user_id)
@@ -367,8 +367,8 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_account_state_table_id_index') THEN
-        CREATE INDEX user_table_user_account_state_table_id_index ON user_table (user_account_state_table_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_bd2027e_index') THEN
+        CREATE INDEX user_table_bd2027e_index ON user_table (user_account_state_table_id);
         END IF; END $$;
       EOS
     end
@@ -404,13 +404,13 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_user_account_state_table_id_index') THEN
-        CREATE INDEX user_table_user_account_state_table_id_index ON user_table (user_account_state_table_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_bd2027e_index') THEN
+        CREATE INDEX user_table_bd2027e_index ON user_table (user_account_state_table_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_hr_user_account_state_table_id_index') THEN
-        CREATE INDEX user_table_hr_user_account_state_table_id_index ON user_table (hr_user_account_state_table_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_074da4a_index') THEN
+        CREATE INDEX user_table_074da4a_index ON user_table (hr_user_account_state_table_id);
         END IF; END $$;
       EOS
     end
@@ -447,8 +447,8 @@ describe Masamune::Transform::DefineTable do
             name VARCHAR
           );
 
-          CREATE INDEX user_table_stage_user_account_state_table_id_index ON user_table_stage (user_account_state_table_id);
-          CREATE INDEX user_table_stage_hr_user_account_state_table_id_index ON user_table_stage (hr_user_account_state_table_id);
+          CREATE INDEX user_table_stage_bd2027e_index ON user_table_stage (user_account_state_table_id);
+          CREATE INDEX user_table_stage_074da4a_index ON user_table_stage (hr_user_account_state_table_id);
         EOS
       end
     end
@@ -465,8 +465,8 @@ describe Masamune::Transform::DefineTable do
             name VARCHAR
           );
 
-          CREATE INDEX user_table_stage_hr_user_account_state_table_id_index ON user_table_stage (hr_user_account_state_table_id);
-          CREATE INDEX user_table_stage_user_account_state_table_id_index ON user_table_stage (user_account_state_table_id);
+          CREATE INDEX user_table_stage_074da4a_index ON user_table_stage (hr_user_account_state_table_id);
+          CREATE INDEX user_table_stage_bd2027e_index ON user_table_stage (user_account_state_table_id);
         EOS
       end
     end

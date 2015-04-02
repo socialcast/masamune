@@ -60,6 +60,38 @@ describe Masamune::Schema::Column do
       end
     end
 
+    context 'with type :enum' do
+      subject(:column) { described_class.new(id: 'mode', type: :enum, values: %w(public private)) }
+
+      context '#default' do
+        subject { column.default }
+        it { is_expected.to eq('public') }
+      end
+
+      context '#sql_type' do
+        subject { column.sql_type }
+        it { is_expected.to eq('MODE_TYPE') }
+      end
+
+      context 'with :sub_type' do
+        subject(:column) { described_class.new(id: 'permission', type: :enum, sub_type: 'mode') }
+
+        context '#sql_type' do
+          subject { column.sql_type }
+          it { is_expected.to eq('MODE_TYPE') }
+        end
+      end
+
+      context 'with :default' do
+        subject(:column) { described_class.new(id: 'mode', type: :enum, values: %w(public private), default: 'private') }
+
+        context '#default' do
+          subject { column.default }
+          it { is_expected.to eq('private') }
+        end
+      end
+    end
+
     context 'with index: false' do
       subject(:column) { described_class.new(id: 'id', index: false) }
       context '#index' do

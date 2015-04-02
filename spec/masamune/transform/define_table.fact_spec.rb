@@ -136,43 +136,43 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_cluster_type_id_index') THEN
-        CREATE INDEX visits_fact_cluster_type_id_index ON visits_fact (cluster_type_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_d6b9b38_index') THEN
+        CREATE INDEX visits_fact_d6b9b38_index ON visits_fact (cluster_type_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_date_dimension_id_index') THEN
-        CREATE INDEX visits_fact_date_dimension_id_index ON visits_fact (date_dimension_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_0a531a8_index') THEN
+        CREATE INDEX visits_fact_0a531a8_index ON visits_fact (date_dimension_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_tenant_dimension_id_index') THEN
-        CREATE INDEX visits_fact_tenant_dimension_id_index ON visits_fact (tenant_dimension_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_d3950d9_index') THEN
+        CREATE INDEX visits_fact_d3950d9_index ON visits_fact (tenant_dimension_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_user_dimension_id_index') THEN
-        CREATE INDEX visits_fact_user_dimension_id_index ON visits_fact (user_dimension_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_39f0fdd_index') THEN
+        CREATE INDEX visits_fact_39f0fdd_index ON visits_fact (user_dimension_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_group_dimension_id_index') THEN
-        CREATE INDEX visits_fact_group_dimension_id_index ON visits_fact (group_dimension_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_e0d2a9e_index') THEN
+        CREATE INDEX visits_fact_e0d2a9e_index ON visits_fact (group_dimension_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_user_agent_type_id_index') THEN
-        CREATE INDEX visits_fact_user_agent_type_id_index ON visits_fact (user_agent_type_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_d8b1c3e_index') THEN
+        CREATE INDEX visits_fact_d8b1c3e_index ON visits_fact (user_agent_type_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_feature_type_id_index') THEN
-        CREATE INDEX visits_fact_feature_type_id_index ON visits_fact (feature_type_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_33b68fd_index') THEN
+        CREATE INDEX visits_fact_33b68fd_index ON visits_fact (feature_type_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_time_key_index') THEN
-        CREATE INDEX visits_fact_time_key_index ON visits_fact (time_key);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_6444ed3_index') THEN
+        CREATE INDEX visits_fact_6444ed3_index ON visits_fact (time_key);
         END IF; END $$;
       EOS
     end
@@ -203,13 +203,13 @@ describe Masamune::Transform::DefineTable do
         COPY visits_file_fact_stage FROM 'output_2.csv' WITH (FORMAT 'csv', HEADER true);
         COPY visits_file_fact_stage FROM 'output_3.csv' WITH (FORMAT 'csv', HEADER true);
 
-        CREATE INDEX visits_file_fact_stage_date_dimension_date_id_index ON visits_file_fact_stage (date_dimension_date_id);
-        CREATE INDEX visits_file_fact_stage_tenant_dimension_tenant_id_index ON visits_file_fact_stage (tenant_dimension_tenant_id);
-        CREATE INDEX visits_file_fact_stage_user_dimension_user_id_index ON visits_file_fact_stage (user_dimension_user_id);
-        CREATE INDEX visits_file_fact_stage_user_agent_type_name_index ON visits_file_fact_stage (user_agent_type_name);
-        CREATE INDEX visits_file_fact_stage_user_agent_type_version_index ON visits_file_fact_stage (user_agent_type_version);
-        CREATE INDEX visits_file_fact_stage_feature_type_name_index ON visits_file_fact_stage (feature_type_name);
-        CREATE INDEX visits_file_fact_stage_time_key_index ON visits_file_fact_stage (time_key);
+        CREATE INDEX visits_file_fact_stage_964dac1_index ON visits_file_fact_stage (date_dimension_date_id);
+        CREATE INDEX visits_file_fact_stage_90fc13c_index ON visits_file_fact_stage (tenant_dimension_tenant_id);
+        CREATE INDEX visits_file_fact_stage_30f3cca_index ON visits_file_fact_stage (user_dimension_user_id);
+        CREATE INDEX visits_file_fact_stage_99c433b_index ON visits_file_fact_stage (user_agent_type_name);
+        CREATE INDEX visits_file_fact_stage_d5d236f_index ON visits_file_fact_stage (user_agent_type_version);
+        CREATE INDEX visits_file_fact_stage_5a187ed_index ON visits_file_fact_stage (feature_type_name);
+        CREATE INDEX visits_file_fact_stage_6444ed3_index ON visits_file_fact_stage (time_key);
       EOS
     end
 
@@ -254,13 +254,13 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_message_kind_type_id_index') THEN
-        CREATE INDEX visits_fact_message_kind_type_id_index ON visits_fact (message_kind_type_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_2a6313d_index') THEN
+        CREATE INDEX visits_fact_2a6313d_index ON visits_fact (message_kind_type_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_time_key_index') THEN
-        CREATE INDEX visits_fact_time_key_index ON visits_fact (time_key);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_6444ed3_index') THEN
+        CREATE INDEX visits_fact_6444ed3_index ON visits_fact (time_key);
         END IF; END $$;
       EOS
     end
