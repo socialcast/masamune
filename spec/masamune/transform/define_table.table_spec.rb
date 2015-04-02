@@ -516,7 +516,7 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT (SELECT sequence_owner('user_table_id_seq') = 'user_table.id') THEN
+        IF NOT EXISTS (SELECT 1 WHERE sequence_owner('user_table_id_seq') = 'user_table.id') THEN
         ALTER SEQUENCE user_table_id_seq OWNED BY user_table.id;
         END IF; END $$;
       EOS
