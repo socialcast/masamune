@@ -23,7 +23,7 @@
 require 'spec_helper'
 
 describe Masamune::Schema::Map do
-  let(:environment) { double }
+  let(:environment) { double(logger: double) }
   let(:catalog) { Masamune::Schema::Catalog.new(environment) }
 
   before do
@@ -198,7 +198,7 @@ describe Masamune::Schema::Map do
       end
 
       before do
-        expect(environment).to receive_message_chain(:logger, :warn).with(/row .* missing required columns 'user_id'/)
+        expect(environment.logger).to receive(:warn).with(/row .* missing required columns 'user_id'/)
       end
 
       it 'should match target data' do
@@ -212,6 +212,7 @@ describe Masamune::Schema::Map do
       before do
         catalog.schema :files do
           map from: hive.user_event, to: postgres.user_dimension do |row|
+            raise if row[:tenant_id] == 42
             {
               'tenant_id'               => row[:tenant_id],
               'user_id'                 => row[:id],
@@ -234,10 +235,18 @@ describe Masamune::Schema::Map do
         catalog.postgres.user_dimension
       end
 
+      before do
+        expect(environment.logger).to receive(:warn).with(/failed to process '{.*}' for #{target.name}/).ordered
+        expect(environment.logger).to receive(:warn).with(/failed to parse '{.*}' for #{source.name}/).ordered
+      end
+
       let(:source_data) do
         <<-EOS.strip_heredoc
           X	user_create	1	30	0	\\N	\\N	\\N
+          A	user_create	1	42	0	\\N	\\N	\\N
           Y	user_delete	2	40	0	1	"{""enabled"":true}"	\\N
+          # NOTE record is intentionally invalid
+          Z	user_create	3	50	0	1	INVALID_JSON	\\N
         EOS
       end
 

@@ -100,8 +100,7 @@ module Masamune::Schema
         raise 'must call Buffer#bind first' unless @io
         CSV.parse(JSONEncoder.new(@io, @store), options.merge(headers: @store.headers || @table.columns.keys)) do |data|
           next if data.to_s =~ /\A#/
-          row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
-          yield row.to_hash
+          yield safe_row(data)
         end
       end
 
@@ -123,6 +122,13 @@ module Masamune::Schema
         {skip_blanks: true}.tap do | opts|
           opts[:col_sep] = "\t" if @store.format == :tsv
         end
+      end
+
+      def safe_row(data)
+        row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
+        row.to_hash
+      rescue
+        @store.logger.warn("failed to parse '#{data.to_hash}' for #{@table.name}, skipping")
       end
     end
 
@@ -230,11 +236,20 @@ module Masamune::Schema
 
     def apply_buffer(input_buffer, output_buffer)
       input_buffer.each do |input|
-        Array.wrap(function.call(input)).each do |output|
+        safe_apply_function(input) do |output|
           output_buffer.append output
         end
       end
       output_buffer.flush
+    end
+
+    def safe_apply_function(input, &block)
+      return unless input
+      Array.wrap(function.call(input)).each do |output|
+        yield output
+      end
+    rescue
+      @store.logger.warn("failed to process '#{input}' for #{target.name}, skipping")
     end
   end
 end
