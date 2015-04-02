@@ -53,7 +53,10 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
 );
 
 <%- target.sequence_columns.each do |_, column| -%>
+DO $$ BEGIN
+IF NOT (SELECT sequence_owner('<%= column.sequence_id %>') = '<%= column.qualified_name %>') THEN
 ALTER SEQUENCE <%= column.sequence_id %> OWNED BY <%= column.qualified_name %>;
+END IF; END $$;
 <%- end -%>
 
 <%- files.each do |file| -%>
