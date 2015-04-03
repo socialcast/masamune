@@ -168,6 +168,60 @@ describe Masamune::Schema::Column do
     end
   end
 
+  describe '#sql_value' do
+    subject(:result) { column.sql_value(value) }
+
+    shared_examples 'with :null value' do
+      context 'with :null value' do
+        let(:value) { :null }
+        it { is_expected.to eq('NULL') }
+      end
+    end
+
+    context 'with type :integer' do
+      let(:column) { described_class.new(id: 'integer', type: :integer) }
+      context 'with integer value' do
+        let(:value) { 0 }
+        it { is_expected.to eq(0) }
+      end
+      it_behaves_like 'with :null value'
+    end
+
+    context 'with type :string' do
+      let(:column) { described_class.new(id: 'string', type: :string) }
+      context 'with string value' do
+        let(:value) { 'value' }
+        it { is_expected.to eq(%q{'value'}) }
+      end
+      it_behaves_like 'with :null value'
+    end
+
+    context 'with type :boolean' do
+      let(:column) { described_class.new(id: 'boolean', type: :boolean) }
+      context 'with boolean value' do
+        let(:value) { true }
+        it { is_expected.to eq('TRUE') }
+      end
+
+      context 'with string value' do
+        let(:value) { 'true' }
+        it { is_expected.to eq('TRUE') }
+      end
+
+      it_behaves_like 'with :null value'
+    end
+
+    context 'with type :enum' do
+      let(:column) { described_class.new(id: 'enum', type: :enum, values: %w(public private)) }
+      context 'with enum value' do
+        let(:value) { 'public' }
+        it { is_expected.to eq(%q{'public'::ENUM_TYPE}) }
+      end
+
+      it_behaves_like 'with :null value'
+    end
+  end
+
   describe '#hql_type' do
     subject(:result) { column.hql_type }
 
