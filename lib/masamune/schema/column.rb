@@ -199,6 +199,7 @@ module Masamune::Schema
 
     def sql_value(value)
       return value if sql_function?(value)
+      return 'NULL' if value == :null
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
