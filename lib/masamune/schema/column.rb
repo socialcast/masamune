@@ -479,7 +479,9 @@ module Masamune::Schema
     end
 
     def sql_default
-      "DEFAULT #{sql_value(default)}" unless default.nil?
+      return if default.nil?
+      return if !strict
+      "DEFAULT #{sql_value(default)}"
     end
 
     def ruby_array(value)

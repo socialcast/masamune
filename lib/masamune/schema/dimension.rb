@@ -84,7 +84,7 @@ module Masamune::Schema
           [column_now, column_was]
         else
           column.dup.tap do |column_copy|
-            column_copy.strict = false unless column.surrogate_key || column.natural_key
+            column_copy.strict = false unless column.surrogate_key || column.natural_key || (column.reference && column.reference.surrogate_key.auto)
           end
         end
       end.flatten
