@@ -85,10 +85,11 @@ module Masamune::Schema
 
       def_delegators :@io, :flush, :path
 
-      def initialize(table)
-        @table  = table
-        @store  = table.store
-        @lines  = 0
+      def initialize(table, options = {})
+        @table    = table
+        @store    = table.store
+        @lines    = 0
+        @options  = options
       end
 
       def bind(io)
@@ -113,10 +114,12 @@ module Masamune::Schema
           missing_required_column_names = row.missing_required_columns.map(&:name)
           @store.logger.warn("row '#{row.to_hash}' is missing required columns '#{missing_required_column_names.join(',')}', skipping")
         else
-          @csv << row.serialize
+          @csv << row.serialize if append?(row.serialize)
         end
         @lines += 1
       end
+
+      private
 
       def options
         {skip_blanks: true}.tap do | opts|
@@ -130,6 +133,12 @@ module Masamune::Schema
       rescue
         @store.logger.warn("failed to parse '#{data.to_hash}' for #{@table.name}, skipping")
       end
+
+      def append?(elem)
+        return true unless @options[:distinct]
+        @seen ||= Set.new
+        @seen.add?(elem)
+      end
     end
 
     DEFAULT_ATTRIBUTES =
@@ -139,6 +148,7 @@ module Masamune::Schema
       columns:   nil,
       store:     nil,
       function:  ->(row) { row },
+      distinct:  false,
       debug:     false
     }
 
@@ -177,7 +187,7 @@ module Masamune::Schema
 
     def apply(input_files, output_file)
       input_buffer  = Buffer.new(source)
-      output_buffer = Buffer.new(intermediate)
+      output_buffer = Buffer.new(intermediate, distinct: distinct)
       self.class.convert_files(input_files).each do |input_file|
         open_stream(input_file, 'r') do |input_stream|
           input_buffer.bind(input_stream)
