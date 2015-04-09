@@ -84,11 +84,11 @@ describe Masamune::Transform::BulkUpsert do
         UPDATE
           user_dimension
         SET
-          department_type_id = user_dimension_stage.department_type_id,
-          user_account_state_type_id = user_dimension_stage.user_account_state_type_id,
-          hr_user_account_state_type_id = user_dimension_stage.hr_user_account_state_type_id,
-          name = user_dimension_stage.name,
-          preferences = user_dimension_stage.preferences
+          department_type_id = COALESCE(user_dimension_stage.department_type_id, user_dimension.department_type_id),
+          user_account_state_type_id = COALESCE(user_dimension_stage.user_account_state_type_id, user_dimension.user_account_state_type_id),
+          hr_user_account_state_type_id = COALESCE(user_dimension_stage.hr_user_account_state_type_id, user_dimension.hr_user_account_state_type_id),
+          name = COALESCE(user_dimension_stage.name, user_dimension.name),
+          preferences = COALESCE(user_dimension_stage.preferences, user_dimension.preferences)
         FROM
           user_dimension_stage
         WHERE
@@ -143,12 +143,12 @@ describe Masamune::Transform::BulkUpsert do
         UPDATE
           user_dimension_ledger
         SET
-          department_type_id = user_dimension_ledger_stage.department_type_id,
-          user_account_state_type_id = user_dimension_ledger_stage.user_account_state_type_id,
-          hr_user_account_state_type_id = user_dimension_ledger_stage.hr_user_account_state_type_id,
-          name = user_dimension_ledger_stage.name,
-          preferences_now = user_dimension_ledger_stage.preferences_now,
-          preferences_was = user_dimension_ledger_stage.preferences_was
+          department_type_id = COALESCE(user_dimension_ledger_stage.department_type_id, user_dimension_ledger.department_type_id),
+          user_account_state_type_id = COALESCE(user_dimension_ledger_stage.user_account_state_type_id, user_dimension_ledger.user_account_state_type_id),
+          hr_user_account_state_type_id = COALESCE(user_dimension_ledger_stage.hr_user_account_state_type_id, user_dimension_ledger.hr_user_account_state_type_id),
+          name = COALESCE(user_dimension_ledger_stage.name, user_dimension_ledger.name),
+          preferences_now = COALESCE(user_dimension_ledger_stage.preferences_now, user_dimension_ledger.preferences_now),
+          preferences_was = COALESCE(user_dimension_ledger_stage.preferences_was, user_dimension_ledger.preferences_was)
         FROM
           user_dimension_ledger_stage
         WHERE

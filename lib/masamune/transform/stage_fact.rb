@@ -75,12 +75,10 @@ module Masamune::Transform
               coalesce_values << cross_references.map { |_, column| column.qualified_name }
             end
 
-            if column.adjacent.try(:default)
-              coalesce_values << column.adjacent.sql_value(column.adjacent.try(:default))
-            end
-
-            if column.reference && column.reference.default
+            if column.reference && !column.reference.default.nil?
               coalesce_values << column.reference.default(column.adjacent) if column.adjacent.natural_key
+            elsif !column.adjacent.default.nil?
+              coalesce_values << column.adjacent.sql_value(column.adjacent.default)
             end
 
             conditions[reference.name] << (coalesce_values.any? ?

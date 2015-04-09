@@ -118,7 +118,7 @@ module Masamune::Schema
     def unique_constraints
       return [] if temporary?
       unique_constraints_map.map do |_, column_names|
-        column_names
+        [column_names, short_md5(column_names)]
       end
     end
 
@@ -126,7 +126,7 @@ module Masamune::Schema
     # TODO: Default to GIN for array columns
     def index_columns
       index_column_map.map do |_, column_names|
-        [column_names, reverse_unique_constraints_map.key?(column_names.sort)]
+        [column_names, reverse_unique_constraints_map.key?(column_names.sort), short_md5(column_names)]
       end
     end
 
@@ -299,6 +299,10 @@ module Masamune::Schema
 
     def reverse_unique_constraints_map
       @reverse_unique_constraints_map ||= Hash[unique_constraints_map.to_a.map { |k,v| [v.sort, k] }]
+    end
+
+    def short_md5(*a)
+      Digest::MD5.hexdigest(a.join('_'))[0..6]
     end
   end
 end

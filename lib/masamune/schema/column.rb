@@ -80,6 +80,8 @@ module Masamune::Schema
         'uuid_generate_v4()'
       when :sequence
         "nextval('#{sequence_id}')"
+      when :enum
+        values.first
       end
     end
 
@@ -169,7 +171,7 @@ module Masamune::Schema
       when :sequence
         'INTEGER'
       when :enum
-        "#{sub_type}_TYPE".upcase
+        "#{sub_type || id}_TYPE".upcase
       when :key_value
         if parent.type == :stage && !parent.inherit
           'JSON'
@@ -197,11 +199,14 @@ module Masamune::Schema
 
     def sql_value(value)
       return value if sql_function?(value)
+      return 'NULL' if value == :null
       case type
       when :boolean
         value ? 'TRUE' : 'FALSE'
-      when :string, :enum
+      when :string
         "'#{value}'"
+      when :enum
+        "'#{value}'::#{sql_type}"
       else
         value
       end
@@ -456,6 +461,14 @@ module Masamune::Schema
       "#{reference_name}_seq" if type == :sequence
     end
 
+    def required_value?
+      if reference
+        !(reference.null || reference.default)
+      else
+        surrogate_key || natural_key
+      end
+    end
+
     private
 
     def sql_constraints
@@ -466,7 +479,9 @@ module Masamune::Schema
     end
 
     def sql_default
-      "DEFAULT #{sql_value(default)}" unless default.nil?
+      return if default.nil?
+      return if !strict
+      "DEFAULT #{sql_value(default)}"
     end
 
     def ruby_array(value)

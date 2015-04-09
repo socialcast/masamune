@@ -20,8 +20,8 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
-<%- target.index_columns.each do |column_names, unique| -%>
-<%- index_name = "#{target.name}_#{column_names.join('_')}_index" -%>
+<%- target.index_columns.each do |column_names, unique, id| -%>
+<%- index_name = "#{target.name}_#{id}_index" -%>
 <%- unless target.temporary? -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= index_name %>') THEN

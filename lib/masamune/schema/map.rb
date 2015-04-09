@@ -85,10 +85,11 @@ module Masamune::Schema
 
       def_delegators :@io, :flush, :path
 
-      def initialize(table)
-        @table  = table
-        @store  = table.store
-        @lines  = 0
+      def initialize(table, options = {})
+        @table    = table
+        @store    = table.store
+        @lines    = 0
+        @options  = options
       end
 
       def bind(io)
@@ -100,8 +101,7 @@ module Masamune::Schema
         raise 'must call Buffer#bind first' unless @io
         CSV.parse(JSONEncoder.new(@io, @store), options.merge(headers: @store.headers || @table.columns.keys)) do |data|
           next if data.to_s =~ /\A#/
-          row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
-          yield row.to_hash
+          yield safe_row(data)
         end
       end
 
@@ -110,14 +110,34 @@ module Masamune::Schema
         row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash)
         write_headers = @store.headers && @lines < 1
         @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: write_headers))
-        @csv << row.serialize
+        if row.missing_required_columns.any?
+          missing_required_column_names = row.missing_required_columns.map(&:name)
+          @store.logger.warn("row '#{row.to_hash}' is missing required columns '#{missing_required_column_names.join(',')}', skipping")
+        else
+          @csv << row.serialize if append?(row.serialize)
+        end
         @lines += 1
       end
+
+      private
 
       def options
         {skip_blanks: true}.tap do | opts|
           opts[:col_sep] = "\t" if @store.format == :tsv
         end
+      end
+
+      def safe_row(data)
+        row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
+        row.to_hash
+      rescue
+        @store.logger.warn("failed to parse '#{data.to_hash}' for #{@table.name}, skipping")
+      end
+
+      def append?(elem)
+        return true unless @options[:distinct]
+        @seen ||= Set.new
+        @seen.add?(elem)
       end
     end
 
@@ -128,6 +148,7 @@ module Masamune::Schema
       columns:   nil,
       store:     nil,
       function:  ->(row) { row },
+      distinct:  false,
       debug:     false
     }
 
@@ -166,7 +187,7 @@ module Masamune::Schema
 
     def apply(input_files, output_file)
       input_buffer  = Buffer.new(source)
-      output_buffer = Buffer.new(intermediate)
+      output_buffer = Buffer.new(intermediate, distinct: distinct)
       self.class.convert_files(input_files).each do |input_file|
         open_stream(input_file, 'r') do |input_stream|
           input_buffer.bind(input_stream)
@@ -225,11 +246,20 @@ module Masamune::Schema
 
     def apply_buffer(input_buffer, output_buffer)
       input_buffer.each do |input|
-        Array.wrap(function.call(input)).each do |output|
+        safe_apply_function(input) do |output|
           output_buffer.append output
         end
       end
       output_buffer.flush
+    end
+
+    def safe_apply_function(input, &block)
+      return unless input
+      Array.wrap(function.call(input)).each do |output|
+        yield output
+      end
+    rescue
+      @store.logger.warn("failed to process '#{input}' for #{target.name}, skipping")
     end
   end
 end

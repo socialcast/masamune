@@ -60,6 +60,38 @@ describe Masamune::Schema::Column do
       end
     end
 
+    context 'with type :enum' do
+      subject(:column) { described_class.new(id: 'mode', type: :enum, values: %w(public private)) }
+
+      context '#default' do
+        subject { column.default }
+        it { is_expected.to eq('public') }
+      end
+
+      context '#sql_type' do
+        subject { column.sql_type }
+        it { is_expected.to eq('MODE_TYPE') }
+      end
+
+      context 'with :sub_type' do
+        subject(:column) { described_class.new(id: 'permission', type: :enum, sub_type: 'mode') }
+
+        context '#sql_type' do
+          subject { column.sql_type }
+          it { is_expected.to eq('MODE_TYPE') }
+        end
+      end
+
+      context 'with :default' do
+        subject(:column) { described_class.new(id: 'mode', type: :enum, values: %w(public private), default: 'private') }
+
+        context '#default' do
+          subject { column.default }
+          it { is_expected.to eq('private') }
+        end
+      end
+    end
+
     context 'with index: false' do
       subject(:column) { described_class.new(id: 'id', index: false) }
       context '#index' do
@@ -133,6 +165,60 @@ describe Masamune::Schema::Column do
     context 'with type :string and :array' do
       let(:column) { described_class.new(id: 'string', type: :string, array: true) }
       it { is_expected.to eq('VARCHAR[]') }
+    end
+  end
+
+  describe '#sql_value' do
+    subject(:result) { column.sql_value(value) }
+
+    shared_examples 'with :null value' do
+      context 'with :null value' do
+        let(:value) { :null }
+        it { is_expected.to eq('NULL') }
+      end
+    end
+
+    context 'with type :integer' do
+      let(:column) { described_class.new(id: 'integer', type: :integer) }
+      context 'with integer value' do
+        let(:value) { 0 }
+        it { is_expected.to eq(0) }
+      end
+      it_behaves_like 'with :null value'
+    end
+
+    context 'with type :string' do
+      let(:column) { described_class.new(id: 'string', type: :string) }
+      context 'with string value' do
+        let(:value) { 'value' }
+        it { is_expected.to eq(%q{'value'}) }
+      end
+      it_behaves_like 'with :null value'
+    end
+
+    context 'with type :boolean' do
+      let(:column) { described_class.new(id: 'boolean', type: :boolean) }
+      context 'with boolean value' do
+        let(:value) { true }
+        it { is_expected.to eq('TRUE') }
+      end
+
+      context 'with string value' do
+        let(:value) { 'true' }
+        it { is_expected.to eq('TRUE') }
+      end
+
+      it_behaves_like 'with :null value'
+    end
+
+    context 'with type :enum' do
+      let(:column) { described_class.new(id: 'enum', type: :enum, values: %w(public private)) }
+      context 'with enum value' do
+        let(:value) { 'public' }
+        it { is_expected.to eq(%q{'public'::ENUM_TYPE}) }
+      end
+
+      it_behaves_like 'with :null value'
     end
   end
 
@@ -558,6 +644,53 @@ describe Masamune::Schema::Column do
       let(:column) { described_class.new id: 'name', type: :string }
       let(:other) { described_class.new id: 'name', type: :integer }
       it { is_expected.to eq(false) }
+    end
+  end
+
+  describe '#required_value?' do
+    subject { column.required_value? }
+
+    context 'by default' do
+      let(:column) { described_class.new id: 'name', type: :string }
+      it { is_expected.to eq(false) }
+    end
+
+    context 'when surrogate_key' do
+      let(:column) { described_class.new id: 'name', type: :string, surrogate_key: true }
+      it { is_expected.to eq(true) }
+
+      context 'when reference allow null' do
+        before do
+          allow(column).to receive(:reference).and_return(double(null: true, default: nil))
+        end
+        it { is_expected.to eq(false) }
+      end
+
+      context 'when reference has default' do
+        before do
+          allow(column).to receive(:reference).and_return(double(null: false, default: 'Unknown'))
+        end
+        it { is_expected.to eq(false) }
+      end
+    end
+
+    context 'when natural_key' do
+      let(:column) { described_class.new id: 'name', type: :string, natural_key: true }
+      it { is_expected.to eq(true) }
+
+      context 'when reference allow null' do
+        before do
+          allow(column).to receive(:reference).and_return(double(null: true, default: nil))
+        end
+        it { is_expected.to eq(false) }
+      end
+
+      context 'when reference has default' do
+        before do
+          allow(column).to receive(:reference).and_return(double(null: false, default: 'Unknown'))
+        end
+        it { is_expected.to eq(false) }
+      end
     end
   end
 end

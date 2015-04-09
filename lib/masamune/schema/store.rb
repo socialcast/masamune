@@ -24,6 +24,8 @@ require 'active_support/core_ext/hash'
 
 module Masamune::Schema
   class Store
+    include Masamune::HasEnvironment
+
     SUPPORTED_ATTRIBUTES = %(table dimension fact file event)
 
     DEFAULT_ATTRIBUTES =
@@ -52,7 +54,8 @@ module Masamune::Schema
       end
     end
 
-    def initialize(opts = {})
+    def initialize(environment, opts = {})
+      self.environment = environment
       opts.symbolize_keys!
       raise ArgumentError, 'required parameter type: missing' unless opts.key?(:type)
       raise ArgumentError, "unknown type: '#{opts[:type]}'" unless self.class.types.include?(opts[:type])

@@ -28,7 +28,7 @@ UPDATE
   <%= target.name %>
 SET
   <%- target.update_columns.each do |column, last| -%>
-  <%= column.name %> = <%= source.name %>.<%= column.name %><%= ',' unless last %>
+  <%= column.name %> = COALESCE(<%= source.name %>.<%= column.name %>, <%= target.name %>.<%= column.name %>)<%= ',' unless last %>
   <%- end -%>
 FROM
   <%= source.name %>

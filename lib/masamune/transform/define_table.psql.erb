@@ -53,7 +53,10 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
 );
 
 <%- target.sequence_columns.each do |_, column| -%>
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 WHERE sequence_owner('<%= column.sequence_id %>') = '<%= column.qualified_name %>') THEN
 ALTER SEQUENCE <%= column.sequence_id %> OWNED BY <%= column.qualified_name %>;
+END IF; END $$;
 <%- end -%>
 
 <%- files.each do |file| -%>
@@ -79,12 +82,14 @@ WHERE NOT EXISTS (SELECT 1 FROM <%= target.name %> WHERE <%= row.insert_constrai
 <%- row.natural_keys.each do |column| -%>
 CREATE OR REPLACE FUNCTION <%= row.name(column) %>
 RETURNS <%= column.sql_type %> IMMUTABLE AS $$
-  SELECT <%= row.values[column.name] %>;
+  SELECT <%= row.sql_value(column) %>;
 $$ LANGUAGE SQL;
+
 <%- end -%>
 
 CREATE OR REPLACE FUNCTION <%= row.name %>
 RETURNS <%= target.surrogate_key.sql_type %> IMMUTABLE AS $$
   SELECT <%= target.surrogate_key.name %> FROM <%= target.name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
 $$ LANGUAGE SQL;
+
 <%- end -%>
