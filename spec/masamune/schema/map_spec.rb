@@ -154,7 +154,7 @@ describe Masamune::Schema::Map do
     context 'from csv file to dimension' do
       before do
         catalog.schema :files do
-          map from: postgres.user_file, to: postgres.user_dimension do |row|
+          map from: postgres.user_file, to: postgres.user_dimension, distinct: true do |row|
             {
               'tenant_id'                  => row[:tenant_id],
               'user_id'                    => row[:id],
@@ -180,6 +180,8 @@ describe Masamune::Schema::Map do
       let(:source_data) do
         <<-EOS.strip_heredoc
           id,tenant_id,junk_id,deleted_at,admin,preferences
+          1,30,X,,0,,
+          # NOTE intentional duplicate record
           1,30,X,,0,,
           2,40,Y,2014-02-26 18:15:51 UTC,1,"---
           :enabled: true
@@ -243,6 +245,8 @@ describe Masamune::Schema::Map do
       let(:source_data) do
         <<-EOS.strip_heredoc
           X	user_create	1	30	0	\\N	\\N	\\N
+          # NOTE intentional duplicate record
+          X	user_create	1	30	0	\\N	\\N	\\N
           A	user_create	1	42	0	\\N	\\N	\\N
           Y	user_delete	2	40	0	1	"{""enabled"":true}"	\\N
           # NOTE record is intentionally invalid
@@ -253,6 +257,7 @@ describe Masamune::Schema::Map do
       let(:target_data) do
         <<-EOS.strip_heredoc
           tenant_id,user_id,user_account_state_type_name,admin,preferences_now,preferences_was,source,cluster_id
+          30,1,active,FALSE,{},{},user_event,100
           30,1,active,FALSE,{},{},user_event,100
           40,2,deleted,TRUE,"{""enabled"":true}",{},user_event,100
         EOS
