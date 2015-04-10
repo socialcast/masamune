@@ -68,7 +68,7 @@ class Masamune::DataPlan::Elem
     end || MISSING_MODIFIED_AT
   end
 
-  def explode(&block)
+  def explode
     return Set.new(to_enum(__method__)) unless block_given?
     if rule.for_path?
       file_glob = path
@@ -82,7 +82,7 @@ class Masamune::DataPlan::Elem
     end
   end
 
-  def targets(&block)
+  def targets
     return Masamune::DataPlan::Set::EMPTY if @rule.for_targets?
     return Masamune::DataPlan::Set.new(rule.engine.get_target_rule(rule.name), to_enum(__method__)) unless block_given?
     rule.engine.targets_for_source(rule.name, self).each do |target|
@@ -94,7 +94,7 @@ class Masamune::DataPlan::Elem
     targets.first
   end
 
-  def sources(&block)
+  def sources
     return Masamune::DataPlan::Set::EMPTY if @rule.for_sources?
     return Masamune::DataPlan::Set.new(rule.engine.get_source_rule(rule.name), to_enum(__method__)) unless block_given?
     rule.engine.sources_for_target(rule.name, self).each do |source|

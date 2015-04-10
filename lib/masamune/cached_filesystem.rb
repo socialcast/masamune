@@ -36,7 +36,7 @@ module Masamune
       @cache.key?(file) || glob(file).include?(file) || @cache.key?(file)
     end
 
-    def glob(file_or_glob, &block)
+    def glob(file_or_glob)
       return Set.new(to_enum(:glob, file_or_glob)) unless block_given?
       glob_stat(file_or_glob) do |entry|
         yield entry.name unless entry.name == dirname(file_or_glob)

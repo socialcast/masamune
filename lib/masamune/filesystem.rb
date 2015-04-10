@@ -167,7 +167,7 @@ module Masamune
       end
     end
 
-    def glob_stat(pattern, &block)
+    def glob_stat(pattern)
       return Set.new(to_enum(:glob_stat, pattern)) unless block_given?
       case type(pattern)
       when :hdfs
@@ -219,7 +219,7 @@ module Masamune
       end
     end
 
-    def glob(pattern, &block)
+    def glob(pattern)
       return Set.new(to_enum(:glob, pattern)) unless block_given?
       case type(pattern)
       when :hdfs

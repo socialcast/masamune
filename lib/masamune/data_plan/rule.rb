@@ -126,7 +126,7 @@ class Masamune::DataPlan::Rule
     rule.bind_date(elem.start_time)
   end
 
-  def generate(start_time, stop_time, &block)
+  def generate(start_time, stop_time)
     return Set.new(to_enum(:generate, start_time, stop_time)) unless block_given?
     instance = bind_date(start_time)
 
@@ -136,7 +136,7 @@ class Masamune::DataPlan::Rule
     end while instance.start_time <= stop_time
   end
 
-  def generate_via_unify(elem, rule, &block)
+  def generate_via_unify(elem, rule)
     return Set.new(to_enum(:generate_via_unify, elem, rule)) unless block_given?
     instance = unify(elem, rule)
 

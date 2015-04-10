@@ -40,7 +40,7 @@ class Masamune::MockFilesystem < Delegator
     @files.keys.include?(file)
   end
 
-  def glob(pattern, &block)
+  def glob(pattern)
     return Set.new(to_enum(:glob, pattern)) unless block_given?
     file_regexp = glob_to_regexp(pattern)
     @files.keys.each do |name|
@@ -52,7 +52,7 @@ class Masamune::MockFilesystem < Delegator
     glob(pattern)
   end
 
-  def glob_stat(pattern, &block)
+  def glob_stat(pattern)
     return Set.new(to_enum(:glob_stat, pattern)) unless block_given?
     file_regexp = glob_to_regexp(pattern, recursive: true)
     @files.each do |name, stat|

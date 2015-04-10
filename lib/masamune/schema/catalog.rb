@@ -115,7 +115,7 @@ module Masamune::Schema
       @stores[store_id.to_sym]
     end
 
-    def table(id, options = {}, &block)
+    def table(id, options = {})
       @context.push(options)
       yield if block_given?
       @context.tables[id] ||= Masamune::Schema::Table.new(@context.options.merge(id: id))
@@ -124,7 +124,7 @@ module Masamune::Schema
       @context.pop
     end
 
-    def dimension(id, options = {}, &block)
+    def dimension(id, options = {})
       @context.push(options)
       yield if block_given?
       @context.dimensions[id] ||= Masamune::Schema::Dimension.new(@context.options.merge(id: id))
@@ -133,7 +133,7 @@ module Masamune::Schema
       @context.pop
     end
 
-    def column(id, options = {}, &block)
+    def column(id, options = {})
       @context.options[:columns] << dereference_column(id, options)
     end
 
@@ -152,7 +152,7 @@ module Masamune::Schema
       @context.options[:rows] << Masamune::Schema::Row.new(attributes)
     end
 
-    def fact(id, options = {}, &block)
+    def fact(id, options = {})
       @context.push(options)
       grain = Array.wrap(options.delete(:grain) || [])
       fact_attributes(grain).each do |attributes|
@@ -164,15 +164,15 @@ module Masamune::Schema
       @context.pop
     end
 
-    def partition(id, options = {}, &block)
+    def partition(id, options = {})
       @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id, partition: true))
     end
 
-    def measure(id, options = {}, &block)
+    def measure(id, options = {})
       @context.options[:columns] << Masamune::Schema::Column.new(options.merge(id: id, measure: true))
     end
 
-    def file(id, options = {}, &block)
+    def file(id, options = {})
       format_options = options.extract!(:format, :headers)
       @context.push(options)
       yield if block_given?
@@ -182,7 +182,7 @@ module Masamune::Schema
       @context.pop
     end
 
-    def event(id, options = {}, &block)
+    def event(id, options = {})
       @context.push(options)
       yield if block_given?
       @context.events[id] = HasMap.new Masamune::Schema::Event.new(@context.options.merge(id: id))
@@ -190,7 +190,7 @@ module Masamune::Schema
       @context.pop
     end
 
-    def attribute(id, options = {}, &block)
+    def attribute(id, options = {})
       @context.options[:attributes] << Masamune::Schema::Event::Attribute.new(options.merge(id: id))
     end
 

@@ -79,7 +79,7 @@ class Masamune::DataPlan::Engine
     end
   end
 
-  def targets_for_date_range(rule, start, stop, &block)
+  def targets_for_date_range(rule, start, stop)
     return Masamune::DataPlan::Set.new(get_target_rule(rule), to_enum(:targets_for_date_range, rule, start, stop)) unless block_given?
     target_template = @target_rules[rule]
     return unless target_template
@@ -88,7 +88,7 @@ class Masamune::DataPlan::Engine
     end
   end
 
-  def targets_for_source(rule, source, &block)
+  def targets_for_source(rule, source)
     return Masamune::DataPlan::Set.new(get_target_rule(rule), to_enum(:targets_for_source, rule, source)) unless block_given?
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
@@ -98,7 +98,7 @@ class Masamune::DataPlan::Engine
     end
   end
 
-  def sources_for_target(rule, target, &block)
+  def sources_for_target(rule, target)
     return Masamune::DataPlan::Set.new(get_source_rule(rule), to_enum(:sources_for_target, rule, target)) unless block_given?
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
@@ -145,7 +145,7 @@ class Masamune::DataPlan::Engine
     @current_depth > 0
   end
 
-  def constrain_max_depth(rule, &block)
+  def constrain_max_depth(rule)
     @current_depth += 1
     raise "Max depth of #{MAX_DEPTH} exceeded for rule '#{rule}'" if @current_depth > MAX_DEPTH
     yield
