@@ -27,7 +27,6 @@ class Masamune::DataPlan::Engine
   MAX_DEPTH = 10
 
   include Masamune::HasEnvironment
-  include Masamune::Accumulate
 
   def initialize
     @target_rules = Hash.new
@@ -80,34 +79,34 @@ class Masamune::DataPlan::Engine
     end
   end
 
-  def targets_for_date_range(rule, start, stop, &block)
+  def targets_for_date_range(rule, start, stop)
+    return Masamune::DataPlan::Set.new(get_target_rule(rule), to_enum(:targets_for_date_range, rule, start, stop)) unless block_given?
     target_template = @target_rules[rule]
     return unless target_template
-    target_template.generate(start.to_time.utc, stop.to_time.utc) do |target|
+    target_template.generate(start.to_time.utc, stop.to_time.utc).each do |target|
       yield target
     end
   end
-  method_accumulate :targets_for_date_range, lambda { |engine, rule, _, _| Masamune::DataPlan::Set.new(engine.get_target_rule(rule)) }
 
-  def targets_for_source(rule, source, &block)
+  def targets_for_source(rule, source)
+    return Masamune::DataPlan::Set.new(get_target_rule(rule), to_enum(:targets_for_source, rule, source)) unless block_given?
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     source_instance = source_template.bind_input(source)
-    source_template.generate_via_unify(source_instance, target_template) do |target|
+    source_template.generate_via_unify(source_instance, target_template).each do |target|
       yield target
     end
   end
-  method_accumulate :targets_for_source, lambda { |engine, rule, source| Masamune::DataPlan::Set.new(engine.get_target_rule(rule)) }
 
-  def sources_for_target(rule, target, &block)
+  def sources_for_target(rule, target)
+    return Masamune::DataPlan::Set.new(get_source_rule(rule), to_enum(:sources_for_target, rule, target)) unless block_given?
     source_template = @source_rules[rule]
     target_template = @target_rules[rule]
     target_instance = target_template.bind_input(target)
-    target_template.generate_via_unify(target_instance, source_template) do |source|
+    target_template.generate_via_unify(target_instance, source_template).each do |source|
       yield source
     end
   end
-  method_accumulate :sources_for_target, lambda { |engine, rule, target| Masamune::DataPlan::Set.new(engine.get_source_rule(rule)) }
 
   def targets(rule)
     @set_cache[:targets_for_rule][rule] ||= @targets[rule].union(@sources[rule].targets)
@@ -146,7 +145,7 @@ class Masamune::DataPlan::Engine
     @current_depth > 0
   end
 
-  def constrain_max_depth(rule, &block)
+  def constrain_max_depth(rule)
     @current_depth += 1
     raise "Max depth of #{MAX_DEPTH} exceeded for rule '#{rule}'" if @current_depth > MAX_DEPTH
     yield

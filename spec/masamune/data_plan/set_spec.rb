@@ -43,7 +43,7 @@ describe Masamune::DataPlan::Set do
     end
 
     context 'when all missing' do
-      it { expect(missing.size).to eq(3) }
+      it { expect(missing.count).to eq(3) }
       it { expect(missing).to include '/table/y=2013/m=01/d=01' }
       it { expect(missing).to include '/table/y=2013/m=01/d=02' }
       it { expect(missing).to include '/table/y=2013/m=01/d=03' }
@@ -53,7 +53,7 @@ describe Masamune::DataPlan::Set do
       before do
         fs.touch!('/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02')
       end
-      it { expect(missing.size).to eq(3) }
+      it { expect(missing.count).to eq(3) }
       it { expect(missing).to include '/table/y=2013/m=01/d=01' }
       it { expect(missing).to include '/table/y=2013/m=01/d=02' }
       it { expect(missing).to include '/table/y=2013/m=01/d=03' }
@@ -63,7 +63,7 @@ describe Masamune::DataPlan::Set do
       before do
         fs.touch!('/table/y=2013/m=01/d=01/0000', '/table/y=2013/m=01/d=02/0000')
       end
-      it { expect(missing.size).to eq(1) }
+      it { expect(missing.count).to eq(1) }
       it { expect(missing).to include '/table/y=2013/m=01/d=03' }
     end
 
@@ -93,7 +93,7 @@ describe Masamune::DataPlan::Set do
         before do
           fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
         end
-        it { expect(existing.size).to eq(1) }
+        it { expect(existing.count).to eq(1) }
         it { expect(existing).to include '/log/20130101.random_1.log' }
       end
 
@@ -102,7 +102,7 @@ describe Masamune::DataPlan::Set do
           fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
           fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log')
         end
-        it { expect(existing.size).to eq(2) }
+        it { expect(existing.count).to eq(2) }
         it { expect(existing).to include '/log/20130101.random_1.log' }
         it { expect(existing).to include '/log/20130102.random_1.log' }
       end
@@ -119,7 +119,7 @@ describe Masamune::DataPlan::Set do
         before do
           fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
         end
-        it { expect(existing.size).to eq(2) }
+        it { expect(existing.count).to eq(2) }
         it { expect(existing).to include '/log/20130101.random_1.log' }
         it { expect(existing).to include '/log/20130101.random_2.log' }
       end
@@ -129,7 +129,7 @@ describe Masamune::DataPlan::Set do
           fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
           fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log')
         end
-        it { expect(existing.size).to eq(4) }
+        it { expect(existing.count).to eq(4) }
         it { expect(existing).to include '/log/20130101.random_1.log' }
         it { expect(existing).to include '/log/20130101.random_2.log' }
         it { expect(existing).to include '/log/20130102.random_1.log' }
@@ -156,7 +156,7 @@ describe Masamune::DataPlan::Set do
         allow(instance.rule).to receive(:window) { 1 }
       end
 
-      it { expect(sources.size).to eq(3) }
+      it { expect(sources.count).to eq(3) }
       it { expect(sources).to include '/log/20121231.*.log' }
       it { expect(sources).to include '/log/20130101.*.log' }
       it { expect(sources).to include '/log/20130102.*.log' }
@@ -169,7 +169,7 @@ describe Masamune::DataPlan::Set do
         before do
           fs.touch!('/log/20130101.random_1.log', '/log/20130101.random_2.log')
         end
-        it { expect(existing.size).to eq(2) }
+        it { expect(existing.count).to eq(2) }
         it { expect(existing).to include '/log/20130101.random_1.log' }
         it { expect(existing).to include '/log/20130101.random_2.log' }
       end
@@ -181,7 +181,7 @@ describe Masamune::DataPlan::Set do
           fs.touch!('/log/20130102.random_1.log', '/log/20130102.random_2.log')
           fs.touch!('/log/20130103.random_1.log', '/log/20130103.random_2.log')
         end
-        it { expect(existing.size).to eq(6) }
+        it { expect(existing.count).to eq(6) }
         it { expect(existing).to include '/log/20121231.random_1.log' }
         it { expect(existing).to include '/log/20121231.random_2.log' }
         it { expect(existing).to include '/log/20130101.random_1.log' }
@@ -230,7 +230,7 @@ describe Masamune::DataPlan::Set do
         fs.touch!('/log/20130101.random_1.log', mtime: future_time)
       end
 
-      it { expect(stale_targets.size).to eq(1) }
+      it { expect(stale_targets.count).to eq(1) }
       it { expect(stale_targets).to include '/table/y=2013/m=01/d=01' }
     end
 
@@ -239,7 +239,7 @@ describe Masamune::DataPlan::Set do
         fs.touch!('/log/20130101.random_2.log', mtime: future_time)
       end
 
-      it { expect(stale_targets.size).to eq(1) }
+      it { expect(stale_targets.count).to eq(1) }
       it { expect(stale_targets).to include '/table/y=2013/m=01/d=01' }
     end
 
@@ -248,7 +248,7 @@ describe Masamune::DataPlan::Set do
         fs.touch!('/log/20130101.random_1.log', mtime: present_time)
       end
 
-      it { expect(stale_targets.size).to eq(1) }
+      it { expect(stale_targets.count).to eq(1) }
       it { expect(stale_targets).to include '/table/y=2013/m=01/d=01' }
     end
 
@@ -260,7 +260,7 @@ describe Masamune::DataPlan::Set do
         fs.touch!('/log/20130103.random_2.log', mtime: future_time)
       end
 
-      it { expect(stale_targets.size).to eq(3) }
+      it { expect(stale_targets.count).to eq(3) }
       it { expect(stale_targets).to include '/table/y=2013/m=01/d=01' }
       it { expect(stale_targets).to include '/table/y=2013/m=01/d=02' }
       it { expect(stale_targets).to include '/table/y=2013/m=01/d=03' }
@@ -288,7 +288,7 @@ describe Masamune::DataPlan::Set do
     context 'when :day' do
       let(:grain) { :day }
       it 'has 6 items' do
-        expect(subject.size).to eq(6)
+        expect(subject.count).to eq(6)
       end
       it { is_expected.to include '/table/y=2012/m=12/d=29' }
       it { is_expected.to include '/table/y=2012/m=12/d=30' }
@@ -301,7 +301,7 @@ describe Masamune::DataPlan::Set do
     context 'when :month' do
       let(:grain) { :month }
       it 'has 3 items' do
-        expect(subject.size).to eq(3)
+        expect(subject.count).to eq(3)
       end
       it { is_expected.to include '/table/y=2012/m=12' }
       it { is_expected.to include '/table/y=2013/m=01' }
@@ -311,7 +311,7 @@ describe Masamune::DataPlan::Set do
     context 'when :year' do
       let(:grain) { :year }
       it 'has 2 items' do
-        expect(subject.size).to eq(2)
+        expect(subject.count).to eq(2)
       end
       it { is_expected.to include '/table/y=2012' }
       it { is_expected.to include '/table/y=2013' }
@@ -366,7 +366,7 @@ describe Masamune::DataPlan::Set do
     end
 
     context 'when all incomplete' do
-      it { expect(incomplete.size).to eq(2) }
+      it { expect(incomplete.count).to eq(2) }
       it { expect(incomplete).to include '/table/y=2014/m=01' }
       it { expect(incomplete).to include '/table/y=2014/m=02' }
     end
@@ -378,7 +378,7 @@ describe Masamune::DataPlan::Set do
         end
       end
 
-      it { expect(incomplete.size).to eq(1) }
+      it { expect(incomplete.count).to eq(1) }
       it { expect(incomplete).to include '/table/y=2014/m=02' }
     end
 
@@ -390,7 +390,7 @@ describe Masamune::DataPlan::Set do
         end
       end
 
-      it { expect(incomplete.size).to eq(0) }
+      it { expect(incomplete.count).to eq(0) }
     end
   end
 
@@ -432,7 +432,7 @@ describe Masamune::DataPlan::Set do
         it 'actionable is equivalent to stale' do
           expect(actionable).to eq(instance.stale)
         end
-        it { expect(updateable.size).to eq(3) }
+        it { expect(updateable.count).to eq(3) }
         it { expect(updateable).to include '/table/y=2013/m=01/d=01' }
         it { expect(updateable).to include '/table/y=2013/m=01/d=02' }
         it { expect(updateable).to include '/table/y=2013/m=01/d=03' }
@@ -464,7 +464,7 @@ describe Masamune::DataPlan::Set do
         it 'actionable is equivalent to missing' do
           expect(actionable).to eq(instance.missing)
         end
-        it { expect(updateable.size).to eq(1) }
+        it { expect(updateable.count).to eq(1) }
         it { expect(updateable).to include '/table/y=2013/m=01/d=01' }
       end
 
@@ -477,7 +477,7 @@ describe Masamune::DataPlan::Set do
         it 'actionable is equivalent to missing' do
           expect(actionable).to eq(instance.missing)
         end
-        it { expect(updateable.size).to eq(3) }
+        it { expect(updateable.count).to eq(3) }
         it { expect(updateable).to include '/table/y=2013/m=01/d=01' }
         it { expect(updateable).to include '/table/y=2013/m=01/d=02' }
         it { expect(updateable).to include '/table/y=2013/m=01/d=03' }
@@ -495,9 +495,9 @@ describe Masamune::DataPlan::Set do
 
     context 'when sources are missing' do
       it 'should chain expectedly' do
-        expect(instance.targets.size).to eq(2)
-        expect(instance.targets.sources.existing.size).to eq(0)
-        expect(instance.targets.sources.existing.targets.size).to eq(0)
+        expect(instance.targets.count).to eq(2)
+        expect(instance.targets.sources.existing.count).to eq(0)
+        expect(instance.targets.sources.existing.targets.count).to eq(0)
       end
     end
 
@@ -507,10 +507,10 @@ describe Masamune::DataPlan::Set do
       end
 
       it 'should chain expectedly' do
-        expect(instance.targets.size).to eq(2)
-        expect(instance.targets.sources.existing.size).to eq(4)
-        expect(instance.targets.sources.existing.targets.size).to eq(2)
-        expect(instance.targets.sources.existing.targets.sources.existing.size).to eq(4)
+        expect(instance.targets.count).to eq(2)
+        expect(instance.targets.sources.existing.count).to eq(4)
+        expect(instance.targets.sources.existing.targets.count).to eq(2)
+        expect(instance.targets.sources.existing.targets.sources.existing.count).to eq(4)
       end
     end
   end

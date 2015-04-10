@@ -40,8 +40,8 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/a/b/c/3.txt')).to eq(true)
       expect(cached_filesystem.exists?('/a/b/c/4.txt')).to eq(false)
       expect(cached_filesystem.exists?('/a/b/c')).to eq(true)
-      expect(cached_filesystem.glob('/a/b/c/*')).not_to be_empty
-      expect(cached_filesystem.glob('/a/b/c/*.txt')).not_to be_empty
+      expect(cached_filesystem.glob('/a/b/c/*').count).to eq(3)
+      expect(cached_filesystem.glob('/a/b/c/*.txt').count).to eq(3)
       expect(cached_filesystem.stat('/a/b/c/1.txt')).to_not be_nil
       expect(cached_filesystem.stat('/a/b/c/2.txt')).to_not be_nil
       expect(cached_filesystem.stat('/a/b/c/3.txt')).to_not be_nil
@@ -60,7 +60,9 @@ describe Masamune::CachedFilesystem do
     end
 
     it 'calls Filesystem#glob_stat once for multiple calls' do
-      expect(cached_filesystem.glob('/a/b/*')).to eq(['/a/b/c/1.txt', '/a/b/c/2.txt', '/a/b/c/3.txt'])
+      expect(cached_filesystem.glob('/a/b/*')).to include '/a/b/c/1.txt'
+      expect(cached_filesystem.glob('/a/b/*')).to include '/a/b/c/2.txt'
+      expect(cached_filesystem.glob('/a/b/*')).to include '/a/b/c/3.txt'
       expect(cached_filesystem.exists?('/a/b/c/1.txt')).to eq(true)
       expect(cached_filesystem.exists?('/a/b/c/2.txt')).to eq(true)
       expect(cached_filesystem.exists?('/a/b/c/3.txt')).to eq(true)
@@ -87,8 +89,8 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/y=2013/m=1/d=22/00000')).to eq(true)
       expect(cached_filesystem.exists?('/y=2013/m=1/d=22')).to eq(true)
       expect(cached_filesystem.exists?('/y=2013/m=1/d=2')).to eq(false)
-      expect(cached_filesystem.glob('/y=2013/m=1/*')).not_to be_empty
-      expect(cached_filesystem.glob('/y=2013/m=1/d=22/*')).not_to be_empty
+      expect(cached_filesystem.glob('/y=2013/m=1/*').count).to eq(1)
+      expect(cached_filesystem.glob('/y=2013/m=1/d=22/*').count).to eq(1)
       expect(cached_filesystem.stat('/y=2013/m=1/d=22/00000')).not_to be_nil
       expect(cached_filesystem.stat('/y=2013/m=1/d=22')).not_to be_nil
       expect(cached_filesystem.stat('/y=2013/m=1')).not_to be_nil
@@ -113,15 +115,15 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/logs/box4_123.txt')).to eq(false)
       expect(cached_filesystem.exists?('/logs/box4_456.txt')).to eq(false)
       expect(cached_filesystem.exists?('/logs/box')).to eq(false)
-      expect(cached_filesystem.glob('/logs/*')).not_to be_empty
-      expect(cached_filesystem.glob('/logs/*.txt')).not_to be_empty
-      expect(cached_filesystem.glob('/logs/box1_*.txt')).not_to be_empty
-      expect(cached_filesystem.glob('/logs/box2_*.txt')).not_to be_empty
-      expect(cached_filesystem.glob('/logs/box3_*.txt')).not_to be_empty
-      expect(cached_filesystem.glob('/logs/box*.txt').size).to eq(3)
-      expect(cached_filesystem.glob('/logs/box*.csv')).to be_empty
-      expect(cached_filesystem.glob('/logs/box')).to be_empty
-      expect(cached_filesystem.glob('/logs/box/*')).to be_empty
+      expect(cached_filesystem.glob('/logs/*').count).to eq(3)
+      expect(cached_filesystem.glob('/logs/*.txt').count).to eq(3)
+      expect(cached_filesystem.glob('/logs/box1_*.txt').count).to eq(1)
+      expect(cached_filesystem.glob('/logs/box2_*.txt').count).to eq(1)
+      expect(cached_filesystem.glob('/logs/box3_*.txt').count).to eq(1)
+      expect(cached_filesystem.glob('/logs/box*.txt').count).to eq(3)
+      expect(cached_filesystem.glob('/logs/box*.csv').count).to eq(0)
+      expect(cached_filesystem.glob('/logs/box').count).to eq(0)
+      expect(cached_filesystem.glob('/logs/box/*').count).to eq(0)
       expect(cached_filesystem.stat('/logs/box1_123.txt')).to_not be_nil
       expect(cached_filesystem.stat('/logs/box1_456.txt')).to be_nil
       expect(cached_filesystem.stat('/logs/box2_123.txt')).to_not be_nil
@@ -149,13 +151,13 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/a/b/c')).to eq(true)
       expect(cached_filesystem.exists?('/a/b')).to eq(true)
       expect(cached_filesystem.exists?('/a')).to eq(true)
-      expect(cached_filesystem.glob('/a')).to be_empty
-      expect(cached_filesystem.glob('/a/*')).not_to be_empty
-      expect(cached_filesystem.glob('/a/b')).to be_empty
-      expect(cached_filesystem.glob('/a/b/*')).not_to be_empty
-      expect(cached_filesystem.glob('/a/b/c')).not_to be_empty
-      expect(cached_filesystem.glob('/a/b/c/*')).to be_empty
-      expect(cached_filesystem.glob('/a/b/c/*.txt')).to be_empty
+      expect(cached_filesystem.glob('/a').count).to eq(0)
+      expect(cached_filesystem.glob('/a/*').count).to eq(1)
+      expect(cached_filesystem.glob('/a/b').count).to eq(0)
+      expect(cached_filesystem.glob('/a/b/*').count).to eq(1)
+      expect(cached_filesystem.glob('/a/b/c').count).to eq(1)
+      expect(cached_filesystem.glob('/a/b/c/*').count).to eq(0)
+      expect(cached_filesystem.glob('/a/b/c/*.txt').count).to eq(0)
       expect(cached_filesystem.stat('/a/b/c/1.txt')).to be_nil
       expect(cached_filesystem.stat('/a/b/c/2.txt')).to be_nil
       expect(cached_filesystem.stat('/a/b/c/3.txt')).to be_nil

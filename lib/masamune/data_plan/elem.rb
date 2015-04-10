@@ -23,7 +23,6 @@
 class Masamune::DataPlan::Elem
   MISSING_MODIFIED_AT = Time.new(0)
 
-  include Masamune::Accumulate
   include Comparable
 
   attr_reader :rule, :options
@@ -69,39 +68,39 @@ class Masamune::DataPlan::Elem
     end || MISSING_MODIFIED_AT
   end
 
-  def explode(&block)
+  def explode
+    return Set.new(to_enum(__method__)) unless block_given?
     if rule.for_path?
       file_glob = path
       file_glob += '/' unless path.include?('*') || path.include?('.')
       file_glob += '*' unless path.include?('*')
-      rule.engine.filesystem.glob(file_glob) do |new_path|
+      rule.engine.filesystem.glob(file_glob).each do |new_path|
         yield rule.bind_input(new_path)
       end
     elsif rule.for_table_with_partition?
       yield self if exists?
     end
   end
-  method_accumulate :explode
 
-  def targets(&block)
+  def targets
     return Masamune::DataPlan::Set::EMPTY if @rule.for_targets?
-    rule.engine.targets_for_source(rule.name, self) do |target|
+    return Masamune::DataPlan::Set.new(rule.engine.get_target_rule(rule.name), to_enum(__method__)) unless block_given?
+    rule.engine.targets_for_source(rule.name, self).each do |target|
       yield target
     end
   end
-  method_accumulate :targets, lambda { |elem| Masamune::DataPlan::Set.new(elem.rule.engine.get_target_rule(elem.rule.name)) }
 
   def target
     targets.first
   end
 
-  def sources(&block)
+  def sources
     return Masamune::DataPlan::Set::EMPTY if @rule.for_sources?
-    rule.engine.sources_for_target(rule.name, self) do |source|
+    return Masamune::DataPlan::Set.new(rule.engine.get_source_rule(rule.name), to_enum(__method__)) unless block_given?
+    rule.engine.sources_for_target(rule.name, self).each do |source|
       yield source
     end
   end
-  method_accumulate :sources, lambda { |elem| Masamune::DataPlan::Set.new(elem.rule.engine.get_source_rule(elem.rule.name)) }
 
   def source
     sources.first

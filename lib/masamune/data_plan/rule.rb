@@ -31,8 +31,6 @@ require 'date'
 class Masamune::DataPlan::Rule
   TERMINAL = nil
 
-  include Masamune::Accumulate
-
   attr_reader :engine, :name, :type, :options
 
   def initialize(engine, name, type, options = {})
@@ -128,7 +126,8 @@ class Masamune::DataPlan::Rule
     rule.bind_date(elem.start_time)
   end
 
-  def generate(start_time, stop_time, &block)
+  def generate(start_time, stop_time)
+    return Set.new(to_enum(:generate, start_time, stop_time)) unless block_given?
     instance = bind_date(start_time)
 
     begin
@@ -136,9 +135,9 @@ class Masamune::DataPlan::Rule
       instance = instance.next
     end while instance.start_time <= stop_time
   end
-  method_accumulate :generate
 
-  def generate_via_unify(elem, rule, &block)
+  def generate_via_unify(elem, rule)
+    return Set.new(to_enum(:generate_via_unify, elem, rule)) unless block_given?
     instance = unify(elem, rule)
 
     stop_time = instance.start_time.advance(time_step => 1)
@@ -147,7 +146,6 @@ class Masamune::DataPlan::Rule
       instance = instance.next
     end while instance.start_time < stop_time
   end
-  method_accumulate :generate_via_unify
 
   def tz
     ActiveSupport::TimeZone[@options.fetch(:tz, 'UTC')]
@@ -199,6 +197,7 @@ class Masamune::DataPlan::Rule
   end
 
   def adjacent_matches(instance)
+    return Set.new(to_enum(:adjacent_matches, instance)) unless block_given?
     (-window .. -1).each do |i|
       yield instance.prev(i.abs)
     end
@@ -207,7 +206,6 @@ class Masamune::DataPlan::Rule
       yield instance.next(i)
     end
   end
-  method_accumulate :adjacent_matches
 
   def inspect
     {type: type, pattern: pattern, options: options}.to_s

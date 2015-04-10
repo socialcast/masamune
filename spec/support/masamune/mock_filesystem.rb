@@ -23,8 +23,6 @@
 require 'delegate'
 
 class Masamune::MockFilesystem < Delegator
-  include Masamune::Accumulate
-
   def initialize
     @filesystem = Masamune::Filesystem.new
     @filesystem.add_path :root_dir, File.expand_path('../../../', __FILE__)
@@ -42,19 +40,20 @@ class Masamune::MockFilesystem < Delegator
     @files.keys.include?(file)
   end
 
-  def glob(pattern, &block)
+  def glob(pattern)
+    return Set.new(to_enum(:glob, pattern)) unless block_given?
     file_regexp = glob_to_regexp(pattern)
     @files.keys.each do |name|
       yield name if name =~ file_regexp
     end
   end
-  method_accumulate :glob
 
   def glob_sort(pattern, options = {})
     glob(pattern)
   end
 
-  def glob_stat(pattern, &block)
+  def glob_stat(pattern)
+    return Set.new(to_enum(:glob_stat, pattern)) unless block_given?
     file_regexp = glob_to_regexp(pattern, recursive: true)
     @files.each do |name, stat|
       yield stat if name =~ file_regexp
