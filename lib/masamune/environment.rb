@@ -89,9 +89,7 @@ module Masamune
     end
 
     def logger
-      @logger ||= Logger.new(log_file_io).tap do
-        symlink_latest_log
-      end
+      @logger ||= Logger.new(log_file_io)
     end
 
     def console(*a)
@@ -150,15 +148,6 @@ module Masamune
       else
         configuration.debug ? $stderr : nil
       end
-    end
-
-    def symlink_latest_log
-      return unless filesystem.has_path?(:log_dir)
-      latest = filesystem.path(:log_dir, 'latest')
-      FileUtils.rm(latest) if File.exists?(latest)
-      FileUtils.ln_s(log_file_name, latest)
-    rescue => e
-      logger.error(e)
     end
   end
 end
