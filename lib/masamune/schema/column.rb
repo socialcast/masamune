@@ -465,7 +465,7 @@ module Masamune::Schema
       if reference
         !(reference.null || reference.default)
       else
-        surrogate_key || natural_key
+        surrogate_key || natural_key || !(null || default)
       end
     end
 
