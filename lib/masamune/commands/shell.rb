@@ -41,13 +41,13 @@ module Masamune::Commands
       @stderr_line_no = 0
     end
 
-    def replace
+    def replace(opts = {})
       logger.debug('replace: ' + command_args.join(' '))
       before_execute
       around_execute do
         pid = Process.fork
         if pid
-          STDIN.close; STDOUT.close; STDERR.close
+          STDIN.close; STDOUT.close; STDERR.close if opts.fetch(:detach, true)
           Process.waitpid(pid)
           exit
         else
