@@ -20,20 +20,29 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-module Masamune
-  module Actions
-    require 'masamune/actions/hive'
-    require 'masamune/actions/s3cmd'
-    require 'masamune/actions/hadoop_streaming'
-    require 'masamune/actions/hadoop_filesystem'
-    require 'masamune/actions/postgres'
-    require 'masamune/actions/postgres_admin'
-    require 'masamune/actions/filesystem'
-    require 'masamune/actions/date_parse'
-    require 'masamune/actions/data_flow'
-    require 'masamune/actions/elastic_mapreduce'
-    require 'masamune/actions/execute'
-    require 'masamune/actions/transform'
-    require 'masamune/actions/invoke_parallel'
+require 'spec_helper'
+
+describe Masamune::Actions::InvokeParallel do
+  let(:klass) do
+    Class.new(Thor) do
+      include Masamune::HasEnvironment
+      include Masamune::Actions::InvokeParallel
+    end
+  end
+
+  let(:instance) { klass.new }
+
+  describe '.invoke_parallel' do
+    context 'with a simple thor command' do
+      before do
+        mock_command(/\Athor list/, mock_success)
+      end
+
+      subject do
+        instance.invoke_parallel('list', max_tasks: 1)
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end
   end
 end

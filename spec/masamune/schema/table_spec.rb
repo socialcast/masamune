@@ -82,6 +82,9 @@ describe Masamune::Schema::Table do
     end
 
     it { expect(table.name).to eq('user_table') }
+    it { expect(table.unique_columns).to include :tenant_id }
+    it { expect(table.unique_columns).to include :user_id }
+    it { expect(table.stage_table.unique_columns).to be_empty }
   end
 
   context 'with enum column' do

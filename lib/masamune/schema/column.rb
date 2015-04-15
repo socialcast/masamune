@@ -376,7 +376,7 @@ module Masamune::Schema
 
     # TODO: Add ELEMENT REFERENCES
     def reference_constraint
-      return if parent.temporary?
+      return if parent && parent.temporary?
       return if degenerate?
       return if array_value?
       if reference && reference.surrogate_key.type == type
@@ -465,7 +465,7 @@ module Masamune::Schema
       if reference
         !(reference.null || reference.default)
       else
-        surrogate_key || natural_key
+        surrogate_key || natural_key || !(null || default)
       end
     end
 

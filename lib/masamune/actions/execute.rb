@@ -46,7 +46,7 @@ module Masamune::Actions
       end if block_given?
 
       command = Masamune::Commands::Shell.new(klass.new(self), {fail_fast: false}.merge(opts))
-      command.execute
+      opts.fetch(:interactive, true) ? command.execute : command.replace(opts)
     end
   end
 end

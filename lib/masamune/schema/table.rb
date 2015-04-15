@@ -126,7 +126,8 @@ module Masamune::Schema
     # TODO: Default to GIN for array columns
     def index_columns
       index_column_map.map do |_, column_names|
-        [column_names, reverse_unique_constraints_map.key?(column_names.sort), short_md5(column_names)]
+        unique_index = reverse_unique_constraints_map.key?(column_names.sort)
+        [column_names, unique_index, short_md5(column_names)]
       end
     end
 
@@ -292,7 +293,7 @@ module Masamune::Schema
           column.unique.each do |unique|
             map[unique] << column.name
           end
-        end
+        end unless temporary?
         Hash[map.sort_by { |k, v| v.length }]
       end
     end

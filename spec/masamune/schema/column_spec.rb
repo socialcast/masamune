@@ -652,6 +652,16 @@ describe Masamune::Schema::Column do
 
     context 'by default' do
       let(:column) { described_class.new id: 'name', type: :string }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'when :null true' do
+      let(:column) { described_class.new id: 'name', type: :string, null: true }
+      it { is_expected.to eq(false) }
+    end
+
+    context 'when column has default' do
+      let(:column) { described_class.new id: 'name', type: :string, default: 'missing' }
       it { is_expected.to eq(false) }
     end
 
