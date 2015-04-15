@@ -47,7 +47,7 @@ module Masamune::Commands
       around_execute do
         pid = Process.fork
         if pid
-          STDIN.close; STDOUT.close; STDERR.close if opts.fetch(:detach, true)
+          detach if opts.fetch(:detach, true)
           Process.waitpid(pid)
           exit
         else
@@ -197,6 +197,10 @@ module Masamune::Commands
     def exit_code(status, code = 1)
       return code unless status
       status.exitstatus
+    end
+
+    def detach
+      STDIN.close; STDOUT.close; STDERR.close
     end
   end
 end
