@@ -58,13 +58,23 @@ describe Masamune::Actions::Postgres do
   end
 
   describe '.after_initialize' do
-    let(:options) { {} }
+    let(:options) { {initialize: true} }
     let(:setup_files) { [] }
     let(:schema_files) { [] }
     let(:configuration) { {database: 'test', setup_files: setup_files, schema_files: schema_files} }
 
     subject(:after_initialize_invoke) do
       instance.after_initialize_invoke(options)
+    end
+
+    context 'without --initialize' do
+      let(:options) { {} }
+      before do
+        expect(instance).to_not receive(:postgres_admin)
+        expect(instance).to_not receive(:postgres)
+        after_initialize_invoke
+      end
+      it 'should not call postgres_admin or postgres' do; end
     end
 
     context 'when database does not exist' do

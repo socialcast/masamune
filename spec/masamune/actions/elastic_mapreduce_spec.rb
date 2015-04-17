@@ -51,7 +51,7 @@ describe Masamune::Actions::ElasticMapreduce do
   end
 
   describe '.after_initialize' do
-    let(:options) { {} }
+    let(:options) { {initialize: true} }
 
     subject(:after_initialize_invoke) do
       instance.after_initialize_invoke(options)
@@ -72,9 +72,18 @@ describe Masamune::Actions::ElasticMapreduce do
       it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--jobflow'/ }
     end
 
-    context 'when jobflow does not exist' do
+    context 'when jobflow is present without initialize' do
       let(:configuration) { {enabled: true} }
       let(:options) { {jobflow: 'j-XYZ'} }
+      before do
+        expect(instance).to_not receive(:elastic_mapreduce)
+      end
+      it { expect { subject }.to_not raise_error }
+    end
+
+    context 'when jobflow does not exist' do
+      let(:configuration) { {enabled: true} }
+      let(:options) { {initialize: true, jobflow: 'j-XYZ'} }
       before do
         mock_command(/\Aelastic-mapreduce/, mock_failure)
       end
@@ -83,7 +92,7 @@ describe Masamune::Actions::ElasticMapreduce do
 
     context 'when jobflow exists' do
       let(:configuration) { {enabled: true} }
-      let(:options) { {jobflow: 'j-XYZ'} }
+      let(:options) { {initialize: true, jobflow: 'j-XYZ'} }
       before do
         mock_command(/\Aelastic-mapreduce/, mock_success)
       end
@@ -95,7 +104,7 @@ describe Masamune::Actions::ElasticMapreduce do
 
     context 'when jobflow is symbolic' do
       let(:configuration) { {enabled: true, jobflows: {'build' => 'j-XYZ'}} }
-      let(:options) { {jobflow: 'build', } }
+      let(:options) { {initialize: true, jobflow: 'build', } }
       before do
         mock_command(/\Aelastic-mapreduce/, mock_success)
       end

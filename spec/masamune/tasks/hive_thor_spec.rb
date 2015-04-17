@@ -34,42 +34,45 @@ describe Masamune::Tasks::HiveThor do
     it_behaves_like 'command usage'
   end
 
-  context 'with command options' do
-    before do
+  context 'with --file and --initialize' do
+    let(:options) { ['--file=zombo.hql', '--initialize'] }
+    it do
       expect_any_instance_of(described_class).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS masamune;', database: nil).and_return(mock_success)
       expect_any_instance_of(described_class).to receive(:hive).with(file: instance_of(String)).and_return(mock_success)
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: File.expand_path('zombo.hql'))).once.and_return(mock_success)
+      cli_invocation
     end
+  end
 
-    context 'with --file' do
-      let(:options) { ['--file=zombo.hql'] }
-      it do
-        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: File.expand_path('zombo.hql'))).once.and_return(mock_success)
-        cli_invocation
-      end
+  context 'with --file' do
+    let(:options) { ['--file=zombo.hql'] }
+    it do
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: File.expand_path('zombo.hql'))).once.and_return(mock_success)
+      cli_invocation
     end
+  end
 
-    context 'with --output' do
-      let(:options) { ['--output=report.txt'] }
-      it do
-        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(output: File.expand_path('report.txt'))).once.and_return(mock_success)
-        cli_invocation
-      end
+  context 'with --output' do
+    let(:options) { ['--output=report.txt'] }
+    it do
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(output: File.expand_path('report.txt'))).once.and_return(mock_success)
+      cli_invocation
     end
+  end
 
-    context 'with --variables=YEAR:2015 MONTH:1' do
-      let(:options) { ['--variables=YEAR:2015', 'MONTH:1'] }
-      it do
-        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
-        cli_invocation
-      end
+  context 'with --variables=YEAR:2015 MONTH:1' do
+    let(:options) { ['--variables=YEAR:2015', 'MONTH:1'] }
+    it do
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
+      cli_invocation
     end
+  end
 
-    context 'with -X YEAR:2015 MONTH:1' do
-      let(:options) { ['-X', 'YEAR:2015', 'MONTH:1'] }
-      it do
-        expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
-        cli_invocation
-      end
+  context 'with -X YEAR:2015 MONTH:1' do
+    let(:options) { ['-X', 'YEAR:2015', 'MONTH:1'] }
+    it do
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
+      cli_invocation
     end
   end
 end
