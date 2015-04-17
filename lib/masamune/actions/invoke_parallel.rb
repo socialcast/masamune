@@ -40,7 +40,7 @@ module Masamune::Actions
       bail_fast task_group, opts if opts[:version]
       Parallel.each(task_group, in_processes: max_tasks) do |task_name|
         begin
-          execute(thor_wrapper, task_name, *task_args(opts), interactive: false, detach: false)
+          execute(thor_wrapper, task_name, *task_args(opts), interactive: true, detach: false)
         rescue SystemExit
         end
       end
