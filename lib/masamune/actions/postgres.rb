@@ -67,6 +67,7 @@ module Masamune::Actions
 
     included do |base|
       base.after_initialize do |thor, options|
+        next unless options[:initialize]
         thor.create_postgres_database_if_not_exists
         thor.load_postgres_setup_files
         thor.load_postgres_schema

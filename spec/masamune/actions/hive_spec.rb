@@ -68,11 +68,20 @@ describe Masamune::Actions::Hive do
   end
 
   describe '.after_initialize' do
-    let(:options) { {} }
+    let(:options) { {initialize: true} }
     let(:configuration) { {database: 'test'} }
 
     subject(:after_initialize_invoke) do
       instance.after_initialize_invoke(options)
+    end
+
+    context 'without --initialize' do
+      let(:options) { {} }
+      before do
+        expect(instance).to_not receive(:hive)
+        after_initialize_invoke
+      end
+      it 'should not call hive' do; end
     end
 
     context 'with default database' do
@@ -103,12 +112,12 @@ describe Masamune::Actions::Hive do
       it 'should call hive with create database' do; end
     end
 
-    context 'with dryrun' do
-      let(:options) { {dry_run: true} }
+    context 'with dry_run' do
+      let(:options) { {initialize: true, dry_run: true} }
       before do
         expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
-        expect(instance).to receive(:hive).with(exec: 'SHOW TABLES;', safe: true, fail_fast: false).once.and_return(mock_success)
         expect(instance).to receive(:hive).with(file: an_instance_of(String)).once.and_return(mock_success)
+        expect(instance).to receive(:hive).with(exec: 'SHOW TABLES;', safe: true, fail_fast: false).once.and_return(mock_success)
         after_initialize_invoke
       end
       it 'should call hive with show tables' do; end

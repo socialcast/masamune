@@ -63,11 +63,14 @@ module Masamune::Actions
 
     included do |base|
       base.after_initialize do |thor, options|
+        next unless options[:initialize]
         thor.create_hive_database_if_not_exists
-        if options[:dry_run]
-          raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'SHOW TABLES;', safe: true, fail_fast: false).success?
-        end
         thor.load_hive_schema
+      end if defined?(base.after_initialize)
+
+      base.after_initialize(:later) do |thor, options|
+        next unless options[:dry_run]
+        raise ::Thor::InvocationError, 'Dry run of hive failed' unless thor.hive(exec: 'SHOW TABLES;', safe: true, fail_fast: false).success?
       end if defined?(base.after_initialize)
     end
   end

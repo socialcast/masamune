@@ -101,6 +101,7 @@ module Masamune
         class_option :config, :desc => 'Configuration file'
         class_option :version, :desc => 'Print version and exit', :type => :boolean
         class_option :lock, :desc => 'Optional job lock name', :type => :string
+        class_option :initialize, :aliases => '--init', :desc => 'Initialize configured data stores', :type => :boolean, :default => false
         class_option :'--', :desc => 'Extra pass through arguments'
         def initialize(_args=[], _options={}, _config={})
           self.environment.parent = self
