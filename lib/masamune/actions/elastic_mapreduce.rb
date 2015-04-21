@@ -51,18 +51,21 @@ module Masamune::Actions
       extra.empty?
     end
 
+    def validate_jobflow!
+      return unless jobflow_required?
+      jobflow = configuration.elastic_mapreduce[:jobflow]
+      raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless jobflow
+      raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{jobflow}' for '--jobflow' doesn't exist) unless elastic_mapreduce(extra: '--list', jobflow: jobflow, fail_fast: false).success?
+    end
+
     included do |base|
       base.class_option :jobflow, :aliases => '-j', :desc => 'Elastic MapReduce jobflow ID (Hint: elastic-mapreduce --list)' if defined?(base.class_option)
       base.after_initialize(:early) do |thor, options|
-        next unless options[:initialize]
-        next if thor.configuration.elastic_mapreduce.empty?
+        next unless thor.configuration.elastic_mapreduce.any?
         next unless thor.configuration.elastic_mapreduce.fetch(:enabled, true)
-        jobflow = thor.resolve_jobflow(options[:jobflow] || thor.configuration.elastic_mapreduce[:jobflow])
-        if thor.jobflow_required?
-          raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--jobflow'" unless jobflow
-          raise ::Thor::RequiredArgumentMissingError, %Q(Value '#{jobflow}' for '--jobflow' doesn't exist) unless thor.elastic_mapreduce(extra: '--list', jobflow: jobflow, fail_fast: false).success?
-        end
-        thor.configuration.elastic_mapreduce[:jobflow] = jobflow
+        thor.configuration.elastic_mapreduce[:jobflow] = thor.resolve_jobflow(options[:jobflow] || thor.configuration.elastic_mapreduce[:jobflow])
+        next unless options[:initialize]
+        thor.validate_jobflow!
       end if defined?(base.after_initialize)
     end
   end

@@ -78,7 +78,10 @@ describe Masamune::Actions::ElasticMapreduce do
       before do
         expect(instance).to_not receive(:elastic_mapreduce)
       end
-      it { expect { subject }.to_not raise_error }
+      it do
+        expect { subject }.to_not raise_error
+        expect(instance.configuration.elastic_mapreduce[:jobflow]).to eq('j-XYZ')
+      end
     end
 
     context 'when jobflow does not exist' do
@@ -98,7 +101,7 @@ describe Masamune::Actions::ElasticMapreduce do
       end
       it do
         expect { subject }.to_not raise_error
-        expect(configuration[:jobflow]).to eq('j-XYZ')
+        expect(instance.configuration.elastic_mapreduce[:jobflow]).to eq('j-XYZ')
       end
     end
 
@@ -110,7 +113,7 @@ describe Masamune::Actions::ElasticMapreduce do
       end
       it do
         expect { subject }.to_not raise_error
-        expect(configuration[:jobflow]).to eq('j-XYZ')
+        expect(instance.configuration.elastic_mapreduce[:jobflow]).to eq('j-XYZ')
       end
     end
   end
