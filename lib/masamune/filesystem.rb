@@ -407,13 +407,13 @@ module Masamune
     end
 
     def mktemp!(path)
-      get_path(path, SecureRandom.base64).tap do |file|
+      get_path(path, SecureRandom.urlsafe_base64).tap do |file|
         touch!(file)
       end
     end
 
     def mktempdir!(path)
-      get_path(path, SecureRandom.base64).tap do |dir|
+      get_path(path, SecureRandom.urlsafe_base64).tap do |dir|
         mkdir!(dir)
       end
     end
