@@ -52,8 +52,8 @@ describe Masamune::Transform::ConsolidateDimension do
         transform.define_table(target.stage_table(suffix: 'deduplicated')),
         transform.snapshot_dimension(target.ledger_table, target.stage_table(suffix: 'consolidated_forward'), 'ASC'),
         transform.snapshot_dimension(target.ledger_table, target.stage_table(suffix: 'consolidated_reverse'), 'DESC'),
-        transform.bulk_upsert(target.stage_table(suffix: 'consolidated_forward'), target.stage_table(suffix: 'consolidated')),
         transform.bulk_upsert(target.stage_table(suffix: 'consolidated_reverse'), target.stage_table(suffix: 'consolidated')),
+        transform.bulk_upsert(target.stage_table(suffix: 'consolidated_forward'), target.stage_table(suffix: 'consolidated')),
         transform.deduplicate_dimension(target.stage_table(suffix: 'consolidated'), target.stage_table(suffix: 'deduplicated')),
         transform.bulk_upsert(target.stage_table(suffix: 'deduplicated'), target),
         transform.relabel_dimension(target)
