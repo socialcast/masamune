@@ -23,9 +23,7 @@ Gem::Specification.new do |s|
   s.add_dependency('tilt')
   s.add_dependency('erubis')
   s.add_dependency('parallel')
-  s.add_dependency('pry')
-  # Needed to work around: https://github.com/pry/pry/issues/1217
-  s.add_dependency('rb-readline')
+  s.add_dependency('pry', '>= 0.10.1')
 
   # Development
   s.add_development_dependency('rake', '>= 0.9')
