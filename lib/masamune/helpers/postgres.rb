@@ -39,7 +39,7 @@ module Masamune::Helpers
     end
 
     def database_exists?
-      postgres(exec: 'SELECT version();', fail_fast: false).success?
+      @database_exists ||= postgres(exec: 'SELECT version();', fail_fast: false).success?
     end
 
     def table_exists?(table)
