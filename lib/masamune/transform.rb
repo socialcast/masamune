@@ -27,6 +27,7 @@ module Masamune
     require 'masamune/transform/define_table'
     require 'masamune/transform/define_event_view'
     require 'masamune/transform/define_schema'
+    require 'masamune/transform/denormalize_table'
 
     require 'masamune/transform/bulk_upsert'
     require 'masamune/transform/insert_reference_values'
