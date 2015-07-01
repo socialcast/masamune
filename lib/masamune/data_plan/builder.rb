@@ -58,9 +58,7 @@ class Masamune::DataPlan::Builder
 
   def thor_command_wrapper
     Proc.new do |engine, rule, _|
-      engine.environment.with_exclusive_lock(rule) do
-        engine.environment.parent.invoke(rule)
-      end
+      engine.environment.parent.invoke(rule)
     end
   end
 end

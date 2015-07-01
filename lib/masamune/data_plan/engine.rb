@@ -141,10 +141,6 @@ class Masamune::DataPlan::Engine
     clear!
   end
 
-  def executing?
-    @current_depth > 0
-  end
-
   def constrain_max_depth(rule)
     @current_depth += 1
     raise "Max depth of #{MAX_DEPTH} exceeded for rule '#{rule}'" if @current_depth > MAX_DEPTH
