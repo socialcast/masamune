@@ -57,6 +57,21 @@ module Masamune::Actions
       Set.new File.read(value).split(/\s+/)
     end
 
+    def execute(options = {})
+      raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start' or '--at'" unless options[:start] || options[:at] || options[:sources] || options[:targets]
+      raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
+
+      desired_sources = Masamune::DataPlan::Set.new current_command_name, parse_file_type(:sources)
+      desired_targets = Masamune::DataPlan::Set.new current_command_name, parse_file_type(:targets)
+
+      if start_time && stop_time
+        desired_targets.merge engine.targets_for_date_range(current_command_name, start_time, stop_time)
+      end
+
+      engine.prepare(current_command_name, options.merge(sources: desired_sources, targets: desired_targets))
+      engine.execute(current_command_name, options)
+    end
+
     private
 
     included do |base|
@@ -68,23 +83,11 @@ module Masamune::Actions
       end
 
       base.after_initialize(:final) do |thor, options|
-        # Only execute this block if DataPlan::Engine is not currently executing
-        next if thor.engine.executing?
         thor.engine.environment = thor.environment
         thor.engine.filesystem.environment = thor.environment
-
-        raise Thor::RequiredArgumentMissingError, "No value provided for required options '--start' or '--at'" unless options[:start] || options[:at] || options[:sources] || options[:targets]
-        raise Thor::MalformattedArgumentError, "Cannot specify both option '--sources' and option '--targets'" if options[:sources] && options[:targets]
-
-        desired_sources = Masamune::DataPlan::Set.new thor.current_command_name, thor.parse_file_type(:sources)
-        desired_targets = Masamune::DataPlan::Set.new thor.current_command_name, thor.parse_file_type(:targets)
-
-        if thor.start_time && thor.stop_time
-          desired_targets.merge thor.engine.targets_for_date_range(thor.current_command_name, thor.start_time, thor.stop_time)
+        thor.environment.with_process_lock(:data_flow_after_initialize) do
+          thor.execute(options)
         end
-
-        thor.engine.prepare(thor.current_command_name, options.merge(sources: desired_sources, targets: desired_targets))
-        thor.engine.execute(thor.current_command_name, options)
         exit 0 if thor.top_level?
       end if defined?(base.after_initialize)
     end
