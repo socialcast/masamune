@@ -53,18 +53,18 @@ module Masamune
       @mutex ||= Mutex.new
     end
 
-    def with_exclusive_lock(name, non_blocking: false, &block)
+    def with_exclusive_lock(name, options = {}, &block)
       raise 'filesystem path :run_dir not defined' unless filesystem.has_path?(:run_dir)
       lock_name = [name, configuration.lock].compact.join(':')
       logger.debug("acquiring lock '#{lock_name}'")
       lock_file = lock_file(lock_name)
       lock_mode = File::LOCK_EX
-      lock_mode |= File::LOCK_NB if non_blocking
+      lock_mode |= File::LOCK_NB if options[:non_blocking]
       lock_status = lock_file.flock(lock_mode)
       if lock_status == 0
         yield if block_given?
       else
-        logger.error "acquire lock attempt failed for '#{lock_name}'" unless non_blocking
+        logger.error "acquire lock attempt failed for '#{lock_name}'" unless options[:non_blocking]
       end
     ensure
       if lock_file
