@@ -21,9 +21,7 @@
 --  THE SOFTWARE.
 
 <%- target_partition = target.partition_table(date) %>
-<%- target_stage = target_partition.stage_table %>
-
-BEGIN;
+<%- target_stage = target_partition.stage_table(suffix: Process.pid) %>
 
 DROP TABLE IF EXISTS <%= target_stage.name %> CASCADE;
 CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.name %> INCLUDING ALL);
@@ -55,8 +53,6 @@ ON
 <%- index_name = "#{target_stage.name}_#{column_names.join('_')}_index" -%>
 CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target_stage.name %> (<%= column_names.join(', ') %>);
 <%- end -%>
-
-COMMIT;
 
 BEGIN;
 

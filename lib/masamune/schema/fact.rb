@@ -63,12 +63,13 @@ module Masamune::Schema
       columns.values.detect { |column| column.id == :time_key }
     end
 
-    def stage_table(*a)
-      super.tap do |stage|
-        stage.id    = @id
-        stage.store = store
-        stage.range = range
-        stage.grain = grain
+    def stage_table(options = {})
+      super(options).tap do |stage|
+        stage.id      = @id
+        stage.suffix  = options[:suffix]
+        stage.store   = store
+        stage.range   = range
+        stage.grain   = grain
         stage.columns.each do |_, column|
           column.unique = false
         end

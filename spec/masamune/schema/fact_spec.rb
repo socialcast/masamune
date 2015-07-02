@@ -68,6 +68,16 @@ describe Masamune::Schema::Fact do
       it { expect(stage_table.store.id).to eq(store.id) }
       it { expect(stage_table.name).to eq('visits_fact_y2015m01_stage') }
       it { expect(stage_table.range.start_date).to eq(date.utc.to_date) }
+
+      context 'with optional suffix' do
+        subject(:stage_table) { partition_table.stage_table(suffix: 'tmp') }
+
+        it 'should append suffix to id' do
+          expect(stage_table.store.id).to eq(store.id)
+          expect(stage_table.name).to eq('visits_fact_y2015m01_stage_tmp')
+          expect(stage_table.range.start_date).to eq(date.utc.to_date)
+        end
+      end
     end
   end
 
