@@ -24,6 +24,8 @@ require 'spec_helper'
 
 describe Masamune::Transform::StageFact do
   before do
+    allow(Process).to receive(:pid).and_return('PID')
+
     catalog.schema :postgres do
       dimension 'cluster', type: :mini do
         column 'id', type: :sequence, surrogate_key: true, auto: true
@@ -100,22 +102,20 @@ describe Masamune::Transform::StageFact do
 
     it 'should eq render stage_fact template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        BEGIN;
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_PID CASCADE;
+        CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage_PID (LIKE visits_hourly_fact INCLUDING ALL);
 
-        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
-        CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage (LIKE visits_hourly_fact INCLUDING ALL);
-
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_group_dimension_id_fkey FOREIGN KEY (group_dimension_id) REFERENCES group_dimension(id);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id);
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_group_dimension_id_fkey FOREIGN KEY (group_dimension_id) REFERENCES group_dimension(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id);
 
         INSERT INTO
-          visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
+          visits_hourly_fact_y2014m08_stage_PID (date_dimension_id, tenant_dimension_id, user_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
         SELECT
           date_dimension.id,
           tenant_dimension.id,
@@ -160,22 +160,20 @@ describe Masamune::Transform::StageFact do
           feature_type.name = visits_hourly_file_fact_stage.feature_type_name
         ;
 
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_cluster_type_id_index ON visits_hourly_fact_y2014m08_stage (cluster_type_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_date_dimension_id_index ON visits_hourly_fact_y2014m08_stage (date_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_id_index ON visits_hourly_fact_y2014m08_stage (tenant_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_user_dimension_id_index ON visits_hourly_fact_y2014m08_stage (user_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_group_dimension_id_index ON visits_hourly_fact_y2014m08_stage (group_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index ON visits_hourly_fact_y2014m08_stage (user_agent_type_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index ON visits_hourly_fact_y2014m08_stage (feature_type_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_session_type_id_index ON visits_hourly_fact_y2014m08_stage (session_type_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_stage_time_key_index ON visits_hourly_fact_y2014m08_stage (time_key);
-
-        COMMIT;
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_cluster_type_id_index ON visits_hourly_fact_y2014m08_stage_PID (cluster_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_date_dimension_id_index ON visits_hourly_fact_y2014m08_stage_PID (date_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_tenant_dimension_id_index ON visits_hourly_fact_y2014m08_stage_PID (tenant_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_user_dimension_id_index ON visits_hourly_fact_y2014m08_stage_PID (user_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_group_dimension_id_index ON visits_hourly_fact_y2014m08_stage_PID (group_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_user_agent_type_id_index ON visits_hourly_fact_y2014m08_stage_PID (user_agent_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_feature_type_id_index ON visits_hourly_fact_y2014m08_stage_PID (feature_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_session_type_id_index ON visits_hourly_fact_y2014m08_stage_PID (session_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_time_key_index ON visits_hourly_fact_y2014m08_stage_PID (time_key);
 
         BEGIN;
 
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08;
-        ALTER TABLE visits_hourly_fact_y2014m08_stage RENAME TO visits_hourly_fact_y2014m08;
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID RENAME TO visits_hourly_fact_y2014m08;
 
         ALTER TABLE visits_hourly_fact_y2014m08 INHERIT visits_hourly_fact;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600) NOT VALID;
@@ -187,15 +185,15 @@ describe Masamune::Transform::StageFact do
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id) NOT VALID;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id) NOT VALID;
 
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_cluster_type_id_index RENAME TO visits_hourly_fact_y2014m08_cluster_type_id_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_date_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_date_dimension_id_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_tenant_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_tenant_dimension_id_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_user_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_user_dimension_id_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_group_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_group_dimension_id_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_user_agent_type_id_index RENAME TO visits_hourly_fact_y2014m08_user_agent_type_id_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_feature_type_id_index RENAME TO visits_hourly_fact_y2014m08_feature_type_id_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_session_type_id_index RENAME TO visits_hourly_fact_y2014m08_session_type_id_index;
-        ALTER INDEX visits_hourly_fact_y2014m08_stage_time_key_index RENAME TO visits_hourly_fact_y2014m08_time_key_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_cluster_type_id_index RENAME TO visits_hourly_fact_y2014m08_cluster_type_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_date_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_date_dimension_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_tenant_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_tenant_dimension_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_user_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_user_dimension_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_group_dimension_id_index RENAME TO visits_hourly_fact_y2014m08_group_dimension_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_user_agent_type_id_index RENAME TO visits_hourly_fact_y2014m08_user_agent_type_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_feature_type_id_index RENAME TO visits_hourly_fact_y2014m08_feature_type_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_session_type_id_index RENAME TO visits_hourly_fact_y2014m08_session_type_id_index;
+        ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_time_key_index RENAME TO visits_hourly_fact_y2014m08_time_key_index;
 
         COMMIT;
       EOS
