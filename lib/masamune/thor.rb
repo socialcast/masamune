@@ -158,6 +158,7 @@ module Masamune
           end
 
           def invoke_command(command, *args)
+            return super if self.class.skip_lock?
             lock_name = "#{current_namespace}:#{command.name}".gsub('_task', '') + '_command'
             environment.with_exclusive_lock(lock_name, non_blocking: true) do
               super
@@ -168,6 +169,16 @@ module Masamune
             lock_name = name.gsub('_task', '')
             environment.with_exclusive_lock(lock_name, non_blocking: false) do
               super
+            end
+          end
+
+          class << self
+            def skip_lock!
+              @skip_lock = true
+            end
+
+            def skip_lock?
+              @skip_lock
             end
           end
         end

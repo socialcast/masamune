@@ -33,6 +33,7 @@ module Masamune::Tasks
     # FIXME need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
     namespace :shell
+    skip_lock!
 
     desc 'shell', 'Launch an interactive shell'
     method_option :dump, :type => :boolean, :desc => 'Dump SQL schema', :default => false
