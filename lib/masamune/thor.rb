@@ -103,11 +103,11 @@ module Masamune
         class_option :lock, :desc => 'Optional job lock name', :type => :string
         class_option :initialize, :aliases => '--init', :desc => 'Initialize configured data stores', :type => :boolean, :default => false
         class_option :'--', :desc => 'Extra pass through arguments'
-        def initialize(_args=[], _options={}, _config={})
+        def initialize(_args = [], _options = {}, _config = {})
           self.environment.parent = self
           self.filesystem.environment = self
           self.current_namespace = self.class.namespace unless self.class.namespace == 'masamune'
-          self.current_task_name = _config[:current_command].name
+          self.current_task_name = _config[:current_command].try(:name)
           self.current_command_name = current_namespace ? current_namespace + ':' + current_task_name : current_task_name
           self.class.instance = self
 
@@ -163,17 +163,23 @@ module Masamune
 
           def invoke_command(command, *args)
             return super if self.class.skip_lock?
-            lock_name = "#{current_namespace}:#{command.name}".gsub('_task', '') + '_command'
+            lock_name = qualify_task_name(command.name) + '_command'
             environment.with_exclusive_lock(lock_name, non_blocking: true) do
               super
             end
           end
 
           def invoke(name = nil, *args)
-            lock_name = name.gsub('_task', '')
+            lock_name = qualify_task_name(name) + '_task'
             environment.with_exclusive_lock(lock_name, non_blocking: false) do
               super
             end
+          end
+
+          def qualify_task_name(task_name)
+            task, namespace = *task_name.split(':').reverse
+            namespace ||= current_namespace
+            "#{namespace}:#{task.gsub(/_task\Z/, '')}"
           end
 
           class << self
