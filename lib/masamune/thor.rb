@@ -157,6 +157,10 @@ module Masamune
             environment.configuration.params[key]
           end
 
+          def top_level?
+            self.current_command_name == ARGV.first
+          end
+
           def invoke_command(command, *args)
             return super if self.class.skip_lock?
             lock_name = "#{current_namespace}:#{command.name}".gsub('_task', '') + '_command'
