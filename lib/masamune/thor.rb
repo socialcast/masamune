@@ -157,18 +157,16 @@ module Masamune
             environment.configuration.params[key]
           end
 
-          def top_level?
-            self.current_command_name == ARGV.first
-          end
-
           def invoke_command(command, *args)
-            environment.with_exclusive_lock(command.name, non_blocking: true) do
+            lock_name = "#{current_namespace}:#{command.name}".gsub('_task', '') + '_command'
+            environment.with_exclusive_lock(lock_name, non_blocking: true) do
               super
             end
           end
 
           def invoke(name = nil, *args)
-            environment.with_exclusive_lock(name, non_blocking: top_level?) do
+            lock_name = name.gsub('_task', '')
+            environment.with_exclusive_lock(lock_name, non_blocking: false) do
               super
             end
           end
