@@ -67,7 +67,7 @@ module Masamune
         logger.error "acquire lock attempt failed for '#{lock_name}'" unless options[:non_blocking]
       end
     ensure
-      if lock_file
+      if lock_file && lock_status == 0
         logger.debug("releasing lock '#{lock_name}'")
         lock_file.flock(File::LOCK_UN)
       end
