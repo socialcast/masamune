@@ -56,7 +56,7 @@ describe Masamune::Environment do
       before do
         instance.filesystem.add_path(:run_dir, run_dir)
         expect(instance.logger).to receive(:error).with(/acquire lock attempt failed for 'some_lock'/)
-        expect_any_instance_of(File).to receive(:flock).twice.and_return(1)
+        expect_any_instance_of(File).to receive(:flock).once.and_return(1)
       end
 
       it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to_not raise_error }

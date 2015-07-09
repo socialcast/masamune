@@ -31,6 +31,7 @@ module Masamune::Tasks
     # FIXME need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
     namespace :postgres
+    skip_lock!
 
     desc 'psql', 'Launch a Postgres session'
     method_option :file, :aliases => '-f', :desc => 'SQL from files'

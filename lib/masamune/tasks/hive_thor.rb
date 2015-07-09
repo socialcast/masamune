@@ -32,6 +32,7 @@ module Masamune::Tasks
     # FIXME need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
     namespace :hive
+    skip_lock!
 
     desc 'hive', 'Launch a Hive session'
     method_option :file, :aliases => '-f', :desc => 'SQL from files'

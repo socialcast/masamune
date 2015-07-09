@@ -235,4 +235,37 @@ describe Masamune::Thor do
       it { is_expected.to eq([[], ['--more']]) }
     end
   end
+
+  context '#qualify_task_name' do
+    let(:thor_class) do
+      Class.new(Thor) do
+        include Masamune::Thor
+      end
+    end
+
+    let(:instance) { thor_class.new([], {}, {}) }
+
+    before do
+      expect(instance).to receive(:current_namespace).at_most(:once).and_return('namespace')
+    end
+
+    subject do
+      instance.qualify_task_name(name)
+    end
+
+    context 'without namespace' do
+      let(:name) { 'other' }
+      it { is_expected.to eq('namespace:other') }
+    end
+
+    context 'with namespace' do
+      let(:name) { 'namespace:other' }
+      it { is_expected.to eq('namespace:other') }
+    end
+
+    context 'with task suffix' do
+      let(:name) { 'namespace:other_task' }
+      it { is_expected.to eq('namespace:other') }
+    end
+  end
 end

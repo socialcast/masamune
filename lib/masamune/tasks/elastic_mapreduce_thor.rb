@@ -31,6 +31,7 @@ module Masamune::Tasks
     # FIXME need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
     namespace :elastic_mapreduce
+    skip_lock!
 
     desc 'elastic_mapreduce', 'Launch an ElasticMapReduce ssh session'
     class_option :template, :type => :string, :aliases => '-t', :desc => 'Execute named template command'
