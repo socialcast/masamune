@@ -164,14 +164,14 @@ module Masamune
           def invoke_command(command, *args)
             return super if self.class.skip_lock?
             lock_name = qualify_task_name(command.name) + '_command'
-            environment.with_exclusive_lock(lock_name, non_blocking: true) do
+            environment.with_exclusive_lock(lock_name) do
               super
             end
           end
 
           def invoke(name = nil, *args)
             lock_name = qualify_task_name(name) + '_task'
-            environment.with_exclusive_lock(lock_name, non_blocking: false) do
+            environment.with_exclusive_lock(lock_name) do
               super
             end
           end
