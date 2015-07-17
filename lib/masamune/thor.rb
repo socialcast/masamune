@@ -149,7 +149,7 @@ module Masamune
             end
           end
 
-          after_initialize_invoke(options.symbolize_keys)
+          after_initialize_invoke(options.to_hash.symbolize_keys)
         end
 
         no_tasks do
