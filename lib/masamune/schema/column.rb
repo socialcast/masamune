@@ -281,7 +281,7 @@ module Masamune::Schema
         when Hash
           value
         when String
-          ruby_key_value(YAML.load(value))
+          YAML.load(value)
         when nil
           {}
         end
@@ -290,7 +290,7 @@ module Masamune::Schema
         when Hash
           value
         when String
-          ruby_key_value(JSON.load(value))
+          JSON.load(value)
         when nil
           {}
         end
@@ -492,24 +492,6 @@ module Masamune::Schema
         Array.wrap(JSON.load(value)).map { |elem| ruby_value(elem, false) }
       when nil
         []
-      end
-    end
-
-    def ruby_key_value(hash)
-      case sub_type
-      when :boolean
-        Hash[hash.map { |key, value| ruby_boolean_key_value(key, value) }.compact]
-      else
-        hash
-      end
-    end
-
-    def ruby_boolean_key_value(key, value)
-      case value
-      when true, '1', 1
-        [key, true]
-      when false, '0', 0
-        [key, false]
       end
     end
 
