@@ -314,7 +314,7 @@ module Masamune
       check_immutable_path!(dir)
       case type(dir)
       when :hdfs
-        hadoop_fs('-rmr', dir)
+        hadoop_fs('-rm', '-r', dir)
       when :s3
         s3cmd('del', '--recursive', s3b(dir, dir: true))
         s3cmd('del', '--recursive', s3b("#{dir}_$folder$"))

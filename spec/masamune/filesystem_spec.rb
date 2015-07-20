@@ -994,7 +994,7 @@ shared_examples_for 'Filesystem' do
     context 'hdfs dir' do
       it do
         expect(filesystem).to receive(:root_path?).once.and_return(false)
-        expect(filesystem).to receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-rm', '-r', 'file://' + old_dir)
         instance.remove_dir('file://' + old_dir)
       end
     end
@@ -1242,7 +1242,7 @@ shared_examples_for 'Filesystem' do
     context 'hdfs dir to local dir' do
       it do
         expect(filesystem).to receive(:hadoop_fs).with('-copyToLocal', 'file://' + old_dir, 'file://' + new_dir)
-        expect(filesystem).to receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-rm', '-r', 'file://' + old_dir)
         instance.move_dir('file://' + old_dir, new_dir)
       end
     end
@@ -1250,7 +1250,7 @@ shared_examples_for 'Filesystem' do
     context 'hdfs dir to s3 dir' do
       it do
         expect(filesystem).to receive(:hadoop_fs).with('-cp', 'file://' + old_dir, 's3n://bucket/new_dir/')
-        expect(filesystem).to receive(:hadoop_fs).with('-rmr', 'file://' + old_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-rm', '-r', 'file://' + old_dir)
         instance.move_dir('file://' + old_dir, 's3://bucket/new_dir')
       end
     end
