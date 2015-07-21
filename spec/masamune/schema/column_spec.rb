@@ -433,31 +433,6 @@ describe Masamune::Schema::Column do
         it { is_expected.to eq({"k" => "v"}) }
       end
     end
-
-    context 'with type :yaml and sub_type :boolean' do
-      let(:column) { described_class.new(id: 'yaml', type: :yaml, sub_type: :boolean) }
-      let(:value) do
-        {
-          'true'         => true,
-          'one'          => '1',
-          'zero'         => '0',
-          'false'        => false,
-          'string'       => 'string',
-          'one_integer'  => 1,
-          'zero_integer' => 0
-        }.to_yaml
-      end
-
-      it 'should cast yaml to ruby' do
-        expect(result['true']).to eq(true)
-        expect(result['false']).to eq(false)
-        expect(result['one']).to eq(true)
-        expect(result['zero']).to eq(false)
-        expect(result['one_integer']).to eq(true)
-        expect(result['zero_integer']).to eq(false)
-        expect(result.key?('string')).to eq(false)
-      end
-    end
   end
 
   describe '#default_ruby_value' do
