@@ -82,10 +82,6 @@ module Masamune::Schema
       @partition_tables[partition_range] ||= self.class.new(id: @id, store: store, columns: partition_table_columns, parent: self, range: partition_range, grain: grain, inherit: true)
     end
 
-    def partitions
-      columns.select { |_, column| column.partition }
-    end
-
     def measures
       columns.select { |_, column| column.measure }
     end

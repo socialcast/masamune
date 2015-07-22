@@ -22,13 +22,11 @@
 
 CREATE TABLE IF NOT EXISTS <%= target.name %>
 (
-  <%- target.reference_columns.each do |column| -%>
-  <%= column.name %> <%= column.hql_type %>,
+  <%- target.defined_columns.each do |column, last| -%>
+  <%= column.as_hql %><%= ',' unless last %>
   <%- end -%>
-  <%- target.measures.each do |_, measure| -%>
-  <%= measure.name %> <%= measure.hql_type %>,
-  <%- end -%>
-  <%= target.time_key.name %> <%= target.time_key.hql_type %>
 )
+<%- if target.partition_by -%>
 PARTITIONED BY (<%= target.partition_by %>)
+<%- end -%>
 TBLPROPERTIES ('serialization.null.format' = '');

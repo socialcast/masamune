@@ -33,6 +33,7 @@ module Masamune::Transform
 
     class Hive < SimpleDelegator
       def partition_by
+        return unless partitions.any?
         partitions.map { |_, column| "#{column.name} #{column.hql_type}" }.join(', ')
       end
     end

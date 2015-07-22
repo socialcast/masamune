@@ -184,12 +184,12 @@ module Masamune::Schema
       array_value? ? "#{elem}[]" : elem
     end
 
-    def hql_type
+    def hql_type(for_surrogate_key = false)
       elem =
       case type
       when :integer
-        'INT'
-      when :string
+        for_surrogate_key ? 'STRING' : 'INT'
+      when :string, :enum, :key_value
         'STRING'
       else
         sql_type
@@ -364,6 +364,10 @@ module Masamune::Schema
 
     def as_psql
       [name, sql_type(surrogate_key), *sql_constraints, reference_constraint, sql_default].compact.join(' ')
+    end
+
+    def as_hql
+      [name, hql_type(surrogate_key)].compact.join(' ')
     end
 
     def as_hash

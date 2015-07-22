@@ -41,6 +41,77 @@ describe Masamune::Transform::DefineTable do
     end
   end
 
+  context 'for hive ledger dimension' do
+    before do
+      catalog.schema :hive do
+        dimension 'tenant', type: :ledger do
+          column 'tenant_id', type: :integer, natural_key: true
+          column 'tenant_account_state', type: :enum, values: %w(missing unknown active inactive)
+          column 'tenant_premium_state', type: :enum, values: %w(missing unkown goodwill pilot sandbox premium internal free vmware)
+          column 'preferences', type: :key_value, null: true
+        end
+      end
+    end
+
+    let(:table) { catalog.hive.tenant_dimension }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS tenant_ledger
+        (
+          id STRING,
+          tenant_id INT,
+          tenant_account_state STRING,
+          tenant_premium_state STRING,
+          preferences STRING,
+          source_kind STRING,
+          source_uuid STRING,
+          start_at TIMESTAMP,
+          last_modified_at TIMESTAMP,
+          delta INT
+        )
+        TBLPROPERTIES ('serialization.null.format' = '');
+      EOS
+    end
+  end
+
+  context 'for hive ledger dimension with partitions' do
+    before do
+      catalog.schema :hive do
+        dimension 'tenant', type: :ledger do
+          partition :y
+          partition :m
+          column 'tenant_id', type: :integer, natural_key: true
+          column 'tenant_account_state', type: :enum, values: %w(missing unknown active inactive)
+          column 'tenant_premium_state', type: :enum, values: %w(missing unkown goodwill pilot sandbox premium internal free vmware)
+          column 'preferences', type: :key_value, null: true
+        end
+      end
+    end
+
+    let(:table) { catalog.hive.tenant_dimension }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS tenant_ledger
+        (
+          id STRING,
+          tenant_id INT,
+          tenant_account_state STRING,
+          tenant_premium_state STRING,
+          preferences STRING,
+          source_kind STRING,
+          source_uuid STRING,
+          start_at TIMESTAMP,
+          last_modified_at TIMESTAMP,
+          delta INT
+        )
+        PARTITIONED BY (y INT, m INT)
+        TBLPROPERTIES ('serialization.null.format' = '');
+      EOS
+    end
+  end
+
   context 'for postgres dimension type: one' do
     before do
       catalog.schema :postgres do
