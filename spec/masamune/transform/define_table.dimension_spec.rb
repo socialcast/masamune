@@ -112,6 +112,35 @@ describe Masamune::Transform::DefineTable do
     end
   end
 
+  context 'for hive ledger dimension with :tsv format' do
+    before do
+      catalog.schema :hive do
+        dimension 'tenant', type: :ledger, properties: { format: :tsv } do
+          column 'tenant_id', type: :integer, natural_key: true
+        end
+      end
+    end
+
+    let(:table) { catalog.hive.tenant_dimension }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS tenant_ledger
+        (
+          id STRING,
+          tenant_id INT,
+          source_kind STRING,
+          source_uuid STRING,
+          start_at TIMESTAMP,
+          last_modified_at TIMESTAMP,
+          delta INT
+        )
+        ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t'
+        TBLPROPERTIES ('serialization.null.format' = '');
+      EOS
+    end
+  end
+
   context 'for postgres dimension type: one' do
     before do
       catalog.schema :postgres do

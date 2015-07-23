@@ -29,4 +29,7 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
 <%- if target.partition_by -%>
 PARTITIONED BY (<%= target.partition_by %>)
 <%- end -%>
+<%- if target.properties[:format] == :tsv -%>
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+<%- end -%>
 TBLPROPERTIES ('serialization.null.format' = '');

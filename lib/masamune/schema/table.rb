@@ -39,7 +39,8 @@ module Masamune::Schema
       columns:         {},
       rows:            [],
       inherit:         false,
-      debug:           false
+      debug:           false,
+      properties:      {}
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
