@@ -264,7 +264,9 @@ module Masamune::Schema
         when Date, DateTime
           value.to_time
         when String
-          if value =~ /\A\d+\z/
+          if value.blank?
+            nil
+          elsif value =~ /\A\d+\z/
             Time.at(value.to_i)
           else
             Time.parse(value)
