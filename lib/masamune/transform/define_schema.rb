@@ -21,12 +21,10 @@
 #  THE SOFTWARE.
 
 require 'masamune/transform/define_table'
-require 'masamune/transform/define_event_view'
 
 module Masamune::Transform
   module DefineSchema
     include DefineTable
-    include DefineEventView
 
     extend ActiveSupport::Concern
 

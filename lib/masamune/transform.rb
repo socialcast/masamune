@@ -25,7 +25,6 @@ module Masamune
     require 'masamune/transform/operator'
 
     require 'masamune/transform/define_table'
-    require 'masamune/transform/define_event_view'
     require 'masamune/transform/define_schema'
     require 'masamune/transform/denormalize_table'
 

@@ -63,11 +63,10 @@ describe Masamune::Transform::DefineSchema do
   context 'for hive schema' do
     before do
       catalog.schema :hive do
-        event 'tenant' do
-          attribute 'tenant_id', type: :integer, immutable: true
-          attribute 'account_state', type: :string
-          attribute 'premium_type', type: :string
-          attribute 'preferences', type: :json
+        dimension 'user', type: :ledger do
+          column 'tenant_id', index: true, natural_key: true
+          column 'user_id', index: true, natural_key: true
+          column 'preferences', type: :key_value, null: true
         end
       end
     end
@@ -77,7 +76,7 @@ describe Masamune::Transform::DefineSchema do
     it 'should render combined template' do
       is_expected.to eq Masamune::Template.combine \
         Masamune::Transform::Operator.new('define_schema', source: catalog.hive),
-        transform.define_event_view(catalog.hive.events['tenant'])
+        transform.define_table(catalog.hive.dimensions['user'])
     end
   end
 end
