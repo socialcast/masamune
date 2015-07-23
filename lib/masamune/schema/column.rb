@@ -226,7 +226,7 @@ module Masamune::Schema
       when :date
         value.to_s
       when :timestamp
-        value.to_time.utc.iso8601(3)
+        hive_encoding? ? value.to_time.utc.strftime('%Y-%m-%d %H:%M:%S.%3N') : value.to_time.utc.iso8601(3)
       when :string
         value.empty? ? nil : value
       else

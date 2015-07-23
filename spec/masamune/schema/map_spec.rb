@@ -303,7 +303,7 @@ describe Masamune::Schema::Map do
       let(:target_data) do
         <<-EOS.strip_heredoc
           1	30			{}
-          2	40	2014-02-26T18:15:51.000Z		"{""enabled"":true}"
+          2	40	2014-02-26 18:15:51.000		"{""enabled"":true}"
         EOS
       end
 

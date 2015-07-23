@@ -598,6 +598,29 @@ describe Masamune::Schema::Column do
         it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :timestamp for column 'timestamp'" }
       end
     end
+
+    context 'with type :timestamp with store :hive' do
+      let(:column) { described_class.new(id: 'timestamp', type: :timestamp) }
+
+      before do
+        allow(column).to receive_message_chain(:parent, :store, :type).and_return(:hive)
+      end
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to be_nil }
+      end
+
+      context 'when Time' do
+        let(:value) { Time.now }
+        it { is_expected.to eq(value.utc.iso8601(3).gsub(/T|Z/, ' ').strip) }
+      end
+
+      context 'when unknown' do
+        let(:value) { 'unknown' }
+        it { expect { result }.to raise_error ArgumentError, "Could not coerce 'unknown' into :timestamp for column 'timestamp'" }
+      end
+    end
   end
 
   describe '#==' do
