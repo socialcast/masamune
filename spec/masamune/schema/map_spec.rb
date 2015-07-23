@@ -135,7 +135,7 @@ describe Masamune::Schema::Map do
               'user_account_state.name'    => row[:deleted_at] ? 'deleted' :  'active',
               'hr_user_account_state.name' => row[:deleted_at] ? 'deleted' :  'active',
               'admin'                      => row[:admin],
-              'preferences_now'            => row[:preferences],
+              'preferences'                => row[:preferences],
               'source'                     => 'users_file',
               'cluster_id'                 => 100
             }
@@ -167,7 +167,7 @@ describe Masamune::Schema::Map do
 
       let(:target_data) do
         <<-EOS.strip_heredoc
-          tenant_id,user_id,user_account_state_type_name,hr_user_account_state_type_name,admin,preferences_now,source,cluster_id
+          tenant_id,user_id,user_account_state_type_name,hr_user_account_state_type_name,admin,preferences,source,cluster_id
           30,1,active,active,FALSE,{},users_file,100
           40,2,deleted,deleted,TRUE,"{""enabled"":true}",users_file,100
         EOS
@@ -202,8 +202,7 @@ describe Masamune::Schema::Map do
               'user_id'                 => row[:id],
               'user_account_state.name' => row[:deleted_at] ? 'deleted' : 'active',
               'admin'                   => row[:admin],
-              'preferences_now'         => row[:preferences],
-              'preferences_was'         => row[:preferences],
+              'preferences'             => row[:preferences],
               'source'                  => 'user_file',
               'cluster_id'              => 100
             }
@@ -226,10 +225,10 @@ describe Masamune::Schema::Map do
 
       let(:target_data) do
         <<-EOS.strip_heredoc
-          tenant_id,user_id,user_account_state_type_name,admin,preferences_now,preferences_was,source,cluster_id
-          30,1,active,FALSE,{},{},user_file,100
-          30,1,active,FALSE,{},{},user_file,100
-          40,2,deleted,TRUE,"{""enabled"":true}","{""enabled"":true}",user_file,100
+          tenant_id,user_id,user_account_state_type_name,admin,preferences,source,cluster_id
+          30,1,active,FALSE,{},user_file,100
+          30,1,active,FALSE,{},user_file,100
+          40,2,deleted,TRUE,"{""enabled"":true}",user_file,100
         EOS
       end
 

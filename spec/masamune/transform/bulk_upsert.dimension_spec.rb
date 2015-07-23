@@ -63,7 +63,7 @@ describe Masamune::Transform::BulkUpsert do
         column 'department.department_id', type: :integer
         column 'user_account_state.name', type: :string
         column 'hr_user_account_state.name', type: :string
-        column 'preferences_now', type: :json
+        column 'preferences', type: :json
         column 'start_at', type: :timestamp
         column 'source_kind', type: :string
         column 'delta', type: :integer
@@ -147,8 +147,7 @@ describe Masamune::Transform::BulkUpsert do
           user_account_state_type_id = COALESCE(user_dimension_ledger_stage.user_account_state_type_id, user_dimension_ledger.user_account_state_type_id),
           hr_user_account_state_type_id = COALESCE(user_dimension_ledger_stage.hr_user_account_state_type_id, user_dimension_ledger.hr_user_account_state_type_id),
           name = COALESCE(user_dimension_ledger_stage.name, user_dimension_ledger.name),
-          preferences_now = COALESCE(user_dimension_ledger_stage.preferences_now, user_dimension_ledger.preferences_now),
-          preferences_was = COALESCE(user_dimension_ledger_stage.preferences_was, user_dimension_ledger.preferences_was)
+          preferences = COALESCE(user_dimension_ledger_stage.preferences, user_dimension_ledger.preferences)
         FROM
           user_dimension_ledger_stage
         WHERE
@@ -160,7 +159,7 @@ describe Masamune::Transform::BulkUpsert do
         ;
 
         INSERT INTO
-          user_dimension_ledger (department_type_id, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, name, preferences_now, preferences_was, source_kind, source_uuid, start_at, last_modified_at, delta)
+          user_dimension_ledger (department_type_id, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, name, preferences, source_kind, source_uuid, start_at, last_modified_at, delta)
         SELECT
           user_dimension_ledger_stage.department_type_id,
           user_dimension_ledger_stage.user_account_state_type_id,
@@ -168,8 +167,7 @@ describe Masamune::Transform::BulkUpsert do
           user_dimension_ledger_stage.tenant_id,
           user_dimension_ledger_stage.user_id,
           user_dimension_ledger_stage.name,
-          user_dimension_ledger_stage.preferences_now,
-          user_dimension_ledger_stage.preferences_was,
+          user_dimension_ledger_stage.preferences,
           user_dimension_ledger_stage.source_kind,
           user_dimension_ledger_stage.source_uuid,
           user_dimension_ledger_stage.start_at,

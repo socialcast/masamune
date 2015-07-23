@@ -77,15 +77,8 @@ module Masamune::Schema
         next if column.surrogate_key
         next if reserved_column_ids.include?(column.id)
 
-        if column.type == :key_value
-          column_now, column_was = column.dup, column.dup
-          column_now.id, column_was.id = "#{column.id}_now", "#{column.id}_was"
-          column_now.strict, column_was.strict = false, false
-          [column_now, column_was]
-        else
-          column.dup.tap do |column_copy|
-            column_copy.strict = false unless column.surrogate_key || column.natural_key || (column.reference && column.reference.surrogate_key.auto)
-          end
+        column.dup.tap do |column_copy|
+          column_copy.strict = false unless column.surrogate_key || column.natural_key || (column.reference && column.reference.surrogate_key.auto)
         end
       end.flatten
     end

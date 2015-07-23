@@ -72,7 +72,7 @@ describe Masamune::Transform::SnapshotDimension do
               coalesce_merge(user_account_state_type_id) OVER w AS user_account_state_type_id,
               tenant_id AS tenant_id,
               user_id AS user_id,
-              hstore_merge(preferences_now) OVER w - hstore_merge(preferences_was) OVER w AS preferences,
+              hstore_merge(preferences) OVER w AS preferences,
               start_at AS start_at
             FROM
               windows
