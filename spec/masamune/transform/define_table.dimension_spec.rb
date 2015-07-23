@@ -66,8 +66,8 @@ describe Masamune::Transform::DefineTable do
           preferences STRING,
           source_kind STRING,
           source_uuid STRING,
-          start_at TIMESTAMP,
-          last_modified_at TIMESTAMP,
+          start_at STRING,
+          last_modified_at STRING,
           delta INT
         )
         TBLPROPERTIES ('serialization.null.format' = '');
@@ -102,8 +102,8 @@ describe Masamune::Transform::DefineTable do
           preferences STRING,
           source_kind STRING,
           source_uuid STRING,
-          start_at TIMESTAMP,
-          last_modified_at TIMESTAMP,
+          start_at STRING,
+          last_modified_at STRING,
           delta INT
         )
         PARTITIONED BY (y INT, m INT)
@@ -131,8 +131,8 @@ describe Masamune::Transform::DefineTable do
           tenant_id INT,
           source_kind STRING,
           source_uuid STRING,
-          start_at TIMESTAMP,
-          last_modified_at TIMESTAMP,
+          start_at STRING,
+          last_modified_at STRING,
           delta INT
         )
         ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t'

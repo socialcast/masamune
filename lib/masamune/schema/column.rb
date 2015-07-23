@@ -189,7 +189,7 @@ module Masamune::Schema
       case type
       when :integer
         for_surrogate_key ? 'STRING' : 'INT'
-      when :string, :enum, :key_value
+      when :string, :enum, :key_value, :timestamp
         'STRING'
       else
         sql_type
@@ -226,7 +226,7 @@ module Masamune::Schema
       when :date
         value.to_s
       when :timestamp
-        hive_encoding? ? value.to_time.utc.strftime('%Y-%m-%d %H:%M:%S.%3N') : value.to_time.utc.iso8601(3)
+        value.to_time.utc.iso8601(3)
       when :string
         value.empty? ? nil : value
       else
