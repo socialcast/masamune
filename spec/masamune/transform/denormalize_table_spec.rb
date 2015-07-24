@@ -63,7 +63,9 @@ describe Masamune::Transform::DenormalizeTable do
     end
   end
 
-  subject(:result) { transform.denormalize_table(target, columns).to_s }
+  let(:order_by) { nil }
+
+  subject(:result) { transform.denormalize_table(target, columns, order_by).to_s }
 
   context 'with postgres fact' do
     let(:target) { catalog.postgres.visits_fact }
@@ -150,6 +152,8 @@ describe Masamune::Transform::DenormalizeTable do
       ]
     end
 
+    let(:order_by) { ['tenant_id', 'start_at'] }
+
     it 'should eq render denormalize_table template' do
       is_expected.to eq <<-EOS.strip_heredoc
         SELECT
@@ -163,11 +167,7 @@ describe Masamune::Transform::DenormalizeTable do
           tenant_ledger
         ORDER BY
           tenant_id,
-          tenant_account_state,
-          tenant_premium_state,
-          preferences,
-          y,
-          m
+          start_at
         ;
       EOS
     end

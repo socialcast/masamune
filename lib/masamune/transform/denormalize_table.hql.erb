@@ -27,7 +27,7 @@ SELECT
 FROM
   <%= target.name %>
 ORDER BY
-  <%- target.order_by_columns(columns).each do |column, last| -%>
+  <%- target.order_by_columns(order_by).each do |column, last| -%>
   <%= column %><%= ',' unless last %>
   <%- end -%>
 ;
