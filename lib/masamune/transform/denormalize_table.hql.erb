@@ -20,32 +20,14 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
-DROP VIEW IF EXISTS <%= target.view_name %>;
-CREATE VIEW IF NOT EXISTS <%= target.view_name %> (
-  uuid,
-  type,
-  <%- target.view_columns.each do |value| -%>
-  <%= value %>,
+SELECT
+  <%- target.select_columns(columns).each do |column, last| -%>
+  <%= column %><%= ',' unless last %>
   <%- end -%>
-  delta,
-  created_at,
-  y, m, d ,h
-) PARTITIONED ON (y, m, d, h) AS
-SELECT DISTINCT
-  uuid,
-  type,
-  <%- target.view_values.each do |value| -%>
-  <%= value %>,
-  <%- end -%>
-  IF(type = '<%= target.update_type %>', 1, 0) AS delta,
-  ctime_iso8601 AS created_at,
-  y, m, d ,h
 FROM
-  events
-LATERAL VIEW
-  json_tuple(events.json, <%= target.view_columns.map { |value| "'#{value}'" }.join(', ') %>) event_data AS <%= target.view_columns.join(', ') %>
-WHERE
-  type = '<%= target.create_type %>' OR
-  type = '<%= target.update_type %>' OR
-  type = '<%= target.delete_type %>'
+  <%= target.name %>
+ORDER BY
+  <%- target.order_by_columns(order_by).each do |column, last| -%>
+  <%= column %><%= ',' unless last %>
+  <%- end -%>
 ;

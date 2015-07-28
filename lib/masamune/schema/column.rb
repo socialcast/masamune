@@ -184,12 +184,12 @@ module Masamune::Schema
       array_value? ? "#{elem}[]" : elem
     end
 
-    def hql_type
+    def hql_type(for_surrogate_key = false)
       elem =
       case type
       when :integer
-        'INT'
-      when :string
+        for_surrogate_key ? 'STRING' : 'INT'
+      when :string, :enum, :key_value, :timestamp
         'STRING'
       else
         sql_type
@@ -264,7 +264,9 @@ module Masamune::Schema
         when Date, DateTime
           value.to_time
         when String
-          if value =~ /\A\d+\z/
+          if value.blank?
+            nil
+          elsif value =~ /\A\d+\z/
             Time.at(value.to_i)
           else
             Time.parse(value)
@@ -364,6 +366,10 @@ module Masamune::Schema
 
     def as_psql
       [name, sql_type(surrogate_key), *sql_constraints, reference_constraint, sql_default].compact.join(' ')
+    end
+
+    def as_hql
+      [name, hql_type(surrogate_key)].compact.join(' ')
     end
 
     def as_hash

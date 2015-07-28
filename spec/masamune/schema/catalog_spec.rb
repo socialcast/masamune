@@ -332,30 +332,6 @@ describe Masamune::Schema::Catalog do
       it { expect(visits_monthly.measures).to include :count }
     end
 
-    context 'when schema contains events' do
-      before do
-        instance.schema :hive do
-          event 'event_one' do
-            attribute 'attribute_one'
-            attribute 'attribute_two'
-          end
-
-          event 'event_two' do
-            attribute 'attribute_three'
-            attribute 'attribute_four'
-          end
-        end
-      end
-
-      let(:event_one) { hive.event_one_event }
-      let(:event_two) { hive.event_two_event }
-
-      it { expect(event_one.attributes).to include :attribute_one }
-      it { expect(event_one.attributes).to include :attribute_two }
-      it { expect(event_two.attributes).to include :attribute_three }
-      it { expect(event_two.attributes).to include :attribute_four }
-    end
-
     context 'when schema contains file' do
       before do
         instance.schema :postgres do
@@ -450,35 +426,6 @@ describe Masamune::Schema::Catalog do
       end
 
       subject(:map) { files.users.map(to: postgres.user_dimension) }
-
-      it 'constructs map' do
-        expect(map.function).to_not be_nil
-      end
-    end
-
-    context 'when schema contains map from: event' do
-      before do
-        instance.schema :postgres do
-          dimension 'user', type: :mini do
-            column 'user_id', type: :integer, natural_key: true
-            column 'name', type: :string
-          end
-
-          event 'users' do
-            attribute 'id', type: :integer, immutable: true
-            attribute 'name', type: :string
-          end
-
-          map from: postgres.users_event, to: postgres.user_dimension do |row|
-            {
-              'user_id' => row[:id],
-              'name'    => row[:name_now]
-            }
-          end
-        end
-      end
-
-      subject(:map) { postgres.users_event.map(to: postgres.user_dimension) }
 
       it 'constructs map' do
         expect(map.function).to_not be_nil

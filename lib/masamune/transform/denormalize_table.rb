@@ -24,13 +24,14 @@ module Masamune::Transform
   module DenormalizeTable
     extend ActiveSupport::Concern
 
-    def denormalize_table(target, columns = [])
-      Operator.new(__method__, target: target, columns: columns, presenters: { postgres: Postgres })
+    def denormalize_table(target, columns = [], order_by = nil)
+      order_by ||= columns
+      Operator.new(__method__, target: target, columns: columns, order_by: order_by, presenters: { postgres: Common, hive: Common })
     end
 
     private
 
-    class Postgres < SimpleDelegator
+    class Common < SimpleDelegator
       include Masamune::LastElement
 
       def select_columns(column_names)

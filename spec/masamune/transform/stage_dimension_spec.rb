@@ -63,7 +63,7 @@ describe Masamune::Transform::StageDimension do
         column 'department.department_id', type: :integer
         column 'user_account_state.name', type: :string
         column 'hr_user_account_state.name', type: :string
-        column 'preferences_now', type: :json
+        column 'preferences', type: :json
         column 'start_at', type: :timestamp
         column 'source_kind', type: :string
         column 'delta', type: :integer
@@ -82,14 +82,14 @@ describe Masamune::Transform::StageDimension do
         CREATE TEMPORARY TABLE IF NOT EXISTS user_dimension_ledger_stage (LIKE user_dimension_ledger INCLUDING ALL);
 
         INSERT INTO
-          user_dimension_ledger_stage (department_type_id, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, preferences_now, source_kind, start_at, delta)
+          user_dimension_ledger_stage (department_type_id, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, preferences, source_kind, start_at, delta)
         SELECT
           department_type.id,
           user_account_state_type.id,
           hr_user_account_state_type.id,
           user_file_dimension_ledger_stage.tenant_id,
           user_file_dimension_ledger_stage.user_id,
-          json_to_hstore(user_file_dimension_ledger_stage.preferences_now),
+          json_to_hstore(user_file_dimension_ledger_stage.preferences),
           user_file_dimension_ledger_stage.source_kind,
           user_file_dimension_ledger_stage.start_at,
           user_file_dimension_ledger_stage.delta

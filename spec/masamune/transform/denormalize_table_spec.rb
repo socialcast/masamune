@@ -63,22 +63,24 @@ describe Masamune::Transform::DenormalizeTable do
     end
   end
 
-  let(:target) { catalog.postgres.visits_fact }
-  let(:columns) do
-    [
-      'date.date_id',
-      'tenant.tenant_id',
-      'user.tenant_id',
-      'user.user_id',
-      'user_agent.name',
-      'user_agent.version',
-      'total',
-      'time_key'
-    ]
-  end
+  let(:order_by) { nil }
+
+  subject(:result) { transform.denormalize_table(target, columns, order_by).to_s }
 
   context 'with postgres fact' do
-    subject(:result) { transform.denormalize_table(target, columns).to_s }
+    let(:target) { catalog.postgres.visits_fact }
+    let(:columns) do
+      [
+        'date.date_id',
+        'tenant.tenant_id',
+        'user.tenant_id',
+        'user.user_id',
+        'user_agent.name',
+        'user_agent.version',
+        'total',
+        'time_key'
+      ]
+    end
 
     it 'should eq render denormalize_table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -119,6 +121,54 @@ describe Masamune::Transform::DenormalizeTable do
         total,
         time_key
       ;
+      EOS
+    end
+  end
+
+  context 'with hive table' do
+    before do
+      catalog.schema :hive do
+        dimension 'tenant', type: :ledger do
+          partition :y
+          partition :m
+          column 'tenant_id', type: :integer, natural_key: true
+          column 'tenant_account_state', type: :enum, values: %w(missing unknown active inactive)
+          column 'tenant_premium_state', type: :enum, values: %w(missing unkown goodwill pilot sandbox premium internal free vmware)
+          column 'preferences', type: :key_value, null: true
+        end
+      end
+    end
+
+    let(:target) { catalog.hive.tenant_dimension }
+
+    let(:columns) do
+      [
+        'tenant_id',
+        'tenant_account_state',
+        'tenant_premium_state',
+        'preferences',
+        'y',
+        'm'
+      ]
+    end
+
+    let(:order_by) { ['tenant_id', 'start_at'] }
+
+    it 'should eq render denormalize_table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        SELECT
+          tenant_ledger.tenant_id,
+          tenant_ledger.tenant_account_state,
+          tenant_ledger.tenant_premium_state,
+          tenant_ledger.preferences,
+          tenant_ledger.y,
+          tenant_ledger.m
+        FROM
+          tenant_ledger
+        ORDER BY
+          tenant_id,
+          start_at
+        ;
       EOS
     end
   end

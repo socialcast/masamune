@@ -60,6 +60,8 @@ describe Masamune::Transform::DefineTable do
       end
 
       fact 'visits', partition: 'y%Ym%m' do
+        partition :y
+        partition :m
         references :cluster
         references :date
         references :tenant

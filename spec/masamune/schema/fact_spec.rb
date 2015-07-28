@@ -47,7 +47,9 @@ describe Masamune::Schema::Fact do
         Masamune::Schema::TableReference.new(user_dimension)
       ],
       columns: [
-        Masamune::Schema::Column.new(id: 'total', type: :integer)
+        Masamune::Schema::Column.new(id: 'total', type: :integer),
+        Masamune::Schema::Column.new(id: 'y', type: :integer, partition: true),
+        Masamune::Schema::Column.new(id: 'm', type: :integer, partition: true)
       ]
   end
 

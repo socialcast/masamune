@@ -60,10 +60,10 @@ module Masamune::Actions
       end
 
       transform = Wrapper.load_dimension(output, result, target)
-      logger.debug(File.read(output)) if (source.debug || map.debug)
-      postgres file: transform.to_file, debug: (source.debug || target.debug || map.debug)
+      logger.debug(File.read(output)) if (source.debug || map.try(:debug))
+      postgres file: transform.to_file, debug: (source.debug || target.debug || map.try(:debug))
     ensure
-      output.unlink
+      output.unlink if output.is_a?(Tempfile)
     end
 
     def consolidate_dimension(target)

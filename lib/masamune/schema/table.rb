@@ -39,7 +39,8 @@ module Masamune::Schema
       columns:         {},
       rows:            [],
       inherit:         false,
-      debug:           false
+      debug:           false,
+      properties:      {}
     }
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
@@ -111,7 +112,7 @@ module Masamune::Schema
     end
 
     def defined_columns
-      columns.values
+      columns.values.reject { |column| column.partition }
     end
     method_with_last_element :defined_columns
 
@@ -152,6 +153,10 @@ module Masamune::Schema
 
     def foreign_key_columns
       columns.values.select { | column| column.reference && column.reference.foreign_key }
+    end
+
+    def partitions
+      columns.select { |_, column| column.partition }
     end
 
     def insert_rows

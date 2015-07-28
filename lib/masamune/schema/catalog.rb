@@ -173,7 +173,7 @@ module Masamune::Schema
     end
 
     def file(id, options = {})
-      format_options = options.extract!(:format, :headers)
+      format_options = options.extract!(:format, :headers, :json_encoding)
       @context.push(options)
       yield if block_given?
       store = HasFormat.new(@context, format_options)

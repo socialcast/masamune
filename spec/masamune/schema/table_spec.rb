@@ -36,6 +36,14 @@ describe Masamune::Schema::Table do
     it { expect(table.name).to eq('account_table') }
   end
 
+  context 'with format' do
+    let(:table) do
+      described_class.new id: 'user', properties: { format: :tsv }
+    end
+
+    it { expect(table.properties[:format]).to eq(:tsv) }
+  end
+
   context 'with columns' do
     let(:table) do
       described_class.new id: 'user',

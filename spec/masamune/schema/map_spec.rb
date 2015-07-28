@@ -52,32 +52,6 @@ describe Masamune::Schema::Map do
         column 'deleted_at', type: :timestamp, null: true
       end
     end
-
-    catalog.schema :hive do
-      event 'user' do
-        attribute 'id', type: :integer, immutable: true
-        attribute 'tenant_id', type: :integer, immutable: true
-        attribute 'admin', type: :boolean
-        attribute 'preferences', type: :json
-      end
-
-      dimension 'tenant', type: :two, implicit: true do
-        column 'tenant_id'
-      end
-
-      fact 'user' do
-        references :tenant
-        measure 'delta'
-      end
-
-      file 'user' do
-        column 'id', type: :integer
-        column 'tenant_id', type: :integer
-        column 'admin', type: :boolean
-        column 'preferences', type: :json
-        column 'deleted_at', type: :timestamp, null: true
-      end
-    end
   end
 
   context 'without source' do
@@ -136,14 +110,14 @@ describe Masamune::Schema::Map do
     end
 
     context 'with undefined function' do
-      let(:source) { catalog.hive.user_event }
-      let(:target) { catalog.hive.user_fact }
+      let(:source) { catalog.postgres.user_file }
+      let(:target) { catalog.postgres.user_dimension }
       let(:source_data) { '' }
       let(:target_data) { '' }
 
       before do
         catalog.schema :hive do
-          map from: hive.user_event, to: hive.user_fact do |row|
+          map from: postgres.user_file, to: postgres.user_dimension do |row|
           end
         end
       end
@@ -151,7 +125,7 @@ describe Masamune::Schema::Map do
       it { expect { subject }.to raise_error ArgumentError, /function for map between .* does not return output for default input/ }
     end
 
-    context 'from csv file to dimension' do
+    context 'from csv file to postgres dimension' do
       before do
         catalog.schema :files do
           map from: postgres.user_file, to: postgres.user_dimension, distinct: true do |row|
@@ -161,7 +135,7 @@ describe Masamune::Schema::Map do
               'user_account_state.name'    => row[:deleted_at] ? 'deleted' :  'active',
               'hr_user_account_state.name' => row[:deleted_at] ? 'deleted' :  'active',
               'admin'                      => row[:admin],
-              'preferences_now'            => row[:preferences],
+              'preferences'                => row[:preferences],
               'source'                     => 'users_file',
               'cluster_id'                 => 100
             }
@@ -193,7 +167,7 @@ describe Masamune::Schema::Map do
 
       let(:target_data) do
         <<-EOS.strip_heredoc
-          tenant_id,user_id,user_account_state_type_name,hr_user_account_state_type_name,admin,preferences_now,source,cluster_id
+          tenant_id,user_id,user_account_state_type_name,hr_user_account_state_type_name,admin,preferences,source,cluster_id
           30,1,active,active,FALSE,{},users_file,100
           40,2,deleted,deleted,TRUE,"{""enabled"":true}",users_file,100
         EOS
@@ -210,19 +184,26 @@ describe Masamune::Schema::Map do
       it_behaves_like 'apply input/output'
     end
 
-    context 'from event to postgres dimension with quoted json' do
+    context 'from tsv file to postgres dimension' do
       before do
         catalog.schema :files do
-          map from: hive.user_event, to: postgres.user_dimension do |row|
+          file 'input', format: :tsv, headers: false do
+            column 'id', type: :integer
+            column 'tenant_id', type: :integer
+            column 'admin', type: :boolean
+            column 'preferences', type: :json
+            column 'deleted_at', type: :timestamp, null: true
+          end
+
+          map from: files.input, to: postgres.user_dimension do |row|
             raise if row[:tenant_id] == 42
             {
               'tenant_id'               => row[:tenant_id],
               'user_id'                 => row[:id],
-              'user_account_state.name' => row[:type] =~ /delete/ ? 'deleted' : 'active',
-              'admin'                   => row[:type] =~ /delete/ ? row[:admin_was] : row[:admin_now],
-              'preferences_now'         => row[:preferences_now],
-              'preferences_was'         => row[:preferences_was],
-              'source'                  => 'user_event',
+              'user_account_state.name' => row[:deleted_at] ? 'deleted' : 'active',
+              'admin'                   => row[:admin],
+              'preferences'             => row[:preferences],
+              'source'                  => 'user_file',
               'cluster_id'              => 100
             }
           end
@@ -230,7 +211,7 @@ describe Masamune::Schema::Map do
       end
 
       let(:source) do
-        catalog.hive.user_event
+        catalog.files.input
       end
 
       let(:target) do
@@ -242,106 +223,99 @@ describe Masamune::Schema::Map do
         expect(environment.logger).to receive(:warn).with(/failed to parse '{.*}' for #{source.name}/).ordered
       end
 
-      let(:source_data) do
-        <<-EOS.strip_heredoc
-          X	user_create	1	30	0	\\N	\\N	\\N
-          # NOTE intentional duplicate record
-          X	user_create	1	30	0	\\N	\\N	\\N
-          A	user_create	1	42	0	\\N	\\N	\\N
-          Y	user_delete	2	40	0	1	"{""enabled"":true}"	\\N
-          # NOTE record is intentionally invalid
-          Z	user_create	3	50	0	1	INVALID_JSON	\\N
-        EOS
-      end
-
       let(:target_data) do
         <<-EOS.strip_heredoc
-          tenant_id,user_id,user_account_state_type_name,admin,preferences_now,preferences_was,source,cluster_id
-          30,1,active,FALSE,{},{},user_event,100
-          30,1,active,FALSE,{},{},user_event,100
-          40,2,deleted,TRUE,"{""enabled"":true}",{},user_event,100
+          tenant_id,user_id,user_account_state_type_name,admin,preferences,source,cluster_id
+          30,1,active,FALSE,{},user_file,100
+          30,1,active,FALSE,{},user_file,100
+          40,2,deleted,TRUE,"{""enabled"":true}",user_file,100
         EOS
       end
 
-      it 'should match target data' do
-        is_expected.to eq(target_data)
+      context 'with quoted json' do
+        let(:source_data) do
+          <<-EOS.strip_heredoc
+            1	30	0			
+            # NOTE intentional duplicate record
+            1	30	0			
+            1	42	0		
+            2	40	1	"{""enabled"":true}"	2015-07-19 00:00:00
+            # NOTE record is intentionally invalid
+            3	50	0	INVALID_JSON	
+          EOS
+        end
+
+        it 'should match target data' do
+          is_expected.to eq(target_data)
+        end
+
+        it_behaves_like 'apply input/output'
       end
 
-      it_behaves_like 'apply input/output'
+      context 'with raw json' do
+        let(:source_data) do
+          <<-EOS.strip_heredoc
+            1	30	0			
+            # NOTE intentional duplicate record
+            1	30	0			
+            1	42	0		
+            2	40	1	{"enabled":true}	2015-07-19 00:00:00
+            # NOTE record is intentionally invalid
+            3	50	0	INVALID_JSON	
+          EOS
+        end
+
+        it 'should match target data' do
+          is_expected.to eq(target_data)
+        end
+
+        it_behaves_like 'apply input/output'
+      end
     end
 
-    context 'from event to tsv file' do
+    context 'from tsv file to csv file' do
       before do
         catalog.schema :files do
-          map from: hive.user_event, to: hive.user_file do |row|
+          file 'input', format: :tsv, headers: false do
+            column 'id', type: :integer
+            column 'tenant_id', type: :integer
+            column 'admin', type: :boolean
+            column 'preferences', type: :json
+            column 'deleted_at', type: :timestamp, null: true
+          end
+
+          file 'output', format: :csv, headers: true do
+            column 'id', type: :integer
+            column 'tenant_id', type: :integer
+            column 'admin', type: :boolean
+            column 'preferences', type: :yaml
+            column 'deleted_at', type: :timestamp, null: true
+          end
+
+          map from: files.input, to: files.output do |row|
             {
               'id'          => row[:id],
               'tenant_id'   => row[:tenant_id],
-              'deleted_at'  => row[:type] =~ /delete/ ? row[:created_at] : nil,
-              'admin'       => row[:admin_now],
-              'preferences' => row[:preferences_now]
+              'deleted_at'  => row[:deleted_at],
+              'admin'       => row[:admin],
+              'preferences' => row[:preferences]
             }
           end
         end
       end
 
       let(:source) do
-        catalog.hive.user_event
+        catalog.files.input
       end
 
       let(:target) do
-        catalog.hive.user_file
+        catalog.files.output
       end
 
       let(:source_data) do
         <<-EOS.strip_heredoc
-          X	user_create	1	30	0	\\N	\\N	\\N	0	\\N
-          Y	user_delete	2	40	0	1	"{""enabled"":true}"	\\N	0	2014-02-26T18:15:51Z
-        EOS
-      end
-
-      let(:target_data) do
-        <<-EOS.strip_heredoc
-          1	30			{}
-          2	40	2014-02-26T18:15:51.000Z		"{""enabled"":true}"
-        EOS
-      end
-
-
-      it 'should match target data' do
-        is_expected.to eq(target_data)
-      end
-
-      it_behaves_like 'apply input/output'
-    end
-
-    context 'from event to csv file' do
-      before do
-        catalog.schema :files do
-          map from: hive.user_event, to: postgres.user_file do |row|
-            {
-              'id'          => row[:id],
-              'tenant_id'   => row[:tenant_id],
-              'deleted_at'  => row[:type] =~ /delete/ ? row[:created_at] : nil,
-              'admin'       => row[:admin_now],
-              'preferences' => row[:preferences_now]
-            }
-          end
-        end
-      end
-
-      let(:source) do
-        catalog.hive.user_event
-      end
-
-      let(:target) do
-        catalog.postgres.user_file
-      end
-
-      let(:source_data) do
-        <<-EOS.strip_heredoc
-          X	user_create	1	30	0	\\N	\\N	\\N	0	\\N
-          Y	user_delete	2	40	0	1	"{""enabled"":true}"	\\N	0	2014-02-26T18:15:51Z
+          1	30	0		
+          2	40	0	"{""enabled"":true}"	2014-02-26T18:15:51.000Z
         EOS
       end
 
@@ -363,183 +337,108 @@ describe Masamune::Schema::Map do
       it_behaves_like 'apply input/output'
     end
 
-    context 'from event to fact' do
+    context 'from csv file to tsv file' do
       before do
         catalog.schema :files do
-          map from: hive.user_event, to: hive.user_fact do |row|
-            if row[:type] =~ /update/
-              [
-                {
-                  'tenant.tenant_id' => row[:tenant_id],
-                  'delta'            => 0,
-                  'time_key'         => row[:created_at]
-                },
-                {
-                  'tenant.tenant_id' => row[:tenant_id],
-                  'delta'            => 0,
-                  'time_key'         => row[:created_at]
-                }
-              ]
-            else
-              {
-                'tenant.tenant_id' => row[:tenant_id],
-                'delta'            => row[:type] =~ /create/ ? 1 :  -1,
-                'time_key'         => row[:created_at]
-              }
-            end
-          end
-        end
-      end
-
-      let(:source) do
-        catalog.hive.user_event
-      end
-
-      let(:target) do
-        catalog.hive.user_fact
-      end
-
-      let(:source_data) do
-        <<-EOS.strip_heredoc
-          X	user_create	3	10	0	1	"{""enabled"":true}"	\\N	\\N	2015-01-01T00:10:00Z
-          Y	user_update	3	10	0	1	"{""enabled"":true}"	\\N	\\N	2015-01-01T00:20:00Z
-          Z	user_delete	3	10	0	1	"{""enabled"":true}"	\\N	\\N	2015-01-01T00:30:00Z
-        EOS
-      end
-
-      let(:target_data) do
-        <<-EOS.strip_heredoc
-          10	1	1420071000
-          10	0	1420071600
-          10	0	1420071600
-          10	-1	1420072200
-        EOS
-      end
-
-      it 'should match target data' do
-        is_expected.to eq(target_data)
-      end
-
-      it_behaves_like 'apply input/output'
-    end
-
-    context 'from event with array attribute to fact' do
-      before do
-        catalog.clear!
-        catalog.schema :hive do
-          event 'user' do
-            attribute 'id', type: :integer, immutable: true
-            attribute 'group_id', type: :integer, array: true
+          file 'input', format: :csv, headers: true, json_encoding: :quoted do
+            column 'id', type: :integer
+            column 'tenant_id', type: :integer
+            column 'admin', type: :boolean
+            column 'preferences', type: :yaml
+            column 'deleted_at', type: :timestamp, null: true
           end
 
-          dimension 'group', type: :two, implicit: true do
-            column 'group_id'
+          file 'output', format: :tsv, headers: false do
+            column 'id', type: :integer
+            column 'tenant_id', type: :integer
+            column 'admin', type: :boolean
+            column 'preferences', type: :json
+            column 'deleted_at', type: :timestamp, null: true
           end
 
-          fact 'user' do
-            references :group
-            column 'junk'
-            measure 'total'
-          end
-
-          map from: hive.user_event, to: hive.user_fact, columns: %w(group.group_id total time_key) do |row|
-            result = []
-            (row[:group_id_now] - row[:group_id_was]).each do |group_id|
-              result <<
-                {
-                  'group.group_id' => group_id,
-                  'total'          => 1,
-                  'time_key'       => row[:created_at]
-                }
-            end
-            (row[:group_id_was] - row[:group_id_now]).each do |group_id|
-              result <<
-                {
-                  'group.group_id' => group_id,
-                  'total'          => -1,
-                  'time_key'       => row[:created_at]
-                }
-            end
-            result
-          end
-        end
-      end
-
-      let(:source) do
-        catalog.hive.user_event
-      end
-
-      let(:target) do
-        catalog.hive.user_fact
-      end
-
-      let(:source_data) do
-        <<-EOS.strip_heredoc
-          # new lines and comments should be skipped
-
-          X	user_create	3	[1,2]	[]	0	2015-01-01T00:10:00Z
-          Y	user_update	3	[1,2,3]	[1,2]	1	2015-01-01T00:20:00Z
-          Y	user_update	3	[1,2]	[1,2,3]	1	2015-01-01T00:30:00Z
-          Z	user_delete	3	[]	[1,2]	0	2015-01-01T00:40:00Z
-        EOS
-      end
-
-      let(:target_data) do
-        <<-EOS.strip_heredoc
-          1	1	1420071000
-          2	1	1420071000
-          3	1	1420071600
-          3	-1	1420072200
-          1	-1	1420072800
-          2	-1	1420072800
-        EOS
-      end
-
-      it 'should match target data' do
-        is_expected.to eq(target_data)
-      end
-
-      it_behaves_like 'apply input/output'
-    end
-
-    context 'from event to postgres dimension with raw json' do
-      before do
-        catalog.schema :files do
-          map from: hive.user_event, to: postgres.user_dimension do |row|
+          map from: files.input, to: files.output do |row|
             {
-              'tenant_id'               => row[:tenant_id],
-              'user_id'                 => row[:id],
-              'user_account_state.name' => row[:type] =~ /delete/ ? 'deleted' : 'active',
-              'admin'                   => row[:type] =~ /delete/ ? row[:admin_was] : row[:admin_now],
-              'preferences_now'         => row[:preferences_now],
-              'preferences_was'         => row[:preferences_was],
-              'source'                  => 'user_event',
-              'cluster_id'              => 100
+              'id'          => row[:id],
+              'tenant_id'   => row[:tenant_id],
+              'deleted_at'  => row[:deleted_at],
+              'admin'       => row[:admin],
+              'preferences' => row[:preferences]
             }
           end
         end
       end
 
       let(:source) do
-        catalog.hive.user_event
+        catalog.files.input
       end
 
       let(:target) do
-        catalog.postgres.user_dimension
+        catalog.files.output
       end
 
       let(:source_data) do
         <<-EOS.strip_heredoc
-          X	user_create	1	30	0	\\N	\\N	\\N
-          Y	user_delete	2	40	0	1	{"enabled":true}	\\N
+          id,tenant_id,deleted_at,admin,preferences
+          1,30,,FALSE,"--- {}
+          "
+          2,40,2014-02-26T18:15:51.000Z,FALSE,"---
+          enabled: true
+          "
         EOS
       end
 
       let(:target_data) do
         <<-EOS.strip_heredoc
-          tenant_id,user_id,user_account_state_type_name,admin,preferences_now,preferences_was,source,cluster_id
-          30,1,active,FALSE,{},{},user_event,100
-          40,2,deleted,TRUE,"{""enabled"":true}",{},user_event,100
+          1	30		FALSE	{}
+          2	40	2014-02-26T18:15:51.000Z	FALSE	"{""enabled"":true}"
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+
+      it_behaves_like 'apply input/output'
+    end
+
+    context 'with multiple outputs' do
+      before do
+        catalog.schema :files do
+          file 'input' do
+            column 'id', type: :integer
+          end
+
+          file 'output' do
+            column 'id', type: :integer
+          end
+
+          map from: files.input, to: files.output do |row|
+            [row, row]
+          end
+        end
+      end
+
+      let(:source) do
+        catalog.files.input
+      end
+
+      let(:target) do
+        catalog.files.output
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          1
+          2
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          1
+          1
+          2
+          2
         EOS
       end
 
@@ -566,7 +465,7 @@ describe Masamune::Schema::Map do
       it { is_expected.to eq(%Q{"{}","{}"}) }
     end
 
-    context 'with raw quoted json' do
+    context 'with quoted empty json' do
       before do
         io.write '"{}","{}"'
         io.rewind
