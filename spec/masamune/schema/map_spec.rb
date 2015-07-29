@@ -235,13 +235,13 @@ describe Masamune::Schema::Map do
       context 'with quoted json' do
         let(:source_data) do
           <<-EOS.strip_heredoc
-            1	30	0			
+            1	30	0
             # NOTE intentional duplicate record
-            1	30	0			
-            1	42	0		
+            1	30	0
+            1	42	0
             2	40	1	"{""enabled"":true}"	2015-07-19 00:00:00
             # NOTE record is intentionally invalid
-            3	50	0	INVALID_JSON	
+            3	50	0	INVALID_JSON
           EOS
         end
 
@@ -255,13 +255,13 @@ describe Masamune::Schema::Map do
       context 'with raw json' do
         let(:source_data) do
           <<-EOS.strip_heredoc
-            1	30	0			
+            1	30	0
             # NOTE intentional duplicate record
-            1	30	0			
-            1	42	0		
+            1	30	0
+            1	42	0
             2	40	1	{"enabled":true}	2015-07-19 00:00:00
             # NOTE record is intentionally invalid
-            3	50	0	INVALID_JSON	
+            3	50	0	INVALID_JSON
           EOS
         end
 
@@ -314,7 +314,7 @@ describe Masamune::Schema::Map do
 
       let(:source_data) do
         <<-EOS.strip_heredoc
-          1	30	0		
+          1	30	0
           2	40	0	"{""enabled"":true}"	2014-02-26T18:15:51.000Z
         EOS
       end
@@ -438,6 +438,50 @@ describe Masamune::Schema::Map do
           1
           1
           2
+          2
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+
+      it_behaves_like 'apply input/output'
+    end
+
+    context 'without block' do
+      before do
+        catalog.schema :files do
+          file 'input' do
+            column 'id', type: :integer
+          end
+
+          file 'output' do
+            column 'id', type: :integer
+          end
+
+          map from: files.input, to: files.output
+        end
+      end
+
+      let(:source) do
+        catalog.files.input
+      end
+
+      let(:target) do
+        catalog.files.output
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          1
+          2
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          1
           2
         EOS
       end

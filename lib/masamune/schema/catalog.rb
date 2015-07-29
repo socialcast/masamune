@@ -200,7 +200,7 @@ module Masamune::Schema
       raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
       raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
       @context.push(options)
-      @context.options[:function] = block.to_proc
+      @context.options[:function] = block.to_proc if block
       from.maps[to] ||= Masamune::Schema::Map.new(@context.options.merge(source: from, target: to))
     ensure
       @context.pop

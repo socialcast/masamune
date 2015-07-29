@@ -149,9 +149,7 @@ describe Masamune::Actions::Transform do
     context 'with :map' do
       before do
         catalog.schema :postgres do
-          map from: postgres.visits_hourly_file, to: postgres.visits_hourly_fact, distinct: true do |row|
-            row
-          end
+          map from: postgres.visits_hourly_file, to: postgres.visits_hourly_fact, distinct: true
         end
 
         expect_any_instance_of(Masamune::Schema::Map).to receive(:apply).and_call_original
