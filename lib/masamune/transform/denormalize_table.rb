@@ -24,8 +24,12 @@ module Masamune::Transform
   module DenormalizeTable
     extend ActiveSupport::Concern
 
-    def denormalize_table(target, columns = [], order_by = nil)
-      order_by ||= columns
+    def denormalize_table(target, options = {})
+      options.symbolize_keys!
+      columns = options[:include] || []
+      columns += options[:columns] || target.denormalized_column_names
+      columns -= options[:except] || []
+      order_by = options[:order] || columns
       Operator.new(__method__, target: target, columns: columns, order_by: order_by, presenters: { postgres: Common, hive: Common })
     end
 
@@ -38,7 +42,11 @@ module Masamune::Transform
         column_names.map do |column_name|
           next unless column = dereference_column_name(column_name)
           if column.reference
-            "#{column.foreign_key_name} AS #{column.name}"
+            if column.reference.implicit || column.reference.degenerate
+              "#{column.name} AS #{column.name}"
+            else
+              "#{column.foreign_key_name} AS #{column.name}"
+            end
           else
             column.qualified_name
           end

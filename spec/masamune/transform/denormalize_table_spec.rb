@@ -63,23 +63,25 @@ describe Masamune::Transform::DenormalizeTable do
     end
   end
 
-  let(:order_by) { nil }
+  let(:options) { {} }
 
-  subject(:result) { transform.denormalize_table(target, columns, order_by).to_s }
+  subject(:result) { transform.denormalize_table(target, options).to_s }
 
-  context 'with postgres fact' do
+  context 'with postgres fact with :columns' do
     let(:target) { catalog.postgres.visits_fact }
-    let(:columns) do
-      [
-        'date.date_id',
-        'tenant.tenant_id',
-        'user.tenant_id',
-        'user.user_id',
-        'user_agent.name',
-        'user_agent.version',
-        'total',
-        'time_key'
-      ]
+    let(:options) do
+      {
+        columns: [
+          'date.date_id',
+          'tenant.tenant_id',
+          'user.tenant_id',
+          'user.user_id',
+          'user_agent.name',
+          'user_agent.version',
+          'total',
+          'time_key'
+        ]
+      }
     end
 
     it 'should eq render denormalize_table template' do
@@ -125,6 +127,62 @@ describe Masamune::Transform::DenormalizeTable do
     end
   end
 
+  context 'with postgres fact with :except' do
+    let(:target) { catalog.postgres.visits_fact }
+    let(:options) do
+      {
+        except: [
+          'cluster.name',
+          'last_modified_at'
+        ]
+      }
+    end
+
+    it 'should eq render denormalize_table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+      SELECT
+        date_dimension.date_id AS date_dimension_date_id,
+        tenant_dimension.tenant_id AS tenant_dimension_tenant_id,
+        user_dimension.tenant_id AS user_dimension_tenant_id,
+        user_dimension.user_id AS user_dimension_user_id,
+        user_agent_type.name AS user_agent_type_name,
+        user_agent_type.version AS user_agent_type_version,
+        user_agent_type.mobile AS user_agent_type_mobile,
+        visits_fact.total,
+        visits_fact.time_key
+      FROM
+        visits_fact
+      JOIN
+        date_dimension
+      ON
+        date_dimension.id = visits_fact.date_dimension_id
+      JOIN
+        tenant_dimension
+      ON
+        tenant_dimension.id = visits_fact.tenant_dimension_id
+      JOIN
+        user_dimension
+      ON
+        user_dimension.id = visits_fact.user_dimension_id
+      JOIN
+        user_agent_type
+      ON
+        user_agent_type.id = visits_fact.user_agent_type_id
+      ORDER BY
+        date_dimension_date_id,
+        tenant_dimension_tenant_id,
+        user_dimension_tenant_id,
+        user_dimension_user_id,
+        user_agent_type_name,
+        user_agent_type_version,
+        user_agent_type_mobile,
+        total,
+        time_key
+      ;
+      EOS
+    end
+  end
+
   context 'with hive table' do
     before do
       catalog.schema :hive do
@@ -141,18 +199,22 @@ describe Masamune::Transform::DenormalizeTable do
 
     let(:target) { catalog.hive.tenant_dimension }
 
-    let(:columns) do
-      [
-        'tenant_id',
-        'tenant_account_state',
-        'tenant_premium_state',
-        'preferences',
-        'y',
-        'm'
-      ]
+    let(:options) do
+      {
+        columns: [
+          'tenant_id',
+          'tenant_account_state',
+          'tenant_premium_state',
+          'preferences',
+          'y',
+          'm'
+        ],
+        order: [
+          'tenant_id',
+          'start_at'
+        ]
+      }
     end
-
-    let(:order_by) { ['tenant_id', 'start_at'] }
 
     it 'should eq render denormalize_table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -168,6 +230,50 @@ describe Masamune::Transform::DenormalizeTable do
         ORDER BY
           tenant_id,
           start_at
+        ;
+      EOS
+    end
+  end
+
+  context 'with hive table with implicit references' do
+    before do
+      catalog.schema :hive do
+        dimension 'date', type: :date, implicit: true do
+          column 'date_id', type: :integer, natural_key: true
+        end
+
+        fact 'visits' do
+          references :date
+          references :user, degenerate: true
+          measure 'total'
+        end
+      end
+    end
+
+    let(:target) { catalog.hive.visits_fact }
+
+    let(:options) do
+      {
+        columns: [
+          'date.date_id',
+          'user.id',
+          'total'
+        ]
+      }
+    end
+
+    it 'should eq render denormalize_table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        SELECT
+          date_dimension_date_id AS date_dimension_date_id,
+          user_type_id AS user_type_id,
+          visits_fact.total
+        FROM
+          visits_fact
+        ORDER BY
+          date_dimension_date_id,
+          user_type_id,
+          total
         ;
       EOS
     end
