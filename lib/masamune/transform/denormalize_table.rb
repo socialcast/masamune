@@ -38,7 +38,11 @@ module Masamune::Transform
         column_names.map do |column_name|
           next unless column = dereference_column_name(column_name)
           if column.reference
-            "#{column.foreign_key_name} AS #{column.name}"
+            if column.reference.implicit || column.reference.degenerate
+              "#{column.name} AS #{column.name}"
+            else
+              "#{column.foreign_key_name} AS #{column.name}"
+            end
           else
             column.qualified_name
           end

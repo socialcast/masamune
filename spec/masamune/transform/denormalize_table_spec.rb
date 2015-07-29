@@ -172,4 +172,46 @@ describe Masamune::Transform::DenormalizeTable do
       EOS
     end
   end
+
+  context 'with hive table with implicit references' do
+    before do
+      catalog.schema :hive do
+        dimension 'date', type: :date, implicit: true do
+          column 'date_id', type: :integer, natural_key: true
+        end
+
+        fact 'visits' do
+          references :date
+          references :user, degenerate: true
+          measure 'total'
+        end
+      end
+    end
+
+    let(:target) { catalog.hive.visits_fact }
+
+    let(:columns) do
+      [
+        'date.date_id',
+        'user.id',
+        'total'
+      ]
+    end
+
+    it 'should eq render denormalize_table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        SELECT
+          date_dimension_date_id AS date_dimension_date_id,
+          user_type_id AS user_type_id,
+          visits_fact.total
+        FROM
+          visits_fact
+        ORDER BY
+          date_dimension_date_id,
+          user_type_id,
+          total
+        ;
+      EOS
+    end
+  end
 end
