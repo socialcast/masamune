@@ -46,16 +46,6 @@ describe Masamune::Actions::Transform do
         column 'updated_at', type: :timestamp
       end
 
-      map from: postgres.user_file, to: postgres.user_dimension do |row|
-        {
-          user_id: row[:id],
-          tenant_id: row[:tenant_id],
-          source_kind: 'users',
-          start_at: row[:updated_at],
-          delta: 1
-        }
-      end
-
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
         references :date
         references :user
@@ -89,13 +79,37 @@ describe Masamune::Actions::Transform do
   end
 
   describe '.load_dimension' do
-    before do
-      mock_command(/\Apsql/, mock_success)
-    end
-
     subject { instance.load_dimension(source_file, postgres.user_file, postgres.user_dimension) }
 
-    it { is_expected.to be_success }
+    context 'without :map' do
+      before do
+        expect_any_instance_of(Masamune::Schema::Map).to_not receive(:apply)
+        mock_command(/\Apsql/, mock_success)
+      end
+
+      it { is_expected.to be_success }
+    end
+
+    context 'with :map' do
+      before do
+        catalog.schema :postgres do
+          map from: postgres.user_file, to: postgres.user_dimension do |row|
+            {
+              user_id: row[:id],
+              tenant_id: row[:tenant_id],
+              source_kind: 'users',
+              start_at: row[:updated_at],
+              delta: 1
+            }
+          end
+        end
+
+        expect_any_instance_of(Masamune::Schema::Map).to receive(:apply).and_call_original
+        mock_command(/\Apsql/, mock_success)
+      end
+
+      it { is_expected.to be_success }
+    end
   end
 
   describe '.relabel_dimension' do
@@ -121,13 +135,33 @@ describe Masamune::Actions::Transform do
   describe '.load_fact' do
     let(:date) { DateTime.civil(2014, 8) }
 
-    before do
-      mock_command(/\Apsql/, mock_success)
+    context 'without :map' do
+      before do
+        expect_any_instance_of(Masamune::Schema::Map).to_not receive(:apply)
+        mock_command(/\Apsql/, mock_success)
+      end
+
+      subject { instance.load_fact(source_file, postgres.visits_hourly_file, postgres.visits_hourly_fact, date) }
+
+      it { is_expected.to be_success }
     end
 
-    subject { instance.load_fact(source_file, postgres.visits_hourly_file, postgres.visits_hourly_fact, date) }
+    context 'with :map' do
+      before do
+        catalog.schema :postgres do
+          map from: postgres.visits_hourly_file, to: postgres.visits_hourly_fact, distinct: true do |row|
+            row
+          end
+        end
 
-    it { is_expected.to be_success }
+        expect_any_instance_of(Masamune::Schema::Map).to receive(:apply).and_call_original
+        mock_command(/\Apsql/, mock_success)
+      end
+
+      subject { instance.load_fact(source_file, postgres.visits_hourly_file, postgres.visits_hourly_fact, date) }
+
+      it { is_expected.to be_success }
+    end
   end
 
   describe '.rollup_fact' do

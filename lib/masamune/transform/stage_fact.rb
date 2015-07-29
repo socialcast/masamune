@@ -77,7 +77,7 @@ module Masamune::Transform
 
             if column.reference && !column.reference.default.nil?
               coalesce_values << column.reference.default(column.adjacent) if column.adjacent.natural_key
-            elsif !column.adjacent.default.nil?
+            elsif column.adjacent && !column.adjacent.default.nil?
               coalesce_values << column.adjacent.sql_value(column.adjacent.default)
             end
 
