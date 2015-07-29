@@ -179,6 +179,27 @@ module Masamune::Schema
       columns.reject { |_, column| reserved_column_ids.include?(column.id) }
     end
 
+    def denormalized_columns
+      columns.map do |_, column|
+        next if column.surrogate_key || column.ignore
+        if column.reference
+          column.reference.natural_keys.any? ? column.reference.natural_keys : column.reference.denormalized_columns
+        else
+          column
+        end
+      end.flatten.compact
+    end
+
+    def denormalized_column_names
+      denormalized_columns.map do |column|
+        if column.parent == self
+          column.name.to_s
+        else
+          [column.parent.id, column.name].join('.')
+        end
+      end
+    end
+
     def stage_table(options = {})
       selected = options[:columns] if options[:columns]
       selected ||= options[:target].columns.values.map(&:compact_name) if options[:target]
