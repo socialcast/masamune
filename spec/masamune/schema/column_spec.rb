@@ -640,27 +640,13 @@ describe Masamune::Schema::Column do
       it { is_expected.to eq(false) }
     end
 
-    context 'when surrogate_key' do
-      let(:column) { described_class.new id: 'name', type: :string, surrogate_key: true }
-      it { is_expected.to eq(true) }
-
-      context 'when reference allow null' do
-        before do
-          allow(column).to receive(:reference).and_return(double(null: true, default: nil))
-        end
-        it { is_expected.to eq(false) }
-      end
-
-      context 'when reference has default' do
-        before do
-          allow(column).to receive(:reference).and_return(double(null: false, default: 'Unknown'))
-        end
-        it { is_expected.to eq(false) }
-      end
+    context 'when column has default of false' do
+      let(:column) { described_class.new id: 'flag', type: :boolean, default: false }
+      it { is_expected.to eq(false) }
     end
 
-    context 'when natural_key' do
-      let(:column) { described_class.new id: 'name', type: :string, natural_key: true }
+    context 'when column has reference' do
+      let(:column) { described_class.new id: 'name', type: :string }
       it { is_expected.to eq(true) }
 
       context 'when reference allow null' do
@@ -673,6 +659,13 @@ describe Masamune::Schema::Column do
       context 'when reference has default' do
         before do
           allow(column).to receive(:reference).and_return(double(null: false, default: 'Unknown'))
+        end
+        it { is_expected.to eq(false) }
+      end
+
+      context 'when reference has default of false' do
+        before do
+          allow(column).to receive(:reference).and_return(double(null: false, default: false))
         end
         it { is_expected.to eq(false) }
       end

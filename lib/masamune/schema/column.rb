@@ -468,11 +468,9 @@ module Masamune::Schema
     end
 
     def required_value?
-      if reference
-        !(reference.null || reference.default)
-      else
-        surrogate_key || natural_key || !(null || default)
-      end
+      return false if reference && (reference.null || !reference.default.nil?)
+      return false if null || !default.nil?
+      true
     end
 
     private
