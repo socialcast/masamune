@@ -182,14 +182,6 @@ module Masamune::Schema
       @context.pop
     end
 
-    def event(id, options = {})
-      @context.push(options)
-      yield if block_given?
-      @context.events[id] = HasMap.new Masamune::Schema::Event.new(@context.options.merge(id: id))
-    ensure
-      @context.pop
-    end
-
     def attribute(id, options = {})
       @context.options[:attributes] << Masamune::Schema::Event::Attribute.new(options.merge(id: id))
     end
