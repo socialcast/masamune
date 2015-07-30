@@ -110,17 +110,21 @@ describe Masamune::Schema::Map do
     end
 
     context 'with undefined function' do
-      let(:source) { catalog.postgres.user_file }
-      let(:target) { catalog.postgres.user_dimension }
-      let(:source_data) { '' }
-      let(:target_data) { '' }
-
       before do
-        catalog.schema :hive do
-          map from: postgres.user_file, to: postgres.user_dimension do |row|
+        catalog.schema :files do
+          file 'input'
+          file 'output'
+
+          map from: files.input , to: files.output do |row|
+            # Empty
           end
         end
       end
+
+      let(:source) { catalog.files.input }
+      let(:target) { catalog.files.output }
+      let(:source_data) { '' }
+      let(:target_data) { '' }
 
       it { expect { subject }.to raise_error ArgumentError, /function for map between .* does not return output for default input/ }
     end
@@ -496,8 +500,7 @@ describe Masamune::Schema::Map do
     context 'from file to table' do
       before do
         catalog.schema :postgres do
-          # FIXME table 'parent'
-          dimension 'parent', type: :mini do
+          table 'parent' do
             column 'id', type: :integer
           end
 
@@ -532,7 +535,7 @@ describe Masamune::Schema::Map do
 
       let(:target_data) do
         <<-EOS.strip_heredoc
-          parent_type_id,id
+          parent_table_id,id
           10,1
           10,2
         EOS
