@@ -89,7 +89,7 @@ module Masamune::Schema
     end
 
     def headers
-      values.keys
+      @columns.map { |_, column| column.name }
     end
 
     def serialize
@@ -121,8 +121,8 @@ module Masamune::Schema
       values.each do |key, value|
         next unless key
         if column = parent.dereference_column_name(key)
-          @columns[column.name] = column
-          result[column.name] = column.ruby_value(value)
+          @columns[column.compact_name] = column
+          result[column.compact_name] = column.ruby_value(value)
         elsif strict
           raise ArgumentError, "#{@values} contains undefined columns #{key}"
         end

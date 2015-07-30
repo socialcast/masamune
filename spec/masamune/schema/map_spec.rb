@@ -492,6 +492,58 @@ describe Masamune::Schema::Map do
 
       it_behaves_like 'apply input/output'
     end
+
+    context 'from file to table' do
+      before do
+        catalog.schema :postgres do
+          # FIXME table 'parent'
+          dimension 'parent', type: :mini do
+            column 'id', type: :integer
+          end
+
+          file 'input', format: :csv, headers: false do
+            column 'parent.id', type: :integer
+            column 'id', type: :integer
+          end
+
+          table 'output' do
+            references :parent
+            column 'id', type: :integer
+          end
+
+          map from: postgres.input_file, to: postgres.output_table
+        end
+      end
+
+      let(:source) do
+        catalog.postgres.input_file
+      end
+
+      let(:target) do
+        catalog.postgres.output_table
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          10,1
+          10,2
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          parent_type_id,id
+          10,1
+          10,2
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+
+      it_behaves_like 'apply input/output'
+    end
   end
 
   describe Masamune::Schema::Map::JSONEncoder do

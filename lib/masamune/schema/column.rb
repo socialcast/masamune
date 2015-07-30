@@ -133,7 +133,7 @@ module Masamune::Schema
     def compact_name
       if reference
         # XXX once columns only reference columns, this can be cleaned up
-        if @id == reference.surrogate_key.reference_name(reference.label)
+        if reference.surrogate_key && @id == reference.surrogate_key.reference_name(reference.label)
           "#{reference.id}.#{reference.surrogate_key.id}".to_sym
         else
           "#{reference.id}.#{@id}".to_sym
