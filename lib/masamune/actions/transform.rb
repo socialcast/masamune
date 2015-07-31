@@ -89,11 +89,15 @@ module Masamune::Actions
 
     def apply_map(map, source_files, source, target)
       Tempfile.open('masamune') do |output|
-        FileUtils.chmod(FILE_MODE, output.path)
-        result = map.apply(source_files, output)
-        result.debug = map.debug
-        logger.debug(File.read(output)) if (source.debug || result.debug)
-        yield output, result
+        begin
+          FileUtils.chmod(FILE_MODE, output.path)
+          result = map.apply(source_files, output)
+          result.debug = map.debug
+          logger.debug(File.read(output)) if (source.debug || result.debug)
+          yield output, result
+        ensure
+          output.unlink
+        end
       end
     end
   end
