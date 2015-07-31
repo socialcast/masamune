@@ -182,14 +182,6 @@ module Masamune::Schema
       @context.pop
     end
 
-    def event(id, options = {})
-      @context.push(options)
-      yield if block_given?
-      @context.events[id] = HasMap.new Masamune::Schema::Event.new(@context.options.merge(id: id))
-    ensure
-      @context.pop
-    end
-
     def attribute(id, options = {})
       @context.options[:attributes] << Masamune::Schema::Event::Attribute.new(options.merge(id: id))
     end
@@ -200,7 +192,7 @@ module Masamune::Schema
       raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
       raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
       @context.push(options)
-      @context.options[:function] = block.to_proc
+      @context.options[:function] = block.to_proc if block
       from.maps[to] ||= Masamune::Schema::Map.new(@context.options.merge(source: from, target: to))
     ensure
       @context.pop

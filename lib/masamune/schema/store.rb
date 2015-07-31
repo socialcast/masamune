@@ -26,7 +26,7 @@ module Masamune::Schema
   class Store
     include Masamune::HasEnvironment
 
-    SUPPORTED_ATTRIBUTES = %(table dimension fact file event)
+    SUPPORTED_ATTRIBUTES = %(table dimension fact file)
 
     DEFAULT_ATTRIBUTES =
     {
@@ -45,7 +45,6 @@ module Masamune::Schema
     attr_accessor :dimensions
     attr_accessor :facts
     attr_accessor :files
-    attr_accessor :events
     attr_accessor :references
 
     class << self
@@ -67,7 +66,6 @@ module Masamune::Schema
       @dimensions = {}.with_indifferent_access
       @facts      = {}.with_indifferent_access
       @files      = {}.with_indifferent_access
-      @events     = {}.with_indifferent_access
       @references = {}.with_indifferent_access
       @extra      = []
     end

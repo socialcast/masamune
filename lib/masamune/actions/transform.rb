@@ -49,21 +49,10 @@ module Masamune::Actions
     FILE_MODE = 0777 - File.umask
 
     def load_dimension(source_files, source, target)
-      output = Tempfile.new('masamune')
-      FileUtils.chmod(FILE_MODE, output.path)
-
-      if source.respond_to?(:map) and map = source.map(to: target)
-        result = map.apply(source_files, output)
-      else
-        output = source_files
-        result = source
+      optional_apply_map(source_files, source, target) do |intermediate_files, intermediate|
+        transform = Wrapper.load_dimension(intermediate_files, intermediate, target)
+        postgres file: transform.to_file, debug: (source.debug || target.debug || intermediate.debug)
       end
-
-      transform = Wrapper.load_dimension(output, result, target)
-      logger.debug(File.read(output)) if (source.debug || map.try(:debug))
-      postgres file: transform.to_file, debug: (source.debug || target.debug || map.try(:debug))
-    ensure
-      output.unlink if output.is_a?(Tempfile)
     end
 
     def consolidate_dimension(target)
@@ -77,13 +66,39 @@ module Masamune::Actions
     end
 
     def load_fact(source_files, source, target, date)
-      transform = Wrapper.load_fact(source_files, source, target, date)
-      postgres file: transform.to_file, debug: (source.debug || target.debug)
+      optional_apply_map(source_files, source, target) do |intermediate_files, intermediate|
+        transform = Wrapper.load_fact(intermediate_files, intermediate, target, date)
+        postgres file: transform.to_file, debug: (source.debug || target.debug || intermediate.debug)
+      end
     end
 
     def rollup_fact(source, target, date)
       transform = Wrapper.rollup_fact(source, target, date)
       postgres file: transform.to_file, debug: (source.debug || target.debug)
+    end
+
+    private
+
+    def optional_apply_map(source_files, source, target, &block)
+      if source.respond_to?(:map) and map = source.map(to: target)
+        apply_map(map, source_files, source, target, &block)
+      else
+        yield source_files, source
+      end
+    end
+
+    def apply_map(map, source_files, source, target)
+      Tempfile.open('masamune') do |output|
+        begin
+          FileUtils.chmod(FILE_MODE, output.path)
+          result = map.apply(source_files, output)
+          result.debug = map.debug
+          logger.debug(File.read(output)) if (source.debug || result.debug)
+          yield output, result
+        ensure
+          output.unlink
+        end
+      end
     end
   end
 end

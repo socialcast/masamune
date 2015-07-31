@@ -239,7 +239,7 @@ module Masamune::Schema
     def default_row(columns)
       {}.tap do |row|
         columns.each do |_, column|
-          row[column.name] = column.default_ruby_value
+          row[column.compact_name] = column.default_ruby_value
         end
       end
     end

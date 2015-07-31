@@ -42,10 +42,6 @@ module Masamune::Transform
         operators << define_table(fact)
       end
 
-      context.events.each do |_, event|
-        operators << define_event_view(event)
-      end
-
       operators += context.extra(:post)
 
       Operator.new __method__, *operators, source: context
