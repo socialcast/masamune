@@ -342,6 +342,30 @@ describe Masamune::Schema::Column do
       end
     end
 
+    context 'with type :integer' do
+      let(:column) { described_class.new(id: 'integer', type: :integer) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to be(nil) }
+      end
+
+      context 'when blank' do
+        let(:value) { '' }
+        it { is_expected.to be(nil) }
+      end
+
+      context 'when String encoded Integer' do
+        let(:value) { "1" }
+        it { is_expected.to eq(1) }
+      end
+
+      context 'when Integer' do
+        let(:value) { 1 }
+        it { is_expected.to eq(1) }
+      end
+    end
+
     context 'with type :timestamp' do
       let(:column) { described_class.new(id: 'timestamp', type: :timestamp) }
 

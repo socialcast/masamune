@@ -277,7 +277,7 @@ module Masamune::Schema
           nil
         end
       when :integer
-        value.nil? ? nil : value.to_i
+        value.blank? ? nil : value.to_i
       when :yaml
         case value
         when Hash
