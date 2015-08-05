@@ -97,19 +97,19 @@ describe Masamune::Transform::DenormalizeTable do
         visits_fact.time_key
       FROM
         visits_fact
-      JOIN
+      LEFT JOIN
         date_dimension
       ON
         date_dimension.id = visits_fact.date_dimension_id
-      JOIN
+      LEFT JOIN
         tenant_dimension
       ON
         tenant_dimension.id = visits_fact.tenant_dimension_id
-      JOIN
+      LEFT JOIN
         user_dimension
       ON
         user_dimension.id = visits_fact.user_dimension_id
-      JOIN
+      LEFT JOIN
         user_agent_type
       ON
         user_agent_type.id = visits_fact.user_agent_type_id
@@ -152,19 +152,19 @@ describe Masamune::Transform::DenormalizeTable do
         visits_fact.time_key
       FROM
         visits_fact
-      JOIN
+      LEFT JOIN
         date_dimension
       ON
         date_dimension.id = visits_fact.date_dimension_id
-      JOIN
+      LEFT JOIN
         tenant_dimension
       ON
         tenant_dimension.id = visits_fact.tenant_dimension_id
-      JOIN
+      LEFT JOIN
         user_dimension
       ON
         user_dimension.id = visits_fact.user_dimension_id
-      JOIN
+      LEFT JOIN
         user_agent_type
       ON
         user_agent_type.id = visits_fact.user_agent_type_id
