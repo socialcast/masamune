@@ -120,7 +120,7 @@ module Masamune::Schema
       return [] if temporary?
       unique_constraints_map.map do |_, column_names|
         [column_names, short_md5(column_names)]
-      end
+      end.uniq
     end
 
     # TODO: Add optional USING
@@ -129,7 +129,7 @@ module Masamune::Schema
       index_column_map.map do |_, column_names|
         unique_index = reverse_unique_constraints_map.key?(column_names.sort)
         [column_names, unique_index, short_md5(column_names)]
-      end
+      end.uniq
     end
 
     def unique_columns
