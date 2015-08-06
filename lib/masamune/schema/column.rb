@@ -80,8 +80,6 @@ module Masamune::Schema
         'uuid_generate_v4()'
       when :sequence
         "nextval('#{sequence_id}')"
-      when :enum
-        values.first
       end
     end
 

@@ -65,7 +65,7 @@ describe Masamune::Schema::Column do
 
       context '#default' do
         subject { column.default }
-        it { is_expected.to eq('public') }
+        it { is_expected.to be_nil }
       end
 
       context '#sql_type' do
