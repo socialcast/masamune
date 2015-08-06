@@ -42,7 +42,7 @@ module Masamune::Transform
       end
 
       def insert_view_constraints
-        consolidated_columns.reject { |_, column| column.null }.map { |_, column| "#{column.name} IS NOT NULL" }
+        consolidated_columns.reject { |_, column| !column.default.nil? || column.null }.map { |_, column| "#{column.name} IS NOT NULL" }
       end
       method_with_last_element :insert_view_constraints
 
