@@ -468,6 +468,7 @@ module Masamune::Schema
     def required_value?
       return false if reference && (reference.null || !reference.default.nil?)
       return false if null || !default.nil?
+      return false if !strict
       true
     end
 
