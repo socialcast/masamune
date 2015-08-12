@@ -124,7 +124,7 @@ describe Masamune::Transform::RollupFact do
           (visits_transaction_fact_y2014m08.time_key - (visits_transaction_fact_y2014m08.time_key % 3600))
         ;
 
-        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08;
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08 CASCADE;
         ALTER TABLE visits_hourly_fact_y2014m08_stage RENAME TO visits_hourly_fact_y2014m08;
 
         ALTER TABLE visits_hourly_fact_y2014m08 INHERIT visits_hourly_fact;
@@ -191,7 +191,7 @@ describe Masamune::Transform::RollupFact do
           visits_hourly_fact_y2014m08.feature_type_id
         ;
 
-        DROP TABLE IF EXISTS visits_daily_fact_y2014m08;
+        DROP TABLE IF EXISTS visits_daily_fact_y2014m08 CASCADE;
         ALTER TABLE visits_daily_fact_y2014m08_stage RENAME TO visits_daily_fact_y2014m08;
 
         ALTER TABLE visits_daily_fact_y2014m08 INHERIT visits_daily_fact;
@@ -258,7 +258,7 @@ describe Masamune::Transform::RollupFact do
           visits_daily_fact_y2014m08.feature_type_id
         ;
 
-        DROP TABLE IF EXISTS visits_monthly_fact_y2014m08;
+        DROP TABLE IF EXISTS visits_monthly_fact_y2014m08 CASCADE;
         ALTER TABLE visits_monthly_fact_y2014m08_stage RENAME TO visits_monthly_fact_y2014m08;
 
         ALTER TABLE visits_monthly_fact_y2014m08 INHERIT visits_monthly_fact;

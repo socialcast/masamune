@@ -46,7 +46,7 @@ ON
 <%- end -%>
 ;
 
-DROP TABLE IF EXISTS <%= target_partition.name %>;
+DROP TABLE IF EXISTS <%= target_partition.name %> CASCADE;
 ALTER TABLE <%= target_stage.name %> RENAME TO <%= target_partition.name %>;
 
 ALTER TABLE <%= target_partition.name %> INHERIT <%= target.name %>;

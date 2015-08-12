@@ -153,7 +153,7 @@ describe Masamune::Transform::StageFact do
           feature_type.name = visits_hourly_file_fact_stage.feature_type_name
         ;
 
-        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08;
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08 CASCADE;
         ALTER TABLE visits_hourly_fact_y2014m08_stage RENAME TO visits_hourly_fact_y2014m08;
 
         ALTER TABLE visits_hourly_fact_y2014m08 INHERIT visits_hourly_fact;

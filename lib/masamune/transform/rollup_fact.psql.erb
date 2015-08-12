@@ -49,7 +49,7 @@ GROUP BY
   <%- end -%>
 ;
 
-DROP TABLE IF EXISTS <%= target.name %>;
+DROP TABLE IF EXISTS <%= target.name %> CASCADE;
 ALTER TABLE <%= target_stage.name %> RENAME TO <%= target.name %>;
 
 ALTER TABLE <%= target.name %> INHERIT <%= target.parent.name %>;
