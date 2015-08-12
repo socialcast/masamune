@@ -21,9 +21,7 @@
 --  THE SOFTWARE.
 
 <%- target_partition = target.partition_table(date) %>
-<%- target_stage = target_partition.stage_table %>
-
-BEGIN;
+<%- target_stage = target_partition.stage_table(suffix: Process.pid) %>
 
 DROP TABLE IF EXISTS <%= target_stage.name %> CASCADE;
 CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.name %> INCLUDING ALL);
@@ -45,6 +43,8 @@ ON
   <%= conditions.join(" AND\n  ") %>
 <%- end -%>
 ;
+
+BEGIN;
 
 DROP TABLE IF EXISTS <%= target_partition.name %> CASCADE;
 ALTER TABLE <%= target_stage.name %> RENAME TO <%= target_partition.name %>;

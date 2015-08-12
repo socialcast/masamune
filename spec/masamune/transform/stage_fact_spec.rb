@@ -24,6 +24,8 @@ require 'spec_helper'
 
 describe Masamune::Transform::StageFact do
   before do
+    allow(Process).to receive(:pid).and_return('PID')
+
     catalog.schema :postgres do
       dimension 'cluster', type: :mini do
         column 'id', type: :sequence, surrogate_key: true, auto: true
@@ -100,15 +102,13 @@ describe Masamune::Transform::StageFact do
 
     it 'should eq render stage_fact template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        BEGIN;
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_PID CASCADE;
+        CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage_PID (LIKE visits_hourly_fact INCLUDING ALL);
 
-        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
-        CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage (LIKE visits_hourly_fact INCLUDING ALL);
-
-        ALTER TABLE visits_hourly_fact_y2014m08_stage ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
 
         INSERT INTO
-          visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
+          visits_hourly_fact_y2014m08_stage_PID (date_dimension_id, tenant_dimension_id, user_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
         SELECT
           date_dimension.id,
           tenant_dimension.id,
@@ -153,9 +153,11 @@ describe Masamune::Transform::StageFact do
           feature_type.name = visits_hourly_file_fact_stage.feature_type_name
         ;
 
+        BEGIN;
+
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08 CASCADE;
-        ALTER TABLE visits_hourly_fact_y2014m08_stage RENAME TO visits_hourly_fact_y2014m08;
-        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT visits_hourly_fact_y2014m08_stage_time_key_check;
+        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID RENAME TO visits_hourly_fact_y2014m08;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_time_key_check;
 
         ALTER TABLE visits_hourly_fact_y2014m08 INHERIT visits_hourly_fact;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600) NOT VALID;
