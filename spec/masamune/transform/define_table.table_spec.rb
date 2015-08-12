@@ -240,6 +240,8 @@ describe Masamune::Transform::DefineTable do
         INSERT INTO user_table (name)
         SELECT 'active'
         WHERE NOT EXISTS (SELECT 1 FROM user_table WHERE name = 'active');
+
+        ANALYZE user_table;
       EOS
     end
   end
@@ -313,6 +315,8 @@ describe Masamune::Transform::DefineTable do
         INSERT INTO user_table (tenant_id, user_id)
         SELECT default_tenant_id(), -2
         WHERE NOT EXISTS (SELECT 1 FROM user_table WHERE tenant_id = default_tenant_id() AND user_id = -2);
+
+        ANALYZE user_table;
 
         CREATE OR REPLACE FUNCTION default_user_id()
         RETURNS INTEGER IMMUTABLE AS $$

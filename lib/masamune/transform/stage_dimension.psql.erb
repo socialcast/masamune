@@ -37,3 +37,5 @@ ON
   <%= conditions.to_a.join(" AND\n  ") %>
 <%- end -%>
 ;
+
+ANALYZE <%= target.stage_table.name %>;

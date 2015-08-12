@@ -55,6 +55,8 @@ GROUP BY
 CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target_stage.name %> (<%= column_names.join(', ') %>);
 <%- end -%>
 
+ANALYZE <%= target_stage.name %>;
+
 BEGIN;
 
 DROP TABLE IF EXISTS <%= target.name %>;
@@ -71,5 +73,7 @@ ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_<%= column.name
 <%- new_index_name = "#{target.name}_#{column_names.join('_')}_index" -%>
 ALTER INDEX <%= old_index_name %> RENAME TO <%= new_index_name %>;
 <%- end -%>
+
+ANALYZE <%= target.name %>;
 
 COMMIT;

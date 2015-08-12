@@ -170,6 +170,8 @@ describe Masamune::Transform::StageFact do
         CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_session_type_id_index ON visits_hourly_fact_y2014m08_stage_PID (session_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_time_key_index ON visits_hourly_fact_y2014m08_stage_PID (time_key);
 
+        ANALYZE visits_hourly_fact_y2014m08_stage_PID;
+
         BEGIN;
 
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08;
@@ -194,6 +196,8 @@ describe Masamune::Transform::StageFact do
         ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_feature_type_id_index RENAME TO visits_hourly_fact_y2014m08_feature_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_session_type_id_index RENAME TO visits_hourly_fact_y2014m08_session_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_time_key_index RENAME TO visits_hourly_fact_y2014m08_time_key_index;
+
+        ANALYZE visits_hourly_fact_y2014m08;
 
         COMMIT;
       EOS

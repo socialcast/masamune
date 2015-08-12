@@ -136,6 +136,8 @@ describe Masamune::Transform::RollupFact do
         CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_feature_type_id_index ON visits_hourly_fact_y2014m08_stage_PID (feature_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_stage_PID_time_key_index ON visits_hourly_fact_y2014m08_stage_PID (time_key);
 
+        ANALYZE visits_hourly_fact_y2014m08_stage_PID;
+
         BEGIN;
 
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08;
@@ -157,6 +159,8 @@ describe Masamune::Transform::RollupFact do
         ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_user_agent_type_id_index RENAME TO visits_hourly_fact_y2014m08_user_agent_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_feature_type_id_index RENAME TO visits_hourly_fact_y2014m08_feature_type_id_index;
         ALTER INDEX visits_hourly_fact_y2014m08_stage_PID_time_key_index RENAME TO visits_hourly_fact_y2014m08_time_key_index;
+
+        ANALYZE visits_hourly_fact_y2014m08;
 
         COMMIT;
       EOS
@@ -215,6 +219,8 @@ describe Masamune::Transform::RollupFact do
         CREATE INDEX visits_daily_fact_y2014m08_stage_PID_feature_type_id_index ON visits_daily_fact_y2014m08_stage_PID (feature_type_id);
         CREATE INDEX visits_daily_fact_y2014m08_stage_PID_time_key_index ON visits_daily_fact_y2014m08_stage_PID (time_key);
 
+        ANALYZE visits_daily_fact_y2014m08_stage_PID;
+
         BEGIN;
 
         DROP TABLE IF EXISTS visits_daily_fact_y2014m08;
@@ -236,6 +242,8 @@ describe Masamune::Transform::RollupFact do
         ALTER INDEX visits_daily_fact_y2014m08_stage_PID_user_agent_type_id_index RENAME TO visits_daily_fact_y2014m08_user_agent_type_id_index;
         ALTER INDEX visits_daily_fact_y2014m08_stage_PID_feature_type_id_index RENAME TO visits_daily_fact_y2014m08_feature_type_id_index;
         ALTER INDEX visits_daily_fact_y2014m08_stage_PID_time_key_index RENAME TO visits_daily_fact_y2014m08_time_key_index;
+
+        ANALYZE visits_daily_fact_y2014m08;
 
         COMMIT;
       EOS
@@ -294,6 +302,8 @@ describe Masamune::Transform::RollupFact do
         CREATE INDEX visits_monthly_fact_y2014m08_stage_PID_feature_type_id_index ON visits_monthly_fact_y2014m08_stage_PID (feature_type_id);
         CREATE INDEX visits_monthly_fact_y2014m08_stage_PID_time_key_index ON visits_monthly_fact_y2014m08_stage_PID (time_key);
 
+        ANALYZE visits_monthly_fact_y2014m08_stage_PID;
+
         BEGIN;
 
         DROP TABLE IF EXISTS visits_monthly_fact_y2014m08;
@@ -315,6 +325,8 @@ describe Masamune::Transform::RollupFact do
         ALTER INDEX visits_monthly_fact_y2014m08_stage_PID_user_agent_type_id_index RENAME TO visits_monthly_fact_y2014m08_user_agent_type_id_index;
         ALTER INDEX visits_monthly_fact_y2014m08_stage_PID_feature_type_id_index RENAME TO visits_monthly_fact_y2014m08_feature_type_id_index;
         ALTER INDEX visits_monthly_fact_y2014m08_stage_PID_time_key_index RENAME TO visits_monthly_fact_y2014m08_time_key_index;
+
+        ANALYZE visits_monthly_fact_y2014m08;
 
         COMMIT;
       EOS

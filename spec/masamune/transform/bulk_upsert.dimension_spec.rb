@@ -127,6 +127,8 @@ describe Masamune::Transform::BulkUpsert do
           user_dimension.start_at IS NULL
         ;
 
+        ANALYZE user_dimension;
+
         COMMIT;
       EOS
     end
@@ -190,6 +192,8 @@ describe Masamune::Transform::BulkUpsert do
           user_dimension_ledger.source_uuid IS NULL AND
           user_dimension_ledger.start_at IS NULL
         ;
+
+        ANALYZE user_dimension_ledger;
 
         COMMIT;
       EOS
