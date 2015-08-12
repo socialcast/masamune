@@ -20,7 +20,7 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
-<%- target_stage = target.stage_table.stage_table(suffix: Process.pid) %>
+<%- target_stage = target.stage_table(suffix: Process.pid) %>
 
 DROP TABLE IF EXISTS <%= target_stage.name %> CASCADE;
 CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.parent.name %> INCLUDING ALL);
