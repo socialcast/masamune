@@ -51,11 +51,12 @@ GROUP BY
 
 DROP TABLE IF EXISTS <%= target.name %> CASCADE;
 ALTER TABLE <%= target_stage.name %> RENAME TO <%= target.name %>;
+ALTER TABLE <%= target.name %> DROP CONSTRAINT <%= target_stage.name %>_time_key_check;
 
 ALTER TABLE <%= target.name %> INHERIT <%= target.parent.name %>;
 ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_time_key_check <%= target.constraints %> NOT VALID;
 <%- target.foreign_key_columns.each do |column| -%>
-ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %> NOT VALID;
+ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %> NOT VALID DEFERRABLE INITIALLY DEFERRED;
 <%- end -%>
 
 <%- target.index_columns.each do |column_names, unique, id| -%>

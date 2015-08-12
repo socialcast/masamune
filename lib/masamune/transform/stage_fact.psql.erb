@@ -48,12 +48,13 @@ ON
 
 DROP TABLE IF EXISTS <%= target_partition.name %> CASCADE;
 ALTER TABLE <%= target_stage.name %> RENAME TO <%= target_partition.name %>;
+ALTER TABLE <%= target_partition.name %> DROP CONSTRAINT <%= target_stage.name %>_time_key_check;
 
 ALTER TABLE <%= target_partition.name %> INHERIT <%= target.name %>;
 ALTER TABLE <%= target_partition.name %> ADD CONSTRAINT <%= target_partition.name %>_time_key_check <%= target_partition.constraints %> NOT VALID;
 <%- target.foreign_key_columns.each do |column| -%>
 <%- if column.reference_constraint -%>
-ALTER TABLE <%= target_partition.name %> ADD CONSTRAINT <%= target_partition.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %> NOT VALID;
+ALTER TABLE <%= target_partition.name %> ADD CONSTRAINT <%= target_partition.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %> NOT VALID DEFERRABLE INITIALLY DEFERRED;
 <%- end -%>
 <%- end -%>
 
