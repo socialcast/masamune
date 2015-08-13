@@ -21,12 +21,15 @@
 --  THE SOFTWARE.
 
 <%- target_partition = target.partition_table(date) %>
-<%- target_stage = target_partition.stage_table(suffix: Process.pid) %>
+<%- target_stage = target_partition.stage_table %>
+
+SELECT pg_advisory_lock(<%= target_partition.lock_id %>);
 
 DROP TABLE IF EXISTS <%= target_stage.name %> CASCADE;
-CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.name %> INCLUDING ALL);
+DROP TABLE IF EXISTS <%= target_partition.name %>_tmp CASCADE;
 
-ALTER TABLE <%= target_stage.name %> ADD CONSTRAINT <%= target_stage.name %>_time_key_check <%= target_stage.constraints %>;
+CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.name %> INCLUDING ALL);
+CREATE TABLE IF NOT EXISTS <%= target_partition.name %> (LIKE <%= target.name %> INCLUDING ALL);
 
 INSERT INTO
   <%= target_stage.name %> (<%= target.insert_columns(source).join(', ') %>)
@@ -44,25 +47,46 @@ ON
 <%- end -%>
 ;
 
-BEGIN;
+SELECT pg_advisory_lock(ddl_advisory_lock());
 
-DROP TABLE IF EXISTS <%= target_partition.name %> CASCADE;
+BEGIN;
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+ALTER TABLE <%= target_partition.name %> DROP CONSTRAINT IF EXISTS <%= target_partition.name %>_time_key_check;
+<%- target.foreign_key_columns.each do |column| -%>
+<%- if column.reference_constraint -%>
+ALTER TABLE <%= target_partition.name %> DROP CONSTRAINT IF EXISTS <%= target_partition.name %>_<%= column.name %>_fkey CASCADE;
+<%- end -%>
+<%- end -%>
+
+<%- target_partition.index_columns.each do |column_names, unique, id| -%>
+<%- index_name = "#{target_partition.name}_#{id}_index" -%>
+DROP INDEX IF EXISTS <%= index_name %>;
+<%- end -%>
+
+ALTER TABLE <%= target_partition.name %> RENAME TO <%= target_partition.name %>_tmp;
 ALTER TABLE <%= target_stage.name %> RENAME TO <%= target_partition.name %>;
-ALTER TABLE <%= target_partition.name %> DROP CONSTRAINT <%= target_stage.name %>_time_key_check;
 
 ALTER TABLE <%= target_partition.name %> INHERIT <%= target.name %>;
-ALTER TABLE <%= target_partition.name %> ADD CONSTRAINT <%= target_partition.name %>_time_key_check <%= target_partition.constraints %> NOT VALID;
+ALTER TABLE <%= target_partition.name %> ADD CONSTRAINT <%= target_partition.name %>_time_key_check <%= target_partition.constraints %>;
 <%- target.foreign_key_columns.each do |column| -%>
 <%- if column.reference_constraint -%>
 ALTER TABLE <%= target_partition.name %> ADD CONSTRAINT <%= target_partition.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %> NOT VALID DEFERRABLE INITIALLY DEFERRED;
 <%- end -%>
 <%- end -%>
 
-<%- target.index_columns.each do |column_names, unique, id| -%>
+<%- target_partition.index_columns.each do |column_names, unique, id| -%>
 <%- index_name = "#{target_partition.name}_#{id}_index" -%>
-CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target.name %> (<%= column_names.join(', ') %>);
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target_partition.name %> (<%= column_names.join(', ') %>);
 <%- end -%>
 
 ANALYZE <%= target_partition.name %>;
 
 COMMIT;
+
+DROP TABLE IF EXISTS <%= target_partition.name %>_tmp CASCADE;
+DROP TABLE IF EXISTS <%= target_stage.name %> CASCADE;
+
+SELECT pg_advisory_unlock(ddl_advisory_lock());
+
+SELECT pg_advisory_unlock(<%= target_partition.lock_id %>);

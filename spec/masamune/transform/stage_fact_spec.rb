@@ -24,7 +24,7 @@ require 'spec_helper'
 
 describe Masamune::Transform::StageFact do
   before do
-    allow(Process).to receive(:pid).and_return('PID')
+    allow_any_instance_of(Masamune::Schema::Table).to receive(:lock_id).and_return(42)
 
     catalog.schema :postgres do
       dimension 'cluster', type: :mini do
@@ -102,13 +102,16 @@ describe Masamune::Transform::StageFact do
 
     it 'should eq render stage_fact template' do
       is_expected.to eq <<-EOS.strip_heredoc
-        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_PID CASCADE;
-        CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage_PID (LIKE visits_hourly_fact INCLUDING ALL);
+        SELECT pg_advisory_lock(42);
 
-        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID ADD CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_tmp CASCADE;
+
+        CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage (LIKE visits_hourly_fact INCLUDING ALL);
+        CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08 (LIKE visits_hourly_fact INCLUDING ALL);
 
         INSERT INTO
-          visits_hourly_fact_y2014m08_stage_PID (date_dimension_id, tenant_dimension_id, user_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
+          visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
         SELECT
           date_dimension.id,
           tenant_dimension.id,
@@ -153,14 +156,35 @@ describe Masamune::Transform::StageFact do
           feature_type.name = visits_hourly_file_fact_stage.feature_type_name
         ;
 
-        BEGIN;
+        SELECT pg_advisory_lock(ddl_advisory_lock());
 
-        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08 CASCADE;
-        ALTER TABLE visits_hourly_fact_y2014m08_stage_PID RENAME TO visits_hourly_fact_y2014m08;
-        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT visits_hourly_fact_y2014m08_stage_PID_time_key_check;
+        BEGIN;
+        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_time_key_check;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_cluster_type_id_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_date_dimension_id_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_tenant_dimension_id_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_user_dimension_id_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_group_dimension_id_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_user_agent_type_id_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_feature_type_id_fkey CASCADE;
+
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d6b9b38_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_0a531a8_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d3950d9_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_39f0fdd_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_e0d2a9e_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d8b1c3e_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_33b68fd_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_422efee_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_6444ed3_index;
+
+        ALTER TABLE visits_hourly_fact_y2014m08 RENAME TO visits_hourly_fact_y2014m08_tmp;
+        ALTER TABLE visits_hourly_fact_y2014m08_stage RENAME TO visits_hourly_fact_y2014m08;
 
         ALTER TABLE visits_hourly_fact_y2014m08 INHERIT visits_hourly_fact;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600) NOT VALID;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
@@ -169,19 +193,26 @@ describe Masamune::Transform::StageFact do
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
 
-        CREATE INDEX visits_hourly_fact_y2014m08_d6b9b38_index ON visits_hourly_fact (cluster_type_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_0a531a8_index ON visits_hourly_fact (date_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_d3950d9_index ON visits_hourly_fact (tenant_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_39f0fdd_index ON visits_hourly_fact (user_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_e0d2a9e_index ON visits_hourly_fact (group_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_d8b1c3e_index ON visits_hourly_fact (user_agent_type_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_33b68fd_index ON visits_hourly_fact (feature_type_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_422efee_index ON visits_hourly_fact (session_type_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_6444ed3_index ON visits_hourly_fact (time_key);
+        CREATE INDEX visits_hourly_fact_y2014m08_d6b9b38_index ON visits_hourly_fact_y2014m08 (cluster_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_0a531a8_index ON visits_hourly_fact_y2014m08 (date_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_d3950d9_index ON visits_hourly_fact_y2014m08 (tenant_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_39f0fdd_index ON visits_hourly_fact_y2014m08 (user_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_e0d2a9e_index ON visits_hourly_fact_y2014m08 (group_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_d8b1c3e_index ON visits_hourly_fact_y2014m08 (user_agent_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_33b68fd_index ON visits_hourly_fact_y2014m08 (feature_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_422efee_index ON visits_hourly_fact_y2014m08 (session_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_6444ed3_index ON visits_hourly_fact_y2014m08 (time_key);
 
         ANALYZE visits_hourly_fact_y2014m08;
 
         COMMIT;
+
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_tmp CASCADE;
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
+
+        SELECT pg_advisory_unlock(ddl_advisory_lock());
+
+        SELECT pg_advisory_unlock(42);
       EOS
     end
   end

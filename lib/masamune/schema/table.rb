@@ -242,6 +242,11 @@ module Masamune::Schema
       inherit ? parent.reserved_column_ids : []
     end
 
+    # NOTE: postgres bigint is 8 bytes long
+    def lock_id
+      Integer('0x' + Digest::MD5.hexdigest(name)) % (1 << 63)
+    end
+
     private
 
     def stage_table_columns(parent, selected = [], inherit = true)
