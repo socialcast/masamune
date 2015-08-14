@@ -95,7 +95,6 @@ describe Masamune::Transform::RollupFact do
         SELECT pg_advisory_lock(42);
 
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
-        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_tmp CASCADE;
 
         CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08 (LIKE visits_hourly_fact INCLUDING ALL);
         CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage (LIKE visits_hourly_fact INCLUDING ALL);
@@ -130,6 +129,8 @@ describe Masamune::Transform::RollupFact do
         COMMIT;
 
         SELECT pg_advisory_lock(ddl_advisory_lock());
+
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_tmp CASCADE;
 
         BEGIN;
         SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
@@ -196,7 +197,6 @@ describe Masamune::Transform::RollupFact do
         SELECT pg_advisory_lock(42);
 
         DROP TABLE IF EXISTS visits_daily_fact_y2014m08_stage CASCADE;
-        DROP TABLE IF EXISTS visits_daily_fact_y2014m08_stage_tmp CASCADE;
 
         CREATE TABLE IF NOT EXISTS visits_daily_fact_y2014m08 (LIKE visits_daily_fact INCLUDING ALL);
         CREATE TABLE IF NOT EXISTS visits_daily_fact_y2014m08_stage (LIKE visits_daily_fact INCLUDING ALL);
@@ -230,6 +230,8 @@ describe Masamune::Transform::RollupFact do
         COMMIT;
 
         SELECT pg_advisory_lock(ddl_advisory_lock());
+
+        DROP TABLE IF EXISTS visits_daily_fact_y2014m08_stage_tmp CASCADE;
 
         BEGIN;
         SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
@@ -296,7 +298,6 @@ describe Masamune::Transform::RollupFact do
         SELECT pg_advisory_lock(42);
 
         DROP TABLE IF EXISTS visits_monthly_fact_y2014m08_stage CASCADE;
-        DROP TABLE IF EXISTS visits_monthly_fact_y2014m08_stage_tmp CASCADE;
 
         CREATE TABLE IF NOT EXISTS visits_monthly_fact_y2014m08 (LIKE visits_monthly_fact INCLUDING ALL);
         CREATE TABLE IF NOT EXISTS visits_monthly_fact_y2014m08_stage (LIKE visits_monthly_fact INCLUDING ALL);
@@ -330,6 +331,8 @@ describe Masamune::Transform::RollupFact do
         COMMIT;
 
         SELECT pg_advisory_lock(ddl_advisory_lock());
+
+        DROP TABLE IF EXISTS visits_monthly_fact_y2014m08_stage_tmp CASCADE;
 
         BEGIN;
         SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
