@@ -105,10 +105,11 @@ describe Masamune::Transform::StageFact do
         SELECT pg_advisory_lock(42);
 
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
-        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_tmp CASCADE;
 
         CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage (LIKE visits_hourly_fact INCLUDING ALL);
         CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08 (LIKE visits_hourly_fact INCLUDING ALL);
+
+        BEGIN;
 
         INSERT INTO
           visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
@@ -156,7 +157,11 @@ describe Masamune::Transform::StageFact do
           feature_type.name = visits_hourly_file_fact_stage.feature_type_name
         ;
 
+        COMMIT;
+
         SELECT pg_advisory_lock(ddl_advisory_lock());
+
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_tmp CASCADE;
 
         BEGIN;
         SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
@@ -180,7 +185,7 @@ describe Masamune::Transform::StageFact do
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_422efee_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_6444ed3_index;
 
-        ALTER TABLE visits_hourly_fact_y2014m08 RENAME TO visits_hourly_fact_y2014m08_tmp;
+        ALTER TABLE visits_hourly_fact_y2014m08 RENAME TO visits_hourly_fact_y2014m08_stage_tmp;
         ALTER TABLE visits_hourly_fact_y2014m08_stage RENAME TO visits_hourly_fact_y2014m08;
 
         ALTER TABLE visits_hourly_fact_y2014m08 INHERIT visits_hourly_fact;
@@ -207,7 +212,7 @@ describe Masamune::Transform::StageFact do
 
         COMMIT;
 
-        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_tmp CASCADE;
+        DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_tmp CASCADE;
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
 
         SELECT pg_advisory_unlock(ddl_advisory_lock());

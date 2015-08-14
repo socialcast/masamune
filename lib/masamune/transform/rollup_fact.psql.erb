@@ -25,10 +25,11 @@
 SELECT pg_advisory_lock(<%= target_stage.lock_id %>);
 
 DROP TABLE IF EXISTS <%= target_stage.name %> CASCADE;
-DROP TABLE IF EXISTS <%= target_stage.name %>_tmp CASCADE;
 
 CREATE TABLE IF NOT EXISTS <%= target.name %> (LIKE <%= target.parent.name %> INCLUDING ALL);
 CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.parent.name %> INCLUDING ALL);
+
+BEGIN;
 
 INSERT INTO
   <%= target_stage.name %> (<%= target.insert_columns(source).join(', ') %>)
@@ -50,46 +51,8 @@ GROUP BY
   <%- end -%>
 ;
 
-SELECT pg_advisory_lock(ddl_advisory_lock());
-
-BEGIN;
-SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-
-ALTER TABLE <%= target.name %> DROP CONSTRAINT IF EXISTS <%= target.name %>_time_key_check;
-<%- target.foreign_key_columns.each do |column| -%>
-<%- if column.reference_constraint -%>
-ALTER TABLE <%= target.name %> DROP CONSTRAINT IF EXISTS <%= target.name %>_<%= column.name %>_fkey CASCADE;
-<%- end -%>
-<%- end -%>
-
-<%- target.index_columns.each do |column_names, unique, id| -%>
-<%- index_name = "#{target.name}_#{id}_index" -%>
-DROP INDEX IF EXISTS <%= index_name %>;
-<%- end -%>
-
-ALTER TABLE <%= target.name %> RENAME TO <%= target_stage.name %>_tmp;
-ALTER TABLE <%= target_stage.name %> RENAME TO <%= target.name %>;
-
-ALTER TABLE <%= target.name %> INHERIT <%= target.parent.name %>;
-ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_time_key_check <%= target.constraints %>;
-<%- target.foreign_key_columns.each do |column| -%>
-<%- if column.reference_constraint -%>
-ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %> NOT VALID DEFERRABLE INITIALLY DEFERRED;
-<%- end -%>
-<%- end -%>
-
-<%- target.index_columns.each do |column_names, unique, id| -%>
-<%- index_name = "#{target.name}_#{id}_index" -%>
-CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target.name %> (<%= column_names.join(', ') %>);
-<%- end -%>
-
-ANALYZE <%= target.name %>;
-
 COMMIT;
 
-DROP TABLE IF EXISTS <%= target_stage.name %>_tmp CASCADE;
-DROP TABLE IF EXISTS <%= target_stage.name %> CASCADE;
-
-SELECT pg_advisory_unlock(ddl_advisory_lock());
+<%= render 'replace_table.psql.erb', source: target_stage, target: target %>
 
 SELECT pg_advisory_unlock(<%= target_stage.lock_id %>);
