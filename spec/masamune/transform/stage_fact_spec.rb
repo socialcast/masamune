@@ -110,6 +110,8 @@ describe Masamune::Transform::StageFact do
         CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage (LIKE visits_hourly_fact INCLUDING ALL);
         CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08 (LIKE visits_hourly_fact INCLUDING ALL);
 
+        BEGIN;
+
         INSERT INTO
           visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
         SELECT
@@ -155,6 +157,8 @@ describe Masamune::Transform::StageFact do
         ON
           feature_type.name = visits_hourly_file_fact_stage.feature_type_name
         ;
+
+        COMMIT;
 
         SELECT pg_advisory_lock(ddl_advisory_lock());
 

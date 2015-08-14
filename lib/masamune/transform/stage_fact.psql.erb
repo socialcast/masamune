@@ -31,6 +31,8 @@ DROP TABLE IF EXISTS <%= target_partition.name %>_tmp CASCADE;
 CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.name %> INCLUDING ALL);
 CREATE TABLE IF NOT EXISTS <%= target_partition.name %> (LIKE <%= target.name %> INCLUDING ALL);
 
+BEGIN;
+
 INSERT INTO
   <%= target_stage.name %> (<%= target.insert_columns(source).join(', ') %>)
 SELECT
@@ -46,6 +48,8 @@ ON
   <%= conditions.join(" AND\n  ") %>
 <%- end -%>
 ;
+
+COMMIT;
 
 SELECT pg_advisory_lock(ddl_advisory_lock());
 

@@ -100,6 +100,8 @@ describe Masamune::Transform::RollupFact do
         CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08 (LIKE visits_hourly_fact INCLUDING ALL);
         CREATE TABLE IF NOT EXISTS visits_hourly_fact_y2014m08_stage (LIKE visits_hourly_fact INCLUDING ALL);
 
+        BEGIN;
+
         INSERT INTO
           visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
@@ -124,6 +126,8 @@ describe Masamune::Transform::RollupFact do
           visits_transaction_fact_y2014m08.feature_type_id,
           (visits_transaction_fact_y2014m08.time_key - (visits_transaction_fact_y2014m08.time_key % 3600))
         ;
+
+        COMMIT;
 
         SELECT pg_advisory_lock(ddl_advisory_lock());
 
@@ -197,6 +201,8 @@ describe Masamune::Transform::RollupFact do
         CREATE TABLE IF NOT EXISTS visits_daily_fact_y2014m08 (LIKE visits_daily_fact INCLUDING ALL);
         CREATE TABLE IF NOT EXISTS visits_daily_fact_y2014m08_stage (LIKE visits_daily_fact INCLUDING ALL);
 
+        BEGIN;
+
         INSERT INTO
           visits_daily_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
@@ -220,6 +226,8 @@ describe Masamune::Transform::RollupFact do
           visits_hourly_fact_y2014m08.user_agent_type_id,
           visits_hourly_fact_y2014m08.feature_type_id
         ;
+
+        COMMIT;
 
         SELECT pg_advisory_lock(ddl_advisory_lock());
 
@@ -293,6 +301,8 @@ describe Masamune::Transform::RollupFact do
         CREATE TABLE IF NOT EXISTS visits_monthly_fact_y2014m08 (LIKE visits_monthly_fact INCLUDING ALL);
         CREATE TABLE IF NOT EXISTS visits_monthly_fact_y2014m08_stage (LIKE visits_monthly_fact INCLUDING ALL);
 
+        BEGIN;
+
         INSERT INTO
           visits_monthly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
@@ -316,6 +326,8 @@ describe Masamune::Transform::RollupFact do
           visits_daily_fact_y2014m08.user_agent_type_id,
           visits_daily_fact_y2014m08.feature_type_id
         ;
+
+        COMMIT;
 
         SELECT pg_advisory_lock(ddl_advisory_lock());
 

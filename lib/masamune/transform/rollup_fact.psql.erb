@@ -30,6 +30,8 @@ DROP TABLE IF EXISTS <%= target_stage.name %>_tmp CASCADE;
 CREATE TABLE IF NOT EXISTS <%= target.name %> (LIKE <%= target.parent.name %> INCLUDING ALL);
 CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.parent.name %> INCLUDING ALL);
 
+BEGIN;
+
 INSERT INTO
   <%= target_stage.name %> (<%= target.insert_columns(source).join(', ') %>)
 SELECT
@@ -49,6 +51,8 @@ GROUP BY
   <%= value %><%= ',' unless last %>
   <%- end -%>
 ;
+
+COMMIT;
 
 SELECT pg_advisory_lock(ddl_advisory_lock());
 
