@@ -65,7 +65,7 @@ describe Masamune::Schema::Column do
 
       context '#default' do
         subject { column.default }
-        it { is_expected.to eq('public') }
+        it { is_expected.to be_nil }
       end
 
       context '#sql_type' do
@@ -339,6 +339,30 @@ describe Masamune::Schema::Column do
       context 'when ISO8601' do
         let(:value) { Date.parse('2015-01-01').iso8601 }
         it { is_expected.to eq(Date.civil(2015,01,01)) }
+      end
+    end
+
+    context 'with type :integer' do
+      let(:column) { described_class.new(id: 'integer', type: :integer) }
+
+      context 'when nil' do
+        let(:value) { nil }
+        it { is_expected.to be(nil) }
+      end
+
+      context 'when blank' do
+        let(:value) { '' }
+        it { is_expected.to be(nil) }
+      end
+
+      context 'when String encoded Integer' do
+        let(:value) { "1" }
+        it { is_expected.to eq(1) }
+      end
+
+      context 'when Integer' do
+        let(:value) { 1 }
+        it { is_expected.to eq(1) }
       end
     end
 
@@ -632,6 +656,16 @@ describe Masamune::Schema::Column do
 
     context 'when :null true' do
       let(:column) { described_class.new id: 'name', type: :string, null: true }
+      it { is_expected.to eq(false) }
+    end
+
+    context 'when :strict true' do
+      let(:column) { described_class.new id: 'name', type: :string, strict: true }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'when :strict false' do
+      let(:column) { described_class.new id: 'name', type: :string, strict: false }
       it { is_expected.to eq(false) }
     end
 

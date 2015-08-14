@@ -20,6 +20,17 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
+WITH consolidated AS (
+  SELECT
+    <%- target.insert_view_values(coalesce: true).each do |value| -%>
+    <%= value %><%= ',' %>
+    <%- end -%>
+    parent_id,
+    record_id,
+    start_at
+  FROM
+    <%= source.name %>
+)
 INSERT INTO
   <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_id, record_id, start_at)
 SELECT DISTINCT
@@ -38,13 +49,13 @@ FROM (
     record_id,
     start_at,
     CASE
-    WHEN <%= target.insert_view_values.map { |value| "(LAG(#{value}) OVER w = #{value})" }.join(' AND ') %> THEN
+    WHEN <%= target.duplicate_value_conditions('w').join(' AND ') %> THEN
       1
     ELSE
       0
     END AS duplicate
   FROM
-    <%= source.name %>
+    consolidated
   WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at)
 ) tmp
 WHERE

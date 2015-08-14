@@ -46,6 +46,18 @@ describe Masamune::Transform::DeduplicateDimension do
 
     it 'should render deduplicate_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
+        WITH consolidated AS (
+          SELECT
+            user_account_state_type_id,
+            tenant_id,
+            user_id,
+            preferences,
+            parent_id,
+            record_id,
+            start_at
+          FROM
+            user_consolidated_dimension_stage
+        )
         INSERT INTO
           user_deduplicated_dimension_stage (user_account_state_type_id, tenant_id, user_id, preferences, parent_id, record_id, start_at)
         SELECT DISTINCT
@@ -66,13 +78,13 @@ describe Masamune::Transform::DeduplicateDimension do
             record_id,
             start_at,
             CASE
-            WHEN (LAG(user_account_state_type_id) OVER w = user_account_state_type_id) AND (LAG(tenant_id) OVER w = tenant_id) AND (LAG(user_id) OVER w = user_id) AND (LAG(preferences) OVER w = preferences) THEN
+            WHEN (LAG(user_account_state_type_id) OVER w = user_account_state_type_id) AND (LAG(tenant_id) OVER w = tenant_id) AND (LAG(user_id) OVER w = user_id) AND ((LAG(preferences) OVER w = preferences) OR (LAG(preferences) OVER w IS NULL AND preferences IS NULL)) THEN
               1
             ELSE
               0
             END AS duplicate
           FROM
-            user_consolidated_dimension_stage
+            consolidated
           WINDOW w AS (PARTITION BY tenant_id, user_id ORDER BY start_at)
         ) tmp
         WHERE

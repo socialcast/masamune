@@ -27,7 +27,7 @@ SELECT
 FROM
   <%= target.name %>
 <%- target.join_conditions(columns).each do |table, condition| -%>
-JOIN
+LEFT JOIN
   <%= table %>
 ON
   <%= condition %>
