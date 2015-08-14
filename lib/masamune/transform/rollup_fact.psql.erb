@@ -20,15 +20,15 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
-<%- target_stage = target.stage_table(suffix: Process.pid) %>
+<%- target_stage = target.stage_table %>
+
+SELECT pg_advisory_lock(<%= target_stage.lock_id %>);
 
 DROP TABLE IF EXISTS <%= target_stage.name %> CASCADE;
-CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.parent.name %> INCLUDING ALL);
+DROP TABLE IF EXISTS <%= target_stage.name %>_tmp CASCADE;
 
-ALTER TABLE <%= target_stage.name %> ADD CONSTRAINT <%= target_stage.name %>_time_key_check <%= target_stage.constraints %>;
-<%- target.foreign_key_columns.each do |column| -%>
-ALTER TABLE <%= target_stage.name %> ADD CONSTRAINT <%= target_stage.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %>;
-<%- end -%>
+CREATE TABLE IF NOT EXISTS <%= target.name %> (LIKE <%= target.parent.name %> INCLUDING ALL);
+CREATE TABLE IF NOT EXISTS <%= target_stage.name %> (LIKE <%= target.parent.name %> INCLUDING ALL);
 
 INSERT INTO
   <%= target_stage.name %> (<%= target.insert_columns(source).join(', ') %>)
@@ -50,26 +50,46 @@ GROUP BY
   <%- end -%>
 ;
 
-<%- target.index_columns.each do |column_names, unique| -%>
-<%- index_name = "#{target_stage.name}_#{column_names.join('_')}_index" -%>
-CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target_stage.name %> (<%= column_names.join(', ') %>);
-<%- end -%>
+SELECT pg_advisory_lock(ddl_advisory_lock());
 
 BEGIN;
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
-DROP TABLE IF EXISTS <%= target.name %>;
+ALTER TABLE <%= target.name %> DROP CONSTRAINT IF EXISTS <%= target.name %>_time_key_check;
+<%- target.foreign_key_columns.each do |column| -%>
+<%- if column.reference_constraint -%>
+ALTER TABLE <%= target.name %> DROP CONSTRAINT IF EXISTS <%= target.name %>_<%= column.name %>_fkey CASCADE;
+<%- end -%>
+<%- end -%>
+
+<%- target.index_columns.each do |column_names, unique, id| -%>
+<%- index_name = "#{target.name}_#{id}_index" -%>
+DROP INDEX IF EXISTS <%= index_name %>;
+<%- end -%>
+
+ALTER TABLE <%= target.name %> RENAME TO <%= target_stage.name %>_tmp;
 ALTER TABLE <%= target_stage.name %> RENAME TO <%= target.name %>;
 
 ALTER TABLE <%= target.name %> INHERIT <%= target.parent.name %>;
-ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_time_key_check <%= target.constraints %> NOT VALID;
+ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_time_key_check <%= target.constraints %>;
 <%- target.foreign_key_columns.each do |column| -%>
-ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %> NOT VALID;
+<%- if column.reference_constraint -%>
+ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_<%= column.name %>_fkey FOREIGN KEY (<%= column.name %>) <%= column.reference_constraint %> NOT VALID DEFERRABLE INITIALLY DEFERRED;
+<%- end -%>
 <%- end -%>
 
-<%- target.index_columns.each do |column_names, unique| -%>
-<%- old_index_name = "#{target_stage.name}_#{column_names.join('_')}_index" -%>
-<%- new_index_name = "#{target.name}_#{column_names.join('_')}_index" -%>
-ALTER INDEX <%= old_index_name %> RENAME TO <%= new_index_name %>;
+<%- target.index_columns.each do |column_names, unique, id| -%>
+<%- index_name = "#{target.name}_#{id}_index" -%>
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target.name %> (<%= column_names.join(', ') %>);
 <%- end -%>
+
+ANALYZE <%= target.name %>;
 
 COMMIT;
+
+DROP TABLE IF EXISTS <%= target_stage.name %>_tmp CASCADE;
+DROP TABLE IF EXISTS <%= target_stage.name %> CASCADE;
+
+SELECT pg_advisory_unlock(ddl_advisory_lock());
+
+SELECT pg_advisory_unlock(<%= target_stage.lock_id %>);

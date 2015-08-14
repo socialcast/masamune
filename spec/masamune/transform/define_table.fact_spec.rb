@@ -212,6 +212,8 @@ describe Masamune::Transform::DefineTable do
         CREATE INDEX visits_file_fact_stage_d5d236f_index ON visits_file_fact_stage (user_agent_type_version);
         CREATE INDEX visits_file_fact_stage_5a187ed_index ON visits_file_fact_stage (feature_type_name);
         CREATE INDEX visits_file_fact_stage_6444ed3_index ON visits_file_fact_stage (time_key);
+
+        ANALYZE visits_file_fact_stage;
       EOS
     end
 

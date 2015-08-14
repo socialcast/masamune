@@ -78,6 +78,10 @@ SELECT <%= row.insert_values.join(', ') %>
 WHERE NOT EXISTS (SELECT 1 FROM <%= target.name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
 <%- end -%>
 
+<%- if files.any? || target.insert_rows.any? -%>
+ANALYZE <%= target.name %>;
+<%- end -%>
+
 <% target.aliased_rows.each do |row| %>
 <%- row.natural_keys.each do |column| -%>
 CREATE OR REPLACE FUNCTION <%= row.name(column) %>

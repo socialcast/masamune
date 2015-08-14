@@ -109,6 +109,8 @@ describe Masamune::Transform::StageDimension do
         ON
           hr_user_account_state_type.name = user_file_dimension_ledger_stage.hr_user_account_state_type_name
         ;
+
+        ANALYZE user_dimension_ledger_stage;
       EOS
     end
   end
