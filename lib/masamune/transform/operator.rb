@@ -74,8 +74,8 @@ module Masamune::Transform
     end
 
     def template_eval(template)
-      return File.read(template) if File.exists?(template.to_s)
-      Masamune::Template.render_to_string(template_file(template), @locals.merge(source: source, target: target))
+      template_file = File.exists?(template.to_s) ? template : template_file(template)
+      Masamune::Template.render_to_string(template_file, @locals.merge(source: source, target: target))
     end
 
     def template_file(template_prefix)
