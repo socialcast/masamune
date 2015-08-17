@@ -202,9 +202,9 @@ module Masamune::Schema
       case file
       when /\.rb\Z/
         instance_eval(File.read(file), file)
-      when /\.psql\Z/
+      when /\.psql(\.erb)?\Z/
         @stores[:postgres].extra << file
-      when /\.hql\Z/
+      when /\.hql(\.erb)?\Z/
         @stores[:hive].extra << file
       end
     end
