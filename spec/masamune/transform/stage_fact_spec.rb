@@ -59,6 +59,7 @@ describe Masamune::Transform::StageFact do
       end
 
       dimension 'group', type: :two do
+        column 'tenant_id', type: :integer, index: true, natural_key: true
         column 'group_id', type: :integer, index: true, natural_key: true
         column 'group_mode', type: :enum, sub_type: 'group_mode', values: %(missing public private), index: true, natural_key: true, default: 'missing'
         row group_id: -1, group_mode: 'missing', attributes: {id: :missing}
@@ -69,6 +70,7 @@ describe Masamune::Transform::StageFact do
         references :date
         references :tenant
         references :user
+        references :group, label: 'from', default: :missing
         references :group, default: :missing
         references :user_agent, insert: true
         references :feature, insert: true
@@ -80,6 +82,8 @@ describe Masamune::Transform::StageFact do
         column 'date.date_id', type: :integer
         column 'tenant.tenant_id', type: :integer
         column 'user.user_id', type: :integer
+        column 'from_group.group_id', type: :integer
+        column 'from_group.group_mode', type: :enum, sub_type: 'group_mode'
         column 'group.group_id', type: :integer
         column 'group.group_mode', type: :enum, sub_type: 'group_mode'
         column 'user_agent.name', type: :string
@@ -112,11 +116,12 @@ describe Masamune::Transform::StageFact do
         BEGIN;
 
         INSERT INTO
-          visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
+          visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, from_group_dimension_id, group_dimension_id, user_agent_type_id, feature_type_id, session_type_id, total, time_key)
         SELECT
           date_dimension.id,
           tenant_dimension.id,
           user_dimension.id,
+          from_group_dimension.id,
           group_dimension.id,
           user_agent_type.id,
           feature_type.id,
@@ -135,16 +140,22 @@ describe Masamune::Transform::StageFact do
           user_dimension.user_id = visits_hourly_file_fact_stage.user_dimension_user_id AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN user_dimension.start_at AND COALESCE(user_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < user_dimension.start_at AND user_dimension.version = 1))
         JOIN
-          tenant_dimension
+          group_dimension AS from_group_dimension
         ON
-          tenant_dimension.tenant_id = COALESCE(visits_hourly_file_fact_stage.tenant_dimension_tenant_id, user_dimension.tenant_id) AND
-          ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < tenant_dimension.start_at AND tenant_dimension.version = 1))
+          from_group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.from_group_dimension_group_id, missing_group_id()) AND
+          from_group_dimension.group_mode = COALESCE(visits_hourly_file_fact_stage.from_group_dimension_group_mode, missing_group_mode()) AND
+          ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN from_group_dimension.start_at AND COALESCE(from_group_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < from_group_dimension.start_at AND from_group_dimension.version = 1))
         JOIN
           group_dimension
         ON
           group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_id, missing_group_id()) AND
           group_dimension.group_mode = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_mode, missing_group_mode()) AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN group_dimension.start_at AND COALESCE(group_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < group_dimension.start_at AND group_dimension.version = 1))
+        JOIN
+          tenant_dimension
+        ON
+          tenant_dimension.tenant_id = COALESCE(visits_hourly_file_fact_stage.tenant_dimension_tenant_id, user_dimension.tenant_id, from_group_dimension.tenant_id, group_dimension.tenant_id) AND
+          ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < tenant_dimension.start_at AND tenant_dimension.version = 1))
         JOIN
           user_agent_type
         ON
@@ -171,6 +182,7 @@ describe Masamune::Transform::StageFact do
         ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_date_dimension_id_fkey CASCADE;
         ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_tenant_dimension_id_fkey CASCADE;
         ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_user_dimension_id_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_from_group_dimension_id_fkey CASCADE;
         ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_group_dimension_id_fkey CASCADE;
         ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_user_agent_type_id_fkey CASCADE;
         ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_feature_type_id_fkey CASCADE;
@@ -179,6 +191,7 @@ describe Masamune::Transform::StageFact do
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_0a531a8_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d3950d9_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_39f0fdd_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_e67f99d_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_e0d2a9e_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d8b1c3e_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_33b68fd_index;
@@ -194,6 +207,7 @@ describe Masamune::Transform::StageFact do
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_from_group_dimension_id_fkey FOREIGN KEY (from_group_dimension_id) REFERENCES group_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_group_dimension_id_fkey FOREIGN KEY (group_dimension_id) REFERENCES group_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
@@ -202,6 +216,7 @@ describe Masamune::Transform::StageFact do
         CREATE INDEX visits_hourly_fact_y2014m08_0a531a8_index ON visits_hourly_fact_y2014m08 (date_dimension_id);
         CREATE INDEX visits_hourly_fact_y2014m08_d3950d9_index ON visits_hourly_fact_y2014m08 (tenant_dimension_id);
         CREATE INDEX visits_hourly_fact_y2014m08_39f0fdd_index ON visits_hourly_fact_y2014m08 (user_dimension_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_e67f99d_index ON visits_hourly_fact_y2014m08 (from_group_dimension_id);
         CREATE INDEX visits_hourly_fact_y2014m08_e0d2a9e_index ON visits_hourly_fact_y2014m08 (group_dimension_id);
         CREATE INDEX visits_hourly_fact_y2014m08_d8b1c3e_index ON visits_hourly_fact_y2014m08 (user_agent_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_33b68fd_index ON visits_hourly_fact_y2014m08 (feature_type_id);

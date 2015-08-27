@@ -48,13 +48,17 @@ module Masamune::Transform
         shared_columns(source).values.map do |columns|
           column = columns.first
           if !column.degenerate? && reference = column.reference
-            reference.surrogate_key.qualified_name
+            reference.surrogate_key.qualified_name(column.reference.label)
           else
             column.qualified_name
           end
         end
       end
       method_with_last_element :insert_values
+
+      def join_alias(reference)
+        reference.label ? "#{reference.name} AS #{[reference.label, reference.name].compact.join('_')}" : reference.name
+      end
 
       def join_conditions(source)
         join_columns = shared_columns(source).values.flatten
@@ -64,15 +68,16 @@ module Masamune::Transform
         dependencies = Masamune::TopologicalHash.new
         conditions = Hash.new { |h,k| h[k] = [] }
         join_columns.each do |reference, columns|
+          reference_name = join_alias(reference)
           columns.each do |column|
             next if column.degenerate?
-            dependencies[reference.name] = []
+            dependencies[reference_name] ||= []
             cross_references = cross_references(column)
             coalesce_values = []
 
             if cross_references.any?
-              dependencies[reference.name] += cross_references.map { |reference, _| reference.name }
-              coalesce_values << cross_references.map { |_, column| column.qualified_name }
+              dependencies[reference_name] += cross_references.map { |reference, _| join_alias(reference) }
+              coalesce_values << cross_references.map { |reference, column| column.qualified_name(reference.label) }
             end
 
             if column.reference && !column.reference.default.nil?
@@ -81,14 +86,14 @@ module Masamune::Transform
               coalesce_values << column.adjacent.sql_value(column.adjacent.default)
             end
 
-            conditions[reference.name] << (coalesce_values.any? ?
+            conditions[reference_name] << (coalesce_values.any? ?
               "#{column.foreign_key_name} = COALESCE(#{column.qualified_name}, #{coalesce_values.join(', ')})" :
               "#{column.foreign_key_name} = #{column.qualified_name}")
           end
           if reference.type == :two || reference.type == :four
-            join_key_a = "TO_TIMESTAMP(#{source.time_key.qualified_name}) BETWEEN #{reference.start_key.qualified_name} AND COALESCE(#{reference.end_key.qualified_name}, 'INFINITY')"
-            join_key_b = "TO_TIMESTAMP(#{source.time_key.qualified_name}) < #{reference.start_key.qualified_name} AND #{reference.version_key.qualified_name} = 1"
-            conditions[reference.name] << "((#{join_key_a}) OR (#{join_key_b}))"
+            join_key_a = "TO_TIMESTAMP(#{source.time_key.qualified_name}) BETWEEN #{reference.start_key.qualified_name(reference.label)} AND COALESCE(#{reference.end_key.qualified_name(reference.label)}, 'INFINITY')"
+            join_key_b = "TO_TIMESTAMP(#{source.time_key.qualified_name}) < #{reference.start_key.qualified_name(reference.label)} AND #{reference.version_key.qualified_name(reference.label)} = 1"
+            conditions[reference_name] << "((#{join_key_a}) OR (#{join_key_b}))"
           end
         end
         conditions.slice(*dependencies.tsort)
@@ -100,7 +105,7 @@ module Masamune::Transform
         return {} unless column.natural_key || column.adjacent.try(:natural_key)
         {}.tap do |result|
           references.each do |_, reference|
-            if reference.id != column.reference.id && reference.columns[column.id]
+            if reference.name != column.reference.name && reference.columns[column.id]
               result[reference] = reference.columns[column.id]
             end
           end
