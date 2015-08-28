@@ -104,8 +104,9 @@ module Masamune::Transform
       def cross_references(column)
         return {} unless column.natural_key || column.adjacent.try(:natural_key)
         {}.tap do |result|
-          references.each do |_, reference|
-            if reference.name != column.reference.name && reference.columns[column.id]
+          column.reference.through.each do |reference_id|
+            reference = references[reference_id]
+            if reference.columns[column.id]
               result[reference] = reference.columns[column.id]
             end
           end

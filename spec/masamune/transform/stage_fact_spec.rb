@@ -68,7 +68,7 @@ describe Masamune::Transform::StageFact do
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
         references :cluster
         references :date
-        references :tenant
+        references :tenant, through: [:user, :from_group, :group]
         references :user
         references :group, label: 'from', default: :missing
         references :group, default: :missing
@@ -142,14 +142,14 @@ describe Masamune::Transform::StageFact do
         JOIN
           group_dimension AS from_group_dimension
         ON
-          from_group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.from_group_dimension_group_id, missing_group_id()) AND
-          from_group_dimension.group_mode = COALESCE(visits_hourly_file_fact_stage.from_group_dimension_group_mode, missing_group_mode()) AND
+          from_group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.from_group_dimension_group_id, missing_group_dimension_group_id()) AND
+          from_group_dimension.group_mode = COALESCE(visits_hourly_file_fact_stage.from_group_dimension_group_mode, missing_group_dimension_group_mode()) AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN from_group_dimension.start_at AND COALESCE(from_group_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < from_group_dimension.start_at AND from_group_dimension.version = 1))
         JOIN
           group_dimension
         ON
-          group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_id, missing_group_id()) AND
-          group_dimension.group_mode = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_mode, missing_group_mode()) AND
+          group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_id, missing_group_dimension_group_id()) AND
+          group_dimension.group_mode = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_mode, missing_group_dimension_group_mode()) AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN group_dimension.start_at AND COALESCE(group_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < group_dimension.start_at AND group_dimension.version = 1))
         JOIN
           tenant_dimension
