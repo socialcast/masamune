@@ -41,10 +41,15 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
       EOS
     end
   end
@@ -65,10 +70,15 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_3854361_index') THEN
@@ -99,10 +109,15 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_3854361_index') THEN
@@ -138,10 +153,15 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e8701ad_key') THEN
@@ -178,11 +198,16 @@ describe Masamune::Transform::DefineTable do
 
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           state USER_STATE_TYPE NOT NULL DEFAULT 'active'::USER_STATE_TYPE
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
       EOS
     end
   end
@@ -203,9 +228,14 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          identifier UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          identifier UUID DEFAULT uuid_generate_v4(),
           name VARCHAR NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (identifier);
+        END IF; END $$;
       EOS
     end
   end
@@ -228,10 +258,15 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           name VARCHAR NOT NULL,
           description VARCHAR NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         INSERT INTO user_table (name, description)
         SELECT 'registered', 'Registered'
@@ -262,10 +297,15 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_key') THEN
@@ -298,10 +338,15 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_key') THEN
@@ -365,10 +410,15 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           user_account_state_table_id INTEGER NOT NULL REFERENCES user_account_state_table(id) DEFAULT default_user_account_state_table_id(),
           name VARCHAR NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_bd2027e_index') THEN
@@ -401,11 +451,16 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           user_account_state_table_id INTEGER NOT NULL REFERENCES user_account_state_table(id) DEFAULT default_user_account_state_table_id(),
           hr_user_account_state_table_id INTEGER REFERENCES user_account_state_table(id),
           name VARCHAR NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_bd2027e_index') THEN
@@ -514,10 +569,15 @@ describe Masamune::Transform::DefineTable do
 
         CREATE TABLE IF NOT EXISTS user_table
         (
-          id INTEGER PRIMARY KEY DEFAULT nextval('user_table_id_seq'),
+          id INTEGER DEFAULT nextval('user_table_id_seq'),
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 WHERE sequence_owner('user_table_id_seq') = 'user_table.id') THEN

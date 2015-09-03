@@ -157,11 +157,16 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_dimension
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_pkey') THEN
+        ALTER TABLE user_dimension ADD PRIMARY KEY (id);
+        END IF; END $$;
       EOS
     end
   end
@@ -182,7 +187,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_dimension
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           start_at TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
@@ -190,6 +195,11 @@ describe Masamune::Transform::DefineTable do
           version INTEGER DEFAULT 1,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_pkey') THEN
+        ALTER TABLE user_dimension ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_e6c3d91_key') THEN
@@ -255,7 +265,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_dimension_ledger
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           cluster_type_id INTEGER NOT NULL REFERENCES cluster_type(id) DEFAULT default_cluster_type_id(),
           user_account_state_type_id INTEGER REFERENCES user_account_state_type(id),
           tenant_id INTEGER NOT NULL,
@@ -267,6 +277,11 @@ describe Masamune::Transform::DefineTable do
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW(),
           delta INTEGER NOT NULL
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_pkey') THEN
+        ALTER TABLE user_dimension_ledger ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_370d6dd_key') THEN
@@ -300,7 +315,7 @@ describe Masamune::Transform::DefineTable do
 
         CREATE TABLE IF NOT EXISTS user_dimension
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           cluster_type_id INTEGER NOT NULL REFERENCES cluster_type(id) DEFAULT default_cluster_type_id(),
           user_account_state_type_id INTEGER NOT NULL REFERENCES user_account_state_type(id) DEFAULT default_user_account_state_type_id(),
           tenant_id INTEGER NOT NULL,
@@ -313,6 +328,11 @@ describe Masamune::Transform::DefineTable do
           version INTEGER DEFAULT 1,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_pkey') THEN
+        ALTER TABLE user_dimension ADD PRIMARY KEY (id);
+        END IF; END $$;
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_e6c3d91_key') THEN

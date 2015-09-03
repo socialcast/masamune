@@ -477,7 +477,6 @@ module Masamune::Schema
     def sql_constraints
       [].tap do |constraints|
         constraints << 'NOT NULL' unless null || surrogate_key || !strict || parent.temporary? || degenerate?
-        constraints << "PRIMARY KEY" if surrogate_key
       end
     end
 

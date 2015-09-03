@@ -52,6 +52,13 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
   <%- end -%>
 );
 
+<%- if target.surrogate_key -%>
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= target.name %>_pkey') THEN
+ALTER TABLE <%= target.name %> ADD PRIMARY KEY (<%= target.surrogate_key.name %>);
+END IF; END $$;
+<%- end -%>
+
 <%- target.sequence_columns.each do |_, column| -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 WHERE sequence_owner('<%= column.sequence_id %>') = '<%= column.qualified_name %>') THEN
