@@ -24,7 +24,7 @@
 <%- constraint_name = "#{target.name}_#{id}_key" -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= constraint_name %>') THEN
-ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= constraint_name %> UNIQUE(<%= column_names.join(', ') %>);
+ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= constraint_name %> UNIQUE(<%= column_names.to_a.join(', ') %>);
 END IF; END $$;
 
 <%- end -%>

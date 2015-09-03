@@ -119,16 +119,18 @@ module Masamune::Schema
     def unique_constraints
       return [] if temporary?
       unique_constraints_map.map do |_, column_names|
-        [column_names, short_md5(column_names)]
+        [column_names, short_md5(column_names.to_a)]
       end.uniq
     end
 
-    # TODO: Add optional USING
-    # TODO: Default to GIN for array columns
     def index_columns
       index_column_map.map do |_, column_names|
         unique_index = reverse_unique_constraints_map.key?(column_names.sort)
-        [column_names, unique_index, short_md5(column_names)]
+        if unique_index
+          [*auto_references.map(&:name).uniq, column_names, unique_index, short_md5(column_names.to_a)]
+        else
+          [column_names, unique_index, short_md5(column_names.to_a)]
+        end
       end.uniq
     end
 
@@ -291,11 +293,11 @@ module Masamune::Schema
           reference.unreserved_columns.each do |_, column|
             next if column.surrogate_key
             next if column.ignore
-            initialize_column! id: column.id, type: column.type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
+            initialize_column! id: column.id, type: column.type, reference: reference, default: reference.default, null: reference.null, natural_key: reference.natural_key
           end
         elsif reference.foreign_key
           # FIXME column.reference should point to reference.surrogate_key, only allow column references to Columns
-          initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
+          initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, null: reference.null, natural_key: reference.natural_key
         end
       end
     end
@@ -307,7 +309,7 @@ module Masamune::Schema
 
     def index_column_map
       @index_column_map ||= begin
-        map = Hash.new { |h,k| h[k] = [] }
+        map = Hash.new { |h,k| h[k] = Set.new }
         columns.each do |_, column|
           column.index.each do |index|
             map[index] << column.name
@@ -319,9 +321,11 @@ module Masamune::Schema
 
     def unique_constraints_map
       @unique_constraints_map ||= begin
-        map = Hash.new { |h,k| h[k] = [] }
+        map = Hash.new { |h,k| h[k] = Set.new }
         columns.each do |_, column|
+          next if column.auto_reference
           column.unique.each do |unique|
+            map[unique] += auto_references.map(&:name)
             map[unique] << column.name
           end
         end unless temporary?
@@ -331,6 +335,10 @@ module Masamune::Schema
 
     def reverse_unique_constraints_map
       @reverse_unique_constraints_map ||= Hash[unique_constraints_map.to_a.map { |k,v| [v.sort, k] }]
+    end
+
+    def auto_references
+      columns.values.select { |column| column.auto_reference }
     end
 
     def short_md5(*a)

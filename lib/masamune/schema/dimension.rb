@@ -91,27 +91,28 @@ module Masamune::Schema
     end
 
     def initialize_dimension_columns!
+      # TODO assign index for load_fact
       case type
       when :one, :date
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :two
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'natural'
-        initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
-        initialize_column! id: 'version', type: :integer, default: 1, null: true, index: true
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: :natural, unique: :natural
+        initialize_column! id: 'end_at', type: :timestamp, null: true
+        initialize_column! id: 'version', type: :integer, default: 1, null: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :four
         children << ledger_table
         # FIXME derive type from from parent
         initialize_column! id: 'parent_id', type: :integer, null: true, reference: ledger_table
         initialize_column! id: 'record_id', type: :integer, null: true, reference: ledger_table
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: true, unique: 'natural'
-        initialize_column! id: 'end_at', type: :timestamp, null: true, index: true
-        initialize_column! id: 'version', type: :integer, default: 1, null: true, index: true
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: :natural, unique: :natural
+        initialize_column! id: 'end_at', type: :timestamp, null: true
+        initialize_column! id: 'version', type: :integer, default: 1, null: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :ledger
-        initialize_column! id: 'source_kind', type: :string, unique: 'natural'
-        initialize_column! id: 'source_uuid', type: :string, unique: 'natural'
-        initialize_column! id: 'start_at', type: :timestamp, index: true, unique: 'natural'
+        initialize_column! id: 'source_kind', type: :string, index: :natural, unique: :natural
+        initialize_column! id: 'source_uuid', type: :string, index: :natural, unique: :natural
+        initialize_column! id: 'start_at', type: :timestamp, index: :natural, unique: :natural
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
         initialize_column! id: 'delta', type: :integer
       when :stage

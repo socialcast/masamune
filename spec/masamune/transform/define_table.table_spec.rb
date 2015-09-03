@@ -176,6 +176,50 @@ describe Masamune::Transform::DefineTable do
     end
   end
 
+  context 'for postgres table with auto reference' do
+    before do
+      catalog.schema :postgres do
+        table 'cluster' do
+          column 'id', surrogate_key: true, auto: true
+        end
+        table 'user' do
+          references :cluster
+          column 'tenant_id', natural_key: true
+          column 'user_id', natural_key: true
+        end
+      end
+    end
+
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          id SERIAL,
+          cluster_table_id INTEGER NOT NULL REFERENCES cluster_table(id),
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_9f1c0d7_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_9f1c0d7_key UNIQUE(cluster_table_id, tenant_id, user_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_index') THEN
+        CREATE INDEX user_table_e0e4295_index ON user_table (tenant_id, user_id);
+        END IF; END $$;
+      EOS
+    end
+  end
+
   context 'for postgres table with enum column' do
     before do
       catalog.schema :postgres do
@@ -353,6 +397,11 @@ describe Masamune::Transform::DefineTable do
         ALTER TABLE user_table ADD CONSTRAINT user_table_e0e4295_key UNIQUE(tenant_id, user_id);
         END IF; END $$;
 
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_index') THEN
+        CREATE UNIQUE INDEX user_table_e0e4295_index ON user_table (tenant_id, user_id);
+        END IF; END $$;
+
         INSERT INTO user_table (tenant_id, user_id)
         SELECT default_tenant_id(), -1
         WHERE NOT EXISTS (SELECT 1 FROM user_table WHERE tenant_id = default_tenant_id() AND user_id = -1);
@@ -419,11 +468,6 @@ describe Masamune::Transform::DefineTable do
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
         ALTER TABLE user_table ADD PRIMARY KEY (id);
         END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_bd2027e_index') THEN
-        CREATE INDEX user_table_bd2027e_index ON user_table (user_account_state_table_id);
-        END IF; END $$;
       EOS
     end
   end
@@ -461,16 +505,6 @@ describe Masamune::Transform::DefineTable do
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
         ALTER TABLE user_table ADD PRIMARY KEY (id);
         END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_bd2027e_index') THEN
-        CREATE INDEX user_table_bd2027e_index ON user_table (user_account_state_table_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_074da4a_index') THEN
-        CREATE INDEX user_table_074da4a_index ON user_table (hr_user_account_state_table_id);
-        END IF; END $$;
       EOS
     end
   end
@@ -505,9 +539,6 @@ describe Masamune::Transform::DefineTable do
             hr_user_account_state_table_id INTEGER,
             name VARCHAR
           );
-
-          CREATE INDEX user_table_stage_bd2027e_index ON user_table_stage (user_account_state_table_id);
-          CREATE INDEX user_table_stage_074da4a_index ON user_table_stage (hr_user_account_state_table_id);
         EOS
       end
     end
@@ -523,9 +554,6 @@ describe Masamune::Transform::DefineTable do
             user_account_state_table_id INTEGER,
             name VARCHAR
           );
-
-          CREATE INDEX user_table_stage_074da4a_index ON user_table_stage (hr_user_account_state_table_id);
-          CREATE INDEX user_table_stage_bd2027e_index ON user_table_stage (user_account_state_table_id);
         EOS
       end
     end

@@ -54,7 +54,7 @@ ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_<%= column.name
 
 <%- target.index_columns.each do |column_names, unique, id| -%>
 <%- index_name = "#{target.name}_#{id}_index" -%>
-CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target.name %> (<%= column_names.join(', ') %>);
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target.name %> (<%= column_names.to_a.join(', ') %>);
 <%- end -%>
 
 ANALYZE <%= target.name %>;

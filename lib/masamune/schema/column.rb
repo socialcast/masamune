@@ -83,6 +83,17 @@ module Masamune::Schema
       end
     end
 
+    def natural_key=(value)
+      @natural_key = value
+      if value
+        @unique ||= Set.new
+        @index ||= Set.new
+        @unique << :natural
+        @index << :natural
+      end
+      value
+    end
+
     def index=(value)
       @index ||= Set.new
       @index.clear
@@ -99,11 +110,6 @@ module Masamune::Schema
       else
         raise ArgumentError
       end
-    end
-
-    def unique
-      self.unique = 'natural' if natural_key
-      @unique
     end
 
     def unique=(value)
