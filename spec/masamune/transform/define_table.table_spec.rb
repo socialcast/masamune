@@ -197,14 +197,130 @@ describe Masamune::Transform::DefineTable do
         CREATE TABLE IF NOT EXISTS user_table
         (
           id SERIAL,
-          cluster_table_id INTEGER NOT NULL REFERENCES cluster_table(id),
+          cluster_table_id INTEGER NOT NULL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
-        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        ALTER TABLE user_table ADD PRIMARY KEY (cluster_table_id, id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_8923fdb_fkey') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_8923fdb_fkey FOREIGN KEY (cluster_table_id) REFERENCES cluster_table(id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_9f1c0d7_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_9f1c0d7_key UNIQUE(cluster_table_id, tenant_id, user_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e0e4295_index') THEN
+        CREATE INDEX user_table_e0e4295_index ON user_table (tenant_id, user_id);
+        END IF; END $$;
+      EOS
+    end
+  end
+
+  context 'for postgres table with natural_key auto reference' do
+    before do
+      catalog.schema :postgres do
+        table 'cluster' do
+          column 'id', surrogate_key: true, auto: true
+        end
+        table 'user' do
+          references :cluster, natural_key: true
+          column 'tenant_id', natural_key: true
+          column 'user_id', natural_key: true
+        end
+      end
+    end
+
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          id SERIAL,
+          cluster_table_id INTEGER NOT NULL,
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (cluster_table_id, id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_8923fdb_fkey') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_8923fdb_fkey FOREIGN KEY (cluster_table_id) REFERENCES cluster_table(id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_9f1c0d7_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_9f1c0d7_key UNIQUE(cluster_table_id, tenant_id, user_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_9f1c0d7_index') THEN
+        CREATE UNIQUE INDEX user_table_9f1c0d7_index ON user_table (cluster_table_id, tenant_id, user_id);
+        END IF; END $$;
+      EOS
+    end
+  end
+
+  context 'for postgres table with nested auto reference' do
+    before do
+      catalog.schema :postgres do
+        table 'cluster' do
+          column 'id', surrogate_key: true, auto: true
+        end
+
+        table 'department' do
+          references :cluster
+          column 'department_id', natural_key: true
+        end
+
+        table 'user' do
+          references :cluster
+          references :department
+          column 'tenant_id', natural_key: true
+          column 'user_id', natural_key: true
+        end
+      end
+    end
+
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          id SERIAL,
+          cluster_table_id INTEGER NOT NULL,
+          department_table_id INTEGER NOT NULL,
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (cluster_table_id, id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_8923fdb_fkey') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_8923fdb_fkey FOREIGN KEY (cluster_table_id) REFERENCES cluster_table(id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_9000538_fkey') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_9000538_fkey FOREIGN KEY (cluster_table_id, department_table_id) REFERENCES department_table(cluster_table_id, id);
         END IF; END $$;
 
         DO $$ BEGIN
@@ -460,13 +576,18 @@ describe Masamune::Transform::DefineTable do
         CREATE TABLE IF NOT EXISTS user_table
         (
           id SERIAL,
-          user_account_state_table_id INTEGER NOT NULL REFERENCES user_account_state_table(id) DEFAULT default_user_account_state_table_id(),
+          user_account_state_table_id INTEGER NOT NULL DEFAULT default_user_account_state_table_id(),
           name VARCHAR NOT NULL
         );
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
         ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_bd2027e_fkey') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_bd2027e_fkey FOREIGN KEY (user_account_state_table_id) REFERENCES user_account_state_table(id);
         END IF; END $$;
       EOS
     end
@@ -496,14 +617,24 @@ describe Masamune::Transform::DefineTable do
         CREATE TABLE IF NOT EXISTS user_table
         (
           id SERIAL,
-          user_account_state_table_id INTEGER NOT NULL REFERENCES user_account_state_table(id) DEFAULT default_user_account_state_table_id(),
-          hr_user_account_state_table_id INTEGER REFERENCES user_account_state_table(id),
+          user_account_state_table_id INTEGER NOT NULL DEFAULT default_user_account_state_table_id(),
+          hr_user_account_state_table_id INTEGER,
           name VARCHAR NOT NULL
         );
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
         ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_bd2027e_fkey') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_bd2027e_fkey FOREIGN KEY (user_account_state_table_id) REFERENCES user_account_state_table(id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_074da4a_fkey') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_074da4a_fkey FOREIGN KEY (hr_user_account_state_table_id) REFERENCES user_account_state_table(id);
         END IF; END $$;
       EOS
     end

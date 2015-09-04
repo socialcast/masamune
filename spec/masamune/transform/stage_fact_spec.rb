@@ -35,10 +35,12 @@ describe Masamune::Transform::StageFact do
       end
 
       dimension 'date', type: :date do
-        column 'date_id', type: :integer, unique: true, index: true, natural_key: true
+        column 'date_id', type: :integer, natural_key: true
       end
 
       dimension 'user_agent', type: :mini do
+        references :cluster
+
         column 'name', type: :string, unique: true, index: 'shared'
         column 'version', type: :string, unique: true, index: 'shared', default: 'Unknown'
         column 'mobile', type: :boolean, unique: true, index: 'shared', default: false
@@ -50,16 +52,22 @@ describe Masamune::Transform::StageFact do
       end
 
       dimension 'tenant', type: :two do
-        column 'tenant_id', type: :integer, index: true, natural_key: true
+        references :cluster
+
+        column 'tenant_id', type: :integer, natural_key: true
       end
 
       dimension 'user', type: :two do
-        column 'tenant_id', type: :integer, index: true, natural_key: true
-        column 'user_id', type: :integer, index: true, natural_key: true
+        references :cluster
+
+        column 'tenant_id', type: :integer, natural_key: true
+        column 'user_id', type: :integer, natural_key: true
       end
 
       dimension 'group', type: :two do
-        column 'group_id', type: :integer, index: true, natural_key: true
+        references :cluster
+
+        column 'group_id', type: :integer, natural_key: true
         column 'group_mode', type: :enum, sub_type: 'group_mode', values: %(missing public private), index: true, natural_key: true, default: 'missing'
         row group_id: -1, group_mode: 'missing', attributes: {id: :missing}
       end
@@ -167,13 +175,13 @@ describe Masamune::Transform::StageFact do
         SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
         ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_time_key_check;
-        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_cluster_type_id_fkey CASCADE;
-        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_date_dimension_id_fkey CASCADE;
-        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_tenant_dimension_id_fkey CASCADE;
-        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_user_dimension_id_fkey CASCADE;
-        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_group_dimension_id_fkey CASCADE;
-        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_user_agent_type_id_fkey CASCADE;
-        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_feature_type_id_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_d6b9b38_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_0a531a8_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_ff74c56_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_1aeb6c0_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_b4cc377_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_13f0010_fkey CASCADE;
+        ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_33b68fd_fkey CASCADE;
 
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d6b9b38_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_0a531a8_index;
@@ -190,13 +198,13 @@ describe Masamune::Transform::StageFact do
 
         ALTER TABLE visits_hourly_fact_y2014m08 INHERIT visits_hourly_fact;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_cluster_type_id_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_date_dimension_id_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_tenant_dimension_id_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_dimension_id_fkey FOREIGN KEY (user_dimension_id) REFERENCES user_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_group_dimension_id_fkey FOREIGN KEY (group_dimension_id) REFERENCES group_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_user_agent_type_id_fkey FOREIGN KEY (user_agent_type_id) REFERENCES user_agent_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
-        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_feature_type_id_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_0a531a8_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_ff74c56_fkey FOREIGN KEY (cluster_type_id, tenant_dimension_id) REFERENCES tenant_dimension(cluster_type_id, id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_1aeb6c0_fkey FOREIGN KEY (cluster_type_id, user_dimension_id) REFERENCES user_dimension(cluster_type_id, id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_b4cc377_fkey FOREIGN KEY (cluster_type_id, group_dimension_id) REFERENCES group_dimension(cluster_type_id, id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_13f0010_fkey FOREIGN KEY (cluster_type_id, user_agent_type_id) REFERENCES user_agent_type(cluster_type_id, id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
+        ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_33b68fd_fkey FOREIGN KEY (feature_type_id) REFERENCES feature_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
 
         CREATE INDEX visits_hourly_fact_y2014m08_d6b9b38_index ON visits_hourly_fact_y2014m08 (cluster_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_0a531a8_index ON visits_hourly_fact_y2014m08 (date_dimension_id);

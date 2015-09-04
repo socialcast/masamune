@@ -26,8 +26,22 @@ module Masamune::Transform
 
     def define_table(target, files = [])
       return if target.implicit
-      Operator.new(__method__, target: target, files: Masamune::Schema::Map.convert_files(files), presenters: { hive: Hive }).tap do |operator|
+      Operator.new(__method__, target: target, files: Masamune::Schema::Map.convert_files(files), presenters: { postgres: Postgres, hive: Hive }).tap do |operator|
         logger.debug("#{target.id}\n" + operator.to_s) if target.debug
+      end
+    end
+
+    class Postgres < SimpleDelegator
+      def children
+        super.map { |child| self.class.new(child) }
+      end
+
+      def delay_index?
+        type == :fact
+      end
+
+      def delay_constraints?
+        type == :fact
       end
     end
 

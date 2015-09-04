@@ -83,17 +83,6 @@ module Masamune::Schema
       end
     end
 
-    def natural_key=(value)
-      @natural_key = value
-      if value
-        @unique ||= Set.new
-        @index ||= Set.new
-        @unique << :natural
-        @index << :natural
-      end
-      value
-    end
-
     def index=(value)
       @index ||= Set.new
       @index.clear
@@ -369,7 +358,7 @@ module Masamune::Schema
     end
 
     def as_psql
-      [name, sql_type(surrogate_key), *sql_constraints, reference_constraint, sql_default].compact.join(' ')
+      [name, sql_type(surrogate_key), *sql_constraints, sql_default].compact.join(' ')
     end
 
     def as_hql
@@ -381,16 +370,6 @@ module Masamune::Schema
         DEFAULT_ATTRIBUTES.keys.each do |attr|
           hash[attr] = public_send(attr)
         end
-      end
-    end
-
-    # TODO: Add ELEMENT REFERENCES
-    def reference_constraint
-      return if parent && parent.temporary?
-      return if degenerate?
-      return if array_value?
-      if reference && reference.surrogate_key.type == type
-        "REFERENCES #{reference.name}(#{reference.surrogate_key.name})"
       end
     end
 

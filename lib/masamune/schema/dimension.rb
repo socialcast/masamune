@@ -103,8 +103,8 @@ module Masamune::Schema
       when :four
         children << ledger_table
         # FIXME derive type from from parent
-        initialize_column! id: 'parent_id', type: :integer, null: true, reference: ledger_table
-        initialize_column! id: 'record_id', type: :integer, null: true, reference: ledger_table
+        initialize_column! id: 'parent_id', type: :integer, null: true, reference: TableReference.new(ledger_table)
+        initialize_column! id: 'record_id', type: :integer, null: true, reference: TableReference.new(ledger_table)
         initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: :natural, unique: :natural
         initialize_column! id: 'end_at', type: :timestamp, null: true
         initialize_column! id: 'version', type: :integer, default: 1, null: true

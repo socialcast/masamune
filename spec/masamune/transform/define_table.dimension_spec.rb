@@ -246,8 +246,8 @@ describe Masamune::Transform::DefineTable do
         CREATE TABLE IF NOT EXISTS user_dimension_ledger
         (
           id SERIAL,
-          cluster_type_id INTEGER NOT NULL REFERENCES cluster_type(id) DEFAULT default_cluster_type_id(),
-          user_account_state_type_id INTEGER REFERENCES user_account_state_type(id),
+          cluster_type_id INTEGER NOT NULL DEFAULT default_cluster_type_id(),
+          user_account_state_type_id INTEGER,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           preferences HSTORE,
@@ -260,7 +260,17 @@ describe Masamune::Transform::DefineTable do
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_pkey') THEN
-        ALTER TABLE user_dimension_ledger ADD PRIMARY KEY (id);
+        ALTER TABLE user_dimension_ledger ADD PRIMARY KEY (cluster_type_id, id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_ledger_d6b9b38_fkey') THEN
+        ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_ledger_7988187_fkey') THEN
+        ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_7988187_fkey FOREIGN KEY (user_account_state_type_id) REFERENCES user_account_state_type(id);
         END IF; END $$;
 
         DO $$ BEGIN
@@ -276,13 +286,13 @@ describe Masamune::Transform::DefineTable do
         CREATE TABLE IF NOT EXISTS user_dimension
         (
           id SERIAL,
-          cluster_type_id INTEGER NOT NULL REFERENCES cluster_type(id) DEFAULT default_cluster_type_id(),
-          user_account_state_type_id INTEGER NOT NULL REFERENCES user_account_state_type(id) DEFAULT default_user_account_state_type_id(),
+          cluster_type_id INTEGER NOT NULL DEFAULT default_cluster_type_id(),
+          user_account_state_type_id INTEGER NOT NULL DEFAULT default_user_account_state_type_id(),
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           preferences HSTORE,
-          parent_id INTEGER REFERENCES user_dimension_ledger(id),
-          record_id INTEGER REFERENCES user_dimension_ledger(id),
+          parent_id INTEGER,
+          record_id INTEGER,
           start_at TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
           end_at TIMESTAMP,
           version INTEGER DEFAULT 1,
@@ -291,7 +301,27 @@ describe Masamune::Transform::DefineTable do
 
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_pkey') THEN
-        ALTER TABLE user_dimension ADD PRIMARY KEY (id);
+        ALTER TABLE user_dimension ADD PRIMARY KEY (cluster_type_id, id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_d6b9b38_fkey') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_7988187_fkey') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_7988187_fkey FOREIGN KEY (user_account_state_type_id) REFERENCES user_account_state_type(id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_e0538bc_fkey') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_e0538bc_fkey FOREIGN KEY (cluster_type_id, parent_id) REFERENCES user_dimension_ledger(cluster_type_id, id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_824002d_fkey') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_824002d_fkey FOREIGN KEY (cluster_type_id, record_id) REFERENCES user_dimension_ledger(cluster_type_id, id);
         END IF; END $$;
 
         DO $$ BEGIN

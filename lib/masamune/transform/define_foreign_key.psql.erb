@@ -22,15 +22,16 @@
 
 <%
   skip_check_exist ||= false
+  skip_check_valid ||= false
 %>
 
-<%- target.index_columns.each do |column_names, unique, id| -%>
-<%- index_name = "#{target.name}_#{id}_index" -%>
+<%- target.foreign_key_constraints.each do |id, column_names, reference_name, reference_column_names| -%>
+<%- foreign_key_name = "#{target.name}_#{id}_fkey" -%>
 <%- unless target.temporary? || skip_check_exist -%>
 DO $$ BEGIN
-IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= index_name %>') THEN
+IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= '<%= foreign_key_name %>') THEN
 <%- end -%>
-CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target.name %> (<%= column_names.to_a.join(', ') %>);
+ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= foreign_key_name %> FOREIGN KEY (<%= column_names.join(', ') %>) REFERENCES <%= reference_name %>(<%= reference_column_names.join(', ') %>)<%= ' NOT VALID DEFERRABLE INITIALLY DEFERRED' if skip_check_valid %>;
 <%- unless target.temporary? || skip_check_exist -%>
 END IF; END $$;
 

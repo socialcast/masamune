@@ -52,11 +52,15 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
   <%- end -%>
 );
 
-<%- if target.surrogate_key -%>
+<%- unless target.temporary? || target.primary_keys.empty? -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= target.name %>_pkey') THEN
-ALTER TABLE <%= target.name %> ADD PRIMARY KEY (<%= target.surrogate_key.name %>);
+ALTER TABLE <%= target.name %> ADD PRIMARY KEY (<%= target.primary_keys.map(&:name).join(', ') %>);
 END IF; END $$;
+<%- end -%>
+
+<%- unless target.delay_constraints? -%>
+<%= render 'define_foreign_key.psql.erb', target: target %>
 <%- end -%>
 
 <%- target.sequence_columns.each do |_, column| -%>
@@ -76,8 +80,13 @@ END IF; END $$;
 COPY <%= target.name %> FROM '<%= file %>' WITH (<%= copy_options.join(", ") %>);
 <%- end -%>
 
+<%- unless target.delay_constraints? -%>
 <%= render 'define_unique.psql.erb', target: target %>
+<%- end -%>
+
+<%- unless target.delay_index? -%>
 <%= render 'define_index.psql.erb', target: target %>
+<%- end -%>
 
 <% target.insert_rows.each do |row| %>
 INSERT INTO <%= target.name %> (<%= row.insert_columns.join(', ') %>)
