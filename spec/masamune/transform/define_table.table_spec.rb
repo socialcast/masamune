@@ -211,7 +211,7 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_8923fdb_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_table_8923fdb_fkey') THEN
         ALTER TABLE user_table ADD CONSTRAINT user_table_8923fdb_fkey FOREIGN KEY (cluster_table_id) REFERENCES cluster_table(id);
         END IF; END $$;
 
@@ -260,7 +260,7 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_8923fdb_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_table_8923fdb_fkey') THEN
         ALTER TABLE user_table ADD CONSTRAINT user_table_8923fdb_fkey FOREIGN KEY (cluster_table_id) REFERENCES cluster_table(id);
         END IF; END $$;
 
@@ -317,12 +317,12 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_8923fdb_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_table_8923fdb_fkey') THEN
         ALTER TABLE user_table ADD CONSTRAINT user_table_8923fdb_fkey FOREIGN KEY (cluster_table_id) REFERENCES cluster_table(id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_9000538_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_table_9000538_fkey') THEN
         ALTER TABLE user_table ADD CONSTRAINT user_table_9000538_fkey FOREIGN KEY (cluster_table_id, department_table_id) REFERENCES department_table(cluster_table_id, id);
         END IF; END $$;
 
@@ -589,7 +589,7 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_bd2027e_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_table_bd2027e_fkey') THEN
         ALTER TABLE user_table ADD CONSTRAINT user_table_bd2027e_fkey FOREIGN KEY (user_account_state_table_id) REFERENCES user_account_state_table(id);
         END IF; END $$;
       EOS
@@ -631,12 +631,12 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_bd2027e_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_table_bd2027e_fkey') THEN
         ALTER TABLE user_table ADD CONSTRAINT user_table_bd2027e_fkey FOREIGN KEY (user_account_state_table_id) REFERENCES user_account_state_table(id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_table_074da4a_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_table_074da4a_fkey') THEN
         ALTER TABLE user_table ADD CONSTRAINT user_table_074da4a_fkey FOREIGN KEY (hr_user_account_state_table_id) REFERENCES user_account_state_table(id);
         END IF; END $$;
       EOS

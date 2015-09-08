@@ -264,12 +264,12 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_ledger_d6b9b38_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_ledger_d6b9b38_fkey') THEN
         ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_ledger_7988187_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_ledger_7988187_fkey') THEN
         ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_7988187_fkey FOREIGN KEY (user_account_state_type_id) REFERENCES user_account_state_type(id);
         END IF; END $$;
 
@@ -305,22 +305,22 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_d6b9b38_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_d6b9b38_fkey') THEN
         ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_7988187_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_7988187_fkey') THEN
         ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_7988187_fkey FOREIGN KEY (user_account_state_type_id) REFERENCES user_account_state_type(id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_e0538bc_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_e0538bc_fkey') THEN
         ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_e0538bc_fkey FOREIGN KEY (cluster_type_id, parent_id) REFERENCES user_dimension_ledger(cluster_type_id, id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname= 'user_dimension_824002d_fkey') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_824002d_fkey') THEN
         ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_824002d_fkey FOREIGN KEY (cluster_type_id, record_id) REFERENCES user_dimension_ledger(cluster_type_id, id);
         END IF; END $$;
 
