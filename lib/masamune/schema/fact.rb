@@ -37,6 +37,10 @@ module Masamune::Schema
       reference_columns.each do |column|
         column.index.clear
         column.index << column.name
+        if type == :stage
+          column.index << "#{column.name}_time_key"
+          time_key.index << "#{column.name}_time_key"
+        end
       end
       time_key.index << time_key.name
     end

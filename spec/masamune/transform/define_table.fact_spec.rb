@@ -174,12 +174,18 @@ describe Masamune::Transform::DefineTable do
         COPY visits_file_fact_stage FROM 'output_3.csv' WITH (FORMAT 'csv', HEADER true);
 
         CREATE INDEX visits_file_fact_stage_964dac1_index ON visits_file_fact_stage (date_dimension_date_id);
-        CREATE INDEX visits_file_fact_stage_90fc13c_index ON visits_file_fact_stage (tenant_dimension_tenant_id);
-        CREATE INDEX visits_file_fact_stage_30f3cca_index ON visits_file_fact_stage (user_dimension_user_id);
-        CREATE INDEX visits_file_fact_stage_99c433b_index ON visits_file_fact_stage (user_agent_type_name);
-        CREATE INDEX visits_file_fact_stage_d5d236f_index ON visits_file_fact_stage (user_agent_type_version);
-        CREATE INDEX visits_file_fact_stage_5a187ed_index ON visits_file_fact_stage (feature_type_name);
         CREATE INDEX visits_file_fact_stage_6444ed3_index ON visits_file_fact_stage (time_key);
+        CREATE INDEX visits_file_fact_stage_90fc13c_index ON visits_file_fact_stage (tenant_dimension_tenant_id);
+        CREATE INDEX visits_file_fact_stage_5a187ed_index ON visits_file_fact_stage (feature_type_name);
+        CREATE INDEX visits_file_fact_stage_30f3cca_index ON visits_file_fact_stage (user_dimension_user_id);
+        CREATE INDEX visits_file_fact_stage_d5d236f_index ON visits_file_fact_stage (user_agent_type_version);
+        CREATE INDEX visits_file_fact_stage_99c433b_index ON visits_file_fact_stage (user_agent_type_name);
+        CREATE INDEX visits_file_fact_stage_766cbfa_index ON visits_file_fact_stage (user_agent_type_name, time_key);
+        CREATE INDEX visits_file_fact_stage_b0abfed_index ON visits_file_fact_stage (user_dimension_user_id, time_key);
+        CREATE INDEX visits_file_fact_stage_0fe2101_index ON visits_file_fact_stage (user_agent_type_version, time_key);
+        CREATE INDEX visits_file_fact_stage_69e4501_index ON visits_file_fact_stage (tenant_dimension_tenant_id, time_key);
+        CREATE INDEX visits_file_fact_stage_28291db_index ON visits_file_fact_stage (feature_type_name, time_key);
+        CREATE INDEX visits_file_fact_stage_8608ecc_index ON visits_file_fact_stage (date_dimension_date_id, time_key);
 
         ANALYZE visits_file_fact_stage;
       EOS
