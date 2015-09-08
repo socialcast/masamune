@@ -20,10 +20,15 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
-<% files ||= [] %>
+<%
+  files ||= []
+  with_index = locals.fetch(:with_index, true)
+  with_foreign_key = locals.fetch(:with_foreign_key, true)
+  with_unique_constraint = locals.fetch(:with_unique_constraint, true)
+%>
 
 <%- target.children.each do |child| -%>
-<%= render 'define_table.psql.erb', target: child %>
+<%= render 'define_table.psql.erb', target: child, **locals.except(:target, :files)  %>
 <%- end -%>
 
 <%- target.enum_columns.each do |_, column| -%>
@@ -59,7 +64,7 @@ ALTER TABLE <%= target.name %> ADD PRIMARY KEY (<%= target.primary_keys.map(&:na
 END IF; END $$;
 <%- end -%>
 
-<%- unless target.delay_constraints? -%>
+<%- if with_foreign_key && !target.delay_constraints? -%>
 <%= render 'define_foreign_key.psql.erb', target: target %>
 <%- end -%>
 
@@ -80,11 +85,11 @@ END IF; END $$;
 COPY <%= target.name %> FROM '<%= file %>' WITH (<%= copy_options.join(", ") %>);
 <%- end -%>
 
-<%- unless target.delay_constraints? -%>
+<%- if with_unique_constraint && !target.delay_constraints? -%>
 <%= render 'define_unique.psql.erb', target: target %>
 <%- end -%>
 
-<%- unless target.delay_index? -%>
+<%- if with_index && !target.delay_index? -%>
 <%= render 'define_index.psql.erb', target: target %>
 <%- end -%>
 

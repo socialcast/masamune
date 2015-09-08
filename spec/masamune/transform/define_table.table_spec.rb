@@ -23,7 +23,10 @@
 require 'spec_helper'
 
 describe Masamune::Transform::DefineTable do
-  subject { transform.define_table(target).to_s }
+  let(:files) { [] }
+  let(:options) { {} }
+
+  subject { transform.define_table(target, files, options).to_s }
 
   context 'for postgres table with columns' do
     before do
@@ -741,6 +744,104 @@ describe Masamune::Transform::DefineTable do
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 WHERE sequence_owner('user_table_id_seq') = 'user_table.id') THEN
         ALTER SEQUENCE user_table_id_seq OWNED BY user_table.id;
+        END IF; END $$;
+      EOS
+    end
+  end
+
+  context 'for postgres table with index columns and with_index: false' do
+    before do
+      catalog.schema :postgres do
+        table 'user' do
+          column 'tenant_id', index: true
+          column 'user_id', index: true
+        end
+      end
+    end
+
+    let(:options) { { with_index: false } }
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          id SERIAL,
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
+      EOS
+    end
+  end
+
+  context 'for postgres table with referenced tables and with_foreign_key: false' do
+    before do
+      catalog.schema :postgres do
+        table 'user_account_state' do
+          column 'name', type: :string, unique: true
+          column 'description', type: :string
+          row name: 'registered', description: 'Registered'
+          row name: 'active', description: 'Active', attributes: { default: true }
+          row name: 'inactive', description: 'Inactive'
+        end
+
+        table 'user' do
+          references :user_account_state
+          column 'name', type: :string
+        end
+      end
+    end
+
+    let(:options) { { with_foreign_key: false } }
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          id SERIAL,
+          user_account_state_table_id INTEGER NOT NULL DEFAULT default_user_account_state_table_id(),
+          name VARCHAR NOT NULL
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
+        END IF; END $$;
+      EOS
+    end
+  end
+
+  context 'for postgres table with unique columns and with_unique_constraint: false' do
+    before do
+      catalog.schema :postgres do
+        table 'user' do
+          column 'tenant_id', unique: true
+          column 'user_id'
+        end
+      end
+    end
+
+    let(:options) { { with_unique_constraint: false } }
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_table
+        (
+          id SERIAL,
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
         END IF; END $$;
       EOS
     end

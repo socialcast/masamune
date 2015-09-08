@@ -28,18 +28,18 @@ module Masamune::Transform
 
     extend ActiveSupport::Concern
 
-    def define_schema(catalog, store_id)
+    def define_schema(catalog, store_id, options = {})
       context = catalog[store_id]
       operators = []
 
       operators += context.extra(:pre)
 
       context.dimensions.each do |_, dimension|
-        operators << define_table(dimension)
+        operators << define_table(dimension, [], options)
       end
 
       context.facts.each do |_, fact|
-        operators << define_table(fact)
+        operators << define_table(fact, [], options)
       end
 
       operators += context.extra(:post)

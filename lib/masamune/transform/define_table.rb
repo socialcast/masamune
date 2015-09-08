@@ -24,9 +24,9 @@ module Masamune::Transform
   module DefineTable
     extend ActiveSupport::Concern
 
-    def define_table(target, files = [])
+    def define_table(target, files = [], options = {})
       return if target.implicit
-      Operator.new(__method__, target: target, files: Masamune::Schema::Map.convert_files(files), presenters: { postgres: Postgres, hive: Hive }).tap do |operator|
+      Operator.new(__method__, target: target, files: Masamune::Schema::Map.convert_files(files), **options.slice(:with_index, :with_foreign_key, :with_unique_constraint), presenters: { postgres: Postgres, hive: Hive }).tap do |operator|
         logger.debug("#{target.id}\n" + operator.to_s) if target.debug
       end
     end
