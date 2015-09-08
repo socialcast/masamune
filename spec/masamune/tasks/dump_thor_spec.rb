@@ -20,26 +20,23 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'masamune'
+require 'spec_helper'
 require 'thor'
-require 'pry'
 
-module Masamune::Tasks
-  class ShellThor < Thor
-    include Masamune::Thor
-    include Masamune::Actions::DataFlow
+require 'masamune/tasks/dump_thor'
 
-    # FIXME need to add an unnecessary namespace until this issue is fixed:
-    # https://github.com/wycats/thor/pull/247
-    namespace :shell
-    skip_lock!
+describe Masamune::Tasks::DumpThor do
+  context 'with help command ' do
+    let(:command) { 'help' }
+    it_behaves_like 'command usage'
+  end
 
-    desc 'shell', 'Launch an interactive shell'
-    method_option :prompt, :desc => 'Set shell prompt', :default => 'masamune'
-    class_option :start, :aliases => '-a', :desc => 'Start time', default: '1 month ago'
-    def shell_exec
-      Pry.start self, prompt: proc { options[:prompt] + '> ' }
+  context 'with no arguments' do
+    it 'exits with status code 0 and prints catalog' do
+      expect { cli_invocation }.to raise_error { |e|
+        expect(e).to be_a(SystemExit)
+        expect(e.status).to eq(0)
+      }
     end
-    default_task :shell_exec
   end
 end

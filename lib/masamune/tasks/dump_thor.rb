@@ -22,24 +22,34 @@
 
 require 'masamune'
 require 'thor'
-require 'pry'
 
 module Masamune::Tasks
-  class ShellThor < Thor
+  class DumpThor < Thor
     include Masamune::Thor
-    include Masamune::Actions::DataFlow
+    include Masamune::Transform::DefineSchema
 
     # FIXME need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
-    namespace :shell
+    namespace :dump
     skip_lock!
 
-    desc 'shell', 'Launch an interactive shell'
-    method_option :prompt, :desc => 'Set shell prompt', :default => 'masamune'
-    class_option :start, :aliases => '-a', :desc => 'Start time', default: '1 month ago'
-    def shell_exec
-      Pry.start self, prompt: proc { options[:prompt] + '> ' }
+    desc 'dump', 'Dump schema'
+    method_option :type, :enum => ['psql', 'hql'], :desc => 'Schema type', :default => 'psql'
+    def dump_exec
+      print_catalog
+      exit
     end
-    default_task :shell_exec
+    default_task :dump_exec
+
+    private
+
+    def print_catalog
+      case options[:type]
+      when 'psql'
+        puts define_schema(catalog, :postgres)
+      when 'hql'
+        puts define_schema(catalog, :hive)
+      end
+    end
   end
 end
