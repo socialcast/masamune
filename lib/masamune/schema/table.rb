@@ -247,11 +247,6 @@ module Masamune::Schema
       Integer('0x' + Digest::MD5.hexdigest(name)) % (1 << 63)
     end
 
-    # TODO move into presenter
-    def short_md5(*a)
-      Digest::MD5.hexdigest(a.join('_'))[0..6]
-    end
-
     def auto_surrogate_keys
       columns.values.select { |column| column.reference && column.reference.surrogate_key.auto }.uniq.compact
     end
@@ -360,6 +355,10 @@ module Masamune::Schema
 
     def reverse_unique_constraints_map
       @reverse_unique_constraints_map ||= Hash[unique_constraints_map.to_a.map { |k,v| [v.sort, k] }]
+    end
+
+    def short_md5(*a)
+      Digest::MD5.hexdigest(a.compact.sort.uniq.join('_'))[0..6]
     end
   end
 end
