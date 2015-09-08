@@ -96,8 +96,8 @@ module Masamune::Schema
       when :one, :date
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :two
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: :natural, unique: :natural
-        initialize_column! id: 'end_at', type: :timestamp, null: true
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: [:start_at, :natural], unique: :natural
+        initialize_column! id: 'end_at', type: :timestamp, null: true, index: :end_at
         initialize_column! id: 'version', type: :integer, default: 1, null: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :four
@@ -105,8 +105,8 @@ module Masamune::Schema
         # FIXME derive type from from parent
         initialize_column! id: 'parent_id', type: :integer, null: true, reference: TableReference.new(ledger_table)
         initialize_column! id: 'record_id', type: :integer, null: true, reference: TableReference.new(ledger_table)
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: :natural, unique: :natural
-        initialize_column! id: 'end_at', type: :timestamp, null: true
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: [:start_at, :natural], unique: :natural
+        initialize_column! id: 'end_at', type: :timestamp, null: true, index: :end_at
         initialize_column! id: 'version', type: :integer, default: 1, null: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :ledger

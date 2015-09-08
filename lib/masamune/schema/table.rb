@@ -325,10 +325,11 @@ module Masamune::Schema
 
     def initialize_column!(column_or_options)
       column = column_or_options.is_a?(Column) ? column_or_options.dup : Column.new(column_or_options.merge(parent: self))
-      @columns[column.name.to_sym] = column
-      @columns[column.name.to_sym].parent = self
-      @columns[column.name.to_sym].index << :natural if column.natural_key
-      @columns[column.name.to_sym].unique << :natural if column.natural_key
+      column_key = column.name.to_sym
+      @columns[column_key] = column
+      @columns[column_key].parent = self
+      @columns[column_key].index += [column_key, :natural] if column.natural_key
+      @columns[column_key].unique << :natural if column.natural_key
     end
 
     def index_column_map

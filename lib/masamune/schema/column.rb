@@ -85,7 +85,6 @@ module Masamune::Schema
 
     def index=(value)
       @index ||= Set.new
-      @index.clear
       @index +=
       case value
       when true
@@ -103,7 +102,6 @@ module Masamune::Schema
 
     def unique=(value)
       @unique ||= Set.new
-      @unique.clear
       @unique +=
       case value
       when true
