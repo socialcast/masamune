@@ -27,6 +27,7 @@ module Masamune
   class Template
     def initialize(paths = [])
       @paths = Array.wrap(paths)
+      @paths << File.join(File.dirname(__FILE__), 'transform')
     end
 
     def render(template, parameters = {})
@@ -48,7 +49,6 @@ module Masamune
 
     class << self
       def render_to_file(template, parameters = {})
-        raise IOError, "File not found: #{template}" unless File.exists?(template)
         Tempfile.new('masamune').tap do |file|
           file.write(render_to_string(template, parameters))
           file.close
@@ -56,7 +56,6 @@ module Masamune
       end
 
       def render_to_string(template, parameters = {})
-        raise IOError, "File not found: #{template}" unless File.exists?(template)
         instance = Template.new(File.dirname(template))
         combine instance.render(template, parameters)
       end
