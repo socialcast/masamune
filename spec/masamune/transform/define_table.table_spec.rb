@@ -285,13 +285,13 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e8701ad_index') THEN
-        CREATE INDEX user_table_e8701ad_index ON user_table (user_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_3854361_index') THEN
+        CREATE INDEX user_table_3854361_index ON user_table (tenant_id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_3854361_index') THEN
-        CREATE INDEX user_table_3854361_index ON user_table (tenant_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e8701ad_index') THEN
+        CREATE INDEX user_table_e8701ad_index ON user_table (user_id);
         END IF; END $$;
 
         DO $$ BEGIN

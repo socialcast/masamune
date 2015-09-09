@@ -335,7 +335,7 @@ module Masamune::Schema
             map[index] << column.name
           end
         end
-        Hash[map.sort_by { |k, v| v.length }]
+        Hash[map.sort_by { |k, v| [v.length, k.to_s] }]
       end
     end
 
@@ -349,7 +349,7 @@ module Masamune::Schema
             map[unique] << column.name
           end
         end unless temporary?
-        Hash[map.sort_by { |k, v| v.length }]
+        Hash[map.sort_by { |k, v| [v.length, k.to_s] }]
       end
     end
 

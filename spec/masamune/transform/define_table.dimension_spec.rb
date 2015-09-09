@@ -207,11 +207,6 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_3854361_index') THEN
-        CREATE INDEX user_dimension_3854361_index ON user_dimension (tenant_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_2c8e908_index') THEN
         CREATE INDEX user_dimension_2c8e908_index ON user_dimension (end_at);
         END IF; END $$;
@@ -219,6 +214,11 @@ describe Masamune::Transform::DefineTable do
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_23563d3_index') THEN
         CREATE INDEX user_dimension_23563d3_index ON user_dimension (start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_3854361_index') THEN
+        CREATE INDEX user_dimension_3854361_index ON user_dimension (tenant_id);
         END IF; END $$;
 
         DO $$ BEGIN
@@ -360,11 +360,6 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_3854361_index') THEN
-        CREATE INDEX user_dimension_3854361_index ON user_dimension (tenant_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_2c8e908_index') THEN
         CREATE INDEX user_dimension_2c8e908_index ON user_dimension (end_at);
         END IF; END $$;
@@ -372,6 +367,11 @@ describe Masamune::Transform::DefineTable do
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_23563d3_index') THEN
         CREATE INDEX user_dimension_23563d3_index ON user_dimension (start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_3854361_index') THEN
+        CREATE INDEX user_dimension_3854361_index ON user_dimension (tenant_id);
         END IF; END $$;
 
         DO $$ BEGIN
@@ -423,9 +423,9 @@ describe Masamune::Transform::DefineTable do
           last_modified_at TIMESTAMP DEFAULT NOW()
         );
 
-        CREATE INDEX user_consolidated_forward_dimension_stage_3854361_index ON user_consolidated_forward_dimension_stage (tenant_id);
         CREATE INDEX user_consolidated_forward_dimension_stage_2c8e908_index ON user_consolidated_forward_dimension_stage (end_at);
         CREATE INDEX user_consolidated_forward_dimension_stage_23563d3_index ON user_consolidated_forward_dimension_stage (start_at);
+        CREATE INDEX user_consolidated_forward_dimension_stage_3854361_index ON user_consolidated_forward_dimension_stage (tenant_id);
         CREATE INDEX user_consolidated_forward_dimension_stage_e8701ad_index ON user_consolidated_forward_dimension_stage (user_id);
         CREATE INDEX user_consolidated_forward_dimension_stage_e6c3d91_index ON user_consolidated_forward_dimension_stage (tenant_id, user_id, start_at);
       EOS

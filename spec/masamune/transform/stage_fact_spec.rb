@@ -185,13 +185,13 @@ describe Masamune::Transform::StageFact do
 
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d6b9b38_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_0a531a8_index;
-        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d3950d9_index;
-        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_39f0fdd_index;
-        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_e0d2a9e_index;
-        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d8b1c3e_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_33b68fd_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_e0d2a9e_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_422efee_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d3950d9_index;
         DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_6444ed3_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_d8b1c3e_index;
+        DROP INDEX IF EXISTS visits_hourly_fact_y2014m08_39f0fdd_index;
 
         ALTER TABLE visits_hourly_fact_y2014m08 RENAME TO visits_hourly_fact_y2014m08_stage_tmp;
         ALTER TABLE visits_hourly_fact_y2014m08_stage RENAME TO visits_hourly_fact_y2014m08;
@@ -208,13 +208,13 @@ describe Masamune::Transform::StageFact do
 
         CREATE INDEX visits_hourly_fact_y2014m08_d6b9b38_index ON visits_hourly_fact_y2014m08 (cluster_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_0a531a8_index ON visits_hourly_fact_y2014m08 (date_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_d3950d9_index ON visits_hourly_fact_y2014m08 (tenant_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_39f0fdd_index ON visits_hourly_fact_y2014m08 (user_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_e0d2a9e_index ON visits_hourly_fact_y2014m08 (group_dimension_id);
-        CREATE INDEX visits_hourly_fact_y2014m08_d8b1c3e_index ON visits_hourly_fact_y2014m08 (user_agent_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_33b68fd_index ON visits_hourly_fact_y2014m08 (feature_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_e0d2a9e_index ON visits_hourly_fact_y2014m08 (group_dimension_id);
         CREATE INDEX visits_hourly_fact_y2014m08_422efee_index ON visits_hourly_fact_y2014m08 (session_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_d3950d9_index ON visits_hourly_fact_y2014m08 (tenant_dimension_id);
         CREATE INDEX visits_hourly_fact_y2014m08_6444ed3_index ON visits_hourly_fact_y2014m08 (time_key);
+        CREATE INDEX visits_hourly_fact_y2014m08_d8b1c3e_index ON visits_hourly_fact_y2014m08 (user_agent_type_id);
+        CREATE INDEX visits_hourly_fact_y2014m08_39f0fdd_index ON visits_hourly_fact_y2014m08 (user_dimension_id);
 
         ANALYZE visits_hourly_fact_y2014m08;
 
