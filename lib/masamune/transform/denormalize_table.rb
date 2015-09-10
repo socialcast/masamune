@@ -54,6 +54,10 @@ module Masamune::Transform
       end
       method_with_last_element :select_columns
 
+      def join_alias(reference)
+        reference.label ? "#{reference.name} AS #{[reference.label, reference.name].compact.join('_')}" : reference.name
+      end
+
       def join_conditions(column_names)
         {}.tap do |conditions|
           column_names.each do |column_name|
@@ -63,7 +67,7 @@ module Masamune::Transform
             next unless adjacent_reference
             adjacent_column = columns[adjacent_reference.foreign_key_name]
             next unless adjacent_column
-            conditions[column.reference.name] = "#{column.reference.surrogate_key.qualified_name} = #{adjacent_column.qualified_name}"
+            conditions[join_alias(column.reference)] = "#{column.reference.surrogate_key.qualified_name(column.reference.label)} = #{adjacent_column.qualified_name}"
           end
         end
       end

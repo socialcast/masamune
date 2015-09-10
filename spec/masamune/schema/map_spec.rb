@@ -223,7 +223,7 @@ describe Masamune::Schema::Map do
       end
 
       before do
-        expect(environment.logger).to receive(:warn).with(/failed to process '{.*}' for #{target.name}/).ordered
+        expect(environment.logger).to receive(:warn).with(/failed to process row for #{target.name}/).ordered
         expect(environment.logger).to receive(:warn).with(/failed to parse '{.*}' for #{source.name}/).ordered
       end
 

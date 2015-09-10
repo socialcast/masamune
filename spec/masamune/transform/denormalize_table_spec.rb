@@ -43,6 +43,7 @@ describe Masamune::Transform::DenormalizeTable do
       dimension 'user', type: :two do
         column 'tenant_id', type: :integer, index: true, natural_key: true
         column 'user_id', type: :integer, index: true, natural_key: true
+        column 'name', type: :string
       end
 
       dimension 'user_agent', type: :mini do
@@ -56,6 +57,7 @@ describe Masamune::Transform::DenormalizeTable do
         references :cluster
         references :date
         references :tenant
+        references :user, label: 'manager'
         references :user
         references :user_agent
         measure 'total', type: :integer
@@ -74,6 +76,8 @@ describe Masamune::Transform::DenormalizeTable do
         columns: [
           'date.date_id',
           'tenant.tenant_id',
+          'manager_user.tenant_id',
+          'manager_user.user_id',
           'user.tenant_id',
           'user.user_id',
           'user_agent.name',
@@ -89,6 +93,8 @@ describe Masamune::Transform::DenormalizeTable do
       SELECT
         date_dimension.date_id AS date_dimension_date_id,
         tenant_dimension.tenant_id AS tenant_dimension_tenant_id,
+        manager_user_dimension.tenant_id AS manager_user_dimension_tenant_id,
+        manager_user_dimension.user_id AS manager_user_dimension_user_id,
         user_dimension.tenant_id AS user_dimension_tenant_id,
         user_dimension.user_id AS user_dimension_user_id,
         user_agent_type.name AS user_agent_type_name,
@@ -106,6 +112,10 @@ describe Masamune::Transform::DenormalizeTable do
       ON
         tenant_dimension.id = visits_fact.tenant_dimension_id
       LEFT JOIN
+        user_dimension AS manager_user_dimension
+      ON
+        manager_user_dimension.id = visits_fact.manager_user_dimension_id
+      LEFT JOIN
         user_dimension
       ON
         user_dimension.id = visits_fact.user_dimension_id
@@ -116,6 +126,8 @@ describe Masamune::Transform::DenormalizeTable do
       ORDER BY
         date_dimension_date_id,
         tenant_dimension_tenant_id,
+        manager_user_dimension_tenant_id,
+        manager_user_dimension_user_id,
         user_dimension_tenant_id,
         user_dimension_user_id,
         user_agent_type_name,
@@ -143,6 +155,8 @@ describe Masamune::Transform::DenormalizeTable do
       SELECT
         date_dimension.date_id AS date_dimension_date_id,
         tenant_dimension.tenant_id AS tenant_dimension_tenant_id,
+        manager_user_dimension.tenant_id AS manager_user_dimension_tenant_id,
+        manager_user_dimension.user_id AS manager_user_dimension_user_id,
         user_dimension.tenant_id AS user_dimension_tenant_id,
         user_dimension.user_id AS user_dimension_user_id,
         user_agent_type.name AS user_agent_type_name,
@@ -161,6 +175,10 @@ describe Masamune::Transform::DenormalizeTable do
       ON
         tenant_dimension.id = visits_fact.tenant_dimension_id
       LEFT JOIN
+        user_dimension AS manager_user_dimension
+      ON
+        manager_user_dimension.id = visits_fact.manager_user_dimension_id
+      LEFT JOIN
         user_dimension
       ON
         user_dimension.id = visits_fact.user_dimension_id
@@ -171,6 +189,8 @@ describe Masamune::Transform::DenormalizeTable do
       ORDER BY
         date_dimension_date_id,
         tenant_dimension_tenant_id,
+        manager_user_dimension_tenant_id,
+        manager_user_dimension_user_id,
         user_dimension_tenant_id,
         user_dimension_user_id,
         user_agent_type_name,

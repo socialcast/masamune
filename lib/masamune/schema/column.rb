@@ -118,7 +118,7 @@ module Masamune::Schema
     end
 
     def foreign_key_name
-      "#{reference.name}.#{@id}".to_sym if reference
+      "#{[reference.label, reference.name].compact.join('_')}.#{@id}".to_sym if reference
     end
 
     def compact_name

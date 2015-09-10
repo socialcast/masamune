@@ -112,7 +112,7 @@ module Masamune::Schema
         @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: write_headers))
         if row.missing_required_columns.any?
           missing_required_column_names = row.missing_required_columns.map(&:name)
-          @store.logger.warn("row '#{row.to_hash}' is missing required columns '#{missing_required_column_names.join(',')}', skipping")
+          @store.logger.warn("row '#{row.to_hash}' is missing required columns '#{missing_required_column_names.join(', ')}', skipping")
         else
           @csv << row.serialize if append?(row.serialize)
         end
@@ -258,8 +258,8 @@ module Masamune::Schema
       Array.wrap(function.call(input)).each do |output|
         yield output
       end
-    rescue
-      @store.logger.warn("failed to process '#{input}' for #{target.name}, skipping")
+    rescue => e
+      @store.logger.warn("failed to process row for #{target.name}, skipping: #{e.message}")
     end
   end
 end

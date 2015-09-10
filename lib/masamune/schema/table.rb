@@ -180,22 +180,28 @@ module Masamune::Schema
     end
 
     def denormalized_columns
+      return to_enum(__method__).to_a.flatten.compact unless block_given?
       columns.map do |_, column|
         next if column.surrogate_key || column.ignore
         if column.reference
-          column.reference.natural_keys.any? ? column.reference.natural_keys : column.reference.denormalized_columns
+          (column.reference.natural_keys.any? ? column.reference.natural_keys : column.reference.denormalized_columns).each do |join_column|
+            yield [column.reference, join_column]
+          end
         else
-          column
+          yield [nil, column]
         end
-      end.flatten.compact
+      end
     end
 
     def denormalized_column_names
-      denormalized_columns.map do |column|
+      return to_enum(__method__).to_a unless block_given?
+      denormalized_columns do |reference, column|
         if column.parent == self
-          column.name.to_s
+          yield column.name.to_s
+        elsif reference
+          yield [reference.id, column.name].compact.join('.')
         else
-          [column.parent.id, column.name].join('.')
+          yield [column.parent.id, column.name].compact.join('.')
         end
       end
     end
