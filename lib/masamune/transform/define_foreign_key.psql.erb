@@ -20,11 +20,20 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
-<%- target.unique_constraints.each do |column_names, id| -%>
-<%- constraint_name = "#{target.name}_#{id}_key" -%>
+<%
+  skip_check_exist ||= false
+  skip_check_valid ||= false
+%>
+
+<%- target.foreign_key_constraints.each do |id, column_names, reference_name, reference_column_names| -%>
+<%- foreign_key_name = "#{target.name}_#{id}_fkey" -%>
+<%- unless target.temporary? || skip_check_exist -%>
 DO $$ BEGIN
-IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= constraint_name %>') THEN
-ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= constraint_name %> UNIQUE(<%= column_names.to_a.join(', ') %>);
+IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = '<%= foreign_key_name %>') THEN
+<%- end -%>
+ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= foreign_key_name %> FOREIGN KEY (<%= column_names.join(', ') %>) REFERENCES <%= reference_name %>(<%= reference_column_names.join(', ') %>)<%= ' NOT VALID DEFERRABLE INITIALLY DEFERRED' if skip_check_valid %>;
+<%- unless target.temporary? || skip_check_exist -%>
 END IF; END $$;
 
+<%- end -%>
 <%- end -%>

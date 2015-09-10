@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+$: << File.expand_path('../../lib/', __FILE__)
+require 'masamune/tasks/dump_thor'
+Masamune::Tasks::DumpThor.start(ARGV)

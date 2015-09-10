@@ -34,8 +34,13 @@ module Masamune::Schema
       @partition = opts.delete(:partition)
       super opts.reverse_merge(type: :fact)
       initialize_fact_columns!
-      foreign_key_columns.each do |column|
+      reference_columns.each do |column|
+        column.index.clear
         column.index << column.name
+        if type == :stage
+          column.index << "#{column.name}_time_key"
+          time_key.index << "#{column.name}_time_key"
+        end
       end
       time_key.index << time_key.name
     end
@@ -57,6 +62,10 @@ module Masamune::Schema
 
     def date_column
       columns.select { |_, column| column && column.reference && column.reference.type == :date }.values.first
+    end
+
+    def primary_keys
+      []
     end
 
     def time_key

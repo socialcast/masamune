@@ -73,5 +73,10 @@ describe Masamune::Template do
       let(:template) { File.join(File.dirname(__FILE__), '..', 'fixtures', 'relative.sql.erb') }
       it { is_expected.to eq("SELECT * FROM relative;\n") }
     end
+
+    context 'with packaged template' do
+      let(:template) { 'define_schema.hql.erb' }
+      it { is_expected.to_not be_nil }
+    end
   end
 end

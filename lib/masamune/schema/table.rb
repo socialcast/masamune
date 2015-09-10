@@ -75,11 +75,9 @@ module Masamune::Schema
       raise ArgumentError, "table #{name} contains reserved columns" if columns.any? { |column| reserved_column_ids.include?(column.id) }
 
       initialize_surrogate_key_column! unless columns.any? { |column| column.surrogate_key }
-      initialize_reference_columns!  unless columns.any? { |column| column.reference }
+      initialize_reference_columns! unless columns.any? { |column| column.reference }
       columns.each do |column|
-        raise ArgumentError, "table #{name} contains invalid columns" unless column.is_a?(Column)
-        @columns[column.name] = column.dup
-        @columns[column.name].parent = self
+        initialize_column!(column)
       end
     end
 
@@ -107,6 +105,10 @@ module Masamune::Schema
       columns.values.detect { |column| column.surrogate_key }
     end
 
+    def primary_keys
+      [*auto_surrogate_keys, surrogate_key].compact
+    end
+
     def natural_keys
       columns.values.select { |column| column.natural_key }
     end
@@ -119,16 +121,14 @@ module Masamune::Schema
     def unique_constraints
       return [] if temporary?
       unique_constraints_map.map do |_, column_names|
-        [column_names, short_md5(column_names)]
+        [column_names, short_md5(column_names.to_a)]
       end.uniq
     end
 
-    # TODO: Add optional USING
-    # TODO: Default to GIN for array columns
     def index_columns
       index_column_map.map do |_, column_names|
         unique_index = reverse_unique_constraints_map.key?(column_names.sort)
-        [column_names, unique_index, short_md5(column_names)]
+        [column_names, unique_index, short_md5(column_names.to_a)]
       end.uniq
     end
 
@@ -152,7 +152,7 @@ module Masamune::Schema
     end
 
     def foreign_key_columns
-      columns.values.select { | column| column.reference && column.reference.foreign_key }
+      columns.values.select { | column| !column.degenerate? && column.reference && column.reference.foreign_key }
     end
 
     def partitions
@@ -253,6 +253,24 @@ module Masamune::Schema
       Integer('0x' + Digest::MD5.hexdigest(name)) % (1 << 63)
     end
 
+    def auto_surrogate_keys
+      columns.values.select { |column| column.reference && column.reference.surrogate_key.auto }.uniq.compact
+    end
+
+    def foreign_key_constraints
+      return [] if temporary?
+      foreign_key_columns.map do |column|
+        if column.reference.auto_surrogate_keys == auto_surrogate_keys
+          column_names = [*column.reference.auto_surrogate_keys.map(&:name), column.name].compact
+          reference_column_names = [*column.reference.auto_surrogate_keys.map(&:name), column.reference.surrogate_key.name].compact
+        else
+          column_names = [column.name]
+          reference_column_names = [column.reference.surrogate_key.name]
+        end
+        [short_md5(column_names), column_names, column.reference.name, reference_column_names]
+      end.compact
+    end
+
     private
 
     def stage_table_columns(parent, selected = [], inherit = true)
@@ -297,18 +315,22 @@ module Masamune::Schema
           reference.unreserved_columns.each do |_, column|
             next if column.surrogate_key
             next if column.ignore
-            initialize_column! id: column.id, type: column.type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
+            initialize_column! id: column.id, type: column.type, reference: reference, default: reference.default, null: reference.null, natural_key: reference.natural_key
           end
         elsif reference.foreign_key
           # FIXME column.reference should point to reference.surrogate_key, only allow column references to Columns
-          initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, index: true, null: reference.null, natural_key: reference.natural_key
+          initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, null: reference.null, natural_key: reference.natural_key
         end
       end
     end
 
-    def initialize_column!(options = {})
-      column = Masamune::Schema::Column.new(options.merge(parent: self))
-      @columns[column.name.to_sym] = column
+    def initialize_column!(column_or_options)
+      column = column_or_options.is_a?(Column) ? column_or_options.dup : Column.new(column_or_options.merge(parent: self))
+      column_key = column.name.to_sym
+      @columns[column_key] = column
+      @columns[column_key].parent = self
+      @columns[column_key].index += [column_key, :natural] if column.natural_key
+      @columns[column_key].unique << :natural if column.natural_key
     end
 
     def index_column_map
@@ -317,9 +339,10 @@ module Masamune::Schema
         columns.each do |_, column|
           column.index.each do |index|
             map[index] << column.name
+            map[index].uniq!
           end
         end
-        Hash[map.sort_by { |k, v| v.length }]
+        Hash[map.sort_by { |k, v| [v.length, k.to_s] }]
       end
     end
 
@@ -327,11 +350,14 @@ module Masamune::Schema
       @unique_constraints_map ||= begin
         map = Hash.new { |h,k| h[k] = [] }
         columns.each do |_, column|
+          next if column.auto_reference
           column.unique.each do |unique|
+            map[unique] += auto_surrogate_keys.map(&:name)
             map[unique] << column.name
+            map[unique].uniq!
           end
         end unless temporary?
-        Hash[map.sort_by { |k, v| v.length }]
+        Hash[map.sort_by { |k, v| [v.length, k.to_s] }]
       end
     end
 
@@ -340,7 +366,7 @@ module Masamune::Schema
     end
 
     def short_md5(*a)
-      Digest::MD5.hexdigest(a.join('_'))[0..6]
+      Digest::MD5.hexdigest(a.compact.sort.uniq.join('_'))[0..6]
     end
   end
 end

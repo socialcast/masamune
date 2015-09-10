@@ -20,14 +20,18 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
+<%
+  skip_check_exist ||= false
+%>
+
 <%- target.index_columns.each do |column_names, unique, id| -%>
 <%- index_name = "#{target.name}_#{id}_index" -%>
-<%- unless target.temporary? -%>
+<%- unless target.temporary? || skip_check_exist -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= index_name %>') THEN
 <%- end -%>
-CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target.name %> (<%= column_names.join(', ') %>);
-<%- unless target.temporary? -%>
+CREATE <%= unique ? 'UNIQUE INDEX' : 'INDEX' %> <%= index_name %> ON <%= target.name %> (<%= column_names.to_a.join(', ') %>);
+<%- unless target.temporary? || skip_check_exist -%>
 END IF; END $$;
 
 <%- end -%>

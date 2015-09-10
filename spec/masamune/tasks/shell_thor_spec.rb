@@ -37,15 +37,4 @@ describe Masamune::Tasks::ShellThor do
       cli_invocation
     end
   end
-
-  context 'with --dump' do
-    let(:options) { ['--dump'] }
-
-    it 'exits with status code 0 and prints catalog' do
-      expect { cli_invocation }.to raise_error { |e|
-        expect(e).to be_a(SystemExit)
-        expect(e.status).to eq(0)
-      }
-    end
-  end
 end

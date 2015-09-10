@@ -20,10 +20,15 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
-<% files ||= [] %>
+<%
+  files ||= []
+  with_index = locals.fetch(:with_index, true)
+  with_foreign_key = locals.fetch(:with_foreign_key, true)
+  with_unique_constraint = locals.fetch(:with_unique_constraint, true)
+%>
 
 <%- target.children.each do |child| -%>
-<%= render 'define_table.psql.erb', target: child %>
+<%= render 'define_table.psql.erb', target: child, **locals.except(:target, :files)  %>
 <%- end -%>
 
 <%- target.enum_columns.each do |_, column| -%>
@@ -52,6 +57,17 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
   <%- end -%>
 );
 
+<%- unless target.temporary? || target.primary_keys.empty? -%>
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= target.name %>_pkey') THEN
+ALTER TABLE <%= target.name %> ADD PRIMARY KEY (<%= target.primary_keys.map(&:name).join(', ') %>);
+END IF; END $$;
+<%- end -%>
+
+<%- if with_foreign_key && !target.delay_constraints? -%>
+<%= render 'define_foreign_key.psql.erb', target: target %>
+<%- end -%>
+
 <%- target.sequence_columns.each do |_, column| -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 WHERE sequence_owner('<%= column.sequence_id %>') = '<%= column.qualified_name %>') THEN
@@ -69,8 +85,13 @@ END IF; END $$;
 COPY <%= target.name %> FROM '<%= file %>' WITH (<%= copy_options.join(", ") %>);
 <%- end -%>
 
+<%- if with_unique_constraint && !target.delay_constraints? -%>
 <%= render 'define_unique.psql.erb', target: target %>
+<%- end -%>
+
+<%- if with_index && !target.delay_index? -%>
 <%= render 'define_index.psql.erb', target: target %>
+<%- end -%>
 
 <% target.insert_rows.each do |row| %>
 INSERT INTO <%= target.name %> (<%= row.insert_columns.join(', ') %>)

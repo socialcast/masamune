@@ -33,10 +33,12 @@ describe Masamune::Transform::DefineTable do
       end
 
       dimension 'date', type: :date do
-        column 'date_id', type: :integer, unique: true, index: true, natural_key: true
+        column 'date_id', type: :integer, natural_key: true
       end
 
       dimension 'user_agent', type: :mini do
+        references :cluster
+
         column 'name', type: :string, unique: true, index: 'shared'
         column 'version', type: :string, unique: true, index: 'shared', default: 'Unknown'
         column 'description', type: :string, null: true, ignore: true
@@ -47,15 +49,21 @@ describe Masamune::Transform::DefineTable do
       end
 
       dimension 'tenant', type: :two do
-        column 'tenant_id', type: :integer, index: true, natural_key: true
+        references :cluster
+
+        column 'tenant_id', type: :integer, natural_key: true
       end
 
       dimension 'user', type: :two do
-        column 'tenant_id', type: :integer, index: true, natural_key: true
-        column 'user_id', type: :integer, index: true, natural_key: true
+        references :cluster
+
+        column 'tenant_id', type: :integer, natural_key: true
+        column 'user_id', type: :integer, natural_key: true
       end
 
       dimension 'group', type: :two do
+        references :cluster
+
         column 'group_id', type: :integer, natural_key: true
       end
 
@@ -125,57 +133,17 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS visits_fact
         (
-          cluster_type_id INTEGER NOT NULL REFERENCES cluster_type(id) DEFAULT default_cluster_type_id(),
-          date_dimension_id INTEGER NOT NULL REFERENCES date_dimension(id),
-          tenant_dimension_id INTEGER NOT NULL REFERENCES tenant_dimension(id),
-          user_dimension_id INTEGER NOT NULL REFERENCES user_dimension(id),
+          cluster_type_id INTEGER NOT NULL DEFAULT default_cluster_type_id(),
+          date_dimension_id INTEGER NOT NULL,
+          tenant_dimension_id INTEGER NOT NULL,
+          user_dimension_id INTEGER NOT NULL,
           group_dimension_id INTEGER[] NOT NULL,
-          user_agent_type_id INTEGER NOT NULL REFERENCES user_agent_type(id),
-          feature_type_id INTEGER NOT NULL REFERENCES feature_type(id),
+          user_agent_type_id INTEGER NOT NULL,
+          feature_type_id INTEGER NOT NULL,
           total INTEGER NOT NULL,
           time_key INTEGER NOT NULL,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_d6b9b38_index') THEN
-        CREATE INDEX visits_fact_d6b9b38_index ON visits_fact (cluster_type_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_0a531a8_index') THEN
-        CREATE INDEX visits_fact_0a531a8_index ON visits_fact (date_dimension_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_d3950d9_index') THEN
-        CREATE INDEX visits_fact_d3950d9_index ON visits_fact (tenant_dimension_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_39f0fdd_index') THEN
-        CREATE INDEX visits_fact_39f0fdd_index ON visits_fact (user_dimension_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_e0d2a9e_index') THEN
-        CREATE INDEX visits_fact_e0d2a9e_index ON visits_fact (group_dimension_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_d8b1c3e_index') THEN
-        CREATE INDEX visits_fact_d8b1c3e_index ON visits_fact (user_agent_type_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_33b68fd_index') THEN
-        CREATE INDEX visits_fact_33b68fd_index ON visits_fact (feature_type_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_6444ed3_index') THEN
-        CREATE INDEX visits_fact_6444ed3_index ON visits_fact (time_key);
-        END IF; END $$;
       EOS
     end
   end
@@ -206,12 +174,18 @@ describe Masamune::Transform::DefineTable do
         COPY visits_file_fact_stage FROM 'output_3.csv' WITH (FORMAT 'csv', HEADER true);
 
         CREATE INDEX visits_file_fact_stage_964dac1_index ON visits_file_fact_stage (date_dimension_date_id);
+        CREATE INDEX visits_file_fact_stage_5a187ed_index ON visits_file_fact_stage (feature_type_name);
         CREATE INDEX visits_file_fact_stage_90fc13c_index ON visits_file_fact_stage (tenant_dimension_tenant_id);
-        CREATE INDEX visits_file_fact_stage_30f3cca_index ON visits_file_fact_stage (user_dimension_user_id);
+        CREATE INDEX visits_file_fact_stage_6444ed3_index ON visits_file_fact_stage (time_key);
         CREATE INDEX visits_file_fact_stage_99c433b_index ON visits_file_fact_stage (user_agent_type_name);
         CREATE INDEX visits_file_fact_stage_d5d236f_index ON visits_file_fact_stage (user_agent_type_version);
-        CREATE INDEX visits_file_fact_stage_5a187ed_index ON visits_file_fact_stage (feature_type_name);
-        CREATE INDEX visits_file_fact_stage_6444ed3_index ON visits_file_fact_stage (time_key);
+        CREATE INDEX visits_file_fact_stage_30f3cca_index ON visits_file_fact_stage (user_dimension_user_id);
+        CREATE INDEX visits_file_fact_stage_8608ecc_index ON visits_file_fact_stage (date_dimension_date_id, time_key);
+        CREATE INDEX visits_file_fact_stage_28291db_index ON visits_file_fact_stage (feature_type_name, time_key);
+        CREATE INDEX visits_file_fact_stage_69e4501_index ON visits_file_fact_stage (tenant_dimension_tenant_id, time_key);
+        CREATE INDEX visits_file_fact_stage_766cbfa_index ON visits_file_fact_stage (user_agent_type_name, time_key);
+        CREATE INDEX visits_file_fact_stage_0fe2101_index ON visits_file_fact_stage (user_agent_type_version, time_key);
+        CREATE INDEX visits_file_fact_stage_b0abfed_index ON visits_file_fact_stage (user_dimension_user_id, time_key);
 
         ANALYZE visits_file_fact_stage;
       EOS
@@ -256,16 +230,6 @@ describe Masamune::Transform::DefineTable do
           time_key INTEGER NOT NULL,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_2a6313d_index') THEN
-        CREATE INDEX visits_fact_2a6313d_index ON visits_fact (message_kind_type_id);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'visits_fact_6444ed3_index') THEN
-        CREATE INDEX visits_fact_6444ed3_index ON visits_fact (time_key);
-        END IF; END $$;
       EOS
     end
   end

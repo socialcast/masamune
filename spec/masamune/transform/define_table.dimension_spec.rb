@@ -157,11 +157,16 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_dimension
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_pkey') THEN
+        ALTER TABLE user_dimension ADD PRIMARY KEY (id);
+        END IF; END $$;
       EOS
     end
   end
@@ -170,8 +175,8 @@ describe Masamune::Transform::DefineTable do
     before do
       catalog.schema :postgres do
         dimension 'user', type: :two do
-          column 'tenant_id', index: true, natural_key: true
-          column 'user_id', index: true, natural_key: true
+          column 'tenant_id', natural_key: true
+          column 'user_id', natural_key: true
         end
       end
     end
@@ -182,7 +187,7 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_dimension
         (
-          id SERIAL PRIMARY KEY,
+          id SERIAL,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           start_at TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
@@ -192,8 +197,23 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_pkey') THEN
+        ALTER TABLE user_dimension ADD PRIMARY KEY (id);
+        END IF; END $$;
+
+        DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_e6c3d91_key') THEN
         ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_e6c3d91_key UNIQUE(tenant_id, user_id, start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_2c8e908_index') THEN
+        CREATE INDEX user_dimension_2c8e908_index ON user_dimension (end_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_23563d3_index') THEN
+        CREATE INDEX user_dimension_23563d3_index ON user_dimension (start_at);
         END IF; END $$;
 
         DO $$ BEGIN
@@ -207,18 +227,8 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_23563d3_index') THEN
-        CREATE INDEX user_dimension_23563d3_index ON user_dimension (start_at);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_2c8e908_index') THEN
-        CREATE INDEX user_dimension_2c8e908_index ON user_dimension (end_at);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_2af72f1_index') THEN
-        CREATE INDEX user_dimension_2af72f1_index ON user_dimension (version);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_e6c3d91_index') THEN
+        CREATE UNIQUE INDEX user_dimension_e6c3d91_index ON user_dimension (tenant_id, user_id, start_at);
         END IF; END $$;
       EOS
     end
@@ -242,8 +252,8 @@ describe Masamune::Transform::DefineTable do
         dimension 'user', type: :four do
           references :cluster
           references :user_account_state
-          column 'tenant_id', index: true, natural_key: true
-          column 'user_id', index: true, natural_key: true
+          column 'tenant_id', natural_key: true
+          column 'user_id', natural_key: true
           column 'preferences', type: :key_value, null: true
         end
       end
@@ -255,9 +265,9 @@ describe Masamune::Transform::DefineTable do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS user_dimension_ledger
         (
-          id SERIAL PRIMARY KEY,
-          cluster_type_id INTEGER NOT NULL REFERENCES cluster_type(id) DEFAULT default_cluster_type_id(),
-          user_account_state_type_id INTEGER REFERENCES user_account_state_type(id),
+          id SERIAL,
+          cluster_type_id INTEGER NOT NULL DEFAULT default_cluster_type_id(),
+          user_account_state_type_id INTEGER,
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           preferences HSTORE,
@@ -269,18 +279,23 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_370d6dd_key') THEN
-        ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_370d6dd_key UNIQUE(tenant_id, user_id, source_kind, source_uuid, start_at);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_pkey') THEN
+        ALTER TABLE user_dimension_ledger ADD PRIMARY KEY (cluster_type_id, id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_d6b9b38_index') THEN
-        CREATE INDEX user_dimension_ledger_d6b9b38_index ON user_dimension_ledger (cluster_type_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_ledger_d6b9b38_fkey') THEN
+        ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_7988187_index') THEN
-        CREATE INDEX user_dimension_ledger_7988187_index ON user_dimension_ledger (user_account_state_type_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_ledger_7988187_fkey') THEN
+        ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_7988187_fkey FOREIGN KEY (user_account_state_type_id) REFERENCES user_account_state_type(id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_ff54dba_key') THEN
+        ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_ff54dba_key UNIQUE(cluster_type_id, tenant_id, user_id, source_kind, source_uuid, start_at);
         END IF; END $$;
 
         DO $$ BEGIN
@@ -294,20 +309,20 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_23563d3_index') THEN
-        CREATE INDEX user_dimension_ledger_23563d3_index ON user_dimension_ledger (start_at);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_370d6dd_index') THEN
+        CREATE INDEX user_dimension_ledger_370d6dd_index ON user_dimension_ledger (tenant_id, user_id, source_kind, source_uuid, start_at);
         END IF; END $$;
 
         CREATE TABLE IF NOT EXISTS user_dimension
         (
-          id SERIAL PRIMARY KEY,
-          cluster_type_id INTEGER NOT NULL REFERENCES cluster_type(id) DEFAULT default_cluster_type_id(),
-          user_account_state_type_id INTEGER NOT NULL REFERENCES user_account_state_type(id) DEFAULT default_user_account_state_type_id(),
+          id SERIAL,
+          cluster_type_id INTEGER NOT NULL DEFAULT default_cluster_type_id(),
+          user_account_state_type_id INTEGER NOT NULL DEFAULT default_user_account_state_type_id(),
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
           preferences HSTORE,
-          parent_id INTEGER REFERENCES user_dimension_ledger(id),
-          record_id INTEGER REFERENCES user_dimension_ledger(id),
+          parent_id INTEGER,
+          record_id INTEGER,
           start_at TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
           end_at TIMESTAMP,
           version INTEGER DEFAULT 1,
@@ -315,18 +330,43 @@ describe Masamune::Transform::DefineTable do
         );
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_e6c3d91_key') THEN
-        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_e6c3d91_key UNIQUE(tenant_id, user_id, start_at);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_pkey') THEN
+        ALTER TABLE user_dimension ADD PRIMARY KEY (cluster_type_id, id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_d6b9b38_index') THEN
-        CREATE INDEX user_dimension_d6b9b38_index ON user_dimension (cluster_type_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_d6b9b38_fkey') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id);
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_7988187_index') THEN
-        CREATE INDEX user_dimension_7988187_index ON user_dimension (user_account_state_type_id);
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_7988187_fkey') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_7988187_fkey FOREIGN KEY (user_account_state_type_id) REFERENCES user_account_state_type(id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_e0538bc_fkey') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_e0538bc_fkey FOREIGN KEY (cluster_type_id, parent_id) REFERENCES user_dimension_ledger(cluster_type_id, id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_dimension_824002d_fkey') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_824002d_fkey FOREIGN KEY (cluster_type_id, record_id) REFERENCES user_dimension_ledger(cluster_type_id, id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_3fcebfa_key') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_3fcebfa_key UNIQUE(cluster_type_id, tenant_id, user_id, start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_2c8e908_index') THEN
+        CREATE INDEX user_dimension_2c8e908_index ON user_dimension (end_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_23563d3_index') THEN
+        CREATE INDEX user_dimension_23563d3_index ON user_dimension (start_at);
         END IF; END $$;
 
         DO $$ BEGIN
@@ -340,18 +380,8 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_23563d3_index') THEN
-        CREATE INDEX user_dimension_23563d3_index ON user_dimension (start_at);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_2c8e908_index') THEN
-        CREATE INDEX user_dimension_2c8e908_index ON user_dimension (end_at);
-        END IF; END $$;
-
-        DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_2af72f1_index') THEN
-        CREATE INDEX user_dimension_2af72f1_index ON user_dimension (version);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_e6c3d91_index') THEN
+        CREATE INDEX user_dimension_e6c3d91_index ON user_dimension (tenant_id, user_id, start_at);
         END IF; END $$;
       EOS
     end
@@ -368,8 +398,8 @@ describe Masamune::Transform::DefineTable do
 
         dimension 'user', type: :four do
           references :user_account_state
-          column 'tenant_id', index: true, natural_key: true
-          column 'user_id', index: true, natural_key: true
+          column 'tenant_id', natural_key: true
+          column 'user_id', natural_key: true
           column 'preferences', type: :key_value, null: true
         end
       end
@@ -393,12 +423,11 @@ describe Masamune::Transform::DefineTable do
           last_modified_at TIMESTAMP DEFAULT NOW()
         );
 
-        CREATE INDEX user_consolidated_forward_dimension_stage_7988187_index ON user_consolidated_forward_dimension_stage (user_account_state_type_id);
+        CREATE INDEX user_consolidated_forward_dimension_stage_2c8e908_index ON user_consolidated_forward_dimension_stage (end_at);
+        CREATE INDEX user_consolidated_forward_dimension_stage_23563d3_index ON user_consolidated_forward_dimension_stage (start_at);
         CREATE INDEX user_consolidated_forward_dimension_stage_3854361_index ON user_consolidated_forward_dimension_stage (tenant_id);
         CREATE INDEX user_consolidated_forward_dimension_stage_e8701ad_index ON user_consolidated_forward_dimension_stage (user_id);
-        CREATE INDEX user_consolidated_forward_dimension_stage_23563d3_index ON user_consolidated_forward_dimension_stage (start_at);
-        CREATE INDEX user_consolidated_forward_dimension_stage_2c8e908_index ON user_consolidated_forward_dimension_stage (end_at);
-        CREATE INDEX user_consolidated_forward_dimension_stage_2af72f1_index ON user_consolidated_forward_dimension_stage (version);
+        CREATE INDEX user_consolidated_forward_dimension_stage_e6c3d91_index ON user_consolidated_forward_dimension_stage (tenant_id, user_id, start_at);
       EOS
     end
   end
