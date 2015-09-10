@@ -60,7 +60,7 @@ module Masamune::Schema
     def name(column = nil)
       return unless @id
       if column
-        "#{@id}_#{column.name}()"
+        "#{@id}_#{parent.name}_#{column.name}()"
       else
         "#{@id}_#{parent.name}_#{parent.surrogate_key.name}()"
       end

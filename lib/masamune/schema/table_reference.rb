@@ -31,6 +31,7 @@ module Masamune::Schema
       natural_key:     false,
       denormalize:     false,
       multiple:        false,
+      through:         [],
       degenerate:      false
     }
 
@@ -71,6 +72,10 @@ module Masamune::Schema
       if default_row = @table.rows.detect { |row| @default ? row.id == @default : row.default }
         default_row.name(column)
       end
+    end
+
+    def through=(columns)
+      @through = Array.wrap(columns)
     end
   end
 end

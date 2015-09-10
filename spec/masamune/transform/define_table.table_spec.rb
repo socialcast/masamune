@@ -318,9 +318,9 @@ describe Masamune::Transform::DefineTable do
 
         ANALYZE user_table;
 
-        CREATE OR REPLACE FUNCTION default_user_id()
+        CREATE OR REPLACE FUNCTION default_user_table_user_id()
         RETURNS INTEGER IMMUTABLE AS $$
-          SELECT -1;
+          SELECT CAST(-1 AS INTEGER);
         $$ LANGUAGE SQL;
 
         CREATE OR REPLACE FUNCTION default_user_table_id()
@@ -328,9 +328,9 @@ describe Masamune::Transform::DefineTable do
           SELECT id FROM user_table WHERE tenant_id = default_tenant_id() AND user_id = -1;
         $$ LANGUAGE SQL;
 
-        CREATE OR REPLACE FUNCTION unknown_user_id()
+        CREATE OR REPLACE FUNCTION unknown_user_table_user_id()
         RETURNS INTEGER IMMUTABLE AS $$
-          SELECT -2;
+          SELECT CAST(-2 AS INTEGER);
         $$ LANGUAGE SQL;
 
         CREATE OR REPLACE FUNCTION unknown_user_table_id()

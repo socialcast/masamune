@@ -86,7 +86,7 @@ ANALYZE <%= target.name %>;
 <%- row.natural_keys.each do |column| -%>
 CREATE OR REPLACE FUNCTION <%= row.name(column) %>
 RETURNS <%= column.sql_type %> IMMUTABLE AS $$
-  SELECT <%= row.sql_value(column) %>;
+  SELECT CAST(<%= row.sql_value(column) %> AS <%= column.sql_type %>);
 $$ LANGUAGE SQL;
 
 <%- end -%>
