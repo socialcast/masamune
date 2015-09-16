@@ -24,9 +24,9 @@ require 'spec_helper'
 
 describe Masamune::Transform::DefineTable do
   let(:files) { [] }
-  let(:options) { {} }
+  let(:section) { :all }
 
-  subject { transform.define_table(target, files, options).to_s }
+  subject { transform.define_table(target, files, section).to_s }
 
   context 'for postgres table with columns' do
     before do
@@ -794,7 +794,7 @@ describe Masamune::Transform::DefineTable do
     end
   end
 
-  context 'for postgres table with index columns and with_index: false' do
+  context 'for postgres table with index columns and section :pre' do
     before do
       catalog.schema :postgres do
         table 'user' do
@@ -804,7 +804,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:options) { { with_index: false } }
+    let(:section) { :pre }
     let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
@@ -824,7 +824,7 @@ describe Masamune::Transform::DefineTable do
     end
   end
 
-  context 'for postgres table with referenced tables and with_foreign_key: false' do
+  context 'for postgres table with referenced tables and section :pre' do
     before do
       catalog.schema :postgres do
         table 'user_account_state' do
@@ -842,7 +842,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:options) { { with_foreign_key: false } }
+    let(:section) { :pre }
     let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
@@ -862,7 +862,7 @@ describe Masamune::Transform::DefineTable do
     end
   end
 
-  context 'for postgres table with unique columns and with_unique_constraint: false' do
+  context 'for postgres table with unique columns and section :pre' do
     before do
       catalog.schema :postgres do
         table 'user' do
@@ -872,7 +872,7 @@ describe Masamune::Transform::DefineTable do
       end
     end
 
-    let(:options) { { with_unique_constraint: false } }
+    let(:section) { :pre }
     let(:target) { catalog.postgres.user_table }
 
     it 'should render table template' do
@@ -888,6 +888,74 @@ describe Masamune::Transform::DefineTable do
         IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
         ALTER TABLE user_table ADD PRIMARY KEY (id);
         END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_3854361_key') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_3854361_key UNIQUE(tenant_id);
+        END IF; END $$;
+      EOS
+    end
+  end
+
+  context 'for postgres table with index columns and section :post' do
+    before do
+      catalog.schema :postgres do
+        table 'user' do
+          column 'tenant_id', index: true
+          column 'user_id', index: true
+        end
+      end
+    end
+
+    let(:section) { :post }
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_3854361_index') THEN
+        CREATE INDEX user_table_3854361_index ON user_table (tenant_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_e8701ad_index') THEN
+        CREATE INDEX user_table_e8701ad_index ON user_table (user_id);
+        END IF; END $$;
+
+        ANALYZE user_table;
+      EOS
+    end
+  end
+
+  context 'for postgres table with referenced tables and section :post' do
+    before do
+      catalog.schema :postgres do
+        table 'user_account_state' do
+          column 'name', type: :string, unique: true
+          column 'description', type: :string
+          row name: 'registered', description: 'Registered'
+          row name: 'active', description: 'Active', attributes: { default: true }
+          row name: 'inactive', description: 'Inactive'
+        end
+
+        table 'user' do
+          references :user_account_state
+          column 'name', type: :string
+        end
+      end
+    end
+
+    let(:section) { :post }
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_table_bd2027e_fkey') THEN
+        ALTER TABLE user_table ADD CONSTRAINT user_table_bd2027e_fkey FOREIGN KEY (user_account_state_table_id) REFERENCES user_account_state_table(id);
+        END IF; END $$;
+
+        ANALYZE user_table;
       EOS
     end
   end

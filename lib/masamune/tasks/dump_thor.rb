@@ -35,9 +35,7 @@ module Masamune::Tasks
 
     desc 'dump', 'Dump schema'
     method_option :type, :enum => ['psql', 'hql'], :desc => 'Schema type', :default => 'psql'
-    method_option :with_index, :type => :boolean, :desc => 'Dump schema with indexes', :default => true
-    method_option :with_foreign_key, :type => :boolean, :desc => 'Dump schema with foreign key constraints', :default => true
-    method_option :with_unique_constraint, :type => :boolean, :desc => 'Dump schema with uniqueness constraints', :default => true
+    method_option :section, :enum => ['pre', 'post', 'all'], :desc => 'Schema section', :default => 'all'
     def dump_exec
       print_catalog
       exit
@@ -49,9 +47,9 @@ module Masamune::Tasks
     def print_catalog
       case options[:type]
       when 'psql'
-        puts define_schema(catalog, :postgres, options.slice(:with_index, :with_foreign_key, :with_unique_constraint).to_h.symbolize_keys)
+        puts define_schema(catalog, :postgres, options[:section].to_sym)
       when 'hql'
-        puts define_schema(catalog, :hive)
+        puts define_schema(catalog, :hive, options[:section].to_sym)
       end
     end
   end
