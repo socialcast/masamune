@@ -65,6 +65,10 @@ module TaskExampleGroup
     it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, message }
   end
 
+  shared_examples 'raises Thor::RequiredArgumentMissingError' do |message|
+    it { expect { cli_invocation }.to raise_error Thor::RequiredArgumentMissingError, message }
+  end
+
   def self.included(base)
     base.before :all do
       ENV['THOR_DEBUG'] = '1'

@@ -99,43 +99,44 @@ describe Masamune::Thor do
 
     context 'with command and no input options' do
       let(:command) { 'command' }
-      it { expect { cli_invocation }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--start'/ }
+      it_behaves_like 'raises Thor::RequiredArgumentMissingError', /No value provided for required options '--start'/
     end
 
     context 'with command and invalid --start' do
       let(:command) { 'command' }
       let(:options) { ['--start', 'xxx'] }
-      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--start'; got/ }
+      it_behaves_like 'raises Thor::MalformattedArgumentError', /Expected date time value for '--start'; got/
     end
 
     context 'with command and invalid --stop' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--stop', 'xxx'] }
-      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Expected date time value for '--stop'; got/ }
+      it_behaves_like 'raises Thor::MalformattedArgumentError', /Expected date time value for '--stop'; got/
     end
 
     context 'with command and invalid --sources' do
       let(:command) { 'command' }
       let(:options) { ['--sources', 'foo'] }
-      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--sources'; got/ }
+      it_behaves_like 'raises Thor::MalformattedArgumentError', /Expected file value for '--sources'; got/
     end
 
     context 'with command and invalid --targets' do
       let(:command) { 'command' }
       let(:options) { ['--targets', 'foo'] }
-      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Expected file value for '--targets'; got/ }
+      it_behaves_like 'raises Thor::MalformattedArgumentError', /Expected file value for '--targets'; got/
     end
 
     context 'with command and both --sources and --targets' do
       let(:command) { 'command' }
       let(:options) { ['--sources', 'sources', '--targets', 'targets'] }
-      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Cannot specify both option '--sources' and option '--targets'/ }
+
+      it_behaves_like 'raises Thor::MalformattedArgumentError', /Cannot specify both option '--sources' and option '--targets'/
     end
 
     context 'with command and --start and bad --config file' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01', '--config', 'xxx'] }
-      it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, /Could not load file provided for '--config'/ }
+      it_behaves_like 'raises Thor::MalformattedArgumentError', /Could not load file provided for '--config'/
     end
 
     context 'with command and --start and missing system --config file' do
@@ -144,7 +145,7 @@ describe Masamune::Thor do
       before do
         expect_any_instance_of(Masamune::Filesystem).to receive(:resolve_file)
       end
-      it { expect { cli_invocation }.to raise_error Thor::RequiredArgumentMissingError, /Option --config or valid system configuration file required/ }
+      it_behaves_like 'raises Thor::RequiredArgumentMissingError', /Option --config or valid system configuration file required/
     end
 
     context 'with command and -- --extra --args' do
@@ -153,9 +154,7 @@ describe Masamune::Thor do
       before do
         expect_any_instance_of(thor_class).to receive(:extra=).with(['--extra', '--args'])
       end
-      it do
-        expect { cli_invocation }.to raise_error SystemExit
-      end
+      it_behaves_like 'executes with success'
     end
 
     context 'with command and --start' do
