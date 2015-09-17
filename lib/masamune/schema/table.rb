@@ -56,6 +56,10 @@ module Masamune::Schema
       @children = Set.new
     end
 
+    def inspect
+      name
+    end
+
     def id=(id)
       @id = id.to_sym
     end

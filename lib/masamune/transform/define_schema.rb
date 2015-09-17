@@ -40,10 +40,9 @@ module Masamune::Transform
 
       context.facts.each do |_, fact|
         operators << define_table(fact, [], options[:section])
-        (options[:start_date] .. options[:stop_date]).each do |date|
-          next unless date.day == 1
-          operators << define_table(fact.partition_table(date.to_time), [], options[:section])
-        end if options[:start_date] && options[:stop_date]
+        fact.partition_tables(options[:start_date], options[:stop_date]) do |fact_partition_table|
+          operators << define_table(fact_partition_table, [], options[:section])
+        end
       end
 
       operators += context.extra(:post)
