@@ -53,7 +53,7 @@ module Masamune::Transform
       end
 
       def define_primary_keys?
-        !post_section? && !(target.temporary? || target.primary_keys.empty?)
+        !pre_section? && !(target.temporary? || target.primary_keys.empty?)
       end
 
       def define_indexes?
@@ -69,8 +69,8 @@ module Masamune::Transform
       end
 
       def define_unique_constraints?
-        return true if pre_section?
-        return false if post_section?
+        return false if pre_section?
+        return true if post_section?
         !target.delay_unique_constraints?
       end
 
