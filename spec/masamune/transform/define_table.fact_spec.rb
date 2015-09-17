@@ -149,7 +149,7 @@ describe Masamune::Transform::DefineTable do
   end
 
   context 'for postgres fact partition with :post' do
-    let(:target) { catalog.postgres.visits_fact.partition_table(Date.civil(2015, 01, 01).to_time) }
+    let(:target) { catalog.postgres.visits_fact.partition_table(Date.civil(2015, 01, 01)) }
 
     subject(:result) { transform.define_table(target, [], :post).to_s }
 

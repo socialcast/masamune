@@ -88,8 +88,7 @@ module Masamune::Schema
     def partition_table(date = nil)
       return unless partition
       return unless date
-      # TODO increase robustness of bind_date
-      partition_range = partition_rule.bind_date(date)
+      partition_range = partition_rule.bind_date_or_time(date)
       @partition_tables ||= {}
       @partition_tables[partition_range] ||= self.class.new(id: @id, store: store, columns: partition_table_columns, parent: self, range: partition_range, grain: grain, inherit: true)
     end
@@ -99,7 +98,7 @@ module Masamune::Schema
       return unless start_date && stop_date
       (start_date .. stop_date).each do |date|
         next unless date.day == 1
-        yield partition_table(date.to_time)
+        yield partition_table(date)
       end 
     end
 

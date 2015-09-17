@@ -77,9 +77,9 @@ describe Masamune::Transform::DefineSchema do
           transform.define_table(catalog.postgres.dimensions['user_account_state']),
           transform.define_table(catalog.postgres.dimensions['user']),
           transform.define_table(catalog.postgres.facts['visits']),
-          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 01, 01).to_time)),
-          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 02, 01).to_time)),
-          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 03, 01).to_time))
+          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 01, 01))),
+          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 02, 01))),
+          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 03, 01)))
       end
     end
   end

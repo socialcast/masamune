@@ -160,9 +160,9 @@ describe Masamune::Schema::Fact do
 
       it do
         expect { |b| fact.partition_tables(start_date, stop_date, &b) }.to yield_successive_args \
-           fact.partition_table(Date.civil(2015, 01, 01).to_time),
-           fact.partition_table(Date.civil(2015, 02, 01).to_time),
-           fact.partition_table(Date.civil(2015, 03, 01).to_time)
+           fact.partition_table(Date.civil(2015, 01, 01)),
+           fact.partition_table(Date.civil(2015, 02, 01)),
+           fact.partition_table(Date.civil(2015, 03, 01))
       end
     end
   end

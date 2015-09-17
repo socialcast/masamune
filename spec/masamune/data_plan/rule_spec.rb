@@ -47,30 +47,45 @@ describe Masamune::DataPlan::Rule do
     end
   end
 
-  describe '#bind_date' do
-    subject(:elem) { instance.bind_date(input_date) }
+  describe '#bind_date_or_time' do
+    subject(:elem) { instance.bind_date_or_time(input) }
 
-    context 'with default' do
-      let(:input_date) { DateTime.civil(2013,04,05,23,13) }
+    context 'with nil input' do
+      let(:input) { nil }
+      it { expect { elem }.to raise_error ArgumentError }
+    end
+
+    context 'with unknown input type' do
+      let(:input) { 1 }
+      it { expect { elem }.to raise_error ArgumentError }
+    end
+
+    context 'with DateTime input' do
+      let(:input) { DateTime.civil(2013,04,05,23,13) }
 
       describe '#path' do
         subject { elem.path }
         it { is_expected.to eq('report/2013-04-05/23') }
       end
-      let(:start_time) { DateTime.civil(2013,04,05,23) }
-      let(:stop_time) { DateTime.civil(2013,04,05,0) }
     end
 
-    context 'with unix timestamp pattern' do
+    context 'with DateTime input and unix timestamp pattern' do
       let(:pattern) { 'logs/%H-s.log' }
-      let(:input_date) { DateTime.civil(2013,04,05,23,13) }
+      let(:input) { DateTime.civil(2013,04,05,23,13) }
 
       describe '#path' do
         subject { elem.path }
         it { is_expected.to eq('logs/1365202800.log') }
       end
-      let(:start_time) { DateTime.civil(2013,04,05,23) }
-      let(:stop_time) { DateTime.civil(2013,04,05,0) }
+    end
+
+    context 'with Date input' do
+      let(:input) { Date.civil(2013,04,05) }
+
+      describe '#path' do
+        subject { elem.path }
+        it { is_expected.to eq('report/2013-04-05/00') }
+      end
     end
   end
 
