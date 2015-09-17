@@ -177,7 +177,7 @@ describe Masamune::DataPlan::Engine do
     context 'invalid target' do
       let(:rule) { 'derived_daily' }
       let(:target) {  '/table/y=2013/m=01/d=01' }
-      it { expect { subject }.to raise_error }
+      it { expect { subject }.to raise_error /Cannot bind_input/ }
     end
   end
 
@@ -206,7 +206,7 @@ describe Masamune::DataPlan::Engine do
 
     context 'invalid target' do
       let(:target) { '/daily' }
-      it { expect { subject }.to raise_error }
+      it { expect { subject }.to raise_error /No rule matches/ }
     end
   end
 
