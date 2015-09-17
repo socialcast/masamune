@@ -69,4 +69,14 @@ describe Masamune::Tasks::DumpThor do
     let(:options) { ['--section=unknown'] }
     it_behaves_like 'raises Thor::MalformattedArgumentError', %q{Expected '--section' to be one of pre, post, all; got unknown}
   end
+
+  context 'with --start=yesterday' do
+    let(:options) { ['--start=yesterday'] }
+    it_behaves_like 'executes with success'
+  end
+
+  context 'with --stop=today' do
+    let(:options) { ['--stop=today'] }
+    it_behaves_like 'executes with success'
+  end
 end

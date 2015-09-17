@@ -26,6 +26,7 @@ require 'thor'
 module Masamune::Tasks
   class DumpThor < Thor
     include Masamune::Thor
+    include Masamune::Actions::DateParse
     include Masamune::Transform::DefineSchema
 
     # FIXME need to add an unnecessary namespace until this issue is fixed:
@@ -47,10 +48,18 @@ module Masamune::Tasks
     def print_catalog
       case options[:type]
       when 'psql'
-        puts define_schema(catalog, :postgres, options[:section].to_sym)
+        puts define_schema(catalog, :postgres, define_schema_options)
       when 'hql'
-        puts define_schema(catalog, :hive, options[:section].to_sym)
+        puts define_schema(catalog, :hive, define_schema_options)
       end
+    end
+
+    def define_schema_options
+      {
+        section: options[:section].to_sym,
+        start_date: start_date,
+        stop_date: stop_date
+      }.reject { |_, v| v.blank? }
     end
   end
 end

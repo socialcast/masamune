@@ -28,18 +28,22 @@ module Masamune::Transform
 
     extend ActiveSupport::Concern
 
-    def define_schema(catalog, store_id, section = :all)
+    def define_schema(catalog, store_id, options = {})
       context = catalog[store_id]
       operators = []
 
       operators += context.extra(:pre)
 
       context.dimensions.each do |_, dimension|
-        operators << define_table(dimension, [], section)
+        operators << define_table(dimension, [], options[:section])
       end
 
       context.facts.each do |_, fact|
-        operators << define_table(fact, [], section)
+        operators << define_table(fact, [], options[:section])
+        (options[:start_date] .. options[:stop_date]).each do |date|
+          next unless date.day == 1
+          operators << define_table(fact.partition_table(date.to_time), [], options[:section])
+        end if options[:start_date] && options[:stop_date]
       end
 
       operators += context.extra(:post)
