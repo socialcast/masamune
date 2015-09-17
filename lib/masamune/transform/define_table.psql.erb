@@ -92,6 +92,10 @@ COPY <%= target.name %> FROM '<%= file %>' WITH (<%= copy_options.join(", ") %>)
 <%- end -%>
 <%- end -%>
 
+<%- if helper.define_inheritance? -%>
+<%= render 'define_inheritance.psql.erb', target: target %>
+<%- end -%>
+
 <%- if helper.define_unique_constraints? -%>
 <%= render 'define_unique.psql.erb', target: target %>
 <%- end -%>

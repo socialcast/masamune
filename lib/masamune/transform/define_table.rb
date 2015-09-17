@@ -56,6 +56,13 @@ module Masamune::Transform
         !pre_section? && !(target.temporary? || target.primary_keys.empty?)
       end
 
+      def define_inheritance?
+        return false unless target.inherited?
+        return false if pre_section?
+        return true if post_section?
+        !target.delay_indexes?
+      end
+
       def define_indexes?
         return false if pre_section?
         return true if post_section?
@@ -106,6 +113,10 @@ module Masamune::Transform
     class Postgres < SimpleDelegator
       def children
         super.map { |child| self.class.new(child) }
+      end
+
+      def inherited?
+        type == :fact && inherit
       end
 
       def delay_indexes?

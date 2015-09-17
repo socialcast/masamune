@@ -43,12 +43,8 @@ DROP INDEX IF EXISTS <%= index_name %>;
 ALTER TABLE <%= target.name %> RENAME TO <%= target_tmp.name %>;
 ALTER TABLE <%= source.name %> RENAME TO <%= target.name %>;
 
-<%- if target.parent -%>
-ALTER TABLE <%= target.name %> INHERIT <%= target.parent.name %>;
-<%- end -%>
-<%- if target.constraints -%>
-ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_time_key_check <%= target.constraints %>;
-<%- end -%>
+<%= render 'define_inheritance.psql.erb', target: target %>
+
 <%= render 'define_foreign_key.psql.erb', target: target, skip_check_exist: true, skip_check_valid: true %>
 
 <%= render 'define_index.psql.erb', target: target, skip_check_exist: true %>
