@@ -48,6 +48,10 @@ module Masamune::Transform
         !post_section?
       end
 
+      def define_functions?
+        !post_section?
+      end
+
       def define_sequences?
         !post_section?
       end

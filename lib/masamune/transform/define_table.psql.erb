@@ -116,7 +116,7 @@ WHERE NOT EXISTS (SELECT 1 FROM <%= target.name %> WHERE <%= row.insert_constrai
 ANALYZE <%= target.name %>;
 <%- end -%>
 
-<%- if helper.insert_rows? -%>
+<%- if helper.define_functions? -%>
 <% target.aliased_rows.each do |row| %>
 <%- row.natural_keys.each do |column| -%>
 CREATE OR REPLACE FUNCTION <%= row.name(column) %>
