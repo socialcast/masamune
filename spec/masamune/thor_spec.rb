@@ -160,27 +160,13 @@ describe Masamune::Thor do
     context 'with command and --start' do
       let(:command) { 'command' }
       let(:options) { ['--start', '2013-01-01'] }
-      it 'exits with status code 0 without error message' do
-        expect { cli_invocation }.to raise_error { |e|
-          expect(e).to be_a(SystemExit)
-          expect(e.status).to eq(0)
-        }
-        expect(stdout.string).to match(/\AUsing '.*' for --start/)
-        expect(stderr.string).to eq('')
-      end
+      it_behaves_like 'executes with success'
     end
 
     context 'with command and natural language --start' do
       let(:command) { 'command' }
       let(:options) { ['--start', 'yesterday'] }
-      it 'exits with status code  0 without error message' do
-        expect { cli_invocation }.to raise_error { |e|
-          expect(e).to be_a(SystemExit)
-          expect(e.status).to eq(0)
-        }
-        expect(stdout.string).to match(/\AUsing '.*' for --start/)
-        expect(stderr.string).to eq('')
-      end
+      it_behaves_like 'executes with success'
     end
 
     context 'with command that raises exception before initialization' do

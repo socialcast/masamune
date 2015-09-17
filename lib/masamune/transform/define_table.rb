@@ -24,7 +24,7 @@ module Masamune::Transform
   module DefineTable
     extend ActiveSupport::Concern
 
-    def define_table(target, files = [], section = :all)
+    def define_table(target, files = [], section = nil)
       return if target.implicit
       Operator.new(__method__, target: target, files: Masamune::Schema::Map.convert_files(files), section: section, helper: Helper, presenters: { postgres: Postgres, hive: Hive }).tap do |operator|
         logger.debug("#{target.id}\n" + operator.to_s) if target.debug
@@ -37,7 +37,7 @@ module Masamune::Transform
       end
 
       def section
-        locals[:section]
+        locals[:section] || :all
       end
 
       def define_types?
@@ -86,7 +86,7 @@ module Masamune::Transform
       end
 
       def insert_rows?
-        all_section?
+        !post_section?
       end
 
       def load_files?
