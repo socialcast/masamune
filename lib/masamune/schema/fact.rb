@@ -99,7 +99,7 @@ module Masamune::Schema
       (start_date .. stop_date).each do |date|
         next unless date.day == 1
         yield partition_table(date)
-      end 
+      end
     end
 
     def measures

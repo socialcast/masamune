@@ -28,7 +28,7 @@ module Masamune::Transform
       @source     = options.delete(:source)
       @target     = options.delete(:target)
       @presenters = options.delete(:presenters) || {}
-      @helper     = options.delete(:helper) 
+      @helper     = options.delete(:helper)
       @locals     = options
     end
 

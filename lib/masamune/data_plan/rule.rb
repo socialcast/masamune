@@ -110,7 +110,7 @@ class Masamune::DataPlan::Rule
   end
 
   def bind_date_or_time(input = nil)
-    input_time = 
+    input_time =
     case input
     when Time, DateTime
       input
