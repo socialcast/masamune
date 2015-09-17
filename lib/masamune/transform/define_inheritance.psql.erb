@@ -23,6 +23,6 @@
 <%- if target.parent -%>
 ALTER TABLE <%= target.name %> INHERIT <%= target.parent.name %>;
 <%- end -%>
-<%- if target.constraints -%>
-ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_time_key_check <%= target.constraints %>;
+<%- if target.inheritance_constraints -%>
+ALTER TABLE <%= target.name %> ADD CONSTRAINT <%= target.name %>_time_key_check <%= target.inheritance_constraints %>;
 <%- end -%>

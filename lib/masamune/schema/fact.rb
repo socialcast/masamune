@@ -106,7 +106,7 @@ module Masamune::Schema
       columns.select { |_, column| column.measure }
     end
 
-    def constraints
+    def inheritance_constraints
       return unless range
       "CHECK (time_key >= #{range.start_time.to_i} AND time_key < #{range.stop_time.to_i})"
     end

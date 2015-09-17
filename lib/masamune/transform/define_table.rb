@@ -116,7 +116,7 @@ module Masamune::Transform
       end
 
       def inherited?
-        type == :fact && inherit
+        type == :fact && inheritance_constraints
       end
 
       def delay_indexes?
