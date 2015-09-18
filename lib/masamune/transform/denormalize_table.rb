@@ -29,6 +29,7 @@ module Masamune::Transform
       columns = options[:include] || []
       columns += options[:columns] || target.denormalized_column_names
       columns -= options[:except] || []
+      columns -= ['last_modified_at']
       order_by = options[:order] || columns
       Operator.new(__method__, target: target, columns: columns, order_by: order_by, presenters: { postgres: Common, hive: Common })
     end

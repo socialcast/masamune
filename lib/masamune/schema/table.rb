@@ -185,6 +185,7 @@ module Masamune::Schema
         next if column.surrogate_key || column.ignore
         if column.reference
           (column.reference.natural_keys.any? ? column.reference.natural_keys : column.reference.denormalized_columns).each do |join_column|
+            next if join_column.reference && join_column.natural_key
             yield [column.reference, join_column]
           end
         else

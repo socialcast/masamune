@@ -37,6 +37,7 @@ describe Masamune::Transform::DenormalizeTable do
       end
 
       dimension 'tenant', type: :two do
+        references :cluster, natural_key: true
         column 'tenant_id', type: :integer, index: true, natural_key: true
       end
 
@@ -69,6 +70,68 @@ describe Masamune::Transform::DenormalizeTable do
 
   subject(:result) { transform.denormalize_table(target, options).to_s }
 
+  context 'with postgres fact without :columns' do
+    let(:target) { catalog.postgres.visits_fact }
+    let(:options) { { } }
+
+    it 'should eq render denormalize_table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+      SELECT
+        cluster_type.name AS cluster_type_name,
+        date_dimension.date_id AS date_dimension_date_id,
+        tenant_dimension.tenant_id AS tenant_dimension_tenant_id,
+        manager_user_dimension.tenant_id AS manager_user_dimension_tenant_id,
+        manager_user_dimension.user_id AS manager_user_dimension_user_id,
+        user_dimension.tenant_id AS user_dimension_tenant_id,
+        user_dimension.user_id AS user_dimension_user_id,
+        user_agent_type.name AS user_agent_type_name,
+        user_agent_type.version AS user_agent_type_version,
+        user_agent_type.mobile AS user_agent_type_mobile,
+        visits_fact.total,
+        visits_fact.time_key
+      FROM
+        visits_fact
+      LEFT JOIN
+        cluster_type
+      ON
+        cluster_type.id = visits_fact.cluster_type_id
+      LEFT JOIN
+        date_dimension
+      ON
+        date_dimension.id = visits_fact.date_dimension_id
+      LEFT JOIN
+        tenant_dimension
+      ON
+        tenant_dimension.id = visits_fact.tenant_dimension_id
+      LEFT JOIN
+        user_dimension AS manager_user_dimension
+      ON
+        manager_user_dimension.id = visits_fact.manager_user_dimension_id
+      LEFT JOIN
+        user_dimension
+      ON
+        user_dimension.id = visits_fact.user_dimension_id
+      LEFT JOIN
+        user_agent_type
+      ON
+        user_agent_type.id = visits_fact.user_agent_type_id
+      ORDER BY
+        cluster_type_name,
+        date_dimension_date_id,
+        tenant_dimension_tenant_id,
+        manager_user_dimension_tenant_id,
+        manager_user_dimension_user_id,
+        user_dimension_tenant_id,
+        user_dimension_user_id,
+        user_agent_type_name,
+        user_agent_type_version,
+        user_agent_type_mobile,
+        total,
+        time_key
+      ;
+      EOS
+    end
+  end
   context 'with postgres fact with :columns' do
     let(:target) { catalog.postgres.visits_fact }
     let(:options) do
@@ -144,8 +207,7 @@ describe Masamune::Transform::DenormalizeTable do
     let(:options) do
       {
         except: [
-          'cluster.name',
-          'last_modified_at'
+          'cluster.name'
         ]
       }
     end
