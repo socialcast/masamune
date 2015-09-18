@@ -85,17 +85,28 @@ module Masamune::Schema
       end
     end
 
-    def partition_table(date)
-      partition_range = partition_rule.bind_date(date)
+    def partition_table(date = nil)
+      return unless partition
+      return unless date
+      partition_range = partition_rule.bind_date_or_time(date)
       @partition_tables ||= {}
       @partition_tables[partition_range] ||= self.class.new(id: @id, store: store, columns: partition_table_columns, parent: self, range: partition_range, grain: grain, inherit: true)
+    end
+
+    def partition_tables(start_date = nil, stop_date = nil)
+      return unless partition
+      return unless start_date && stop_date
+      (start_date .. stop_date).each do |date|
+        next unless date.day == 1
+        yield partition_table(date)
+      end
     end
 
     def measures
       columns.select { |_, column| column.measure }
     end
 
-    def constraints
+    def inheritance_constraints
       return unless range
       "CHECK (time_key >= #{range.start_time.to_i} AND time_key < #{range.stop_time.to_i})"
     end

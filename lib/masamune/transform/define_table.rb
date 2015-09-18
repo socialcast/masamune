@@ -24,10 +24,93 @@ module Masamune::Transform
   module DefineTable
     extend ActiveSupport::Concern
 
-    def define_table(target, files = [], options = {})
+    def define_table(target, files = [], section = nil)
       return if target.implicit
-      Operator.new(__method__, target: target, files: Masamune::Schema::Map.convert_files(files), **options.slice(:with_index, :with_foreign_key, :with_unique_constraint), presenters: { postgres: Postgres, hive: Hive }).tap do |operator|
+      Operator.new(__method__, target: target, files: Masamune::Schema::Map.convert_files(files), section: section, helper: Helper, presenters: { postgres: Postgres, hive: Hive }).tap do |operator|
         logger.debug("#{target.id}\n" + operator.to_s) if target.debug
+      end
+    end
+
+    class Helper < SimpleDelegator
+      def files
+        locals[:files]
+      end
+
+      def section
+        locals[:section] || :all
+      end
+
+      def define_types?
+        !post_section?
+      end
+
+      def define_tables?
+        !post_section?
+      end
+
+      def define_functions?
+        !post_section?
+      end
+
+      def define_sequences?
+        !post_section?
+      end
+
+      def define_primary_keys?
+        !pre_section? && !(target.temporary? || target.primary_keys.empty?)
+      end
+
+      def define_inheritance?
+        return false unless target.inherited?
+        return false if pre_section?
+        return true if post_section?
+        !target.delay_indexes?
+      end
+
+      def define_indexes?
+        return false if pre_section?
+        return true if post_section?
+        !target.delay_indexes?
+      end
+
+      def define_foreign_keys?
+        return false if pre_section?
+        return true if post_section?
+        !target.delay_foreign_keys?
+      end
+
+      def define_unique_constraints?
+        return false if pre_section?
+        return true if post_section?
+        !target.delay_unique_constraints?
+      end
+
+      def insert_rows?
+        !post_section?
+      end
+
+      def load_files?
+        all_section?
+      end
+
+      def perform_analyze?
+        return false if pre_section?
+        return true if post_section?
+        files.any? || target.insert_rows.any?
+      end
+
+      private
+
+      def all_section?
+        section == :all
+      end
+
+      def pre_section?
+        section == :pre
+      end
+
+      def post_section?
+        section == :post
       end
     end
 
@@ -36,11 +119,19 @@ module Masamune::Transform
         super.map { |child| self.class.new(child) }
       end
 
-      def delay_index?
+      def inherited?
+        type == :fact && inheritance_constraints
+      end
+
+      def delay_indexes?
         type == :fact
       end
 
-      def delay_constraints?
+      def delay_foreign_keys?
+        type == :fact
+      end
+
+      def delay_unique_constraints?
         type == :fact
       end
     end

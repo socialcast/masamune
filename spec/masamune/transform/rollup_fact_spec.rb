@@ -156,6 +156,7 @@ describe Masamune::Transform::RollupFact do
 
         ALTER TABLE visits_hourly_fact_y2014m08 INHERIT visits_hourly_fact;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
+
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_0a531a8_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_hourly_fact_y2014m08 ADD CONSTRAINT visits_hourly_fact_y2014m08_d3950d9_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
@@ -257,6 +258,7 @@ describe Masamune::Transform::RollupFact do
 
         ALTER TABLE visits_daily_fact_y2014m08 INHERIT visits_daily_fact;
         ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
+
         ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_0a531a8_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_daily_fact_y2014m08 ADD CONSTRAINT visits_daily_fact_y2014m08_d3950d9_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
@@ -358,6 +360,7 @@ describe Masamune::Transform::RollupFact do
 
         ALTER TABLE visits_monthly_fact_y2014m08 INHERIT visits_monthly_fact;
         ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_time_key_check CHECK (time_key >= 1406851200 AND time_key < 1409529600);
+
         ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_d6b9b38_fkey FOREIGN KEY (cluster_type_id) REFERENCES cluster_type(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_0a531a8_fkey FOREIGN KEY (date_dimension_id) REFERENCES date_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;
         ALTER TABLE visits_monthly_fact_y2014m08 ADD CONSTRAINT visits_monthly_fact_y2014m08_d3950d9_fkey FOREIGN KEY (tenant_dimension_id) REFERENCES tenant_dimension(id) NOT VALID DEFERRABLE INITIALLY DEFERRED;

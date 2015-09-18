@@ -30,7 +30,7 @@ module Masamune::Actions
     def parse_datetime_type(key)
       value = options[key]
       Chronic.parse(value).tap do |datetime_value|
-        console("Using '#{datetime_value}' for --#{key}") if value != datetime_value
+        logger.debug("Using '#{datetime_value}' for --#{key}") if value != datetime_value
       end or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
     end
 

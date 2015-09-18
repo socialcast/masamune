@@ -32,11 +32,51 @@ describe Masamune::Tasks::DumpThor do
   end
 
   context 'with no arguments' do
-    it 'exits with status code 0 and prints catalog' do
-      expect { cli_invocation }.to raise_error { |e|
-        expect(e).to be_a(SystemExit)
-        expect(e.status).to eq(0)
-      }
-    end
+    it_behaves_like 'executes with success'
+  end
+
+  context 'with --type=psql' do
+    let(:options) { ['--type=psql'] }
+    it_behaves_like 'executes with success'
+  end
+
+  context 'with --type=hql' do
+    let(:options) { ['--type=hql'] }
+    it_behaves_like 'executes with success'
+  end
+
+  context 'with --type=unknown' do
+    let(:options) { ['--type=unknown'] }
+    it_behaves_like 'raises Thor::MalformattedArgumentError', %q{Expected '--type' to be one of psql, hql; got unknown}
+  end
+
+  context 'with --section=pre' do
+    let(:options) { ['--section=pre'] }
+    it_behaves_like 'executes with success'
+  end
+
+  context 'with --section=post' do
+    let(:options) { ['--section=post'] }
+    it_behaves_like 'executes with success'
+  end
+
+  context 'with --section=all' do
+    let(:options) { ['--section=all'] }
+    it_behaves_like 'executes with success'
+  end
+
+  context 'with --section=unknown' do
+    let(:options) { ['--section=unknown'] }
+    it_behaves_like 'raises Thor::MalformattedArgumentError', %q{Expected '--section' to be one of pre, post, all; got unknown}
+  end
+
+  context 'with --start=yesterday' do
+    let(:options) { ['--start=yesterday'] }
+    it_behaves_like 'executes with success'
+  end
+
+  context 'with --stop=today' do
+    let(:options) { ['--stop=today'] }
+    it_behaves_like 'executes with success'
   end
 end

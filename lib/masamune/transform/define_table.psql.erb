@@ -22,22 +22,22 @@
 
 <%
   files ||= []
-  with_index = locals.fetch(:with_index, true)
-  with_foreign_key = locals.fetch(:with_foreign_key, true)
-  with_unique_constraint = locals.fetch(:with_unique_constraint, true)
 %>
 
 <%- target.children.each do |child| -%>
 <%= render 'define_table.psql.erb', target: child, **locals.except(:target, :files)  %>
 <%- end -%>
 
+<%- if helper.define_types? %>
 <%- target.enum_columns.each do |_, column| -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE LOWER(t.typname) = LOWER('<%= column.sql_type %>')) THEN
 CREATE TYPE <%= column.sql_type %> AS ENUM (<%= column.values.map { |value| "'#{value}'" }.join(', ') %>);
 END IF; END $$;
 <%- end -%>
+<%- end -%>
 
+<%- if helper.define_sequences? %>
 <%- target.sequence_columns.each do |_, column| -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= column.sequence_id %>') THEN
@@ -45,7 +45,9 @@ CREATE SEQUENCE <%= column.sequence_id %>;
 ALTER SEQUENCE <%= column.sequence_id %> RESTART <%= column.sequence_offset %>;
 END IF; END $$;
 <%- end -%>
+<%- end -%>
 
+<%- if helper.define_tables? %>
 <%- if target.temporary? -%>
 CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.name %>
 <%- else -%>
@@ -56,25 +58,29 @@ CREATE TABLE IF NOT EXISTS <%= target.name %>
   <%= column.as_psql %><%= ',' unless last %>
   <%- end -%>
 );
+<%- end -%>
 
-<%- unless target.temporary? || target.primary_keys.empty? -%>
+<%- if helper.define_primary_keys? %>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = '<%= target.name %>_pkey') THEN
 ALTER TABLE <%= target.name %> ADD PRIMARY KEY (<%= target.primary_keys.map(&:name).join(', ') %>);
 END IF; END $$;
 <%- end -%>
 
-<%- if with_foreign_key && !target.delay_constraints? -%>
+<%- if helper.define_foreign_keys? -%>
 <%= render 'define_foreign_key.psql.erb', target: target %>
 <%- end -%>
 
+<%- if helper.define_sequences? -%>
 <%- target.sequence_columns.each do |_, column| -%>
 DO $$ BEGIN
 IF NOT EXISTS (SELECT 1 WHERE sequence_owner('<%= column.sequence_id %>') = '<%= column.qualified_name %>') THEN
 ALTER SEQUENCE <%= column.sequence_id %> OWNED BY <%= column.qualified_name %>;
 END IF; END $$;
 <%- end -%>
+<%- end -%>
 
+<%- if helper.load_files? -%>
 <%- files.each do |file| -%>
 <%-
   copy_options = []
@@ -84,25 +90,33 @@ END IF; END $$;
 -%>
 COPY <%= target.name %> FROM '<%= file %>' WITH (<%= copy_options.join(", ") %>);
 <%- end -%>
+<%- end -%>
 
-<%- if with_unique_constraint && !target.delay_constraints? -%>
+<%- if helper.define_inheritance? -%>
+<%= render 'define_inheritance.psql.erb', target: target %>
+<%- end -%>
+
+<%- if helper.define_unique_constraints? -%>
 <%= render 'define_unique.psql.erb', target: target %>
 <%- end -%>
 
-<%- if with_index && !target.delay_index? -%>
+<%- if helper.define_indexes? -%>
 <%= render 'define_index.psql.erb', target: target %>
 <%- end -%>
 
+<%- if helper.insert_rows? -%>
 <% target.insert_rows.each do |row| %>
 INSERT INTO <%= target.name %> (<%= row.insert_columns.join(', ') %>)
 SELECT <%= row.insert_values.join(', ') %>
 WHERE NOT EXISTS (SELECT 1 FROM <%= target.name %> WHERE <%= row.insert_constraints.join(' AND ') %>);
 <%- end -%>
+<%- end -%>
 
-<%- if files.any? || target.insert_rows.any? -%>
+<%- if helper.perform_analyze? -%>
 ANALYZE <%= target.name %>;
 <%- end -%>
 
+<%- if helper.define_functions? -%>
 <% target.aliased_rows.each do |row| %>
 <%- row.natural_keys.each do |column| -%>
 CREATE OR REPLACE FUNCTION <%= row.name(column) %>
@@ -117,4 +131,5 @@ RETURNS <%= target.surrogate_key.sql_type %> IMMUTABLE AS $$
   SELECT <%= target.surrogate_key.name %> FROM <%= target.name %> WHERE <%= row.insert_constraints.join(' AND ') %>;
 $$ LANGUAGE SQL;
 
+<%- end -%>
 <%- end -%>

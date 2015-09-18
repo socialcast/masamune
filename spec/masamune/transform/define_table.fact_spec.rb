@@ -148,6 +148,17 @@ describe Masamune::Transform::DefineTable do
     end
   end
 
+  context 'for postgres fact partition with :post' do
+    let(:target) { catalog.postgres.visits_fact.partition_table(Date.civil(2015, 01, 01)) }
+
+    subject(:result) { transform.define_table(target, [], :post).to_s }
+
+    it 'should eq render table template' do
+      is_expected.to match /ALTER TABLE visits_fact_y2015m01 INHERIT visits_fact;/
+      is_expected.to match /ALTER TABLE visits_fact_y2015m01 ADD CONSTRAINT visits_fact_y2015m01_time_key_check CHECK \(time_key >= 1420070400 AND time_key < 1422748800\);/
+    end
+  end
+
   describe 'for fact table from file with sources files' do
     let(:files) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
     let(:target) { catalog.postgres.visits_fact }

@@ -26,6 +26,7 @@ require 'thor'
 module Masamune::Tasks
   class DumpThor < Thor
     include Masamune::Thor
+    include Masamune::Actions::DateParse
     include Masamune::Transform::DefineSchema
 
     # FIXME need to add an unnecessary namespace until this issue is fixed:
@@ -35,9 +36,7 @@ module Masamune::Tasks
 
     desc 'dump', 'Dump schema'
     method_option :type, :enum => ['psql', 'hql'], :desc => 'Schema type', :default => 'psql'
-    method_option :with_index, :type => :boolean, :desc => 'Dump schema with indexes', :default => true
-    method_option :with_foreign_key, :type => :boolean, :desc => 'Dump schema with foreign key constraints', :default => true
-    method_option :with_unique_constraint, :type => :boolean, :desc => 'Dump schema with uniqueness constraints', :default => true
+    method_option :section, :enum => ['pre', 'post', 'all'], :desc => 'Schema section', :default => 'all'
     def dump_exec
       print_catalog
       exit
@@ -49,10 +48,18 @@ module Masamune::Tasks
     def print_catalog
       case options[:type]
       when 'psql'
-        puts define_schema(catalog, :postgres, options.slice(:with_index, :with_foreign_key, :with_unique_constraint).to_h.symbolize_keys)
+        puts define_schema(catalog, :postgres, define_schema_options)
       when 'hql'
-        puts define_schema(catalog, :hive)
+        puts define_schema(catalog, :hive, define_schema_options)
       end
+    end
+
+    def define_schema_options
+      {
+        section: options[:section].to_sym,
+        start_date: start_date,
+        stop_date: stop_date
+      }.reject { |_, v| v.blank? }
     end
   end
 end

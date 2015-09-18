@@ -56,7 +56,7 @@ module Masamune
       end
 
       def render_to_string(template, parameters = {})
-        instance = Template.new(File.dirname(template))
+        instance = self.new(File.dirname(template))
         combine instance.render(template, parameters)
       end
 

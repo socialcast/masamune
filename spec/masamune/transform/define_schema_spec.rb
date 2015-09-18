@@ -38,6 +38,12 @@ describe Masamune::Transform::DefineSchema do
           column 'preferences', type: :key_value, null: true
         end
 
+        fact 'visits', partition: 'y%Ym%m' do
+          partition :y
+          partition :m
+          measure 'total', type: :integer
+        end
+
         file 'user' do
           column 'tenant_id', type: :integer
           column 'user_id', type: :integer
@@ -50,13 +56,31 @@ describe Masamune::Transform::DefineSchema do
       end
     end
 
-    subject(:result) { transform.define_schema(catalog, :postgres).to_s }
+    context 'without options' do
+      subject(:result) { transform.define_schema(catalog, :postgres).to_s }
 
-    it 'should render combined template' do
-      is_expected.to eq Masamune::Template.combine \
-        Masamune::Transform::Operator.new('define_schema', source: catalog.postgres),
-        transform.define_table(catalog.postgres.dimensions['user_account_state']),
-        transform.define_table(catalog.postgres.dimensions['user'])
+      it 'should render combined template' do
+        is_expected.to eq Masamune::Template.combine \
+          Masamune::Transform::Operator.new('define_schema', source: catalog.postgres),
+          transform.define_table(catalog.postgres.dimensions['user_account_state']),
+          transform.define_table(catalog.postgres.dimensions['user']),
+          transform.define_table(catalog.postgres.facts['visits'])
+      end
+    end
+
+    context 'without start_date and stop_date' do
+      subject(:result) { transform.define_schema(catalog, :postgres, start_date: Date.civil(2015, 01, 01), stop_date: Date.civil(2015, 03, 15)).to_s }
+
+      it 'should render combined template' do
+        is_expected.to eq Masamune::Template.combine \
+          Masamune::Transform::Operator.new('define_schema', source: catalog.postgres),
+          transform.define_table(catalog.postgres.dimensions['user_account_state']),
+          transform.define_table(catalog.postgres.dimensions['user']),
+          transform.define_table(catalog.postgres.facts['visits']),
+          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 01, 01))),
+          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 02, 01))),
+          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 03, 01)))
+      end
     end
   end
 

@@ -109,9 +109,18 @@ class Masamune::DataPlan::Rule
     matched_pattern.present? && matched_pattern[:rest].blank?
   end
 
-  def bind_date(input_date)
-    output_date = tz.utc_to_local(input_date)
-    Masamune::DataPlan::Elem.new(self, output_date, options_for_elem)
+  def bind_date_or_time(input = nil)
+    input_time =
+    case input
+    when Time, DateTime
+      input
+    when Date
+      input.to_time
+    else
+      raise ArgumentError, "Cannot bind_date_or_time with type #{input.class}"
+    end
+    output_time = tz.utc_to_local(input_time)
+    Masamune::DataPlan::Elem.new(self, output_time, options_for_elem)
   end
 
   def bind_input(input)
@@ -123,12 +132,12 @@ class Masamune::DataPlan::Rule
   end
 
   def unify(elem, rule)
-    rule.bind_date(elem.start_time)
+    rule.bind_date_or_time(elem.start_time)
   end
 
   def generate(start_time, stop_time)
     return Set.new(to_enum(:generate, start_time, stop_time)) unless block_given?
-    instance = bind_date(start_time)
+    instance = bind_date_or_time(start_time)
 
     begin
       yield instance

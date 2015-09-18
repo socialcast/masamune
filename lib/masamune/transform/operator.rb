@@ -28,6 +28,7 @@ module Masamune::Transform
       @source     = options.delete(:source)
       @target     = options.delete(:target)
       @presenters = options.delete(:presenters) || {}
+      @helper     = options.delete(:helper)
       @locals     = options
     end
 
@@ -39,6 +40,14 @@ module Masamune::Transform
     def target
       return unless @target
       @presenters.key?(target_store.try(:type)) ? @presenters[target_store.try(:type)].new(@target) : @target
+    end
+
+    def helper
+      (@helper || SimpleDelegator).new(self)
+    end
+
+    def locals
+      @locals
     end
 
     def to_s
@@ -76,7 +85,7 @@ module Masamune::Transform
     def template_eval(template)
       return File.read(template) if File.exists?(template.to_s) && template.to_s !~ /erb\Z/
       template_file = File.exists?(template.to_s) ? template : template_file(template)
-      Masamune::Template.render_to_string(template_file, @locals.merge(source: source, target: target))
+      Masamune::Template.render_to_string(template_file, @locals.merge(source: source, target: target, helper: helper))
     end
 
     def template_file(template_prefix)
