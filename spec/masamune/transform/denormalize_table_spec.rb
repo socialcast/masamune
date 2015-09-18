@@ -42,12 +42,14 @@ describe Masamune::Transform::DenormalizeTable do
       end
 
       dimension 'user', type: :two do
+        references :cluster
         column 'tenant_id', type: :integer, index: true, natural_key: true
         column 'user_id', type: :integer, index: true, natural_key: true
         column 'name', type: :string
       end
 
       dimension 'user_agent', type: :mini do
+        references :cluster
         column 'name', type: :string, unique: true, index: 'shared'
         column 'version', type: :string, unique: true, index: 'shared', default: 'Unknown'
         column 'mobile', type: :boolean, unique: true, index: 'shared', default: false
