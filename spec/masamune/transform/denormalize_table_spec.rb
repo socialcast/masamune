@@ -63,6 +63,7 @@ describe Masamune::Transform::DenormalizeTable do
         references :user, label: 'manager'
         references :user
         references :user_agent
+        references :session, degenerate: true
         measure 'total', type: :integer
       end
     end
@@ -89,6 +90,7 @@ describe Masamune::Transform::DenormalizeTable do
         user_agent_type.name AS user_agent_type_name,
         user_agent_type.version AS user_agent_type_version,
         user_agent_type.mobile AS user_agent_type_mobile,
+        session_type_id AS session_type_id,
         visits_fact.total,
         visits_fact.time_key
       FROM
@@ -128,6 +130,7 @@ describe Masamune::Transform::DenormalizeTable do
         user_agent_type_name,
         user_agent_type_version,
         user_agent_type_mobile,
+        session_type_id,
         total,
         time_key
       ;
@@ -226,6 +229,7 @@ describe Masamune::Transform::DenormalizeTable do
         user_agent_type.name AS user_agent_type_name,
         user_agent_type.version AS user_agent_type_version,
         user_agent_type.mobile AS user_agent_type_mobile,
+        session_type_id AS session_type_id,
         visits_fact.total,
         visits_fact.time_key
       FROM
@@ -260,6 +264,7 @@ describe Masamune::Transform::DenormalizeTable do
         user_agent_type_name,
         user_agent_type_version,
         user_agent_type_mobile,
+        session_type_id,
         total,
         time_key
       ;

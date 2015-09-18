@@ -65,6 +65,7 @@ module Masamune::Transform
           column_names.each do |column_name|
             next unless column = dereference_column_name(column_name)
             next unless column.reference
+            next if column.reference.degenerate
             adjacent_reference = references[column.reference.id]
             next unless adjacent_reference
             adjacent_column = columns[adjacent_reference.foreign_key_name]
