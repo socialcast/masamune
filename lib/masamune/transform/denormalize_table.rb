@@ -29,6 +29,8 @@ module Masamune::Transform
       columns = options[:include] || []
       columns += options[:columns] || target.denormalized_column_names
       columns -= options[:except] || []
+      columns -= ['last_modified_at']
+      columns.uniq!
       order_by = options[:order] || columns
       Operator.new(__method__, target: target, columns: columns, order_by: order_by, presenters: { postgres: Common, hive: Common })
     end
@@ -63,6 +65,7 @@ module Masamune::Transform
           column_names.each do |column_name|
             next unless column = dereference_column_name(column_name)
             next unless column.reference
+            next if column.reference.degenerate
             adjacent_reference = references[column.reference.id]
             next unless adjacent_reference
             adjacent_column = columns[adjacent_reference.foreign_key_name]

@@ -183,8 +183,13 @@ module Masamune::Schema
       return to_enum(__method__).to_a.flatten.compact unless block_given?
       columns.map do |_, column|
         next if column.surrogate_key || column.ignore
-        if column.reference
-          (column.reference.natural_keys.any? ? column.reference.natural_keys : column.reference.denormalized_columns).each do |join_column|
+        if column.reference && column.reference.natural_keys.any?
+          column.reference.natural_keys.each do |join_column|
+            next if join_column.reference && join_column.natural_key
+            yield [column.reference, join_column]
+          end
+        elsif column.reference && column.reference.denormalized_columns.any?
+          column.reference.denormalized_columns.each do |join_column|
             yield [column.reference, join_column]
           end
         else
