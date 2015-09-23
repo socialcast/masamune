@@ -30,12 +30,14 @@ module Masamune::Commands
     {
       :create_db_path => 'createdb',
       :drop_db_path   => 'dropdb',
+      :pg_dump_path   => 'pg_dump',
       :options        => [],
       :hostname       => 'localhost',
       :username       => 'postgres',
       :pgpass_file    => nil,
       :action         => nil,
-      :database       => nil
+      :database       => nil,
+      :output         => nil
     }
 
     def initialize(delegate, attrs = {})
@@ -52,7 +54,9 @@ module Masamune::Commands
       args << '--host=%s' % @hostname if @hostname
       args << '--username=%s' % @username if @username
       args << '--no-password'
-      args << @database
+      args << database
+      args << @options
+      args << output
       args.flatten.compact
     end
 
@@ -64,9 +68,21 @@ module Masamune::Commands
         [@create_db_path]
       when :drop
         [@drop_db_path, '--if-exists']
+      when :dump
+        [@pg_dump_path, '--no-owner', '--no-privileges', '--oids', '--schema=public']
       else
-        raise ArgumentError, ':action must be :create or :drop'
+        raise ArgumentError, ':action must be :create, :drop, or :dump'
       end
+    end
+
+    def database
+      return @database unless @action == :dump
+      '--dbname=%s' % @database
+    end
+
+    def output
+      return unless @action == :dump
+      '--file=%s' % @output if @output
     end
   end
 end

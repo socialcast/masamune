@@ -54,6 +54,21 @@ describe Masamune::Commands::PostgresAdmin do
       it { is_expected.to eq(['dropdb', '--if-exists', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
     end
 
+    context 'action :drop with database and :output' do
+      let(:attrs) { {action: :drop, database: 'zombo', output: 'zombo.csv'} }
+      it { is_expected.to eq(['dropdb', '--if-exists', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
+    end
+
+    context 'action :dump with database' do
+      let(:attrs) { {action: :dump, database: 'zombo'} }
+      it { is_expected.to eq(['pg_dump', '--no-owner', '--no-privileges', '--oids', '--schema=public', '--host=localhost', '--username=postgres', '--no-password', '--dbname=zombo']) }
+    end
+
+    context 'action :dump with database and :output' do
+      let(:attrs) { {action: :dump, database: 'zombo', output: 'zombo.csv'} }
+      it { is_expected.to eq(['pg_dump', '--no-owner', '--no-privileges', '--oids', '--schema=public', '--host=localhost', '--username=postgres', '--no-password', '--dbname=zombo', '--file=zombo.csv']) }
+    end
+
     context 'action :drop without database' do
       let(:attrs) { {action: :drop} }
       it { expect { subject }.to raise_error ArgumentError, ':database must be given' }
@@ -61,7 +76,7 @@ describe Masamune::Commands::PostgresAdmin do
 
     context 'action unfuddle with database' do
       let(:attrs) { {action: :unfuddle, database: 'zombo'} }
-      it { expect { subject }.to raise_error ArgumentError, ':action must be :create or :drop' }
+      it { expect { subject }.to raise_error ArgumentError, ':action must be :create, :drop, or :dump' }
     end
   end
 
