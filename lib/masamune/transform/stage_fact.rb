@@ -66,13 +66,14 @@ module Masamune::Transform
         join_columns = join_columns.group_by { |column| column.reference }
 
         dependencies = Masamune::TopologicalHash.new
-        conditions = Hash.new { |h,k| h[k] = [] }
+        conditions = Hash.new { |h,k| h[k] = Set.new }
         join_columns.each do |reference, columns|
           reference_name = join_alias(reference)
           columns.each do |column|
             next if column.degenerate?
             dependencies[reference_name] ||= []
             cross_references = cross_references(column)
+
             coalesce_values = []
 
             if cross_references.any?
@@ -80,8 +81,13 @@ module Masamune::Transform
               coalesce_values << cross_references.map { |reference, column| column.qualified_name(reference.label) }
             end
 
-            if column.reference && !column.reference.default.nil?
-              coalesce_values << column.reference.default(column.adjacent) if column.adjacent.natural_key
+            column.reference.auto_surrogate_keys.each do |auto_surrogate_key|
+              next unless auto_surrogate_key.default
+              conditions[reference_name] << "#{auto_surrogate_key.qualified_name(reference.label)} = #{auto_surrogate_key.default}"
+            end if column.reference
+
+            if column.reference && !column.reference.default.nil? && column.adjacent.natural_key
+              coalesce_values << column.reference.default(column.adjacent)
             elsif column.adjacent && !column.adjacent.default.nil?
               coalesce_values << column.adjacent.sql_value(column.adjacent.default)
             end
@@ -90,6 +96,7 @@ module Masamune::Transform
               "#{column.foreign_key_name} = COALESCE(#{column.qualified_name}, #{coalesce_values.join(', ')})" :
               "#{column.foreign_key_name} = #{column.qualified_name}")
           end
+
           if reference.type == :two || reference.type == :four
             join_key_a = "TO_TIMESTAMP(#{source.time_key.qualified_name}) BETWEEN #{reference.start_key.qualified_name(reference.label)} AND COALESCE(#{reference.end_key.qualified_name(reference.label)}, 'INFINITY')"
             join_key_b = "TO_TIMESTAMP(#{source.time_key.qualified_name}) < #{reference.start_key.qualified_name(reference.label)} AND #{reference.version_key.qualified_name(reference.label)} = 1"
