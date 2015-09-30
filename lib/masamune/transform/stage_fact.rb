@@ -66,7 +66,7 @@ module Masamune::Transform
         join_columns = join_columns.group_by { |column| column.reference }
 
         dependencies = Masamune::TopologicalHash.new
-        conditions = Hash.new { |h,k| h[k] = Set.new }
+        conditions = Hash.new { |h,k| h[k] = [] }
         join_columns.each do |reference, columns|
           reference_name = join_alias(reference)
           columns.each do |column|
@@ -102,6 +102,8 @@ module Masamune::Transform
             join_key_b = "TO_TIMESTAMP(#{source.time_key.qualified_name}) < #{reference.start_key.qualified_name(reference.label)} AND #{reference.version_key.qualified_name(reference.label)} = 1"
             conditions[reference_name] << "((#{join_key_a}) OR (#{join_key_b}))"
           end
+
+          conditions[reference_name].uniq!
         end
         conditions.slice(*dependencies.tsort)
       end
