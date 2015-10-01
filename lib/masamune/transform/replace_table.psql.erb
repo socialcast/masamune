@@ -49,7 +49,7 @@ ALTER TABLE <%= source.name %> RENAME TO <%= target.name %>;
 
 <%= render 'define_index.psql.erb', target: target, skip_check_exist: true %>
 
-ANALYZE <%= target.name %>;
+VACUUM FULL ANALYZE <%= target.name %>;
 
 COMMIT;
 

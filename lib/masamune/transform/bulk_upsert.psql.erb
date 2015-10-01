@@ -61,6 +61,6 @@ WHERE
 ;
 <%- end -%>
 
-ANALYZE <%= target.name %>;
+VACUUM FULL ANALYZE <%= target.name %>;
 
 COMMIT;

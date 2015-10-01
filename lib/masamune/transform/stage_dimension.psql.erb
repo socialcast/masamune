@@ -38,4 +38,4 @@ ON
 <%- end -%>
 ;
 
-ANALYZE <%= target.stage_table.name %>;
+VACUUM FULL ANALYZE <%= target.stage_table.name %>;

@@ -91,7 +91,7 @@ describe Masamune::Transform::InsertReferenceValues do
           user_agent_type_name IS NOT NULL
         ;
 
-        ANALYZE user_agent_type_stage;
+        VACUUM FULL ANALYZE user_agent_type_stage;
 
         BEGIN;
         LOCK TABLE user_agent_type IN EXCLUSIVE MODE;
@@ -113,7 +113,7 @@ describe Masamune::Transform::InsertReferenceValues do
           user_agent_type.version IS NULL
         ;
 
-        ANALYZE user_agent_type;
+        VACUUM FULL ANALYZE user_agent_type;
 
         COMMIT;
 
@@ -129,7 +129,7 @@ describe Masamune::Transform::InsertReferenceValues do
           feature_type_name IS NOT NULL
         ;
 
-        ANALYZE feature_type_stage;
+        VACUUM FULL ANALYZE feature_type_stage;
 
         BEGIN;
         LOCK TABLE feature_type IN EXCLUSIVE MODE;
@@ -148,7 +148,7 @@ describe Masamune::Transform::InsertReferenceValues do
           feature_type.name IS NULL
         ;
 
-        ANALYZE feature_type;
+        VACUUM FULL ANALYZE feature_type;
 
         COMMIT;
       EOS
