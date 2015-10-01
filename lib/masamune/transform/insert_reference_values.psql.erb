@@ -39,7 +39,7 @@ WHERE
 <%- end -%>
 ;
 
-ANALYZE <%= target.stage_table.name %>;
+VACUUM FULL ANALYZE <%= target.stage_table.name %>;
 
 <%= target.bulk_upsert(target.stage_table, target) %>
 <%- end -%>
