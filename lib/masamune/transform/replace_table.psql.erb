@@ -49,9 +49,9 @@ ALTER TABLE <%= source.name %> RENAME TO <%= target.name %>;
 
 <%= render 'define_index.psql.erb', target: target, skip_check_exist: true %>
 
-VACUUM FULL ANALYZE <%= target.name %>;
-
 COMMIT;
+
+VACUUM FULL ANALYZE <%= target.name %>;
 
 DROP TABLE IF EXISTS <%= target_tmp.name %> CASCADE;
 DROP TABLE IF EXISTS <%= source.name %> CASCADE;

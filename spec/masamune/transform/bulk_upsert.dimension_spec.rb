@@ -127,9 +127,9 @@ describe Masamune::Transform::BulkUpsert do
           user_dimension.start_at IS NULL
         ;
 
-        VACUUM FULL ANALYZE user_dimension;
-
         COMMIT;
+
+        VACUUM FULL ANALYZE user_dimension;
       EOS
     end
   end
@@ -193,9 +193,9 @@ describe Masamune::Transform::BulkUpsert do
           user_dimension_ledger.start_at IS NULL
         ;
 
-        VACUUM FULL ANALYZE user_dimension_ledger;
-
         COMMIT;
+
+        VACUUM FULL ANALYZE user_dimension_ledger;
       EOS
     end
   end

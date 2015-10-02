@@ -474,7 +474,7 @@ describe Masamune::Transform::DefineTable do
         SELECT 'active'
         WHERE NOT EXISTS (SELECT 1 FROM user_table WHERE name = 'active');
 
-        VACUUM FULL ANALYZE user_table;
+        ANALYZE user_table;
       EOS
     end
   end
@@ -574,7 +574,7 @@ describe Masamune::Transform::DefineTable do
         SELECT default_tenant_id(), -2
         WHERE NOT EXISTS (SELECT 1 FROM user_table WHERE tenant_id = default_tenant_id() AND user_id = -2);
 
-        VACUUM FULL ANALYZE user_table;
+        ANALYZE user_table;
 
         CREATE OR REPLACE FUNCTION default_user_table_user_id()
         RETURNS INTEGER IMMUTABLE AS $$
@@ -902,7 +902,7 @@ describe Masamune::Transform::DefineTable do
         ALTER TABLE user_table ADD CONSTRAINT user_table_3854361_key UNIQUE(tenant_id);
         END IF; END $$;
 
-        VACUUM FULL ANALYZE user_table;
+        ANALYZE user_table;
       EOS
     end
   end
@@ -937,7 +937,7 @@ describe Masamune::Transform::DefineTable do
         CREATE INDEX user_table_e8701ad_index ON user_table (user_id);
         END IF; END $$;
 
-        VACUUM FULL ANALYZE user_table;
+        ANALYZE user_table;
       EOS
     end
   end
@@ -975,7 +975,7 @@ describe Masamune::Transform::DefineTable do
         ALTER TABLE user_table ADD CONSTRAINT user_table_bd2027e_fkey FOREIGN KEY (user_account_state_table_id) REFERENCES user_account_state_table(id);
         END IF; END $$;
 
-        VACUUM FULL ANALYZE user_table;
+        ANALYZE user_table;
       EOS
     end
   end
