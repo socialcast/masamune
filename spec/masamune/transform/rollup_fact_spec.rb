@@ -172,9 +172,9 @@ describe Masamune::Transform::RollupFact do
         CREATE INDEX visits_hourly_fact_y2014m08_d8b1c3e_index ON visits_hourly_fact_y2014m08 (user_agent_type_id);
         CREATE INDEX visits_hourly_fact_y2014m08_39f0fdd_index ON visits_hourly_fact_y2014m08 (user_dimension_id);
 
-        VACUUM FULL ANALYZE visits_hourly_fact_y2014m08;
-
         COMMIT;
+
+        VACUUM FULL ANALYZE visits_hourly_fact_y2014m08;
 
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_tmp CASCADE;
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
@@ -274,9 +274,9 @@ describe Masamune::Transform::RollupFact do
         CREATE INDEX visits_daily_fact_y2014m08_d8b1c3e_index ON visits_daily_fact_y2014m08 (user_agent_type_id);
         CREATE INDEX visits_daily_fact_y2014m08_39f0fdd_index ON visits_daily_fact_y2014m08 (user_dimension_id);
 
-        VACUUM FULL ANALYZE visits_daily_fact_y2014m08;
-
         COMMIT;
+
+        VACUUM FULL ANALYZE visits_daily_fact_y2014m08;
 
         DROP TABLE IF EXISTS visits_daily_fact_y2014m08_stage_tmp CASCADE;
         DROP TABLE IF EXISTS visits_daily_fact_y2014m08_stage CASCADE;
@@ -376,9 +376,9 @@ describe Masamune::Transform::RollupFact do
         CREATE INDEX visits_monthly_fact_y2014m08_d8b1c3e_index ON visits_monthly_fact_y2014m08 (user_agent_type_id);
         CREATE INDEX visits_monthly_fact_y2014m08_39f0fdd_index ON visits_monthly_fact_y2014m08 (user_dimension_id);
 
-        VACUUM FULL ANALYZE visits_monthly_fact_y2014m08;
-
         COMMIT;
+
+        VACUUM FULL ANALYZE visits_monthly_fact_y2014m08;
 
         DROP TABLE IF EXISTS visits_monthly_fact_y2014m08_stage_tmp CASCADE;
         DROP TABLE IF EXISTS visits_monthly_fact_y2014m08_stage CASCADE;

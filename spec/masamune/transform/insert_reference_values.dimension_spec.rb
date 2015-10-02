@@ -74,7 +74,7 @@ describe Masamune::Transform::InsertReferenceValues do
           department_type_department_id IS NOT NULL
         ;
 
-        VACUUM FULL ANALYZE department_type_stage;
+        ANALYZE department_type_stage;
 
         BEGIN;
         LOCK TABLE department_type IN EXCLUSIVE MODE;
@@ -96,9 +96,9 @@ describe Masamune::Transform::InsertReferenceValues do
           department_type.department_id IS NULL
         ;
 
-        VACUUM FULL ANALYZE department_type;
-
         COMMIT;
+
+        VACUUM FULL ANALYZE department_type;
       EOS
     end
   end

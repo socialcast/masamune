@@ -113,7 +113,7 @@ WHERE NOT EXISTS (SELECT 1 FROM <%= target.name %> WHERE <%= row.insert_constrai
 <%- end -%>
 
 <%- if helper.perform_analyze? -%>
-VACUUM FULL ANALYZE <%= target.name %>;
+ANALYZE <%= target.name %>;
 <%- end -%>
 
 <%- if helper.define_functions? -%>
