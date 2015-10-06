@@ -104,7 +104,7 @@ describe Masamune::Transform::RollupFact do
         INSERT INTO
           visits_hourly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
-          (SELECT id FROM date_dimension d WHERE d.date_epoch = date_dimension.date_epoch ORDER BY d.date_id LIMIT 1),
+          visits_transaction_fact_y2014m08.date_dimension_id,
           visits_transaction_fact_y2014m08.tenant_dimension_id,
           visits_transaction_fact_y2014m08.user_dimension_id,
           visits_transaction_fact_y2014m08.user_agent_type_id,
@@ -113,12 +113,8 @@ describe Masamune::Transform::RollupFact do
           (visits_transaction_fact_y2014m08.time_key - (visits_transaction_fact_y2014m08.time_key % 3600))
         FROM
           visits_transaction_fact_y2014m08
-        JOIN
-          date_dimension
-        ON
-          date_dimension.id = visits_transaction_fact_y2014m08.date_dimension_id
         GROUP BY
-          date_dimension.date_epoch,
+          visits_transaction_fact_y2014m08.date_dimension_id,
           visits_transaction_fact_y2014m08.tenant_dimension_id,
           visits_transaction_fact_y2014m08.user_dimension_id,
           visits_transaction_fact_y2014m08.user_agent_type_id,
@@ -207,25 +203,22 @@ describe Masamune::Transform::RollupFact do
         INSERT INTO
           visits_daily_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
-          (SELECT id FROM date_dimension d WHERE d.date_epoch = date_dimension.date_epoch ORDER BY d.date_id LIMIT 1),
+          visits_hourly_fact_y2014m08.date_dimension_id,
           visits_hourly_fact_y2014m08.tenant_dimension_id,
           visits_hourly_fact_y2014m08.user_dimension_id,
           visits_hourly_fact_y2014m08.user_agent_type_id,
           visits_hourly_fact_y2014m08.feature_type_id,
           SUM(visits_hourly_fact_y2014m08.total),
-          (SELECT date_epoch FROM date_dimension d WHERE d.date_epoch = date_dimension.date_epoch ORDER BY d.date_id LIMIT 1)
+          extract(EPOCH from visits_hourly_fact_y2014m08.date_dimension_id::text::date)
         FROM
           visits_hourly_fact_y2014m08
-        JOIN
-          date_dimension
-        ON
-          date_dimension.id = visits_hourly_fact_y2014m08.date_dimension_id
         GROUP BY
-          date_dimension.date_epoch,
+          visits_hourly_fact_y2014m08.date_dimension_id,
           visits_hourly_fact_y2014m08.tenant_dimension_id,
           visits_hourly_fact_y2014m08.user_dimension_id,
           visits_hourly_fact_y2014m08.user_agent_type_id,
-          visits_hourly_fact_y2014m08.feature_type_id
+          visits_hourly_fact_y2014m08.feature_type_id,
+          extract(EPOCH from visits_hourly_fact_y2014m08.date_dimension_id::text::date)
         ;
 
         COMMIT;
@@ -309,25 +302,22 @@ describe Masamune::Transform::RollupFact do
         INSERT INTO
           visits_monthly_fact_y2014m08_stage (date_dimension_id, tenant_dimension_id, user_dimension_id, user_agent_type_id, feature_type_id, total, time_key)
         SELECT
-          (SELECT id FROM date_dimension d WHERE d.month_epoch = date_dimension.month_epoch ORDER BY d.date_id LIMIT 1),
+          to_char(date_trunc('month',visits_daily_fact_y2014m08.date_dimension_id::text::date),'YYYYMMDD')::integer,
           visits_daily_fact_y2014m08.tenant_dimension_id,
           visits_daily_fact_y2014m08.user_dimension_id,
           visits_daily_fact_y2014m08.user_agent_type_id,
           visits_daily_fact_y2014m08.feature_type_id,
           SUM(visits_daily_fact_y2014m08.total),
-          (SELECT month_epoch FROM date_dimension d WHERE d.month_epoch = date_dimension.month_epoch ORDER BY d.date_id LIMIT 1)
+          extract(EPOCH from date_trunc('month',visits_daily_fact_y2014m08.date_dimension_id::text::date))
         FROM
           visits_daily_fact_y2014m08
-        JOIN
-          date_dimension
-        ON
-          date_dimension.id = visits_daily_fact_y2014m08.date_dimension_id
         GROUP BY
-          date_dimension.month_epoch,
+          to_char(date_trunc('month',visits_daily_fact_y2014m08.date_dimension_id::text::date),'YYYYMMDD')::integer,
           visits_daily_fact_y2014m08.tenant_dimension_id,
           visits_daily_fact_y2014m08.user_dimension_id,
           visits_daily_fact_y2014m08.user_agent_type_id,
-          visits_daily_fact_y2014m08.feature_type_id
+          visits_daily_fact_y2014m08.feature_type_id,
+          extract(EPOCH from date_trunc('month',visits_daily_fact_y2014m08.date_dimension_id::text::date))
         ;
 
         COMMIT;
