@@ -93,64 +93,12 @@ module Masamune::Transform
 
       private
 
-      def rollup_key
-        case grain
-        when :hourly
-          :date_epoch
-        when :daily
-          :date_epoch
-        when :monthly
-          :month_epoch
-        end
-      end
-
-      def date_key
-        :date_id
-      end
-
-      def first_date_surrogate_key
-        <<-EOS.gsub(/\s+/, ' ').strip
-          SELECT
-            #{date_column.reference.surrogate_key.name}
-          FROM
-            #{date_column.reference.name} d
-          WHERE
-            d.#{rollup_key} = #{date_column.reference.columns[rollup_key].qualified_name}
-          ORDER BY
-            d.#{date_key}
-          LIMIT 1
-        EOS
-      end
-
-      def floor_time_key(source)
-        case grain
-        when :hourly
-          "(#{source.time_key.qualified_name} - (#{source.time_key.qualified_name} % #{1.hour.seconds}))"
-        when :daily, :monthly
-          calculated_time_key
-        end
-      end
-
-      def first_date_time_key
-        <<-EOS.gsub(/\s+/, ' ').strip
-          SELECT
-            #{rollup_key}
-          FROM
-            #{date_column.reference.name} d
-          WHERE
-            d.#{rollup_key} = #{date_column.reference.columns[rollup_key].qualified_name}
-          ORDER BY
-            d.#{date_key}
-          LIMIT 1
-        EOS
-      end
-
       def calculated_date_key(source)
         case grain
         when :hourly, :daily
-         "#{source.date_column.qualified_name}"
+          "#{source.date_column.qualified_name}"
         when :monthly
-        "to_char(date_trunc('month',#{source.date_column.qualified_name}::text::date),'YYYYMMDD')::integer"
+          "to_char(date_trunc('month',#{source.date_column.qualified_name}::text::date),'YYYYMMDD')::integer"
         end
       end
 
