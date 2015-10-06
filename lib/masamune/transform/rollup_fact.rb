@@ -164,6 +164,7 @@ module Masamune::Transform
           "extract(EPOCH from date_trunc('month',#{source.date_column.qualified_name}::text::date))"
         end
       end
+
     end
   end
 end
