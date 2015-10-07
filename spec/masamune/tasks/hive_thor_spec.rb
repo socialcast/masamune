@@ -34,6 +34,15 @@ describe Masamune::Tasks::HiveThor do
     it_behaves_like 'command usage'
   end
 
+  context 'without arguments' do
+    let(:options) { [] }
+
+    it do
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(retries: 0)).once.and_return(mock_success)
+      cli_invocation
+    end
+  end
+
   context 'with --file and --initialize' do
     let(:options) { ['--file=zombo.hql', '--initialize'] }
     it do
@@ -72,6 +81,14 @@ describe Masamune::Tasks::HiveThor do
     let(:options) { ['-X', 'YEAR:2015', 'MONTH:1'] }
     it do
       expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
+      cli_invocation
+    end
+  end
+
+  context 'with --retry' do
+    let(:options) { ['--retry'] }
+    it do
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_excluding(retries: 0)).once.and_return(mock_success)
       cli_invocation
     end
   end

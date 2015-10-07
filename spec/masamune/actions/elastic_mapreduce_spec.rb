@@ -48,6 +48,15 @@ describe Masamune::Actions::ElasticMapreduce do
     subject { instance.elastic_mapreduce }
 
     it { is_expected.to be_success }
+
+    context 'with retries and backoff' do
+      before do
+        allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return(retries: 1, backoff: 10)
+        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
+      end
+
+      it { is_expected.to be_success }
+    end
   end
 
   describe '.after_initialize' do
