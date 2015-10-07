@@ -27,7 +27,6 @@ SELECT pg_advisory_lock(ddl_advisory_lock());
 DROP TABLE IF EXISTS <%= target_tmp.name %> CASCADE;
 
 BEGIN;
-SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
 ALTER TABLE <%= target.name %> DROP CONSTRAINT IF EXISTS <%= target.name %>_time_key_check;
 <%- target.foreign_key_constraints.each do |id, _, _, _| -%>
