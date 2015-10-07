@@ -39,6 +39,8 @@ describe Masamune::Actions::HadoopStreaming do
 
   describe '.hadoop_streaming' do
     before do
+      allow(instance).to receive_message_chain(:configuration, :hadoop_streaming).and_return({})
+      allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({})
       mock_command(/\Ahadoop/, mock_success)
     end
 
@@ -48,7 +50,7 @@ describe Masamune::Actions::HadoopStreaming do
 
     context 'with jobflow' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({jobflow: 'j-XYZ'})
+        allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return(jobflow: 'j-XYZ')
         mock_command(/\Ahadoop/, mock_failure)
         mock_command(/\Aelastic-mapreduce/, mock_success, StringIO.new('ssh fakehost exit'))
         mock_command(/\Assh fakehost hadoop/, mock_success)
@@ -61,11 +63,20 @@ describe Masamune::Actions::HadoopStreaming do
       let(:extra) { ['-D', 'EXTRA'] }
 
       before do
-        allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({jobflow: 'j-XYZ'})
+        allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return(jobflow: 'j-XYZ')
         mock_command(/\Ahadoop/, mock_failure)
         mock_command(/\Aelastic-mapreduce/, mock_success, StringIO.new('ssh fakehost exit'))
         mock_command(/\Assh fakehost -D EXTRA hadoop/, mock_failure)
         mock_command(/\Assh fakehost hadoop .*? -D EXTRA/, mock_success)
+      end
+
+      it { is_expected.to be_success }
+    end
+
+    context 'with retries and backoff' do
+      before do
+        allow(instance).to receive_message_chain(:configuration, :hadoop_streaming).and_return(retries: 1, backoff: 10)
+        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
       end
 
       it { is_expected.to be_success }

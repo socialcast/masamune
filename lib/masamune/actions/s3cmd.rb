@@ -31,7 +31,7 @@ module Masamune::Actions
       opts.merge!(block: block.to_proc) if block_given?
 
       command = Masamune::Commands::S3Cmd.new(environment, opts)
-      command = Masamune::Commands::RetryWithBackoff.new(command, opts)
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.s3cmd.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.execute

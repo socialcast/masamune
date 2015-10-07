@@ -32,7 +32,7 @@ module Masamune::Actions
       end
 
       command = Masamune::Commands::ElasticMapReduce.new(command, opts.except(:extra)) if configuration.elastic_mapreduce[:jobflow]
-      command = Masamune::Commands::RetryWithBackoff.new(command, opts)
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.hadoop_streaming.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.execute

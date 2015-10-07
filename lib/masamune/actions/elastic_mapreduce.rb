@@ -32,7 +32,7 @@ module Masamune::Actions
 
       command = Masamune::Commands::Interactive.new(environment, :interactive => opts.fetch(:interactive, false))
       command = Masamune::Commands::ElasticMapReduce.new(command, opts)
-      command = Masamune::Commands::RetryWithBackoff.new(command, opts)
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.elastic_mapreduce.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.interactive? ? command.replace : command.execute

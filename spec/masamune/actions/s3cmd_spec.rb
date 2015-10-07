@@ -40,5 +40,14 @@ describe Masamune::Actions::S3Cmd do
     subject { instance.s3cmd 'ls', 's3://fake-bucket' }
 
     it { is_expected.to be_success }
+
+    context 'with retries and backoff' do
+      before do
+        allow(instance).to receive_message_chain(:configuration, :s3cmd).and_return(retries: 1, backoff: 10)
+        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
+      end
+
+      it { is_expected.to be_success }
+    end
   end
 end
