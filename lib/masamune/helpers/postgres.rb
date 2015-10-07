@@ -39,7 +39,7 @@ module Masamune::Helpers
     end
 
     def database_exists?
-      @database_exists ||= postgres(exec: 'SELECT version();', fail_fast: false).success?
+      @database_exists ||= postgres(exec: 'SELECT version();', fail_fast: false, retries: 0).success?
     end
 
     def table_exists?(table)
@@ -64,7 +64,7 @@ module Masamune::Helpers
 
     def update_tables
       return unless @cache.empty?
-      postgres(exec: 'SELECT table_name FROM information_schema.tables;', tuple_output: true) do |line|
+      postgres(exec: 'SELECT table_name FROM information_schema.tables;', tuple_output: true, retries: 0) do |line|
         table = line.strip
         next if table =~ /\Apg_/
         @cache[table] ||= nil
@@ -73,7 +73,7 @@ module Masamune::Helpers
 
     def update_table_last_modified_at(table, column)
       return if @cache[table].present?
-      postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true) do |line|
+      postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true, retries: 0) do |line|
         begin
           @cache[table] = Time.parse(line.strip).at_beginning_of_minute.utc
         rescue ArgumentError
