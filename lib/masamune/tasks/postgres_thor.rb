@@ -38,9 +38,11 @@ module Masamune::Tasks
     method_option :exec, :aliases => '-e', :desc => 'SQL from command line'
     method_option :output, :aliases => '-o', :desc => 'Save SQL output to file'
     method_option :csv, :type => :boolean, :desc => 'Report SQL output in CSV format', :default => false
+    method_option :retry, :type => :boolean, :desc => 'Retry SQL query in event of failure', :default => false
     def psql_exec
       postgres_options = options.dup.with_indifferent_access
       postgres_options.merge!(print: true)
+      postgres_options.merge!(retries: 0) unless options[:retry]
       postgres(postgres_options)
     end
     default_task :psql_exec
