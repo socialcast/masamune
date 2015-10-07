@@ -51,14 +51,14 @@ module Masamune::Actions
     def load_postgres_setup_files
       configuration.postgres[:setup_files].each do |file|
         configuration.with_quiet do
-          postgres(file: file)
+          postgres(file: file, retries: 0)
         end
       end if configuration.postgres.has_key?(:setup_files)
     end
 
     def load_postgres_schema
       transform = define_schema(catalog, :postgres)
-      postgres(file: transform.to_file)
+      postgres(file: transform.to_file, retries: 0)
     rescue => e
       logger.error(e)
       logger.error("Could not load schema")
