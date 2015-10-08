@@ -24,6 +24,8 @@ require 'spec_helper'
 
 describe Masamune::Transform::InsertReferenceValues do
   before do
+    allow_any_instance_of(Masamune::Schema::Table).to receive(:lock_id).and_return(42)
+
     catalog.schema :postgres do
       dimension 'department', type: :mini do
         column 'tenant_id', type: :integer, unique: true, natural_key: true
@@ -76,8 +78,9 @@ describe Masamune::Transform::InsertReferenceValues do
 
         ANALYZE department_type_stage;
 
+        SELECT pg_advisory_lock(42);
+
         BEGIN;
-        LOCK TABLE department_type IN EXCLUSIVE MODE;
 
         INSERT INTO
           department_type (tenant_id, department_id)
@@ -99,6 +102,8 @@ describe Masamune::Transform::InsertReferenceValues do
         COMMIT;
 
         VACUUM FULL ANALYZE department_type;
+
+        SELECT pg_advisory_unlock(42);
       EOS
     end
   end
