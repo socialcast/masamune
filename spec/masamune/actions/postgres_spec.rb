@@ -90,7 +90,7 @@ describe Masamune::Actions::Postgres do
       before do
         expect(postgres_helper).to receive(:database_exists?).and_return(false)
         expect(instance).to receive(:postgres_admin).with(action: :create, database: 'test', safe: true).once
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql').once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
       it 'should call posgres_admin once' do; end
@@ -100,7 +100,7 @@ describe Masamune::Actions::Postgres do
       before do
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
         expect(instance).to receive(:postgres_admin).never
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql').once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
       it 'should not call postgres_admin' do; end
@@ -110,8 +110,8 @@ describe Masamune::Actions::Postgres do
       let(:setup_files) { ['setup.psql'] }
       before do
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
-        expect(instance).to receive(:postgres).with(file: setup_files.first).once
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql').once
+        expect(instance).to receive(:postgres).with(file: setup_files.first, retries: 0).once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
       it 'should call postgres with setup_files' do; end
@@ -133,7 +133,7 @@ describe Masamune::Actions::Postgres do
       before do
         filesystem.touch!('schema_1.psql', 'schema_2.psql')
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql').once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
       it 'should call postgres with schema_files' do; end
@@ -144,7 +144,7 @@ describe Masamune::Actions::Postgres do
       before do
         filesystem.touch!('schema.rb')
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql').once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
       it 'should call postgres with schema_files' do; end
