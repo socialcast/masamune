@@ -77,6 +77,7 @@ module Masamune::Commands
       args << '--dbname=%s' % @database
       args << '--username=%s' % @username if @username
       args << '--no-password'
+      args << '--set=ON_ERROR_STOP=1'
       args << @options.map(&:to_a)
       args << command_args_for_file if @file
       args << '--output=%s' % @output if @output
