@@ -129,7 +129,6 @@ describe Masamune::Transform::RollupFact do
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_tmp CASCADE;
 
         BEGIN;
-        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
         ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_time_key_check;
         ALTER TABLE visits_hourly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_hourly_fact_y2014m08_d6b9b38_fkey CASCADE;
@@ -228,7 +227,6 @@ describe Masamune::Transform::RollupFact do
         DROP TABLE IF EXISTS visits_daily_fact_y2014m08_stage_tmp CASCADE;
 
         BEGIN;
-        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
         ALTER TABLE visits_daily_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_daily_fact_y2014m08_time_key_check;
         ALTER TABLE visits_daily_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_daily_fact_y2014m08_d6b9b38_fkey CASCADE;
@@ -327,7 +325,6 @@ describe Masamune::Transform::RollupFact do
         DROP TABLE IF EXISTS visits_monthly_fact_y2014m08_stage_tmp CASCADE;
 
         BEGIN;
-        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
         ALTER TABLE visits_monthly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_monthly_fact_y2014m08_time_key_check;
         ALTER TABLE visits_monthly_fact_y2014m08 DROP CONSTRAINT IF EXISTS visits_monthly_fact_y2014m08_d6b9b38_fkey CASCADE;
