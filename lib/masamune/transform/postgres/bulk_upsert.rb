@@ -20,15 +20,41 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-module Masamune::Transform
-  module DefineTable
-    extend ActiveSupport::Concern
+module Masamune::Transform::Postgres
+  class BulkUpsert
+    def initialize(options = {})
+      @target   = options[:target]
+      @source   = options[:source]
+    end
 
-    def define_table(target, files = [], section = nil)
-      return if target.implicit
-      Operator.new(__method__, target: target, files: files, section: section).tap do |operator|
-        logger.debug("#{target.id}\n" + operator.to_s) if target.debug
+    def locals
+      { target: target, source: @source }
+    end
+
+    def target
+      TargetPresenter.new(@target)
+    end
+
+    private
+
+    class TargetPresenter < SimpleDelegator
+      include Masamune::LastElement
+
+      def update_columns
+        columns.values.reject { |column| reserved_column_ids.include?(column.id) || column.surrogate_key || column.natural_key || column.unique.any? || column.auto_reference || column.ignore }
       end
+      method_with_last_element :update_columns
+
+      def insert_columns
+        columns.values.reject { |column| column.surrogate_key || column.auto_reference || column.ignore }
+      end
+      method_with_last_element :insert_columns
+
+      def unique_columns
+        columns.values.select { |column| column.unique.any? && !column.null }
+      end
+      method_with_last_element :unique_columns
     end
   end
 end
+

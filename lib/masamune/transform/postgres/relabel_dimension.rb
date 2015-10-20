@@ -20,14 +20,25 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-module Masamune::Transform
-  module DefineTable
-    extend ActiveSupport::Concern
+module Masamune::Transform::Postgres
+  class RelabelDimension
+    def initialize(options = {})
+      @target   = options[:target]
+    end
 
-    def define_table(target, files = [], section = nil)
-      return if target.implicit
-      Operator.new(__method__, target: target, files: files, section: section).tap do |operator|
-        logger.debug("#{target.id}\n" + operator.to_s) if target.debug
+    def locals
+      { target: target }
+    end
+
+    def target
+      TargetPresenter.new(@target)
+    end
+
+    private
+
+    class TargetPresenter < SimpleDelegator
+      def window(*extra)
+        (columns.values.select { |column| extra.delete(column.name) || column.natural_key || column.auto_reference }.map(&:name) + extra).uniq
       end
     end
   end

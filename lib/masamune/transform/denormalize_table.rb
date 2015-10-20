@@ -32,56 +32,7 @@ module Masamune::Transform
       columns -= ['last_modified_at']
       columns.uniq!
       order_by = options[:order] || columns
-      Operator.new(__method__, target: target, columns: columns, order_by: order_by, presenters: { postgres: Common, hive: Common })
-    end
-
-    private
-
-    class Common < SimpleDelegator
-      include Masamune::LastElement
-
-      def select_columns(column_names)
-        column_names.map do |column_name|
-          next unless column = dereference_column_name(column_name)
-          if column.reference
-            if column.reference.implicit || column.reference.degenerate
-              "#{column.name} AS #{column.name}"
-            else
-              "#{column.foreign_key_name} AS #{column.name}"
-            end
-          else
-            column.qualified_name
-          end
-        end.compact
-      end
-      method_with_last_element :select_columns
-
-      def join_alias(reference)
-        reference.label ? "#{reference.name} AS #{[reference.label, reference.name].compact.join('_')}" : reference.name
-      end
-
-      def join_conditions(column_names)
-        {}.tap do |conditions|
-          column_names.each do |column_name|
-            next unless column = dereference_column_name(column_name)
-            next unless column.reference
-            next if column.reference.degenerate
-            adjacent_reference = references[column.reference.id]
-            next unless adjacent_reference
-            adjacent_column = columns[adjacent_reference.foreign_key_name]
-            next unless adjacent_column
-            conditions[join_alias(column.reference)] = "#{column.reference.surrogate_key.qualified_name(column.reference.label)} = #{adjacent_column.qualified_name}"
-          end
-        end
-      end
-
-      def order_by_columns(column_names)
-        column_names.map do |column_name|
-          next unless column = dereference_column_name(column_name)
-          column.name
-        end.compact
-      end
-      method_with_last_element :order_by_columns
+      Operator.new(__method__, target: target, columns: columns, order_by: order_by)
     end
   end
 end
