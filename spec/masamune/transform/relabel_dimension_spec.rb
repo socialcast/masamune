@@ -24,6 +24,8 @@ require 'spec_helper'
 
 describe Masamune::Transform::RelabelDimension do
   before do
+    allow_any_instance_of(Masamune::Schema::Table).to receive(:lock_id).and_return(42)
+
     catalog.schema :postgres do
       dimension 'user_account_state', type: :mini do
         column 'name', type: :string, unique: true
@@ -46,8 +48,9 @@ describe Masamune::Transform::RelabelDimension do
 
     it 'should eq render relabel_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
+        SELECT pg_advisory_lock(42);
+
         BEGIN;
-        LOCK TABLE user_dimension IN EXCLUSIVE MODE;
 
         UPDATE user_dimension SET version = NULL;
 
@@ -96,6 +99,8 @@ describe Masamune::Transform::RelabelDimension do
         ;
 
         COMMIT;
+
+        SELECT pg_advisory_unlock(42);
       EOS
     end
   end
