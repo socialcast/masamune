@@ -24,6 +24,8 @@ require 'spec_helper'
 
 describe Masamune::Transform::InsertReferenceValues do
   before do
+    allow_any_instance_of(Masamune::Schema::Table).to receive(:lock_id).and_return(42)
+
     catalog.schema :postgres do
       dimension 'date', type: :one do
         column 'date_id', type: :integer, unique: true, index: true, natural_key: true
@@ -93,8 +95,9 @@ describe Masamune::Transform::InsertReferenceValues do
 
         ANALYZE user_agent_type_stage;
 
+        SELECT pg_advisory_lock(42);
+
         BEGIN;
-        LOCK TABLE user_agent_type IN EXCLUSIVE MODE;
 
         INSERT INTO
           user_agent_type (name, version)
@@ -117,6 +120,8 @@ describe Masamune::Transform::InsertReferenceValues do
 
         VACUUM FULL ANALYZE user_agent_type;
 
+        SELECT pg_advisory_unlock(42);
+
         CREATE TEMPORARY TABLE IF NOT EXISTS feature_type_stage (LIKE feature_type INCLUDING ALL);
 
         INSERT INTO
@@ -131,8 +136,9 @@ describe Masamune::Transform::InsertReferenceValues do
 
         ANALYZE feature_type_stage;
 
+        SELECT pg_advisory_lock(42);
+
         BEGIN;
-        LOCK TABLE feature_type IN EXCLUSIVE MODE;
 
         INSERT INTO
           feature_type (name)
@@ -151,6 +157,8 @@ describe Masamune::Transform::InsertReferenceValues do
         COMMIT;
 
         VACUUM FULL ANALYZE feature_type;
+
+        SELECT pg_advisory_unlock(42);
       EOS
     end
   end

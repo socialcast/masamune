@@ -24,6 +24,8 @@ require 'spec_helper'
 
 describe Masamune::Transform::BulkUpsert do
   before do
+    allow_any_instance_of(Masamune::Schema::Table).to receive(:lock_id).and_return(42)
+
     catalog.schema :postgres do
       dimension 'cluster', type: :mini do
         column 'id', type: :integer, surrogate_key: true, auto: true
@@ -78,8 +80,9 @@ describe Masamune::Transform::BulkUpsert do
 
     it 'should render bulk_upsert template' do
       is_expected.to eq <<-EOS.strip_heredoc
+        SELECT pg_advisory_lock(42);
+
         BEGIN;
-        LOCK TABLE user_dimension IN EXCLUSIVE MODE;
 
         UPDATE
           user_dimension
@@ -130,6 +133,8 @@ describe Masamune::Transform::BulkUpsert do
         COMMIT;
 
         VACUUM FULL ANALYZE user_dimension;
+
+        SELECT pg_advisory_unlock(42);
       EOS
     end
   end
@@ -139,8 +144,9 @@ describe Masamune::Transform::BulkUpsert do
 
     it 'should render bulk_upsert template' do
       is_expected.to eq <<-EOS.strip_heredoc
+        SELECT pg_advisory_lock(42);
+
         BEGIN;
-        LOCK TABLE user_dimension_ledger IN EXCLUSIVE MODE;
 
         UPDATE
           user_dimension_ledger
@@ -196,6 +202,8 @@ describe Masamune::Transform::BulkUpsert do
         COMMIT;
 
         VACUUM FULL ANALYZE user_dimension_ledger;
+
+        SELECT pg_advisory_unlock(42);
       EOS
     end
   end

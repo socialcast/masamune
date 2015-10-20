@@ -20,8 +20,9 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
+SELECT pg_advisory_lock(<%= target.lock_id %>);
+
 BEGIN;
-LOCK TABLE <%= target.name %> IN EXCLUSIVE MODE;
 
 <%- if target.update_columns.any? -%>
 UPDATE
@@ -64,3 +65,5 @@ WHERE
 COMMIT;
 
 VACUUM FULL ANALYZE <%= target.name %>;
+
+SELECT pg_advisory_unlock(<%= target.lock_id %>);
