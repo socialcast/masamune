@@ -62,7 +62,7 @@ module Masamune::Schema
       when :two
         [:start_at, :end_at, :version, :last_modified_at]
       when :four
-        [:parent_id, :record_id, :start_at, :end_at, :version, :last_modified_at]
+        [:start_at, :end_at, :version, :last_modified_at]
       when :ledger
         [:source_kind, :source_uuid, :start_at, :last_modified_at, :delta]
       else
@@ -103,8 +103,6 @@ module Masamune::Schema
       when :four
         children << ledger_table
         # FIXME derive type from from parent
-        initialize_column! id: 'parent_id', type: :integer, null: true, reference: TableReference.new(ledger_table)
-        initialize_column! id: 'record_id', type: :integer, null: true, reference: TableReference.new(ledger_table)
         initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: [:start_at, :natural], unique: :natural
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: :end_at
         initialize_column! id: 'version', type: :integer, default: 1, null: true

@@ -25,28 +25,22 @@ WITH consolidated AS (
     <%- target.insert_view_values(coalesce: true).each do |value| -%>
     <%= value %><%= ',' %>
     <%- end -%>
-    parent_id,
-    record_id,
     start_at
   FROM
     <%= source.name %>
 )
 INSERT INTO
-  <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_id, record_id, start_at)
+  <%= target.name %> (<%= target.insert_columns.join(', ') %>, start_at)
 SELECT DISTINCT
   <%- target.insert_view_values.each do |value| -%>
   <%= value %><%= ',' %>
   <%- end -%>
-  parent_id,
-  record_id,
   start_at
 FROM (
   SELECT
     <%- target.insert_view_values.each do |value| -%>
     <%= value %><%= ',' %>
     <%- end -%>
-    parent_id,
-    record_id,
     start_at,
     CASE
     WHEN <%= target.duplicate_value_conditions('w').join(' AND ') %> THEN

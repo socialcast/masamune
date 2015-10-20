@@ -101,7 +101,7 @@ describe Masamune::Transform::BulkUpsert do
         ;
 
         INSERT INTO
-          user_dimension (department_type_id, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, name, preferences, parent_id, record_id, start_at, end_at, version, last_modified_at)
+          user_dimension (department_type_id, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, name, preferences, start_at, end_at, version, last_modified_at)
         SELECT
           user_dimension_stage.department_type_id,
           user_dimension_stage.user_account_state_type_id,
@@ -110,8 +110,6 @@ describe Masamune::Transform::BulkUpsert do
           user_dimension_stage.user_id,
           user_dimension_stage.name,
           user_dimension_stage.preferences,
-          user_dimension_stage.parent_id,
-          user_dimension_stage.record_id,
           user_dimension_stage.start_at,
           user_dimension_stage.end_at,
           user_dimension_stage.version,
