@@ -21,7 +21,8 @@
 #  THE SOFTWARE.
 
 require 'chronic'
-require 'active_support/concern'
+
+require 'masamune/actions/date_parse'
 
 module Masamune::Actions
   module DataFlow

@@ -20,6 +20,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+require 'masamune/transform/bulk_upsert'
+
 module Masamune::Transform::Postgres
   class InsertReferenceValues
     include Masamune::Transform::BulkUpsert

@@ -20,6 +20,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+require 'masamune/transform/common/denormalize_table'
+
 module Masamune::Transform::Postgres
   DenormalizeTable = Masamune::Transform::Common::DenormalizeTable
 end

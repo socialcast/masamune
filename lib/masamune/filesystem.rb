@@ -21,6 +21,8 @@
 #  THE SOFTWARE.
 
 require 'masamune/has_environment'
+require 'masamune/actions/s3cmd'
+require 'masamune/actions/hadoop_filesystem'
 
 module Masamune
   class Filesystem

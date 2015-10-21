@@ -20,6 +20,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+require 'masamune/last_element'
+
 module Masamune::Transform::Common
   class DenormalizeTable
     def initialize(options = {})

@@ -20,6 +20,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+require 'masamune/last_element'
+
 module Masamune::Transform::Postgres
   class BulkUpsert
     def initialize(options = {})

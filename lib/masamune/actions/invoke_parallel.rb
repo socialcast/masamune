@@ -20,8 +20,9 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'active_support/concern'
 require 'parallel'
+
+require 'masamune/actions/execute'
 
 module Masamune::Actions
   module InvokeParallel

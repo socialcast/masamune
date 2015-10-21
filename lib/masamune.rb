@@ -19,27 +19,29 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
+require 'active_support/concern'
 
 module Masamune
   require 'masamune/environment'
   require 'masamune/has_environment'
   require 'masamune/io'
   require 'masamune/template'
-  require 'masamune/commands'
   require 'masamune/last_element'
-  require 'masamune/actions'
-  require 'masamune/helpers'
   require 'masamune/configuration'
-  require 'masamune/data_plan'
   require 'masamune/thor'
   require 'masamune/thor_loader'
   require 'masamune/filesystem'
   require 'masamune/cached_filesystem'
   require 'masamune/method_logger'
   require 'masamune/after_initialize_callbacks'
+  require 'masamune/topological_hash'
+
+  require 'masamune/data_plan'
+  require 'masamune/commands'
+  require 'masamune/actions'
+  require 'masamune/helpers'
   require 'masamune/schema'
   require 'masamune/transform'
-  require 'masamune/topological_hash'
 
   extend self
   extend Masamune::HasEnvironment

@@ -27,6 +27,8 @@ require 'pp'
 
 require 'active_support/core_ext/hash'
 
+require 'masamune/has_environment'
+
 class Masamune::Configuration
   extend Forwardable
   include Masamune::HasEnvironment
