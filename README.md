@@ -26,7 +26,7 @@ class ExampleThor  < Thor
   # Describe a Data Processing Job
   desc 'extract_logs', 'Organize log files by YYYY-MM-DD'
 
-  target fs.path(:target_dir, '%Y-%m-%d', mkdir: true)
+  target fs.path(:target_dir, '%Y-%m-%d')
   source fs.path(:source_dir, '%Y%m%d*.log')
   def extract_logs
     targets.missing.each do |target|

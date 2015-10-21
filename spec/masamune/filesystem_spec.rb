@@ -62,6 +62,10 @@ shared_examples_for 'Filesystem' do
         it { expect(instance.get_path(:home_dir, '/a/b', 'c')).to eq('/home/a/b/c') }
       end
 
+      context 'with extra options' do
+        it { expect(instance.get_path(:home_dir, '/a/b', 'c', mkdir: true)).to eq('/home/a/b/c') }
+      end
+
       context 'with parameter substitution' do
         before do
           instance.configuration.params[:user] = 'zombo'

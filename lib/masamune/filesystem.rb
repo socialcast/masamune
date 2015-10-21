@@ -50,6 +50,8 @@ module Masamune
     end
 
     def get_path(symbol, *extra)
+      extra ||= []
+      extra.select! { |e| e.is_a?(String) }
       lazy_path = lambda do |fs|
         fs.has_path?(symbol) or raise "Path :#{symbol} not defined"
         path, options = fs.paths[symbol]
