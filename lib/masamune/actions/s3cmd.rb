@@ -20,6 +20,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+require 'masamune/commands/s3cmd'
+
 module Masamune::Actions
   module S3Cmd
     include Masamune::Commands::S3Cmd::ClassMethods

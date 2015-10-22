@@ -20,32 +20,50 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-module Masamune
-  module LastElement
-    extend ActiveSupport::Concern
+require 'masamune/transform/bulk_upsert'
 
-    def last_element(method, *args)
-      instance = send(method, *args)
-      case instance
-      when Array
-        instance.map { |elem| [elem, elem == instance.last] }
-      when Hash
-        instance.map { |key, value| [key, value, key == instance.keys.last] }
-      end
+module Masamune::Transform::Postgres
+  class InsertReferenceValues
+    include Masamune::Transform::BulkUpsert
+
+    def initialize(options = {})
+      @target   = options[:target]
+      @source   = options[:source]
     end
 
-    module ClassMethods
-      def method_with_last_element(method)
-        self.class_eval do
-          new_method = "#{method}_with_last_element"
-          old_method = "#{method}_without_last_element"
-          alias_method old_method, method
-          define_method(new_method) do |*args, &block|
-            last_element(old_method,  *args)
+    def locals
+      { target: target, source: @source, helper: self }
+    end
+
+    def target
+      TargetPresenter.new(@target)
+    end
+
+    private
+
+    class TargetPresenter < SimpleDelegator
+      include Masamune::LastElement
+
+      def insert_columns(source)
+        source.shared_columns(stage_table).map { |_, columns| columns.first.name }
+      end
+
+      def insert_values(source)
+        source.shared_columns(stage_table).map do |column, _|
+          if column.adjacent.try(:default)
+            "COALESCE(#{column.name}, #{column.adjacent.sql_value(column.adjacent.default)})"
+          else
+            column.name
           end
-          alias_method method, new_method
         end
       end
+      method_with_last_element :insert_values
+
+      def insert_constraints(source)
+        source.shared_columns(stage_table).reject { |column, _| column.null || column.default || column.adjacent.try(:default) }.map { |column, _| "#{column.name} IS NOT NULL"}
+      end
+      method_with_last_element :insert_constraints
     end
   end
 end
+

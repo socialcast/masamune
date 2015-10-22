@@ -41,5 +41,5 @@ WHERE
 
 ANALYZE <%= target.stage_table.name %>;
 
-<%= target.bulk_upsert(target.stage_table, target) %>
+<%= helper.bulk_upsert(target.stage_table, target) %>
 <%- end -%>

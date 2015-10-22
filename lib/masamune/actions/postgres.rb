@@ -20,7 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'active_support/concern'
 require 'masamune/transform/define_schema'
 require 'masamune/actions/postgres_admin'
 

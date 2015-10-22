@@ -21,7 +21,6 @@
 #  THE SOFTWARE.
 
 require 'chronic'
-require 'active_support/concern'
 
 module Masamune::Actions
   module DateParse
