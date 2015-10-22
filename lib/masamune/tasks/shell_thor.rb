@@ -27,7 +27,7 @@ require 'pry'
 module Masamune::Tasks
   class ShellThor < Thor
     include Masamune::Thor
-    include Masamune::Actions::DataFlow
+    include Masamune::Actions::DateParse
 
     # FIXME need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
