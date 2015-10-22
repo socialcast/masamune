@@ -52,7 +52,7 @@ module Masamune::Transform
           else
             column.qualified_name
           end
-        end.compact
+        end.compact.uniq
       end
       method_with_last_element :select_columns
 
@@ -79,7 +79,7 @@ module Masamune::Transform
         column_names.map do |column_name|
           next unless column = dereference_column_name(column_name)
           column.name
-        end.compact
+        end.compact.uniq
       end
       method_with_last_element :order_by_columns
     end
