@@ -22,24 +22,31 @@
 
 require 'spec_helper'
 require 'thor'
-
 describe Masamune::Thor do
   let(:thor_class) do
     Class.new(Thor) do
       include Masamune::Thor
       include Masamune::Actions::DataFlow
 
+      namespace :example
+
       desc 'command', 'command'
-      target path: "target/%Y-%m-%d"
-      source path: "source/%Y%m%d*.log"
-      method_option :zombo, desc: 'Anything is possible'
-      def command
+      target path: fs.path(:tmp_dir, "target/%Y-%m-%d")
+      source path: fs.path(:tmp_dir, "source/%Y%m%d*.log")
+      def command_task
         # NOP
       end
 
       desc 'other', 'other'
       skip
-      def other
+      def other_task
+        # NOP
+      end
+
+      desc 'unknown', 'unknown'
+      target path: fs.path(:unknown_dir, "target/%Y-%m-%d")
+      source path: fs.path(:unknown_dir, "source/%Y%m%d*.log")
+      def unknown_task
         # NOP
       end
     end
@@ -187,6 +194,19 @@ describe Masamune::Thor do
         allow(thor_class).to receive(:after_initialize_invoke).and_raise('random exception')
       end
       it { expect { cli_invocation }.to raise_error /random exception/ }
+    end
+
+    context 'with command that raises exception during execution' do
+      let(:command) { 'unknown' }
+      let(:options) { ['--start', '2013-01-01'] }
+      it 'exits with status code 1 and prints error to stderr' do
+        expect { cli_invocation }.to raise_error { |e|
+          expect(e).to be_a(SystemExit)
+          expect(e.status).to eq(1)
+        }
+        expect(stdout.string).to be_blank
+        expect(stderr.string).to match(/Path :unknown_dir not defined/)
+      end
     end
   end
 

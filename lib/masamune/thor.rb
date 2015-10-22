@@ -72,11 +72,14 @@ module Masamune
         raise e unless %w(SIGHUP SIGTERM).include?(e.to_s)
         instance.logger.debug("Exiting at user request on #{e.to_s}")
         exit 0
+      rescue ::Thor::MalformattedArgumentError, ::Thor::RequiredArgumentMissingError => e
+        raise e
       rescue => e
         instance.logger.error("#{e.message} (#{e.class}) backtrace:")
         e.backtrace.each { |x| instance.logger.error(x) }
+        $stderr.puts e.to_s
         $stderr.puts "For complete debug log see: #{instance.log_file_name.to_s}"
-        raise e
+        exit 1
       end
     end
 

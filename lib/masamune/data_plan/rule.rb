@@ -40,6 +40,10 @@ class Masamune::DataPlan::Rule
     @options = options
   end
 
+  def prepare
+    pattern
+  end
+
   def for_targets?
     @type == :target
   end

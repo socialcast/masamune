@@ -121,6 +121,8 @@ class Masamune::DataPlan::Engine
   def prepare(rule, options = {})
     @targets[rule].merge options.fetch(:targets, [])
     @sources[rule].merge options.fetch(:sources, [])
+    @target_rules[rule].try(:prepare)
+    @source_rules[rule].try(:prepare)
 
     constrain_max_depth(rule) do
       sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
