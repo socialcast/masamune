@@ -23,6 +23,7 @@
 require 'delegate'
 
 require 'masamune/string_format'
+require 'masamune/commands/postgres_common'
 
 module Masamune::Commands
   class Postgres < SimpleDelegator

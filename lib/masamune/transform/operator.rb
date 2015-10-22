@@ -25,29 +25,7 @@ module Masamune::Transform
     def initialize(*args)
       options     = args.last.is_a?(Hash) ? args.pop : {}
       @templates  = args
-      @source     = options.delete(:source)
-      @target     = options.delete(:target)
-      @presenters = options.delete(:presenters) || {}
-      @helper     = options.delete(:helper)
-      @locals     = options
-    end
-
-    def source
-      return unless @source
-      @presenters.key?(source_store.try(:type)) ? @presenters[source_store.try(:type)].new(@source) : @source
-    end
-
-    def target
-      return unless @target
-      @presenters.key?(target_store.try(:type)) ? @presenters[target_store.try(:type)].new(@target) : @target
-    end
-
-    def helper
-      (@helper || SimpleDelegator).new(self)
-    end
-
-    def locals
-      @locals
+      @options    = options
     end
 
     def to_s
@@ -72,34 +50,55 @@ module Masamune::Transform
 
     private
 
-    def source_store
-      return @source if @source.is_a?(Masamune::Schema::Store)
-      @source.try(:store)
-    end
-
-    def target_store
-      return @target if @target.is_a?(Masamune::Schema::Store)
-      @target.try(:store)
-    end
-
     def template_eval(template)
       return File.read(template) if File.exists?(template.to_s) && template.to_s !~ /erb\Z/
       template_file = File.exists?(template.to_s) ? template : template_file(template)
-      Masamune::Template.render_to_string(template_file, @locals.merge(source: source, target: target, helper: helper))
+      if template_helper(template)
+        Masamune::Template.render_to_string(template_file, template_helper(template).new(@options).locals)
+      else
+        Masamune::Template.render_to_string(template_file, @options)
+      end
     end
 
-    def template_file(template_prefix)
-      File.expand_path(File.join(__FILE__, '..', "#{template_prefix}.#{template_suffix}.erb"))
+    def template_helper(template_name)
+      "Masamune::Transform::#{template_type.to_s.camelize}::#{template_name.to_s.camelize}".constantize
+    rescue NameError
+    end
+
+    def template_file(template_name)
+      File.expand_path(File.join(__FILE__, '..', template_dir, "#{template_name}.#{template_suffix}.erb"))
+    end
+
+    def template_type
+      @options.values.map do |value|
+        case value
+        when Masamune::Schema::Store
+          value.type
+        when Masamune::Schema::Table
+          value.store.type
+        end
+      end.first
+    end
+
+    def template_dir
+      case template_type
+      when :postgres
+        'postgres'
+      when :hive
+        'hive'
+      else
+        raise ArgumentError, "Unknown template_dir for #{template_type}"
+      end
     end
 
     def template_suffix
-      case (target_store || source_store).try(:type)
+      case template_type
       when :postgres
         'psql'
       when :hive
         'hql'
       else
-        'txt'
+        raise ArgumentError, "Unknown template_suffix for #{template_type}"
       end
     end
   end

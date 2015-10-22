@@ -21,14 +21,7 @@
 #  THE SOFTWARE.
 
 module Masamune::Transform
-  module DefineTable
-    extend ActiveSupport::Concern
-
-    def define_table(target, files = [], section = nil)
-      return if target.implicit
-      Operator.new(__method__, target: target, files: files, section: section).tap do |operator|
-        logger.debug("#{target.id}\n" + operator.to_s) if target.debug
-      end
-    end
+  module Common
+    Dir["#{File.dirname(__FILE__)}/common/*.rb"].each { |f| require f }
   end
 end

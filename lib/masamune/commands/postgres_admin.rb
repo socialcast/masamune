@@ -22,6 +22,8 @@
 
 require 'delegate'
 
+require 'masamune/commands/postgres_common'
+
 module Masamune::Commands
   class PostgresAdmin < SimpleDelegator
     include Masamune::Commands::PostgresCommon

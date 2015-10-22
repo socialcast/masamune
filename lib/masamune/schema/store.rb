@@ -22,6 +22,8 @@
 
 require 'active_support/core_ext/hash'
 
+require 'masamune/has_environment'
+
 module Masamune::Schema
   class Store
     include Masamune::HasEnvironment

@@ -42,7 +42,10 @@ module Masamune
       return partial_file if Pathname.new(partial_file).absolute?
       @paths.each do |path|
         file = File.expand_path(File.join(path, partial_file))
-        return file if File.exists?(file) && File.file?(file)
+        if File.exists?(file) && File.file?(file)
+          @paths << File.dirname(file)
+          return file 
+        end
       end
       raise IOError, "File not found: #{partial_file}"
     end

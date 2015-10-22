@@ -23,6 +23,8 @@
 require 'active_support'
 require 'active_support/core_ext/numeric/time'
 
+require 'masamune/has_environment'
+
 class Masamune::DataPlan::Engine
   MAX_DEPTH = 10
 
