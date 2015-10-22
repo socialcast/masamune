@@ -65,7 +65,7 @@ describe Masamune::Transform::SnapshotDimension do
             consolidated.record_id,
             consolidated.start_at
           FROM (
-            SELECT DISTINCT ON (tenant_id, user_id, start_at)
+            SELECT DISTINCT ON (tenant_id, user_id, start_at, record_id)
               FIRST_VALUE(id) OVER w AS parent_id,
               FIRST_VALUE(start_at) OVER w AS parent_start_at,
               id AS record_id,
@@ -77,7 +77,7 @@ describe Masamune::Transform::SnapshotDimension do
             FROM
               windows
             WINDOW w AS (PARTITION BY tenant_id, user_id, window_id ORDER BY start_at DESC)
-            ORDER BY tenant_id, user_id, start_at DESC, window_id
+            ORDER BY tenant_id, user_id, start_at DESC, record_id DESC, window_id
           ) consolidated
           WHERE
             consolidated.user_account_state_type_id IS NOT NULL AND
