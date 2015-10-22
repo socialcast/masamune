@@ -22,8 +22,8 @@
 
 require 'date'
 require 'thor'
-require 'active_support/concern'
 
+require 'masamune/has_environment'
 require 'masamune/after_initialize_callbacks'
 
 module Masamune

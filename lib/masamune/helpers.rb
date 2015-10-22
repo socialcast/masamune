@@ -22,6 +22,6 @@
 
 module Masamune
   module Helpers
-    require 'masamune/helpers/postgres'
+    Dir["#{File.dirname(__FILE__)}/helpers/*.rb"].each { |f| require f }
   end
 end

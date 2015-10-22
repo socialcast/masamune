@@ -25,47 +25,7 @@ module Masamune::Transform
     extend ActiveSupport::Concern
 
     def deduplicate_dimension(source, target)
-      Operator.new(__method__, source: source, target: target, presenters: { postgres: Postgres })
-    end
-
-    private
-
-    class Postgres < SimpleDelegator
-      def insert_columns(source = nil)
-        consolidated_columns.map { |_, column| column.name }
-      end
-
-      def insert_view_values(coalesce: false)
-        consolidated_columns.map do |_, column|
-          if !column.default.nil? && coalesce
-            "COALESCE(#{column.name}, #{column.sql_value(column.default)}) AS #{column.name}"
-          else
-            column.name
-          end
-        end
-      end
-
-      def duplicate_value_conditions(window)
-        [].tap do |result|
-          consolidated_columns.map do |_, column|
-            if column.null
-              result << "((LAG(#{column.name}) OVER #{window} = #{column.name}) OR (LAG(#{column.name}) OVER #{window} IS NULL AND #{column.name} IS NULL))"
-            else
-              result << "(LAG(#{column.name}) OVER #{window} = #{column.name})"
-            end
-          end
-        end
-      end
-
-      def window(*extra)
-        (columns.values.select { |column| extra.delete(column.name) || column.natural_key || column.auto_reference }.map(&:name) + extra).uniq
-      end
-
-      private
-
-      def consolidated_columns
-        unreserved_columns.reject { |_, column| column.surrogate_key }
-      end
+      Operator.new(__method__, source: source, target: target)
     end
   end
 end

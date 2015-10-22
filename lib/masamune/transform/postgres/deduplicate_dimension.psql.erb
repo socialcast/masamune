@@ -20,26 +20,38 @@
 --  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 --  THE SOFTWARE.
 
-<%- if target.insert_columns(source).any? -%>
-CREATE TEMPORARY TABLE IF NOT EXISTS <%= target.stage_table.name %> (LIKE <%= target.name %> INCLUDING ALL);
-
+WITH consolidated AS (
+  SELECT
+    <%- target.insert_view_values(coalesce: true).each do |value| -%>
+    <%= value %><%= ',' %>
+    <%- end -%>
+    start_at
+  FROM
+    <%= source.name %>
+)
 INSERT INTO
-  <%= target.stage_table.name %> (<%= target.insert_columns(source).join(', ') %>)
+  <%= target.name %> (<%= target.insert_columns.join(', ') %>, start_at)
 SELECT DISTINCT
-  <%- target.insert_values(source).each do |value, last| -%>
-  <%= value %><%= ',' unless last %>
+  <%- target.insert_view_values.each do |value| -%>
+  <%= value %><%= ',' %>
   <%- end -%>
-FROM
-  <%= source.name %>
-<%- if target.insert_constraints(source).any? -%>
+  start_at
+FROM (
+  SELECT
+    <%- target.insert_view_values.each do |value| -%>
+    <%= value %><%= ',' %>
+    <%- end -%>
+    start_at,
+    CASE
+    WHEN <%= target.duplicate_value_conditions('w').join(' AND ') %> THEN
+      1
+    ELSE
+      0
+    END AS duplicate
+  FROM
+    consolidated
+  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at)
+) tmp
 WHERE
-  <%- target.insert_constraints(source).each do |constraint, last| -%>
-  <%= constraint %><%= ' AND' unless last %>
-  <%- end -%>
-<%- end -%>
+  duplicate = 0
 ;
-
-ANALYZE <%= target.stage_table.name %>;
-
-<%= target.bulk_upsert(target.stage_table, target) %>
-<%- end -%>

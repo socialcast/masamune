@@ -39,14 +39,9 @@ WITH ranges AS (
     <%- target.insert_view_values.each do |value| -%>
     consolidated.<%= value %><%= ',' %>
     <%- end -%>
-    consolidated.parent_id,
-    consolidated.record_id,
     consolidated.start_at
   FROM (
-    SELECT DISTINCT ON (<%= target.window('start_at').join(', ') %>)
-      FIRST_VALUE(id) OVER w AS parent_id,
-      FIRST_VALUE(start_at) OVER w AS parent_start_at,
-      id AS record_id,
+    SELECT DISTINCT ON (<%= target.window('start_at', 'id').join(', ') %>)
       <%- target.insert_values(window: 'w').each do |value, last| -%>
       <%= value %><%= ',' %>
       <%- end -%>
@@ -54,7 +49,7 @@ WITH ranges AS (
     FROM
       windows
     WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at <%= order %>)
-    ORDER BY <%= target.window("start_at #{order}", 'window_id').join(', ') %>
+    ORDER BY <%= target.window("start_at #{order}", "id DESC", 'window_id').join(', ') %>
   ) consolidated
   WHERE
     <%- target.insert_view_constraints.each do |constraint, last| -%>
@@ -62,13 +57,11 @@ WITH ranges AS (
     <%- end -%>
 )
 INSERT INTO
-  <%= target.name %> (<%= target.insert_columns.join(', ') %>, parent_id, record_id, start_at)
+  <%= target.name %> (<%= target.insert_columns.join(', ') %>, start_at)
 SELECT
   <%- target.insert_view_values.each do |value| -%>
   <%= value %><%= ',' %>
   <%- end -%>
-  parent_id,
-  record_id,
   start_at
 FROM
   snapshot

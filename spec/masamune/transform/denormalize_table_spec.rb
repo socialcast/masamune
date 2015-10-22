@@ -73,6 +73,39 @@ describe Masamune::Transform::DenormalizeTable do
 
   subject(:result) { transform.denormalize_table(target, options).to_s }
 
+  context 'with postgres dimension' do
+    let(:target) { catalog.postgres.user_dimension }
+    let(:options) { { } }
+
+    it 'should eq render denormalize_table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+       SELECT
+         cluster_type.name AS cluster_type_name,
+         user_dimension.tenant_id,
+         user_dimension.user_id,
+         user_dimension.name,
+         user_dimension.start_at,
+         user_dimension.end_at,
+         user_dimension.version
+       FROM
+         user_dimension
+       LEFT JOIN
+         cluster_type
+       ON
+         cluster_type.id = user_dimension.cluster_type_id
+       ORDER BY
+         cluster_type_name,
+         tenant_id,
+         user_id,
+         name,
+         start_at,
+         end_at,
+         version
+       ;
+      EOS
+    end
+  end
+
   context 'with postgres fact without :columns' do
     let(:target) { catalog.postgres.visits_fact }
     let(:options) { { } }
@@ -137,6 +170,7 @@ describe Masamune::Transform::DenormalizeTable do
       EOS
     end
   end
+
   context 'with postgres fact with :columns' do
     let(:target) { catalog.postgres.visits_fact }
     let(:options) do

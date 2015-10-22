@@ -75,7 +75,7 @@ describe Masamune::Template do
     end
 
     context 'with packaged template' do
-      let(:template) { 'define_schema.hql.erb' }
+      let(:template) { 'hive/define_schema.hql.erb' }
       it { is_expected.to_not be_nil }
     end
   end
