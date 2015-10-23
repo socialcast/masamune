@@ -31,7 +31,6 @@ module Masamune
         thor_files = Dir.glob('**/*.rb').delete_if { |file| !File.file?(file) }
         thor_files.each do |file|
           require "#{dir}/#{file}"
-          ::Thor::Util.load_thorfile(file)
         end
       end
     end
