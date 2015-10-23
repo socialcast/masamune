@@ -95,7 +95,7 @@ class Masamune::DataPlan::Rule
   def pattern
     @pattern ||= begin
       if for_path?
-        path.respond_to?(:call) ? path.call(engine.filesystem) : path
+        engine.filesystem.eval_path(path)
       elsif for_table_with_partition?
         [table , partition].join('_')
       elsif for_table?

@@ -78,6 +78,10 @@ module Masamune
       @paths
     end
 
+    def eval_path(path)
+      path.respond_to?(:call) ? path.call(self) : path
+    end
+
     def expand_params(fs, path)
       new_path = path.dup
       fs.environment.configuration.params.each do |key, value|

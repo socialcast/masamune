@@ -114,6 +114,8 @@ module Masamune
           self.current_command_name = current_namespace ? current_namespace + ':' + current_task_name : current_task_name
           self.class.instance = self
 
+          define_current_dir
+
           if _options.is_a?(Array)
             _options, self.extra = self.class.parse_extra(_options)
           end
@@ -126,7 +128,7 @@ module Masamune
           end
 
           environment.configure do |config|
-            config_file = options[:config]
+            config_file = config.filesystem.eval_path(options[:config])
             config_file ||= config.filesystem.resolve_file([config.default_config_file] + SYSTEM_CONFIG_FILES)
             raise ::Thor::RequiredArgumentMissingError, 'Option --config or valid system configuration file required' unless config_file
 
@@ -197,6 +199,11 @@ module Masamune
         end
 
         private
+
+        def define_current_dir
+          return unless current_task_name
+          filesystem.add_path(:current_dir, File.dirname(method(current_task_name).source_location.first))
+        end
 
         def display_help?
           options[:help] || current_task_name == 'help'

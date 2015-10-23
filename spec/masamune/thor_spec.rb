@@ -43,6 +43,12 @@ describe Masamune::Thor do
         # NOP
       end
 
+      desc 'current_dir', 'current_dir'
+      skip
+      def current_dir_task
+        console(fs.path(:current_dir))
+      end
+
       desc 'unknown', 'unknown'
       target path: fs.path(:unknown_dir, "target/%Y-%m-%d")
       source path: fs.path(:unknown_dir, "source/%Y%m%d*.log")
@@ -207,6 +213,27 @@ describe Masamune::Thor do
         expect(stdout.string).to be_blank
         expect(stderr.string).to match(/Path :unknown_dir not defined/)
       end
+    end
+
+  end
+
+  context 'with command that prints :current_dir' do
+    let(:thor_class) do
+      Class.new(Thor) do
+        include Masamune::Thor
+
+        desc 'current_dir', 'current_dir'
+        def current_dir
+          console(fs.path(:current_dir))
+        end
+      end
+    end
+
+    let(:command) { 'current_dir' }
+    it 'prints :current_dir' do
+      cli_invocation
+      expect(stdout.string).to eq(File.dirname(__FILE__) + "\n")
+      expect(stderr.string).to be_blank
     end
   end
 
