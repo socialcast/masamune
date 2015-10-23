@@ -36,6 +36,18 @@ describe Masamune::Configuration do
     it { is_expected.to match(%r{config/masamune\.yml\.erb\Z}) }
   end
 
+  describe '#as_options' do
+    subject { instance.as_options }
+    it { is_expected.to eq([]) }
+
+    context 'with dry_run: true and debug: true' do
+      before do
+        instance.debug = instance.dry_run = true
+      end
+      it { is_expected.to eq(['--debug', '--dry-run']) }
+    end
+  end
+
   describe '#bind_template' do
     let(:section) { nil }
     let(:template) { nil }

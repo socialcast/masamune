@@ -130,7 +130,7 @@ class Masamune::Configuration
     opts << '--quiet'   if quiet
     opts << '--verbose' if verbose
     opts << '--debug'   if debug
-    opts << '--dry_run' if dry_run
+    opts << '--dry-run' if dry_run
     opts
   end
 
