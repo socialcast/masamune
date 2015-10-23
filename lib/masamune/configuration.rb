@@ -36,7 +36,6 @@ class Masamune::Configuration
   attr_accessor :quiet
   attr_accessor :verbose
   attr_accessor :debug
-  attr_accessor :no_op
   attr_accessor :dry_run
   attr_accessor :lock
   attr_accessor :retries
@@ -56,7 +55,6 @@ class Masamune::Configuration
     self.quiet    = false
     self.verbose  = false
     self.debug    = false
-    self.no_op    = false
     self.dry_run  = false
     self.lock     = nil
     self.retries  = 3
@@ -132,7 +130,6 @@ class Masamune::Configuration
     opts << '--quiet'   if quiet
     opts << '--verbose' if verbose
     opts << '--debug'   if debug
-    opts << '--no_op'   if no_op
     opts << '--dry_run' if dry_run
     opts
   end

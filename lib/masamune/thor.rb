@@ -99,8 +99,7 @@ module Masamune
         class_option :quiet, :type => :boolean, :aliases => '-q', :desc => 'Suppress all output', :default => false
         class_option :verbose, :type => :boolean, :aliases => '-v', :desc => 'Print command execution information', :default => false
         class_option :debug, :type => :boolean, :aliases => '-d', :desc => 'Print debugging information', :default => false
-        class_option :no_op, :type => :boolean, :desc => 'Do not execute commands that modify state', :default => false
-        class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Combination of --no-op and --verbose', :default => false
+        class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Do not execute commands that modify state', :default => false
         class_option :config, :desc => 'Configuration file'
         class_option :version, :desc => 'Print version and exit', :type => :boolean
         class_option :lock, :desc => 'Optional job lock name', :type => :string
@@ -142,7 +141,6 @@ module Masamune
             config.quiet    = options[:quiet]
             config.verbose  = options[:verbose] || options[:dry_run]
             config.debug    = options[:debug]
-            config.no_op    = options[:no_op] || options[:dry_run]
             config.dry_run  = options[:dry_run]
             config.lock     = options[:lock]
 

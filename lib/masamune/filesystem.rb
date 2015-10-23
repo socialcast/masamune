@@ -479,7 +479,7 @@ module Masamune
     end
 
     def file_util_args
-      {noop: configuration.no_op, verbose: configuration.verbose}
+      {noop: configuration.dry_run, verbose: configuration.verbose}
     end
 
     def qualify_file(dir, file)

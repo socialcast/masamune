@@ -75,7 +75,7 @@ module Masamune::Commands
     end
 
     def around_execute(&block)
-      if configuration.no_op && !safe
+      if configuration.dry_run && !safe
         return OpenStruct.new(:success? => true)
       end
 
