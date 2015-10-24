@@ -1,5 +1,5 @@
 $: << File.expand_path('../lib/', __FILE__)
 require 'masamune'
 
-Masamune::ThorLoader.load_default_tasks
-Masamune::ThorLoader.load_thorfiles(File.join(File.dirname(__FILE__), 'examples'))
+Dir["#{File.dirname(__FILE__)}/lib/masamune/tasks/*thor.rb"].each { |f| require f }
+Dir["#{File.dirname(__FILE__)}/examples/*/task.rb"].each { |f| require f }
