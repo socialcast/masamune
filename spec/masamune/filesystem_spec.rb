@@ -571,6 +571,15 @@ shared_examples_for 'Filesystem' do
       it { is_expected.to eq(true) }
     end
 
+    context 'local existing directory' do
+      subject { Dir.exists?(old_dir) }
+      before do
+        expect(FileUtils).to receive(:mkdir_p).never
+        instance.mkdir!(old_dir)
+      end
+      it { is_expected.to eq(true) }
+    end
+
     context 'hdfs directory' do
       it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir, 'file://' + other_new_dir).once

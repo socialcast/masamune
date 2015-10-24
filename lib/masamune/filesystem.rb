@@ -222,7 +222,8 @@ module Masamune
         when :s3
           touch! *dir_set.map { |dir| File.join(dir, '.not_empty') }
         when :local
-          FileUtils.mkdir_p(dir_set, file_util_args)
+          missing_dir_set = dir_set.reject { |dir| File.exists?(dir) }
+          FileUtils.mkdir_p(missing_dir_set, file_util_args) if missing_dir_set.any?
         end
       end
     end
