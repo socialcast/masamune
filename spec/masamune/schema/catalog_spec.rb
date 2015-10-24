@@ -145,6 +145,20 @@ describe Masamune::Schema::Catalog do
       it { expect(table_two_columns).to include :column_four }
     end
 
+    context 'when schema contains columns with symbol names' do
+      before do
+        instance.schema :postgres do
+          dimension :table_one, type: :two do
+            column :column_one
+          end
+        end
+      end
+
+      let(:table_one_columns) { postgres.table_one_dimension.columns }
+
+      it { expect(table_one_columns).to include :column_one }
+    end
+
     context 'when schema contains columns and rows' do
       before do
         instance.schema :postgres do

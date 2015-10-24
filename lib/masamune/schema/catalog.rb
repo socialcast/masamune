@@ -212,7 +212,7 @@ module Masamune::Schema
     private
 
     def dereference_column(id, options = {})
-      store_id = id.split(/\./).reverse.last.try(:to_sym)
+      store_id = id.to_s.split(/\./).reverse.last.try(:to_sym)
       context = store_id && @stores.key?(store_id) ? @stores[store_id] : @context
       context.dereference_column(id, options)
     end
