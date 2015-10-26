@@ -46,7 +46,7 @@ class ApacheLogsTask < Thor
     end
   end
 
-  desc 'extract_logs_task', 'Extract Apache log files'
+  desc 'extract_logs', 'Extract Apache log files'
   source path: fs.path(:data_dir, 'sample_logs', '%Y%m%d.*.log')
   target path: fs.path(:data_dir, 'processed_logs', '%Y-%m-%d')
   def extract_logs_task
