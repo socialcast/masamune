@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::Transform::SnapshotDimension do
   before do
     catalog.schema :postgres do

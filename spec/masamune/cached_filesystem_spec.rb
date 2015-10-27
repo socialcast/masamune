@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::CachedFilesystem do
   let(:filesystem) { Masamune::MockFilesystem.new }
   let(:cached_filesystem) { Masamune::CachedFilesystem.new(filesystem) }

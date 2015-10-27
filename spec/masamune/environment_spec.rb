@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::Environment do
   let(:instance) { described_class.new }
   let(:run_dir) { Dir.mktmpdir('masamune') }

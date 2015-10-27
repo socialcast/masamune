@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::Actions::HadoopStreaming do
   let(:klass) do
     Class.new do

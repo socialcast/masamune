@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 require 'securerandom'
 
 # NOTE when operating between hdfs and s3, hadoop fs requires s3n URI

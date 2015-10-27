@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::Schema::Map do
   let(:environment) { double(logger: double) }
   let(:catalog) { Masamune::Schema::Catalog.new(environment) }

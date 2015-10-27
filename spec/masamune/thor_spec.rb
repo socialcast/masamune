@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-require 'thor'
 describe Masamune::Thor do
   let(:thor_class) do
     Class.new(Thor) do

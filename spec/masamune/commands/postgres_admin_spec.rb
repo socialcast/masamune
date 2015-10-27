@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::Commands::PostgresAdmin do
   let(:configuration) { {:create_db_path => 'createdb', :drop_db_path => 'dropdb', :hostname => 'localhost', :username => 'postgres'} }
   let(:attrs) { {} }

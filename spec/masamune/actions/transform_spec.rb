@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::Actions::Transform do
   let(:environment) { double }
   let(:catalog) { Masamune::Schema::Catalog.new(environment) }
