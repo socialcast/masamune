@@ -20,13 +20,17 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+require 'masamune'
+
 class HelloWorldTask < Thor
   include Masamune::Thor
 
-  namespace :examples
+  namespace :'examples:hello_world'
 
   desc 'hello_world', 'say hello world'
   def hello_world_task
     console('hello world')
   end
+
+  default_task :hello_world_task
 end

@@ -22,15 +22,16 @@
 
 $: << File.dirname(__FILE__)
 
+require 'masamune'
 require 'random_apache_log_generator'
 
-class ApacheLogsTask < Thor
+class ApacheLogTask < Thor
   include Masamune::Thor
   include Masamune::Actions::DataFlow
   include Masamune::Actions::Hive
   include Masamune::Actions::HadoopStreaming
 
-  namespace :examples
+  namespace :'examples:apache_log'
   class_option :config, :desc => 'Configuration file', :default => fs.get_path(:current_dir, 'config.yml.erb')
 
   desc 'generate_logs', 'Generate sample Apache log files'
