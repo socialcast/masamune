@@ -20,24 +20,42 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'bundler/setup'
-Bundler.require(:default, :development, :test)
+module Masamune::TaskExampleGroup
+  module TaskFixtureContent
+    shared_context 'task_fixture' do |context_options = {}|
+      include_context 'job_fixture', context_options
+      let!(:default_options) { configuration.as_options }
 
-require 'tempfile'
-require 'tmpdir'
+      let(:stdout) { @stdout }
+      let(:stderr) { @stderr }
+      let(:status) { @status }
 
-Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
+      let(:command) { nil }
+      let(:options) { [] }
 
-require 'active_support/core_ext/string/strip'
+      subject(:execute_command) do
+        n = context_options.fetch(:idempotent, false) ? 2 : 1
+        n = 1 if ENV['MASAMUNE_FASTER_SPEC']
+        capture(!default_options.include?('--debug')) do
+          n.times do
+            Array.wrap(command).each do |cmd|
+              described_class.start([cmd, *(default_options + options)].compact)
+            end
+          end
+        end
+      end
+    end
+  end
 
-ENV['MASAMUNE_ENV'] = 'test'
-
-Masamune::ExampleGroup.configure do |config|
-  config.quiet    = ENV['MASAMUNE_DEBUG'] ? false : true
-  config.debug    = ENV['MASAMUNE_DEBUG'] ? true : false
-  config.retries  = 0
+  def self.included(base)
+    base.send(:include, Masamune::ExampleGroup)
+    base.send(:include, Masamune::Actions::Filesystem)
+    base.send(:include, Masamune::Actions::Hive)
+    base.send(:include, Masamune::Transform::DenormalizeTable)
+    base.send(:include, TaskFixtureContent)
+  end
 end
 
 RSpec.configure do |config|
-  config.mock_with :rspec
+  config.include Masamune::TaskExampleGroup, :type => :task, :file_path => %r{.*/spec/.*task_spec\.rb}
 end

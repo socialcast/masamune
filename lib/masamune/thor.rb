@@ -127,7 +127,7 @@ module Masamune
           end
 
           environment.configure do |config|
-            config_file = config.filesystem.eval_path(options[:config])
+            config_file = options[:config]
             config_file ||= config.filesystem.resolve_file([config.default_config_file] + SYSTEM_CONFIG_FILES)
             raise ::Thor::RequiredArgumentMissingError, 'Option --config or valid system configuration file required' unless config_file
 

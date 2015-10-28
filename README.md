@@ -45,6 +45,15 @@ Execute your dataflow with the goal of processing all data from the start of the
 thor extract_logs --start '1 year ago'
 ```
 
+Testing
+---------------
+```
+rake spec             # Run Rspec unit code examples
+rake spec:acceptance  # Run Rspec acceptance code examples
+rake spec:all         # Run All Rspec code examples
+rake spec:unit        # Run Rspec unit code examples
+```
+
 Contributing
 ---------------
 

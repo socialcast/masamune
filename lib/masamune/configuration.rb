@@ -68,9 +68,10 @@ class Masamune::Configuration
     end
   end
 
-  def load(file)
+  def load(path)
     @load_once ||= begin
-      load_yaml_erb_file(file).each_pair do |command, value|
+      config_file = filesystem.eval_path(path)
+      load_yaml_erb_file(config_file).each_pair do |command, value|
         if COMMANDS.include?(command)
           send("#{command}=", value)
         elsif command == 'paths'
@@ -80,7 +81,7 @@ class Masamune::Configuration
           self.params.merge! value
         end
       end
-      logger.debug("Loaded configuration #{file}")
+      logger.debug("Loaded configuration #{config_file}")
       load_catalog(configuration.postgres.fetch(:schema_files, []) + configuration.hive.fetch(:schema_files, []))
       true
     end
