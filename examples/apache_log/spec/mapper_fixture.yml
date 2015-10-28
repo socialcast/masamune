@@ -1,0 +1,6 @@
+---
+input: |
+  118.33.50.34 - 679 [01/Oct/2015:02:08:41 -0700] "GET /users/29984 HTTP/1.1" 200 8958 "-" "Mozilla/5.0 (Photon; U; QNX x86pc; en-US; rv:1.6) Gecko/20040429"
+
+output: |
+  2015-10-01T09:08:41Z	679	118.33.50.34	/users/29984	Mozilla/5.0 (Photon; U; QNX x86pc; en-US; rv:1.6) Gecko/20040429

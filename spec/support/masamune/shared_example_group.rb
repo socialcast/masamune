@@ -175,6 +175,11 @@ module Masamune::SharedExampleGroup
       Masamune::JobFixture.file_name(options.merge(path: File.dirname(file_path), type: example_type))
     end
 
+    def example_step
+      return unless respond_to?(:description)
+      File.join(example_current_dir, description)
+    end
+
     private
 
     EXAMPLE_FILE_PATH_INFO = %r{(?<current_dir>.*?)/spec/((?<example_name>\w+)_)?(?<example_type>\w+)_spec\.rb\z}
