@@ -85,7 +85,6 @@ module Masamune::SharedExampleGroup
 
   # TODO encapsulate commands as runners
   def setup_example_input!(fixture)
-    fail "No inputs defined for #{fixture.file_name}" if fixture.inputs.none?
     fixture.inputs.each do |input|
       if input['file']
         filesystem.write(with_delim(input['data'], input['delim']), input['file'])
