@@ -65,8 +65,8 @@ describe Masamune::JobFixture do
           },
           {
             'reference' => {
-              'fixture': 'other',
-              'section': 'output'
+              'fixture' => 'other',
+              'section' => 'output'
             }
           }
         ],
