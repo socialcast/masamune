@@ -51,15 +51,14 @@ module Masamune
       self
     end
 
-    def get_path(symbol, *extra)
-      extra ||= []
-      extra.select! { |e| e.is_a?(String) }
+    def get_path(symbol, *args)
+      options = args.last.is_a?(Hash) ? args.pop : {}
       lazy_path = lambda do |fs|
         fs.has_path?(symbol) or raise "Path :#{symbol} not defined"
         path, options = fs.paths[symbol]
 
         mkdir!(path) if options[:mkdir]
-        expand_params(fs, extra.any? ? File.join(path, extra) : path)
+        expand_params(fs, args.any? ? File.join(path, args) : path)
       end
 
       if eager_load_paths?
