@@ -168,6 +168,7 @@ module Masamune::SharedExampleGroup
 
     def example_default_config
       return unless respond_to?(:described_class)
+      return unless described_class.respond_to?(:class_options)
       described_class.class_options[:config].try(:default)
     end
 
