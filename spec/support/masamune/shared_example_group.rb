@@ -158,7 +158,7 @@ module Masamune::SharedExampleGroup
   end
 
   def example_fixture(options = {})
-    Masamune::JobFixture.load(options, binding)
+    Masamune::JobFixture.load(options.merge(type: self.class.example_type), binding)
   end
 
   module ClassMethods
@@ -180,6 +180,10 @@ module Masamune::SharedExampleGroup
       File.join(example_current_dir, description)
     end
 
+    def example_type
+      example_file_path_info[:example_type]
+    end
+
     private
 
     EXAMPLE_FILE_PATH_INFO = %r{(?<current_dir>.*?)/spec/((?<example_name>\w+)_)?(?<example_type>\w+)_spec\.rb\z}
@@ -190,10 +194,6 @@ module Masamune::SharedExampleGroup
 
     def example_name
       example_file_path_info[:example_name]
-    end
-
-    def example_type
-      example_file_path_info[:example_type]
     end
   end
 end

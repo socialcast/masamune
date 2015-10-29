@@ -29,11 +29,12 @@ module Masamune
     attr_accessor :name
 
     def initialize(options = {})
-      @path   = options[:path]
-      @name   = options[:name] || options[:fixture]
-      @file   = options[:file]
-      @data   = options[:data]
-      @type   = options[:type] || 'job'
+      @path     = options[:path]
+      @name     = options[:name] || options[:fixture]
+      @file     = options[:file]
+      @data     = options[:data]
+      @type     = options[:type]
+      @context  = options[:context]
 
       @data['inputs']  ||= []
       @data['outputs'] ||= []
@@ -44,7 +45,7 @@ module Masamune
         file = file_name(options)
         raise ArgumentError, "Fixture '#{file}' does not exist" unless File.exists?(file)
         YAML.load(ERB.new(File.read(file)).result(context)).tap do |data|
-          return new(options.merge(data: data))
+          return new(options.merge(data: data, context: context))
         end
       end
 
@@ -96,7 +97,7 @@ module Masamune
         @data['inputs'].map do |input|
           if input['reference']
             raise ArgumentError, "reference in #{file_name} requires fixture" unless input['reference']['fixture'] || input['reference']['file']
-            reference = self.class.load(path: input['reference']['path'] || path, name: input['reference']['fixture'], file: input['reference']['file'])
+            reference = self.class.load({path: input['reference']['path'] || path, name: input['reference']['fixture'], file: input['reference']['file'], type: @type}, @context)
             section = input['reference']['section'] || 'outputs'
             reference.send(section) if reference.respond_to?(section)
           else
