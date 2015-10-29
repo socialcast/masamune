@@ -70,10 +70,9 @@ module Masamune::SharedExampleGroup
     data
   end
 
-  # NOTE: load config file from class or default_config
   def load_example_config!
-    filesystem.add_path(:current_dir, self.class.example_current_dir)
-    environment.configuration.load(self.class.example_default_config)
+    filesystem.add_path(:current_dir, self.class.example_current_dir) if self.class.example_current_dir
+    environment.configuration.load(self.class.example_default_config) if self.class.example_default_config
   end
 
   # TODO: clean for database as well
@@ -189,7 +188,7 @@ module Masamune::SharedExampleGroup
     EXAMPLE_FILE_PATH_INFO = %r{(?<current_dir>.*?)/spec/((?<example_name>\w+)_)?(?<example_type>\w+)_spec\.rb\z}
     def example_file_path_info
       return {} unless respond_to?(:file_path)
-      @example_file_path_info ||= EXAMPLE_FILE_PATH_INFO.match(file_path)
+      @example_file_path_info ||= EXAMPLE_FILE_PATH_INFO.match(file_path) || {}
     end
 
     def example_name
