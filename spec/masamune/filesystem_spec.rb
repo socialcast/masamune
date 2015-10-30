@@ -375,6 +375,14 @@ shared_examples_for 'Filesystem' do
       it { is_expected.to eq(true) }
     end
 
+    context 'local missing file after glob' do
+      before do
+        instance.glob(new_file + '/*')
+      end
+      subject { instance.exists?(new_file) }
+      it { is_expected.to eq(false) }
+    end
+
     context 'hdfs existing file' do
       before do
         expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
