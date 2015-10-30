@@ -47,7 +47,7 @@ class Masamune::DataPlan::Set < Set
   def missing
     return self.class.new(rule, to_enum(__method__)) unless block_given?
     self.each do |elem|
-      yield elem if elem.explode.count < 1
+      yield elem if elem.explode.none?
     end
   end
 
@@ -90,13 +90,13 @@ class Masamune::DataPlan::Set < Set
     return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
     return self.class.new(rule, to_enum(__method__)) unless block_given?
     set = Set.new
-    missing.each do |target|
+    missing do |target|
       yield target if set.add?(target)
     end
-    incomplete.each do |target|
+    incomplete do |target|
       yield target if set.add?(target)
     end
-    stale.each do |target|
+    stale do |target|
       yield target if set.add?(target)
     end
   end
@@ -105,7 +105,7 @@ class Masamune::DataPlan::Set < Set
     return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
     return self.class.new(rule, to_enum(__method__)) unless block_given?
     set = Set.new
-    actionable.each do |target|
+    actionable do |target|
       yield target if set.add?(target) && target.sources.existing.any?
     end
   end
@@ -124,7 +124,7 @@ class Masamune::DataPlan::Set < Set
     return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_targets?
     return self.class.new(self.first.targets.rule, to_enum(__method__)) unless block_given?
     self.each do |elem|
-      elem.targets.each do |target|
+      elem.targets do |target|
         yield target
       end
     end
@@ -134,7 +134,7 @@ class Masamune::DataPlan::Set < Set
     return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
     return self.class.new(self.first.sources.rule, to_enum(__method__)) unless block_given?
     self.each do |elem|
-      elem.sources.each do |source|
+      elem.sources do |source|
         yield source
       end
     end
