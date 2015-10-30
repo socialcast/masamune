@@ -30,20 +30,31 @@ class ApacheLogTask < Thor
   include Masamune::Actions::DataFlow
   include Masamune::Actions::Hive
   include Masamune::Actions::HadoopStreaming
+  include Masamune::Actions::Postgres
+  include Masamune::Actions::Transform
 
   namespace :'examples:apache_log'
   class_option :config, :desc => 'Configuration file', :default => fs.get_path(:current_dir, 'config.yml.erb')
 
-  desc 'generate_logs', 'Generate sample Apache log files'
+  desc 'generate_users', 'Generate sample users'
   source none: true
-  target path: fs.path(:data_dir, 'sample_logs', '%Y%m%d.apache.log')
+  target path: fs.path(:data_dir, 'users')
   method_option :min_users, :type => :numeric, :desc => 'Min number of users in sample', :default => 10
   method_option :max_users, :type => :numeric, :desc => 'Max number of users in sample', :default => 20
+  def generate_users_task
+    targets.missing do |target|
+      fs.write(generator.random_users, target.path)
+    end
+  end
+
+  desc 'generate_logs', 'Generate sample Apache log files'
+  source path: fs.path(:data_dir, 'users')
+  target path: fs.path(:data_dir, 'sample_logs', '%Y%m%d.apache.log')
   method_option :min_visits, :type => :numeric, :desc => 'Min number of visits per day in sample', :default => 10
   method_option :max_visits, :type => :numeric, :desc => 'Max number of visits per day in sample', :default => 100
   def generate_logs_task
     targets.missing do |target|
-      fs.write(generator.random_logs(target.start_date), target.path)
+      fs.write(generator.random_logs(target.source.path, target.start_date), target.path)
     end
   end
 

@@ -29,8 +29,17 @@ class RandomApacheLogGenerator
     @min_visits = options[:min_visits]
     @max_visits = options[:max_visits]
   end
-    
-  def random_logs(date)
+
+  def random_users
+    n = rand(@min_users .. @max_users)
+    Parallel.map(1 .. n) do
+      random_user.to_json
+    end.join("\n")
+  end
+
+  def random_logs(users_file, date)
+    load_users!(users_file)
+
     logs = []
     rand(@min_visits .. @max_visits).times do
       logs << random_log(date) 
@@ -63,17 +72,32 @@ class RandomApacheLogGenerator
     fallback_user_agents.sample
   end
 
+  def random_user
+    JSON.parse(Net::HTTP.get(randomuser_me_uri))['results'].first.tap do |info|
+      info['user']['id'] = rand(1 << 15)
+      info['user']['nationality'] = info['nationality']
+      return info['user']
+    end
+  end
+
   def random_size
     rand(1 << 15)
   end
 
-  def users
+  def load_users!(file = nil)
     @users ||= begin
-      n = rand(@min_users .. @max_users)
-      Parallel.map(1 .. n) do
-        OpenStruct.new(id: rand(1 << 15), ua: random_user_agent, ip: random_ip_address)
+      ids = []
+      File.open(file).each_line do |line|
+        ids << JSON.parse(line)['id']
+      end
+      Parallel.map(ids) do |id|
+        OpenStruct.new(id: id, ua: random_user_agent, ip: random_ip_address)
       end
     end
+  end
+
+  def users
+    @users
   end
 
   def paths
@@ -82,6 +106,10 @@ class RandomApacheLogGenerator
 
   def user_agent_io_uri
     @user_agent_io_uri ||= URI.parse('http://api.useragent.io/')
+  end
+
+  def randomuser_me_uri
+    @randomuser_me_uri ||= URI.parse('https://randomuser.me/api/')
   end
 
   def fallback_user_agents
