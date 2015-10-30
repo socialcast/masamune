@@ -72,7 +72,7 @@ class Masamune::DataPlan::Elem
       file_glob = path
       file_glob += '/' unless path.include?('*') || path.include?('.')
       file_glob += '*' unless path.include?('*')
-      rule.engine.filesystem.glob(file_glob).each do |new_path|
+      rule.engine.filesystem.glob(file_glob) do |new_path|
         yield rule.bind_input(new_path)
       end
     elsif rule.for_path? && rule.bound?
