@@ -417,4 +417,30 @@ describe Masamune::DataPlan::Rule do
       end
     end
   end
+
+  describe '#free? ' do
+    subject { instance.free? }
+    context 'with rule that contains free variables' do
+      let(:pattern) { 'report/%Y-%m-%d/%H' }
+      it { is_expected.to be(true) }
+    end
+
+    context 'with rule that does not contain free variables' do
+      let(:pattern) { 'report/file' }
+      it { is_expected.to be(false) }
+    end
+  end
+
+  describe '#bound? ' do
+    subject { instance.bound? }
+    context 'with rule that contains free variables' do
+      let(:pattern) { 'report/%Y-%m-%d/%H' }
+      it { is_expected.to be(false) }
+    end
+
+    context 'with rule that does not contain free variables' do
+      let(:pattern) { 'report/file' }
+      it { is_expected.to be(true) }
+    end
+  end
 end
