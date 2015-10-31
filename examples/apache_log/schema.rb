@@ -20,12 +20,25 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-schema :hive do
-  table :visits do
-    column :created_at, type: :timestamp
-    column :user_id, type: :integer
-    column :ip_address, type: :string
-    column :path, type: :string
-    column :user_agent, type: :string
+schema :postgres do
+  # FIXME: should accept symbol
+  # FIXME: alias to format :raw
+  file 'users', format: :tsv, headers: false, json_encoding: :raw do
+    column 'data', type: :json
+  end
+
+  dimension :user, type: :one do
+    column 'user_id',   type: :integer, natural_key: true
+    column 'gender', type: :enum, values: %w(none unknown male female)
+    column 'nationality', type: :string
+  end
+
+  # FIXME: indifferent access
+  map from: postgres.users_file, to: postgres.user_dimension do |row|
+    {
+      user_id:      row['data'][:id],
+      gender:       row[:data][:gender],
+      nationality:  row[:data][:nationality],
+    }
   end
 end

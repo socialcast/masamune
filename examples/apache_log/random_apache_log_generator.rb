@@ -73,10 +73,11 @@ class RandomApacheLogGenerator
   end
 
   def random_user
-    JSON.parse(Net::HTTP.get(randomuser_me_uri))['results'].first.tap do |info|
-      info['user']['id'] = rand(1 << 15)
-      info['user']['nationality'] = info['nationality']
-      return info['user']
+    JSON.parse(Net::HTTP.get(randomuser_me_uri)).tap do |info|
+      user_info = info['results'].first
+      user_info['user']['id'] = rand(1 << 15)
+      user_info['user']['nationality'] = info['nationality']
+      return user_info['user']
     end
   end
 

@@ -69,6 +69,13 @@ class ApacheLogTask < Thor
     end
   end
 
+  desc 'load_users', 'Load sample users'
+  source path: fs.path(:data_dir, 'users')
+  target table: :user_dimension
+  def load_users_task
+    load_dimension(sources.existing, catalog.postgres.users_file, catalog.postgres.user_dimension)
+  end
+
   private
 
   def generator
