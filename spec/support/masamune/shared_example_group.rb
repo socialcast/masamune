@@ -75,11 +75,16 @@ module Masamune::SharedExampleGroup
     environment.configuration.load(self.class.example_default_config) if self.class.example_default_config
   end
 
-  # TODO: clean for database as well
+  # TODO: iterate over databases
   def clean_example_run!
+    if configuration.postgres[:clean]
+      postgres_admin(action: :drop, database: configuration.postgres[:database])
+      postgres_admin(action: :create, database: configuration.postgres[:database])
+      postgres(file: define_schema(catalog, :postgres).to_file, retries: 0)
+    end
     filesystem.paths.each do |_, (path, options)|
       filesystem.remove_dir(path) if options[:clean]
-    end 
+    end
   end
 
   # TODO encapsulate commands as runners
