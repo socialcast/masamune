@@ -42,7 +42,7 @@ class RandomApacheLogGenerator
 
     logs = []
     rand(@min_visits .. @max_visits).times do
-      logs << random_log(date) 
+      logs << random_log(date.to_time.utc)
     end
     logs.join("\n")
   end
