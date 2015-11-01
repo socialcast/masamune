@@ -33,7 +33,7 @@ module Masamune
     end
 
     def exists?(file)
-      @cache.key?(file) || glob(file).include?(file) || @cache.key?(file)
+      @cache[file].any? || glob(file).include?(file) || @cache[file].any?
     end
 
     def glob(file_or_glob)

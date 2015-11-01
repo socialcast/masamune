@@ -375,6 +375,14 @@ shared_examples_for 'Filesystem' do
       it { is_expected.to eq(true) }
     end
 
+    context 'local missing file after glob' do
+      before do
+        instance.glob(new_file + '/*')
+      end
+      subject { instance.exists?(new_file) }
+      it { is_expected.to eq(false) }
+    end
+
     context 'hdfs existing file' do
       before do
         expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
@@ -621,8 +629,18 @@ shared_examples_for 'Filesystem' do
       it { expect { |b| instance.glob(pattern, &b) }.to yield_successive_args(old_dir, old_file) }
     end
 
-    context 'local one matches (with suffix)' do
-      let(:pattern) { File.join(File.dirname(old_file), '*.txt') }
+    context 'local one matches with glob' do
+      let(:pattern) { File.join(File.dirname(old_dir), '*') }
+      it 'has 1 item' do
+        expect(subject.count).to eq(2)
+      end
+      it { is_expected.to include old_dir }
+      it { is_expected.to include old_file }
+      it { expect { |b| instance.glob(pattern, &b) }.to yield_successive_args(old_dir, old_file) }
+    end
+
+    context 'local one matches with glob and suffix' do
+      let(:pattern) { File.join(File.dirname(old_dir), '*.txt') }
       it 'has 1 item' do
         expect(subject.count).to eq(1)
       end

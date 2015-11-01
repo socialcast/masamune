@@ -1,28 +1,16 @@
-#  The MIT License (MIT)
-#
-#  Copyright (c) 2014-2015, VMware, Inc. All Rights Reserved.
-#
-#  Permission is hereby granted, free of charge, to any person obtaining a copy
-#  of this software and associated documentation files (the "Software"), to deal
-#  in the Software without restriction, including without limitation the rights
-#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#  copies of the Software, and to permit persons to whom the Software is
-#  furnished to do so, subject to the following conditions:
-#
-#  The above copyright notice and this permission notice shall be included in
-#  all copies or substantial portions of the Software.
-#
-#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-#  THE SOFTWARE.
-
 ---
 input: |
-  118.33.50.34 - 679 [01/Oct/2015:02:08:41 -0700] "GET /users/29984 HTTP/1.1" 200 8958 "-" "Mozilla/5.0 (Photon; U; QNX x86pc; en-US; rv:1.6) Gecko/20040429"
+  252.74.61.85 - 3808 [01/Oct/2015:15:46:23 +0000] "GET /users/3526 HTTP/1.1" 200 26841 "-" "Mozilla/5.0 (Windows; U; Windows NT 6.0; pl; rv:1.8.1.14) Gecko/20080519 Firefox/2.0.0.14 Flock/1.2.1"
+  78.39.247.106 - 30456 [01/Oct/2015:19:22:09 +0000] "GET /users/15005 HTTP/1.1" 200 24869 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.0; de-AT; rv:1.8) Gecko/20051219 SeaMonkey/1.0b"
+  131.191.121.226 - 2808 [01/Oct/2015:09:33:43 +0000] "GET /users/15386 HTTP/1.1" 200 11900 "-" "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.14eol) Gecko/20070505 (Debian-1.8.0.15~pre080614d-0etch1)"
+  94.225.131.162 - 9377 [01/Oct/2015:23:03:25 +0000] "GET /users/8680 HTTP/1.1" 200 9138 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; da-DK) AppleWebKit/525.13 (KHTML, like Gecko) Version/3.1 Safari/525.13.3"
+  174.51.184.61 - 8680 [02/Oct/2015:04:13:34 +0000] "GET /users/18709 HTTP/1.1" 200 18785 "-" "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20051010 Epiphany/1.8.2 (Ubuntu) (Ubuntu package 1.0.7)"
+  50.7.153.117 - 10559 [02/Oct/2015:00:51:49 +0000] "GET /users/21378 HTTP/1.1" 200 6188 "-" "Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.134 Safari/534.16"
 
 output: |
-  2015-10-01T09:08:41Z	679	118.33.50.34	/users/29984	Mozilla/5.0 (Photon; U; QNX x86pc; en-US; rv:1.6) Gecko/20040429
+  20151001	3808	Flock	Windows Vista	Other	1443714383	1
+  20151001	30456	SeaMonkey	Windows 2000	Other	1443727329	1
+  20151001	2808	Other	Debian	Other	1443692023	1
+  20151001	9377	Safari	Windows XP	Other	1443740605	1
+  20151002	8680	Epiphany	Ubuntu	Other	1443759214	1
+  20151002	10559	Chrome	Linux	Other	1443747109	1

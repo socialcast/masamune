@@ -25,10 +25,17 @@ inputs:
   -
     file: <%= fs.path(:data_dir, 'sample_logs', '20151001.apache.log') %>
     data: |
-      118.33.50.34 - 679 [01/Oct/2015:02:08:41 -0700] "GET /users/29984 HTTP/1.1" 200 8958 "-" "Mozilla/5.0 (Photon; U; QNX x86pc; en-US; rv:1.6) Gecko/20040429"
+      252.74.61.85 - 3808 [01/Oct/2015:15:46:23 +0000] "GET /users/3526 HTTP/1.1" 200 26841 "-" "Mozilla/5.0 (Windows; U; Windows NT 6.0; pl; rv:1.8.1.14) Gecko/20080519 Firefox/2.0.0.14 Flock/1.2.1"
+      78.39.247.106 - 30456 [01/Oct/2015:19:22:09 +0000] "GET /users/15005 HTTP/1.1" 200 24869 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.0; de-AT; rv:1.8) Gecko/20051219 SeaMonkey/1.0b"
+      131.191.121.226 - 2808 [01/Oct/2015:09:33:43 +0000] "GET /users/15386 HTTP/1.1" 200 11900 "-" "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.14eol) Gecko/20070505 (Debian-1.8.0.15~pre080614d-0etch1)"
+      94.225.131.162 - 9377 [01/Oct/2015:23:03:25 +0000] "GET /users/8680 HTTP/1.1" 200 9138 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; da-DK) AppleWebKit/525.13 (KHTML, like Gecko) Version/3.1 Safari/525.13.3"
+
 
 outputs:
   -
     file: <%= fs.path(:data_dir, 'processed_logs', '2015-10-01', 'part-00000') %>
     data: |
-      2015-10-01T09:08:41Z	679	118.33.50.34	/users/29984	Mozilla/5.0 (Photon; U; QNX x86pc; en-US; rv:1.6) Gecko/20040429
+      20151001	9377	Safari	Windows XP	Other	1443740605	1
+      20151001	2808	Other	Debian	Other	1443692023	1
+      20151001	30456	SeaMonkey	Windows 2000	Other	1443727329	1
+      20151001	3808	Flock	Windows Vista	Other	1443714383	1

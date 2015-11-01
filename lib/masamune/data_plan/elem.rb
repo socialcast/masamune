@@ -47,10 +47,8 @@ class Masamune::DataPlan::Elem
   def exists?
     if rule.for_path?
       rule.engine.filesystem.exists?(path)
-    elsif rule.for_table_with_partition?
-      rule.engine.postgres_helper.table_exists?(table)
     elsif rule.for_table?
-      table
+      rule.engine.postgres_helper.table_exists?(table)
     end
   end
 
@@ -70,14 +68,16 @@ class Masamune::DataPlan::Elem
 
   def explode
     return Set.new(to_enum(__method__)) unless block_given?
-    if rule.for_path?
+    if rule.for_path? && rule.free?
       file_glob = path
       file_glob += '/' unless path.include?('*') || path.include?('.')
       file_glob += '*' unless path.include?('*')
-      rule.engine.filesystem.glob(file_glob).each do |new_path|
+      rule.engine.filesystem.glob(file_glob) do |new_path|
         yield rule.bind_input(new_path)
       end
-    elsif rule.for_table_with_partition?
+    elsif rule.for_path? && rule.bound?
+      yield self if exists?
+    elsif rule.for_table?
       yield self if exists?
     end
   end

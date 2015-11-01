@@ -28,33 +28,67 @@ require 'random_apache_log_generator'
 class ApacheLogTask < Thor
   include Masamune::Thor
   include Masamune::Actions::DataFlow
-  include Masamune::Actions::Hive
   include Masamune::Actions::HadoopStreaming
+  include Masamune::Actions::Postgres
+  include Masamune::Actions::Transform
 
   namespace :'examples:apache_log'
   class_option :config, :desc => 'Configuration file', :default => fs.get_path(:current_dir, 'config.yml.erb')
+  class_option :min_users, :type => :numeric, :desc => 'Min number of users in sample', :default => 10
+  class_option :max_users, :type => :numeric, :desc => 'Max number of users in sample', :default => 20
+  class_option :min_visits, :type => :numeric, :desc => 'Min number of visits per day in sample', :default => 10
+  class_option :max_visits, :type => :numeric, :desc => 'Max number of visits per day in sample', :default => 100
+
+  desc 'generate_users', 'Generate sample users'
+  source none: true
+  target path: fs.path(:data_dir, 'users')
+  def generate_users_task
+    targets.missing do |target|
+      fs.write(generator.random_users, target.path)
+    end
+  end
 
   desc 'generate_logs', 'Generate sample Apache log files'
-  source none: true
+  source path: fs.path(:data_dir, 'users')
   target path: fs.path(:data_dir, 'sample_logs', '%Y%m%d.apache.log')
-  method_option :min_users, :type => :numeric, :desc => 'Min number of users in sample', :default => 10
-  method_option :max_users, :type => :numeric, :desc => 'Max number of users in sample', :default => 20
-  method_option :min_visits, :type => :numeric, :desc => 'Min number of visits per day in sample', :default => 10
-  method_option :max_visits, :type => :numeric, :desc => 'Max number of visits per day in sample', :default => 100
   def generate_logs_task
     targets.missing do |target|
-      fs.write(generator.random_logs(target.start_date), target.path)
+      fs.write(generator.random_logs(target.source.path, target.start_date), target.path)
     end
   end
 
   desc 'extract_logs', 'Extract Apache log files'
   source path: fs.path(:data_dir, 'sample_logs', '%Y%m%d.*.log')
   target path: fs.path(:data_dir, 'processed_logs', '%Y-%m-%d')
+  # TODO: add reducer to accumulate over hours
   def extract_logs_task
     targets.actionable do |target|
       target.sources.existing do |source|
         hadoop_streaming input: source.path, output: target.path, mapper: fs.path(:current_dir, 'extract_log_mapper.rb')
       end
+    end
+  end
+
+  desc 'load_users', 'Load sample users'
+  source path: fs.path(:data_dir, 'users')
+  target table: :user_dimension
+  def load_users_task
+    load_dimension(sources.existing, catalog.postgres.users_file, catalog.postgres.user_dimension)
+  end
+
+  desc 'load_visits', 'Load processed Apache log files'
+  # FIXME: allow glob in source
+  source path: fs.path(:data_dir, 'processed_logs', '%Y-%m-%d')
+  target table: :visits_hourly_fact, partition: 'y%Ym%m', last_modified_at: 'last_modified_at'
+  def load_visits_task
+    targets.updateable do |target|
+      files = Set.new
+      target.sources.existing do |source|
+        fs.glob(source.path + '/*') do |file|
+          files << file
+        end
+      end
+      load_fact(files, catalog.postgres.visits_hourly_file, catalog.postgres.visits_hourly_fact, target.start_time)
     end
   end
 

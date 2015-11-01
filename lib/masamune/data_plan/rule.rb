@@ -108,6 +108,14 @@ class Masamune::DataPlan::Rule
     @options.fetch(:primary, true)
   end
 
+  def free?
+    pattern.include?('%') || pattern.include?('*')
+  end
+
+  def bound?
+    !free?
+  end
+
   def matches?(input)
     matched_pattern = match_data_hash(matcher.match(input))
     matched_pattern.present? && matched_pattern[:rest].blank?
