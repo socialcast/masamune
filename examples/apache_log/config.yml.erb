@@ -41,5 +41,6 @@
   postgres:
     database: apache_log_<%= MASAMUNE_ENV %>
     username: <%= %x{whoami} %>
+    clean: true
     schema_files:
       - <%= get_path(:current_dir, 'schema.rb') %>
