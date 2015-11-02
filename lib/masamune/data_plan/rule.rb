@@ -40,6 +40,10 @@ class Masamune::DataPlan::Rule
     @options = options
   end
 
+  def prepare
+    pattern
+  end
+
   def for_targets?
     @type == :target
   end
@@ -91,7 +95,7 @@ class Masamune::DataPlan::Rule
   def pattern
     @pattern ||= begin
       if for_path?
-        path.respond_to?(:call) ? path.call(engine.filesystem) : path
+        engine.filesystem.eval_path(path)
       elsif for_table_with_partition?
         [table , partition].join('_')
       elsif for_table?

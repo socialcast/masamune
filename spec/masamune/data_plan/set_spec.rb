@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::DataPlan::Set do
   let(:fs) { Masamune::MockFilesystem.new }
   let!(:engine) { Masamune::DataPlan::Engine.new }
@@ -243,13 +241,12 @@ describe Masamune::DataPlan::Set do
       it { expect(stale_targets).to include '/table/y=2013/m=01/d=01' }
     end
 
-    context 'when some stale targets (tie breaker)' do
+    context 'when none stale targets (tie breaker)' do
       before do
         fs.touch!('/log/20130101.random_1.log', mtime: present_time)
       end
 
-      it { expect(stale_targets.count).to eq(1) }
-      it { expect(stale_targets).to include '/table/y=2013/m=01/d=01' }
+      it { expect(stale_targets).to be_empty }
     end
 
     context 'when all stale targets' do

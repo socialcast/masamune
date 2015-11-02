@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::Configuration do
   let(:environment) { Masamune::Environment.new }
   let(:instance) { described_class.new(environment) }
@@ -34,6 +32,18 @@ describe Masamune::Configuration do
   describe '#default_config_file' do
     subject { instance.default_config_file }
     it { is_expected.to match(%r{config/masamune\.yml\.erb\Z}) }
+  end
+
+  describe '#as_options' do
+    subject { instance.as_options }
+    it { is_expected.to eq([]) }
+
+    context 'with dry_run: true and debug: true' do
+      before do
+        instance.debug = instance.dry_run = true
+      end
+      it { is_expected.to eq(['--debug', '--dry-run']) }
+    end
   end
 
   describe '#bind_template' do

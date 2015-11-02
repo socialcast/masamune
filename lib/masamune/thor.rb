@@ -72,11 +72,14 @@ module Masamune
         raise e unless %w(SIGHUP SIGTERM).include?(e.to_s)
         instance.logger.debug("Exiting at user request on #{e.to_s}")
         exit 0
+      rescue ::Thor::MalformattedArgumentError, ::Thor::RequiredArgumentMissingError => e
+        raise e
       rescue => e
         instance.logger.error("#{e.message} (#{e.class}) backtrace:")
         e.backtrace.each { |x| instance.logger.error(x) }
+        $stderr.puts e.to_s
         $stderr.puts "For complete debug log see: #{instance.log_file_name.to_s}"
-        raise e
+        exit 1
       end
     end
 
@@ -96,8 +99,7 @@ module Masamune
         class_option :quiet, :type => :boolean, :aliases => '-q', :desc => 'Suppress all output', :default => false
         class_option :verbose, :type => :boolean, :aliases => '-v', :desc => 'Print command execution information', :default => false
         class_option :debug, :type => :boolean, :aliases => '-d', :desc => 'Print debugging information', :default => false
-        class_option :no_op, :type => :boolean, :desc => 'Do not execute commands that modify state', :default => false
-        class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Combination of --no-op and --verbose', :default => false
+        class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Do not execute commands that modify state', :default => false
         class_option :config, :desc => 'Configuration file'
         class_option :version, :desc => 'Print version and exit', :type => :boolean
         class_option :lock, :desc => 'Optional job lock name', :type => :string
@@ -110,6 +112,8 @@ module Masamune
           self.current_task_name = _config[:current_command].try(:name)
           self.current_command_name = current_namespace ? current_namespace + ':' + current_task_name : current_task_name
           self.class.instance = self
+
+          define_current_dir
 
           if _options.is_a?(Array)
             _options, self.extra = self.class.parse_extra(_options)
@@ -137,7 +141,6 @@ module Masamune
             config.quiet    = options[:quiet]
             config.verbose  = options[:verbose] || options[:dry_run]
             config.debug    = options[:debug]
-            config.no_op    = options[:no_op] || options[:dry_run]
             config.dry_run  = options[:dry_run]
             config.lock     = options[:lock]
 
@@ -194,6 +197,11 @@ module Masamune
         end
 
         private
+
+        def define_current_dir
+          return unless current_task_name
+          filesystem.add_path(:current_dir, File.dirname(method(current_task_name).source_location.first))
+        end
 
         def display_help?
           options[:help] || current_task_name == 'help'

@@ -30,6 +30,8 @@ Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
 
 require 'active_support/core_ext/string/strip'
 
+ENV['MASAMUNE_ENV'] = 'test'
+
 Masamune::ExampleGroup.configure do |config|
   config.quiet    = ENV['MASAMUNE_DEBUG'] ? false : true
   config.debug    = ENV['MASAMUNE_DEBUG'] ? true : false

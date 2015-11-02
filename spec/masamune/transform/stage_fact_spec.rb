@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::Transform::StageFact do
   before do
     allow_any_instance_of(Masamune::Schema::Table).to receive(:lock_id).and_return(42)

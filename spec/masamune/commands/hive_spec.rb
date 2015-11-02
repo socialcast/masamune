@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 describe Masamune::Commands::Hive do
   let(:filesystem) { Masamune::MockFilesystem.new }
   let(:configuration) { {:options => options} }

@@ -30,7 +30,6 @@ module Masamune
   require 'masamune/last_element'
   require 'masamune/configuration'
   require 'masamune/thor'
-  require 'masamune/thor_loader'
   require 'masamune/filesystem'
   require 'masamune/cached_filesystem'
   require 'masamune/method_logger'

@@ -36,7 +36,6 @@ class Masamune::Configuration
   attr_accessor :quiet
   attr_accessor :verbose
   attr_accessor :debug
-  attr_accessor :no_op
   attr_accessor :dry_run
   attr_accessor :lock
   attr_accessor :retries
@@ -56,7 +55,6 @@ class Masamune::Configuration
     self.quiet    = false
     self.verbose  = false
     self.debug    = false
-    self.no_op    = false
     self.dry_run  = false
     self.lock     = nil
     self.retries  = 3
@@ -70,9 +68,10 @@ class Masamune::Configuration
     end
   end
 
-  def load(file)
+  def load(path)
     @load_once ||= begin
-      load_yaml_erb_file(file).each_pair do |command, value|
+      config_file = filesystem.eval_path(path)
+      load_yaml_erb_file(config_file).each_pair do |command, value|
         if COMMANDS.include?(command)
           send("#{command}=", value)
         elsif command == 'paths'
@@ -82,7 +81,7 @@ class Masamune::Configuration
           self.params.merge! value
         end
       end
-      logger.debug("Loaded configuration #{file}")
+      logger.debug("Loaded configuration #{config_file}")
       load_catalog(configuration.postgres.fetch(:schema_files, []) + configuration.hive.fetch(:schema_files, []))
       true
     end
@@ -132,8 +131,7 @@ class Masamune::Configuration
     opts << '--quiet'   if quiet
     opts << '--verbose' if verbose
     opts << '--debug'   if debug
-    opts << '--no_op'   if no_op
-    opts << '--dry_run' if dry_run
+    opts << '--dry-run' if dry_run
     opts
   end
 

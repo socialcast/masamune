@@ -20,9 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-require 'thor'
-
 require 'masamune/tasks/elastic_mapreduce_thor'
 
 describe Masamune::Tasks::ElasticMapreduceThor do

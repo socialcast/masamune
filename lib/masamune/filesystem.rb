@@ -51,13 +51,14 @@ module Masamune
       self
     end
 
-    def get_path(symbol, *extra)
+    def get_path(symbol, *args)
+      options = args.last.is_a?(Hash) ? args.pop : {}
       lazy_path = lambda do |fs|
         fs.has_path?(symbol) or raise "Path :#{symbol} not defined"
         path, options = fs.paths[symbol]
 
         mkdir!(path) if options[:mkdir]
-        expand_params(fs, extra.any? ? File.join(path, extra) : path)
+        expand_params(fs, args.any? ? File.join(path, args) : path)
       end
 
       if eager_load_paths?
@@ -74,6 +75,10 @@ module Masamune
 
     def paths
       @paths
+    end
+
+    def eval_path(path)
+      path.respond_to?(:call) ? path.call(self) : path
     end
 
     def expand_params(fs, path)
@@ -216,7 +221,8 @@ module Masamune
         when :s3
           touch! *dir_set.map { |dir| File.join(dir, '.not_empty') }
         when :local
-          FileUtils.mkdir_p(dir_set, file_util_args)
+          missing_dir_set = dir_set.reject { |dir| File.exists?(dir) }
+          FileUtils.mkdir_p(missing_dir_set, file_util_args) if missing_dir_set.any?
         end
       end
     end
@@ -473,7 +479,7 @@ module Masamune
     end
 
     def file_util_args
-      {noop: configuration.no_op, verbose: configuration.verbose}
+      {noop: configuration.dry_run, verbose: configuration.verbose}
     end
 
     def qualify_file(dir, file)

@@ -26,7 +26,7 @@ class ExampleThor  < Thor
   # Describe a Data Processing Job
   desc 'extract_logs', 'Organize log files by YYYY-MM-DD'
 
-  target fs.path(:target_dir, '%Y-%m-%d', mkdir: true)
+  target fs.path(:target_dir, '%Y-%m-%d')
   source fs.path(:source_dir, '%Y%m%d*.log')
   def extract_logs
     targets.missing.each do |target|
@@ -43,6 +43,15 @@ Execute your dataflow with the goal of processing all data from the start of the
 
 ```
 thor extract_logs --start '1 year ago'
+```
+
+Testing
+---------------
+```
+rake spec             # Run Rspec unit code examples
+rake spec:acceptance  # Run Rspec acceptance code examples
+rake spec:all         # Run All Rspec code examples
+rake spec:unit        # Run Rspec unit code examples
 ```
 
 Contributing

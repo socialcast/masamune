@@ -20,8 +20,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-require 'spec_helper'
-
 require 'securerandom'
 
 # NOTE when operating between hdfs and s3, hadoop fs requires s3n URI
@@ -60,6 +58,10 @@ shared_examples_for 'Filesystem' do
 
       context 'with extra directories delimited by "/"' do
         it { expect(instance.get_path(:home_dir, '/a/b', 'c')).to eq('/home/a/b/c') }
+      end
+
+      context 'with extra options' do
+        it { expect(instance.get_path(:home_dir, '/a/b', 'c', mkdir: true)).to eq('/home/a/b/c') }
       end
 
       context 'with parameter substitution' do
@@ -563,6 +565,15 @@ shared_examples_for 'Filesystem' do
     context 'local directory' do
       before do
         instance.mkdir!(new_dir, other_new_dir)
+      end
+      it { is_expected.to eq(true) }
+    end
+
+    context 'local existing directory' do
+      subject { Dir.exists?(old_dir) }
+      before do
+        expect(FileUtils).to receive(:mkdir_p).never
+        instance.mkdir!(old_dir)
       end
       it { is_expected.to eq(true) }
     end
