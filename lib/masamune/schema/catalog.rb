@@ -198,14 +198,14 @@ module Masamune::Schema
       @context.pop
     end
 
-    def load(file)
-      case file
+    def load(schema_file)
+      case schema_file
       when /\.rb\Z/
-        instance_eval(File.read(file), file)
+        instance_eval(File.read(schema_file), schema_file)
       when /\.psql(\.erb)?\Z/
-        @stores[:postgres].extra << file
+        @stores[:postgres].extra << schema_file
       when /\.hql(\.erb)?\Z/
-        @stores[:hive].extra << file
+        @stores[:hive].extra << schema_file
       end
     end
 
