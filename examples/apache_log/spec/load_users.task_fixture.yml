@@ -1,0 +1,41 @@
+#  The MIT License (MIT)
+#
+#  Copyright (c) 2014-2015, VMware, Inc. All Rights Reserved.
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#  THE SOFTWARE.
+
+---
+inputs:
+  -
+    file: <%= fs.path(:data_dir, 'users') %>
+    data: |
+      {"gender":"male","name":{"title":"mr","first":"iloy","last":"lageweg"},"location":{"street":"7514 jutfaseweg","city":"nijmegen","state":"utrecht","zip":55330},"email":"iloy.lageweg@example.com","username":"goldenfrog189","password":"515151","salt":"43dI6cf0","md5":"d5f1d2bee5a0049fc0a7e777e0c46de2","sha1":"8dfface0b55d1097e3b9115bd150208e311ee9e8","sha256":"f396b544230e5304fee403a02811296c811c8b8bda16a3652316b642c743238e","registered":1134632057,"dob":967201682,"phone":"(490)-131-6111","cell":"(230)-835-1015","BSN":"22940324","picture":{"large":"https://randomuser.me/api/portraits/men/41.jpg","medium":"https://randomuser.me/api/portraits/med/men/41.jpg","thumbnail":"https://randomuser.me/api/portraits/thumb/men/41.jpg"},"id":9377,"nationality":"NL"}
+      {"gender":"male","name":{"title":"mr","first":"liam","last":"philippe"},"location":{"street":"1691 place de l'europe","city":"toulouse","state":"moselle","zip":14847},"email":"liam.philippe@example.com","username":"whitelion690","password":"criminal","salt":"m5ageFaH","md5":"d78aeb9d9bb78f4947d3b7ef22c92b15","sha1":"4a3e250e805ffe9516ffc1a2d1344a4b4250574a","sha256":"95031fdda7abe122376763205ecfde763e501570d75c093fa132effc36515dc4","registered":1248528583,"dob":1383906831,"phone":"05-43-76-07-82","cell":"06-92-82-66-41","INSEE":"1131169861814 52","picture":{"large":"https://randomuser.me/api/portraits/men/53.jpg","medium":"https://randomuser.me/api/portraits/med/men/53.jpg","thumbnail":"https://randomuser.me/api/portraits/thumb/men/53.jpg"},"id":2808,"nationality":"FR"}
+      {"gender":"male","name":{"title":"mr","first":"jia","last":"beekmans"},"location":{"street":"4535 hamburgerstraat","city":"hendrik-ido-ambacht","state":"overijssel","zip":48691},"email":"jia.beekmans@example.com","username":"yellowsnake501","password":"qqqqq","salt":"PNd6SqtJ","md5":"06eda009c829f3d3ecc4c8834971dee1","sha1":"05a76a89fbb58af5664c486c3f7fb5cdb030072e","sha256":"a5a5c1d9dc3173a3060ccf8ec2fff815f340822a6467c5da086888a193d2631f","registered":1376554942,"dob":705107274,"phone":"(554)-444-0701","cell":"(848)-538-3639","BSN":"47245650","picture":{"large":"https://randomuser.me/api/portraits/men/70.jpg","medium":"https://randomuser.me/api/portraits/med/men/70.jpg","thumbnail":"https://randomuser.me/api/portraits/thumb/men/70.jpg"},"id":30456,"nationality":"NL"}
+      {"gender":"male","name":{"title":"mr","first":"jesus","last":"marquez"},"location":{"street":"8932 calle del pez","city":"almería","state":"cataluña","zip":69404},"email":"jesus.marquez@example.com","username":"organicmeercat653","password":"felix","salt":"DsQbJLcm","md5":"d8efdbd9455dd5329de517520f4f3815","sha1":"5f4f5543a0def4465718e34d8745866e61d12112","sha256":"8fa6cd0cfc3e2f1ef68cacd9027f314f88a7e8f7d50bcc7f80f5b7129d2b0d55","registered":925191547,"dob":1418003908,"phone":"980-966-495","cell":"687-253-402","DNI":"48416602-T","picture":{"large":"https://randomuser.me/api/portraits/men/63.jpg","medium":"https://randomuser.me/api/portraits/med/men/63.jpg","thumbnail":"https://randomuser.me/api/portraits/thumb/men/63.jpg"},"id":3808,"nationality":"ES"}
+
+outputs:
+  -
+    table: postgres.user_dimension
+    data: |
+      user_id,gender,nationality
+      2808,male,FR
+      3808,male,ES
+      9377,male,NL
+      30456,male,NL
