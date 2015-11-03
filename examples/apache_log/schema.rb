@@ -21,8 +21,7 @@
 #  THE SOFTWARE.
 
 schema :postgres do
-  # FIXME: alias to format :raw
-  file :users, format: :tsv, headers: false, json_encoding: :raw do
+  file :users, format: :raw, headers: false, json_encoding: :raw do
     column 'data', type: :json
   end
 
@@ -32,7 +31,6 @@ schema :postgres do
     column 'nationality', type: :string
   end
 
-  # FIXME: indifferent access
   map from: postgres.users_file, to: postgres.user_dimension do |row|
     {
       user_id:      row[:data][:id],

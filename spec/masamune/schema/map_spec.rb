@@ -545,6 +545,57 @@ describe Masamune::Schema::Map do
 
       it_behaves_like 'apply input/output'
     end
+
+    context 'with nested json and indifferent access' do
+      before do
+        catalog.schema :files do
+          file 'input' do
+            column 'data', type: :json
+          end
+
+          file 'output' do
+            column 'id', type: :integer
+          end
+
+          map from: files.input, to: files.output do |row|
+            [
+              { 'id' => row[:data][:user][:id] },
+              { 'id' => row['data']['user']['id'] }
+            ]
+          end
+        end
+      end
+
+      let(:source) do
+        catalog.files.input
+      end
+
+      let(:target) do
+        catalog.files.output
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          {"user":{"id":1}}
+          {"user":{"id":2}}
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          1
+          1
+          2
+          2
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+
+      it_behaves_like 'apply input/output'
+    end
   end
 
   describe Masamune::Schema::Map::JSONEncoder do

@@ -76,7 +76,11 @@ module Masamune::Schema
       end
 
       def separator
-        @separator ||= (@store.format == :tsv ? "\t" : ',')
+        @separator ||=
+        case @store.format
+        when :tsv then "\t"
+        when :csv then ','
+        end
       end
     end
 
@@ -237,7 +241,7 @@ module Masamune::Schema
     private
 
     def default_row(columns)
-      {}.tap do |row|
+      {}.with_indifferent_access.tap do |row|
         columns.each do |_, column|
           row[column.compact_name] = column.default_ruby_value
         end

@@ -33,9 +33,9 @@ module Masamune::Schema
     DEFAULT_ATTRIBUTES =
     {
       type:            nil,
-      format:          ->(store) { store.type == :postgres ? :csv : :tsv },
-      json_encoding:   ->(store) { store.type == :postgres ? :quoted : :raw },
-      headers:         ->(store) { store.type == :postgres ? true : false },
+      format:          ->(store) { default_format(store) },
+      json_encoding:   ->(store) { default_json_encoding(store) },
+      headers:         ->(store) { default_headers(store) },
       debug:           false
     }
 
@@ -110,6 +110,34 @@ module Masamune::Schema
         end
       end
       result.to_a
+    end
+
+    private
+
+    class << self
+      def default_format(store)
+        case store.type
+        when :postgres then :csv
+        when :hive then :tsv
+        else :raw
+        end
+      end
+
+      def default_headers(store)
+        return false if store.format == :raw
+        case store.type
+        when :postgres then true
+        else false
+        end
+      end
+
+      def default_json_encoding(store)
+        return :raw if store.format == :raw
+        case store.type
+        when :postgres then :quoted
+        else :raw
+        end
+      end
     end
   end
 end

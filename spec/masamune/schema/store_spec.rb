@@ -37,11 +37,34 @@ describe Masamune::Schema::Store do
     subject(:store) { described_class.new(environment, type: :postgres) }
     it { expect(store.format).to eq(:csv) }
     it { expect(store.headers).to be_truthy }
+    it { expect(store.json_encoding).to eq(:quoted) }
+
+    context 'with format override' do
+      subject(:store) { described_class.new(environment, type: :postgres, format: :raw) }
+      it { expect(store.format).to eq(:raw) }
+      it { expect(store.headers).to be_falsey }
+      it { expect(store.json_encoding).to eq(:raw) }
+    end
   end
 
   context 'with type :hive' do
     subject(:store) { described_class.new(environment, type: :hive) }
     it { expect(store.format).to eq(:tsv) }
     it { expect(store.headers).to be_falsey }
+    it { expect(store.json_encoding).to eq(:raw) }
+  end
+
+  context 'with type :files' do
+    subject(:store) { described_class.new(environment, type: :files) }
+    it { expect(store.format).to eq(:raw) }
+    it { expect(store.headers).to be_falsey }
+    it { expect(store.json_encoding).to eq(:raw) }
+
+    context 'with format overrides' do
+      subject(:store) { described_class.new(environment, type: :files, format: :csv, headers: true, json_encoding: :quoted) }
+      it { expect(store.format).to eq(:csv) }
+      it { expect(store.headers).to be_truthy }
+      it { expect(store.json_encoding).to eq(:quoted) }
+    end
   end
 end
