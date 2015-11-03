@@ -21,9 +21,8 @@
 #  THE SOFTWARE.
 
 schema :postgres do
-  # FIXME: should accept symbol
   # FIXME: alias to format :raw
-  file 'users', format: :tsv, headers: false, json_encoding: :raw do
+  file :users, format: :tsv, headers: false, json_encoding: :raw do
     column 'data', type: :json
   end
 
@@ -42,13 +41,13 @@ schema :postgres do
     }
   end
 
-  dimension 'user_agent', type: :mini do
+  dimension :user_agent, type: :mini do
     column 'name', type: :string, unique: 'shared', index: 'shared'
     column 'os_name', type: :string, unique: 'shared', index: 'shared', default: 'Unknown'
     column 'device', type: :string, unique: 'shared', index: 'shared', default: 'Unknown'
   end
 
-  fact 'visits', partition: 'y%Ym%m', grain: %w(hourly) do
+  fact :visits, partition: 'y%Ym%m', grain: %w(hourly) do
     # TODO add date dimension generator
     references :date, degenerate: true
     references :user
@@ -57,7 +56,7 @@ schema :postgres do
     measure 'total', type: :integer, aggregate: :sum
   end
 
-  file 'visits_hourly', headers: false, format: :tsv do
+  file :visits_hourly, headers: false, format: :tsv do
     column 'date.date_id', type: :integer
     column 'user.user_id', type: :integer
     column 'user_agent.name', type: :string
