@@ -29,13 +29,15 @@ schema :postgres do
     column 'user_id',   type: :integer, natural_key: true
     column 'gender', type: :enum, values: %w(none unknown male female)
     column 'nationality', type: :string
+    column 'ab_test_group', type: :enum, values: %w(none unknown control a b)
   end
 
   map from: postgres.users_file, to: postgres.user_dimension do |row|
     {
-      user_id:      row[:data][:id],
-      gender:       row[:data][:gender],
-      nationality:  row[:data][:nationality],
+      user_id:        row[:data][:id],
+      gender:         row[:data][:gender],
+      nationality:    row[:data][:nationality],
+      ab_test_group:  row[:data][:ab_test_group]
     }
   end
 

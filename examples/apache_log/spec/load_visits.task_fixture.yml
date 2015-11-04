@@ -28,11 +28,11 @@ inputs:
 
   -
     psql: |
-      COPY user_dimension (user_id, gender, nationality) FROM stdin WITH (FORMAT 'csv');
-      2808,male,FR
-      30456,male,NL
-      9377,male,NL
-      3808,male,ES
+      COPY user_dimension (user_id, gender, nationality, ab_test_group) FROM stdin WITH (FORMAT 'csv');
+      2808,male,FR,a
+      30456,male,NL,b
+      9377,male,NL,a
+      3808,male,ES,b
       \.
 
 outputs:

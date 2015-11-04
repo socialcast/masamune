@@ -77,6 +77,7 @@ class RandomApacheLogGenerator
       user_info = info['results'].first
       user_info['user']['id'] = rand(1 << 15)
       user_info['user']['nationality'] = info['nationality']
+      user_info['user']['ab_test_group'] = ['a', 'b'].sample
       return user_info['user']
     end
   end
