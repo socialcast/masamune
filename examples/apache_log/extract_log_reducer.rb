@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #  The MIT License (MIT)
 #
 #  Copyright (c) 2014-2015, VMware, Inc. All Rights Reserved.
@@ -20,27 +21,27 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
----
-inputs:
-  -
-    reference:
-      fixture: extract_logs
+KFS = ':'
+OFS = "\t"
+IFS = "\t"
 
-  -
-    psql: |
-      COPY user_dimension (user_id, gender, nationality, ab_test_group) FROM stdin WITH (FORMAT 'csv');
-      2808,male,FR,a
-      30456,male,NL,b
-      9377,male,NL,a
-      3808,male,ES,b
-      \.
+prev_key = nil
+total = 0
 
-outputs:
-  -
-    table: postgres.visits_hourly_fact
-    data: |
-      date_type_id,user_dimension_user_id,user_agent_type_name,user_agent_type_os_name,user_agent_type_device,total,time_key
-      20151001,2808,Other,Debian,Other,1,1443690000
-      20151001,3808,Flock,Windows Vista,Other,2,1443711600
-      20151001,9377,Safari,Windows XP,Other,1,1443740400
-      20151001,30456,SeaMonkey,Windows 2000,Other,1,1443726000
+ARGF.each do |line|
+   key, count = line.chomp.split(IFS)
+
+   if prev_key && key != prev_key && total > 0
+      puts [*prev_key.split(KFS), total].join(OFS)
+      prev_key = key
+      total = 0
+   elsif !prev_key
+      prev_key = key
+   end
+
+   total += count.to_i
+end
+
+if prev_key && total > 0
+  puts [*prev_key.split(KFS), total].join(OFS)
+end

@@ -8,9 +8,9 @@ input: |
   50.7.153.117 - 10559 [02/Oct/2015:00:51:49 +0000] "GET /users/21378 HTTP/1.1" 200 6188 "-" "Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.134 Safari/534.16"
 
 output: |
-  20151001	3808	Flock	Windows Vista	Other	1443714383	1
-  20151001	30456	SeaMonkey	Windows 2000	Other	1443727329	1
-  20151001	2808	Other	Debian	Other	1443692023	1
-  20151001	9377	Safari	Windows XP	Other	1443740605	1
-  20151002	8680	Epiphany	Ubuntu	Other	1443759214	1
-  20151002	10559	Chrome	Linux	Other	1443747109	1
+  20151001:3808:Flock:Windows Vista:Other:1443711600	1
+  20151001:30456:SeaMonkey:Windows 2000:Other:1443726000	1
+  20151001:2808:Other:Debian:Other:1443690000	1
+  20151001:9377:Safari:Windows XP:Other:1443740400	1
+  20151002:8680:Epiphany:Ubuntu:Other:1443758400	1
+  20151002:10559:Chrome:Linux:Other:1443744000	1

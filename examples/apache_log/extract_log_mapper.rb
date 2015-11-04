@@ -24,6 +24,8 @@
 require 'user_agent_parser'
 
 APACHE_LOG_REGEX = /^(?<ip_address>\d+\.\d+\.\d+\.\d+) - (?<user_id>\d+) \[(?<timestamp>.*?)\] "GET (?<path>.*?) HTTP\/1.1" \d+ \d+ "-" "(?<user_agent>.*?)"/
+KFS = ':'
+OFS = "\t"
 
 user_agent_parser = UserAgentParser::Parser.new
 
@@ -32,5 +34,8 @@ ARGF.each do |line|
   next unless fields[:timestamp] && fields[:ip_address] && fields[:path]
   created_at = DateTime.strptime(fields[:timestamp], '%d/%b/%Y:%H:%M:%S %z').to_time.utc
   user_agent = user_agent_parser.parse(fields[:user_agent])
-  puts [created_at.strftime('%Y%m%d'), fields[:user_id].to_i, user_agent.family, user_agent.os.name, user_agent.device, created_at.to_i, 1].join("\t")
+  date_key = created_at.strftime('%Y%m%d')
+  time_key = created_at.to_i - (created_at.to_i % 3600)
+  key = [date_key, fields[:user_id].to_i, user_agent.family, user_agent.os.name, user_agent.device, time_key]
+  puts [key.join(KFS), 1].join(OFS)
 end

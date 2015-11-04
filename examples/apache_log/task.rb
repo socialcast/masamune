@@ -60,11 +60,12 @@ class ApacheLogTask < Thor
   desc 'extract_logs', 'Extract Apache log files'
   source path: fs.path(:data_dir, 'sample_logs', '%Y%m%d.*.log')
   target path: fs.path(:data_dir, 'processed_logs', '%Y-%m-%d')
-  # TODO: add reducer to accumulate over hours
   def extract_logs_task
     targets.actionable do |target|
       target.sources.existing do |source|
-        hadoop_streaming input: source.path, output: target.path, mapper: fs.path(:current_dir, 'extract_log_mapper.rb')
+        hadoop_streaming input: source.path, output: target.path,
+          mapper: fs.path(:current_dir, 'extract_log_mapper.rb'),
+          reducer: fs.path(:current_dir, 'extract_log_reducer.rb')
       end
     end
   end
