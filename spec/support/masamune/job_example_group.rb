@@ -28,7 +28,7 @@ module Masamune::JobExampleGroup
 
       before :all do
         load_example_config!
-        clean_example_run! unless context_options[:preserve]
+        clean_example_run!
       end
 
       before do
