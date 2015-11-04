@@ -136,6 +136,10 @@ class Masamune::DataPlan::Elem
     @options[:glob]
   end
 
+  def rest
+    @options[:rest]
+  end
+
   def next(i = 1)
     self.class.new(@rule, start_time.advance(@rule.time_step => +1*i), @options)
   end
@@ -184,6 +188,10 @@ class Masamune::DataPlan::Elem
   private
 
   def strftime_format
-    @strftime_format ||= glob ? @rule.strftime_format.sub('*', glob) : @rule.strftime_format
+    @strftime_format ||= begin
+      format = @rule.strftime_format.dup
+      format.sub!('*', glob || rest) if glob || rest
+      format
+    end
   end
 end

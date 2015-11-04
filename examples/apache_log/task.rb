@@ -77,18 +77,11 @@ class ApacheLogTask < Thor
   end
 
   desc 'load_visits', 'Load processed Apache log files'
-  # FIXME: allow glob in source
-  source path: fs.path(:data_dir, 'processed_logs', '%Y-%m-%d')
+  source path: fs.path(:data_dir, 'processed_logs', '%Y-%m-%d/*')
   target table: :visits_hourly_fact, partition: 'y%Ym%m', last_modified_at: 'last_modified_at'
   def load_visits_task
     targets.updateable do |target|
-      files = Set.new
-      target.sources.existing do |source|
-        fs.glob(source.path + '/*') do |file|
-          files << file
-        end
-      end
-      load_fact(files, catalog.postgres.visits_hourly_file, catalog.postgres.visits_hourly_fact, target.start_time)
+      load_fact(target.sources.existing, catalog.postgres.visits_hourly_file, catalog.postgres.visits_hourly_fact, target.start_time)
     end
   end
 

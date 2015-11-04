@@ -118,7 +118,7 @@ class Masamune::DataPlan::Rule
 
   def matches?(input)
     matched_pattern = match_data_hash(matcher.match(input))
-    matched_pattern.present? && matched_pattern[:rest].blank?
+    matched_pattern.present? && (matched_pattern[:rest].blank? || matched_pattern[:rest].include?('*'))
   end
 
   def bind_date_or_time(input = nil)
@@ -300,9 +300,8 @@ class Masamune::DataPlan::Rule
     end
   end
 
-  def matched_extra(matched_data)
-    return {} unless matched_data.has_key?(:glob)
-    {glob: matched_data[:glob]}.reject { |_,v| v == '*' }
+  def matched_extra(matched_data = {})
+    matched_data.slice(:glob, :rest).reject { |_, v| v.blank? || v == '*' }
   end
 
   def options_for_elem
