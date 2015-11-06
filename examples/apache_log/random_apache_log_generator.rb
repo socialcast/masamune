@@ -80,6 +80,8 @@ class RandomApacheLogGenerator
       user_info['user']['ab_test_group'] = ['a', 'b'].sample
       return user_info['user']
     end
+  rescue
+    fallback_user
   end
 
   def random_size
@@ -122,5 +124,14 @@ class RandomApacheLogGenerator
       'Opera/9.80 (Windows NT 6.1; U; en-US) Presto/2.7.62 Version/11.01',
       'Mozilla/5.0 (X11; U; NetBSD amd64; fr-FR; rv:1.8.0.7) Gecko/20061102 Firefox/1.5.0.7'
     ]
+  end
+
+  def fallback_user
+    {
+      'id'            => rand(1 << 15),
+      'gender'        => %w(male female).sample,
+      'nationality'   => %w(AU BR CA DE ES FI FR GB IE NL NZ US).sample,
+      'ab_test_group' => %w(a b).sample
+    }
   end
 end
