@@ -20,12 +20,49 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-schema :hive do
-  table :visits do
-    column :created_at, type: :timestamp
-    column :user_id, type: :integer
-    column :ip_address, type: :string
-    column :path, type: :string
-    column :user_agent, type: :string
+schema :postgres do
+  file :users, format: :raw, headers: false, json_encoding: :raw do
+    column 'data', type: :json
+  end
+
+  dimension :user, type: :one do
+    column 'user_id',   type: :integer, natural_key: true
+    column 'gender', type: :enum, values: %w(none unknown male female)
+    column 'nationality', type: :string
+    column 'ab_test_group', type: :enum, values: %w(none unknown control a b)
+  end
+
+  map from: postgres.users_file, to: postgres.user_dimension do |row|
+    {
+      user_id:        row[:data][:id],
+      gender:         row[:data][:gender],
+      nationality:    row[:data][:nationality],
+      ab_test_group:  row[:data][:ab_test_group]
+    }
+  end
+
+  dimension :user_agent, type: :mini do
+    column 'name', type: :string, unique: 'shared', index: 'shared'
+    column 'os_name', type: :string, unique: 'shared', index: 'shared', default: 'Unknown'
+    column 'device', type: :string, unique: 'shared', index: 'shared', default: 'Unknown'
+  end
+
+  fact :visits, partition: 'y%Ym%m', grain: %w(hourly) do
+    # TODO add date dimension generator
+    references :date, degenerate: true
+    references :user
+    references :user_agent, insert: true
+
+    measure 'total', type: :integer, aggregate: :sum
+  end
+
+  file :visits_hourly, headers: false, format: :tsv do
+    column 'date.date_id', type: :integer
+    column 'user.user_id', type: :integer
+    column 'user_agent.name', type: :string
+    column 'user_agent.os_name', type: :string
+    column 'user_agent.device', type: :string
+    column 'time_key', type: :integer
+    column 'total', type: :integer
   end
 end

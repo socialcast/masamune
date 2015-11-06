@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #  The MIT License (MIT)
 #
 #  Copyright (c) 2014-2015, VMware, Inc. All Rights Reserved.
@@ -20,27 +21,27 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-<%
-  MASAMUNE_ENV ||= ENV['MASAMUNE_ENV'] || 'development'
+KFS = ':'
+OFS = "\t"
+IFS = "\t"
 
-  add_path :var_dir, get_path(:root_dir, 'var', MASAMUNE_ENV), mkdir: true, clean: true
-  add_path :run_dir, get_path(:var_dir, 'run'), mkdir: true
-  add_path :tmp_dir, get_path(:var_dir, 'tmp'), mkdir: true
-  add_path :log_dir, get_path(:var_dir, 'log'), mkdir: true
-  add_path :data_dir, get_path(:var_dir, 'data'), mkdir: true
+prev_key = nil
+total = 0
 
-  add_path :warehouse_dir, get_path(:data_dir, 'warehouse'), mkdir: true
-  add_path :current_dir, File.dirname(__FILE__)
- %>
----
-  hive:
-    database: apache_log_<%= MASAMUNE_ENV %>
-    location: <%= get_path(:warehouse_dir) %>
-    schema_files:
-      - <%= get_path(:current_dir, 'schema.rb') %>
-  postgres:
-    database: apache_log_<%= MASAMUNE_ENV %>
-    username: <%= %x{whoami} %>
-    clean: true
-    schema_files:
-      - <%= get_path(:current_dir, 'schema.rb') %>
+ARGF.each do |line|
+   key, count = line.chomp.split(IFS)
+
+   if prev_key && key != prev_key && total > 0
+      puts [*prev_key.split(KFS), total].join(OFS)
+      prev_key = key
+      total = 0
+   elsif !prev_key
+      prev_key = key
+   end
+
+   total += count.to_i
+end
+
+if prev_key && total > 0
+  puts [*prev_key.split(KFS), total].join(OFS)
+end

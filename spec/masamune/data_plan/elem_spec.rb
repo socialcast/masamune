@@ -21,11 +21,19 @@
 #  THE SOFTWARE.
 
 describe Masamune::DataPlan::Elem do
+  let(:filesystem) { Masamune::MockFilesystem.new }
+  let(:environment) { Masamune::Environment.new }
   let(:engine) { Masamune::DataPlan::Engine.new }
+
+  before do
+    environment.filesystem = filesystem
+    engine.environment = environment
+  end
+
   let(:name) { 'primary' }
   let(:type) { :target }
-  let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: 'report/%Y-%m-%d/%H'}) }
-  let(:other_rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: 'log/%Y%m%d.*.log'}) }
+  let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/%Y-%m-%d/%H'}) }
+  let(:other_rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/log/%Y%m%d.*.log'}) }
 
   let(:start_time) { DateTime.civil(2013,07,19,11,07) }
   let(:other_start_time) { DateTime.civil(2013,07,20,0,0) }
@@ -39,7 +47,7 @@ describe Masamune::DataPlan::Elem do
     subject do
       instance.path
     end
-    it { is_expected.to eq('report/2013-07-19/11') }
+    it { is_expected.to eq('/report/2013-07-19/11') }
   end
 
   describe '#==' do
@@ -95,6 +103,68 @@ describe Masamune::DataPlan::Elem do
       end
 
       it { is_expected.to eq(early) }
+    end
+  end
+
+  describe '#explode' do
+    subject { instance.explode.map(&:path) }
+
+    context 'with free path and existing files' do
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/%Y-%m-%d/%H'}) }
+      before do
+        engine.filesystem.touch!('/report/2013-07-19/11/part-0000')
+      end
+      it { is_expected.to include '/report/2013-07-19/11' }
+    end
+
+    context 'with free path and missing files' do
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/%Y-%m-%d/%H'}) }
+      it { is_expected.to be_empty }
+    end
+
+    context 'with bound path and existing files' do
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/file'}) }
+      before do
+        engine.filesystem.touch!('/report/file')
+      end
+      it { is_expected.to include '/report/file' }
+    end
+
+    context 'with bound path and missing files' do
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/file'}) }
+      it { is_expected.to be_empty }
+    end
+
+    context 'with free table and existing table' do
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {table: 'visits_fact', partition: 'y%Y%m'}) }
+      before do
+        expect(instance.rule.engine.postgres_helper).to receive(:table_exists?).and_return(true)
+      end
+      it { is_expected.to include 'visits_fact_y201307' }
+    end
+
+    context 'with free table and missing table' do
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {table: 'visits_fact', partition: 'y%Y%m'}) }
+      before do
+        expect(instance.rule.engine.postgres_helper).to receive(:table_exists?).and_return(false)
+      end
+      it { is_expected.to be_empty }
+    end
+
+    context 'with bound table and existing table' do
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {table: 'visits_fact'}) }
+      before do
+        expect(instance.rule.engine.postgres_helper).to receive(:table_exists?).and_return(true)
+      end
+      it { is_expected.to include 'visits_fact' }
+    end
+
+    context 'with bound table and missing table' do
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {table: 'visits_fact'}) }
+      before do
+        expect(instance.rule.engine.postgres_helper).to receive(:table_exists?).and_return(false)
+      end
+      it { is_expected.to be_empty }
     end
   end
 end

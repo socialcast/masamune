@@ -25,9 +25,29 @@ $: << File.join(File.dirname(__FILE__), '..', '..')
 require 'apache_log/task'
 
 describe ApacheLogTask do
+  describe 'load_users' do
+    include_context 'task_fixture', fixture: 'load_users' do
+      let(:command) { 'load_users' }
+      let(:options) { ['--start', '2015-10-01', '--stop', '2015-10-02'] }
+      before do
+        execute_command
+      end
+    end
+  end
+
   describe 'extract_logs' do
-    include_context 'task_fixture' do
+    include_context 'task_fixture', fixture: 'extract_logs' do
       let(:command) { 'extract_logs' }
+      let(:options) { ['--start', '2015-10-01', '--stop', '2015-10-02'] }
+      before do
+        execute_command
+      end
+    end
+  end
+
+  describe 'load_visits' do
+    include_context 'task_fixture', fixture: 'load_visits' do
+      let(:command) { 'load_visits' }
       let(:options) { ['--start', '2015-10-01', '--stop', '2015-10-02'] }
       before do
         execute_command

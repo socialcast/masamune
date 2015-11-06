@@ -29,11 +29,20 @@ class RandomApacheLogGenerator
     @min_visits = options[:min_visits]
     @max_visits = options[:max_visits]
   end
-    
-  def random_logs(date)
+
+  def random_users
+    n = rand(@min_users .. @max_users)
+    Parallel.map(1 .. n) do
+      random_user.to_json
+    end.join("\n")
+  end
+
+  def random_logs(users_file, date)
+    load_users!(users_file)
+
     logs = []
     rand(@min_visits .. @max_visits).times do
-      logs << random_log(date) 
+      logs << random_log(date.to_time.utc)
     end
     logs.join("\n")
   end
@@ -63,17 +72,36 @@ class RandomApacheLogGenerator
     fallback_user_agents.sample
   end
 
+  def random_user
+    JSON.parse(Net::HTTP.get(randomuser_me_uri)).tap do |info|
+      user_info = info['results'].first
+      user_info['user']['id'] = rand(1 << 15)
+      user_info['user']['nationality'] = info['nationality']
+      user_info['user']['ab_test_group'] = ['a', 'b'].sample
+      return user_info['user']
+    end
+  rescue
+    fallback_user
+  end
+
   def random_size
     rand(1 << 15)
   end
 
-  def users
+  def load_users!(file = nil)
     @users ||= begin
-      n = rand(@min_users .. @max_users)
-      Parallel.map(1 .. n) do
-        OpenStruct.new(id: rand(1 << 15), ua: random_user_agent, ip: random_ip_address)
+      ids = []
+      File.open(file).each_line do |line|
+        ids << JSON.parse(line)['id']
+      end
+      Parallel.map(ids) do |id|
+        OpenStruct.new(id: id, ua: random_user_agent, ip: random_ip_address)
       end
     end
+  end
+
+  def users
+    @users
   end
 
   def paths
@@ -84,6 +112,10 @@ class RandomApacheLogGenerator
     @user_agent_io_uri ||= URI.parse('http://api.useragent.io/')
   end
 
+  def randomuser_me_uri
+    @randomuser_me_uri ||= URI.parse('https://randomuser.me/api/')
+  end
+
   def fallback_user_agents
     @fallback_user_agents ||= [
       'Mozilla/5.0 (X11; U; Linux i686; es-ES; rv:1.8.1.2) Gecko/20060601 Firefox/2.0.0.2 (Ubuntu-edgy)',
@@ -92,5 +124,14 @@ class RandomApacheLogGenerator
       'Opera/9.80 (Windows NT 6.1; U; en-US) Presto/2.7.62 Version/11.01',
       'Mozilla/5.0 (X11; U; NetBSD amd64; fr-FR; rv:1.8.0.7) Gecko/20061102 Firefox/1.5.0.7'
     ]
+  end
+
+  def fallback_user
+    {
+      'id'            => rand(1 << 15),
+      'gender'        => %w(male female).sample,
+      'nationality'   => %w(AU BR CA DE ES FI FR GB IE NL NZ US).sample,
+      'ab_test_group' => %w(a b).sample
+    }
   end
 end

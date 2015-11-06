@@ -298,7 +298,7 @@ module Masamune::Schema
 
     def default_ruby_value
       return [] if array_value?
-      return {} if hash_value?
+      return HashWithIndifferentAccess.new { |h,k| h[k] = HashWithIndifferentAccess.new(&h.default_proc) } if hash_value?
       case type
       when :date
         Date.new(0)

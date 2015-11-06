@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
 
   # Development
   s.add_development_dependency('rake', '>= 0.9')
+  s.add_development_dependency('user_agent_parser')
 
   # Testing
   s.add_development_dependency('rspec', '> 2.99')

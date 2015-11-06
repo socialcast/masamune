@@ -136,6 +136,27 @@ describe Masamune::DataPlan::Rule do
       let(:input) { instance.bind_input(prev_input) }
       it { is_expected.to eq(input) }
     end
+
+    context 'with wildcard pattern' do
+      let(:pattern) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k/*' }
+      let(:input) { 'requests/y=2013/m=4/d=30/h=20/part-00000' }
+      let(:output_date) { DateTime.civil(2013,04,30,20) }
+
+      describe '#path' do
+        subject { elem.path }
+        it { is_expected.to eq(input) }
+      end
+
+      describe '#start_time' do
+        subject { elem.start_time }
+        it { is_expected.to eq(output_date) }
+      end
+
+      describe '#stop_time' do
+        subject { elem.stop_time }
+        it { is_expected.to eq(output_date.to_time + 1.hour) }
+      end
+    end
   end
 
   describe '#unify' do
@@ -198,7 +219,7 @@ describe Masamune::DataPlan::Rule do
       it { is_expected.to eq(true) }
     end
 
-    context 'with alternative hour' do
+    context 'with another alternative hour' do
       let(:pattern) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k' }
       let(:input) { 'requests/y=2013/m=4/d=30/h=20' }
       it { is_expected.to eq(true) }
@@ -210,9 +231,9 @@ describe Masamune::DataPlan::Rule do
       it { is_expected.to eq(true) }
     end
 
-    context 'with unix timestamp pattern' do
-      let(:pattern) { 'request_logs/%H-s.log' }
-      let(:input) { 'request_logs/1374192000.log' }
+    context 'with wildcard input' do
+      let(:pattern) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k' }
+      let(:input) { 'requests/y=2013/m=4/d=30/h=20/*' }
       it { is_expected.to eq(true) }
     end
   end
@@ -415,6 +436,32 @@ describe Masamune::DataPlan::Rule do
         let(:pattern) { 'table/y=%Y' }
         include_context 'cannot round'
       end
+    end
+  end
+
+  describe '#free? ' do
+    subject { instance.free? }
+    context 'with rule that contains free variables' do
+      let(:pattern) { 'report/%Y-%m-%d/%H' }
+      it { is_expected.to be(true) }
+    end
+
+    context 'with rule that does not contain free variables' do
+      let(:pattern) { 'report/file' }
+      it { is_expected.to be(false) }
+    end
+  end
+
+  describe '#bound? ' do
+    subject { instance.bound? }
+    context 'with rule that contains free variables' do
+      let(:pattern) { 'report/%Y-%m-%d/%H' }
+      it { is_expected.to be(false) }
+    end
+
+    context 'with rule that does not contain free variables' do
+      let(:pattern) { 'report/file' }
+      it { is_expected.to be(true) }
     end
   end
 end
