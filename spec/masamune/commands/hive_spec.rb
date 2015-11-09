@@ -39,27 +39,15 @@ describe Masamune::Commands::Hive do
     allow(filesystem).to receive(:mktempdir!) { filesystem.path(:tmp_dir, mock_tmpdir) }
 
     allow(delegate).to receive(:filesystem) { filesystem }
+    allow(delegate).to receive(:console).and_return(double)
     allow(delegate).to receive_message_chain(:configuration, :hive).and_return(configuration)
-  end
-
-  describe '#stdin' do
-    context 'with exec' do
-      let(:attrs) { {exec: %q(SELECT * FROM table;)} }
-      subject(:stdin) { instance.stdin }
-
-      it { is_expected.to be_a(StringIO) }
-
-      describe '#string' do
-        subject { stdin.string }
-        it { is_expected.to eq(%q(SELECT * FROM table;)) }
-      end
-    end
   end
 
   describe '#command_args' do
     let(:default_command) { ['hive', '--database', 'default'] }
 
     subject do
+      instance.before_execute
       instance.command_args
     end
 
@@ -72,6 +60,14 @@ describe Masamune::Commands::Hive do
 
     context 'with file' do
       let(:attrs) { {file: local_file} }
+      it { is_expected.to eq([*default_command, '-f', remote_file]) }
+    end
+
+    context 'with exec' do
+      let(:attrs) { {exec: 'SELECT * FROM table;'} }
+      before do
+        expect_any_instance_of(Masamune::MockFilesystem).to receive(:basename).and_return(File.basename(local_file))
+      end
       it { is_expected.to eq([*default_command, '-f', remote_file]) }
     end
 

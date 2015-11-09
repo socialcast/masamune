@@ -128,12 +128,7 @@ module Masamune::SharedExampleGroup
 
   def execute_output_command(output, output_file)
     if output['hive'] && output['hive'].is_a?(String)
-      # FIXME: Replace with exec once SBI-530 is fixed
-      Tempfile.open('etl') do |tmp|
-        tmp.write(output['hive'])
-        tmp.flush
-        hive(file: tmp.path, output: output_file)
-      end
+      hive(exec: output['hive'], output: output_file)
     elsif output['table']
       table = eval "catalog.#{output['table']}"
       query = denormalize_table(table, output.slice('columns', 'order', 'except', 'include')).to_s
@@ -142,12 +137,7 @@ module Masamune::SharedExampleGroup
       when :postgres
         postgres(exec: query, csv: true, output: output_file)
       when :hive
-        # FIXME: Replace with exec once SBI-530 is fixed
-        Tempfile.open('etl') do |tmp|
-          tmp.write(query)
-          tmp.flush
-          hive(file: tmp.path, output: output_file)
-        end
+        hive(exec: query, output: output_file)
       else
         raise "'table' output not supported for #{output['table']}"
       end

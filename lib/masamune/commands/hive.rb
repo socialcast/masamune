@@ -41,7 +41,6 @@ module Masamune::Commands
       :schema_files   => [],
       :file           => nil,
       :exec           => nil,
-      :input          => nil,
       :output         => nil,
       :print          => false,
       :block          => nil,
@@ -57,12 +56,6 @@ module Masamune::Commands
       super delegate
       DEFAULT_ATTRIBUTES.merge(configuration.hive).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
-      end
-    end
-
-    def stdin
-      if @input || @exec
-        @stdin ||= StringIO.new(strip_sql(@input || @exec))
       end
     end
 
@@ -99,6 +92,7 @@ module Masamune::Commands
 
       if @exec
         console("hive exec '#{strip_sql(@exec)}' #{'into ' + @output if @output}")
+        @file = exec_file
       end
 
       if @output
@@ -173,6 +167,13 @@ module Masamune::Commands
 
     def remote_file
       @remote_file ||= File.join(filesystem.mktempdir!(:tmp_dir), filesystem.basename(@file)).gsub(/.erb\z/,'')
+    end
+
+    def exec_file
+      Tempfile.new('masamune').tap do |tmp|
+        tmp.write(@exec)
+        tmp.flush
+      end.path
     end
   end
 end
