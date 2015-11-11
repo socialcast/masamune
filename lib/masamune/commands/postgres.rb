@@ -83,7 +83,6 @@ module Masamune::Commands
       args << command_args_for_file if @file
       args << '--output=%s' % @output if @output
       args << '--no-align' << '--field-separator=,' << '--pset=footer' if @csv
-      args << '--command=%s' % strip_sql(@exec) if @exec
       args << '--pset=tuples_only' if @tuple_output
       args.flatten.compact
     end
@@ -92,6 +91,11 @@ module Masamune::Commands
       console("psql with file #{@file}") if @file
       if @debug and output = @rendered_file || @file
         logger.debug("#{output}:\n" + File.read(output))
+      end
+
+      if @exec
+        console("postgres exec '#{strip_sql(@exec)}' #{'into ' + @output if @output}")
+        @file = exec_file
       end
     end
 
@@ -125,6 +129,13 @@ module Masamune::Commands
     def command_args_for_template
       @rendered_file = Masamune::Template.render_to_file(@file, @variables)
       ['--file=%s' % @rendered_file]
+    end
+
+    def exec_file
+      Tempfile.new('masamune').tap do |tmp|
+        tmp.write(@exec)
+        tmp.flush
+      end.path
     end
   end
 end

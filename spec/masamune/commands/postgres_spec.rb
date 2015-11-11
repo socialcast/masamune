@@ -29,6 +29,7 @@ describe Masamune::Commands::Postgres do
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
+    allow(delegate).to receive(:console).and_return(double)
     allow(delegate).to receive_message_chain(:configuration, :postgres).and_return(configuration)
   end
 
@@ -50,6 +51,7 @@ describe Masamune::Commands::Postgres do
     let(:default_command) { ['psql', '--host=localhost', '--dbname=postgres', '--username=postgres', '--no-password', '--set=ON_ERROR_STOP=1'] }
 
     subject do
+      instance.before_execute
       instance.command_args
     end
 
@@ -60,17 +62,25 @@ describe Masamune::Commands::Postgres do
       it { is_expected.to eq([*default_command, '-A']) }
     end
 
+    context 'with exec' do
+      let(:attrs) { {exec: 'SELECT * FROM table;'} }
+      before do
+        expect(instance).to receive(:exec_file).and_return('zomg.psql')
+      end
+      it { is_expected.to eq([*default_command, '--file=zomg.psql']) }
+    end
+
     context 'with file' do
-      let(:attrs) { {file: 'zomg.hql'} }
-      it { is_expected.to eq([*default_command, '--file=zomg.hql']) }
+      let(:attrs) { {file: 'zomg.psql'} }
+      it { is_expected.to eq([*default_command, '--file=zomg.psql']) }
     end
 
     context 'with template file' do
-      let(:attrs) { {file: 'zomg.hql.erb'} }
+      let(:attrs) { {file: 'zomg.psql.erb'} }
       before do
-        expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
+        expect(Masamune::Template).to receive(:render_to_file).with('zomg.psql.erb', {}).and_return('zomg.psql')
       end
-      it { is_expected.to eq([*default_command, '--file=zomg.hql']) }
+      it { is_expected.to eq([*default_command, '--file=zomg.psql']) }
     end
 
     context 'with variables and no file' do
@@ -79,8 +89,8 @@ describe Masamune::Commands::Postgres do
     end
 
     context 'with variables and file' do
-      let(:attrs) { {file: 'zomg.hql', variables: {R: 'R2D2', C: 'C3PO'}} }
-      it { is_expected.to eq([*default_command, '--file=zomg.hql', %q(--set=R='R2D2'), %q(--set=C='C3PO')]) }
+      let(:attrs) { {file: 'zomg.psql', variables: {R: 'R2D2', C: 'C3PO'}} }
+      it { is_expected.to eq([*default_command, '--file=zomg.psql', %q(--set=R='R2D2'), %q(--set=C='C3PO')]) }
     end
 
     context 'with csv' do

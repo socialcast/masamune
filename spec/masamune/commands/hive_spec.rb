@@ -66,7 +66,7 @@ describe Masamune::Commands::Hive do
     context 'with exec' do
       let(:attrs) { {exec: 'SELECT * FROM table;'} }
       before do
-        expect_any_instance_of(Masamune::MockFilesystem).to receive(:basename).and_return(File.basename(local_file))
+        expect(instance).to receive(:exec_file).and_return(remote_file)
       end
       it { is_expected.to eq([*default_command, '-f', remote_file]) }
     end
