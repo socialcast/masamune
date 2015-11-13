@@ -99,11 +99,7 @@ module Masamune::SharedExampleGroup
       end
 
       if input['psql']
-        Tempfile.open('etl') do |tmp|
-          tmp.write(input['psql'])
-          tmp.flush
-          postgres(file: tmp.path)
-        end
+        postgres(exec: input['psql'])
       end
     end
   end
