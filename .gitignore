@@ -10,3 +10,4 @@ rdoc/
 doc/
 .yardoc/
 var
+.byebug_history

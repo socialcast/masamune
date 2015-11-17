@@ -140,11 +140,13 @@ describe Masamune::JobFixture do
       }
     end
 
-    let(:other_data) { {} }
+    let(:reference_data) { {} }
+    let(:another_reference_data) { {} }
 
     before do
       described_class.new(path: fixture_path, name: 'basic', data: basic_data).save
-      described_class.new(path: fixture_path, name: 'other', data: other_data).save
+      described_class.new(path: fixture_path, name: 'reference', data: reference_data).save
+      described_class.new(path: fixture_path, name: 'another_reference', data: another_reference_data).save
     end
 
     context 'with basic fixture from path' do
@@ -178,7 +180,7 @@ describe Masamune::JobFixture do
     end
 
     context 'with reference fixture' do
-      let(:other_data) do
+      let(:reference_data) do
         {
           'inputs' => [
             {
@@ -200,17 +202,17 @@ describe Masamune::JobFixture do
         }
       end
 
-      subject(:instance) { described_class.load(path: fixture_path, name: 'other') }
+      subject(:instance) { described_class.load(path: fixture_path, name: 'reference') }
 
       it 'loads referenced fixture' do
-        expect(instance.inputs).to include(other_data['inputs'].first)
+        expect(instance.inputs).to include(reference_data['inputs'].first)
         expect(instance.inputs).to include(basic_data['outputs'].first)
-        expect(instance.outputs).to eq(other_data['outputs'])
+        expect(instance.outputs).to eq(reference_data['outputs'])
       end
     end
 
     context 'with reference fixture and path' do
-      let(:other_data) do
+      let(:reference_data) do
         {
           'inputs' => [
             {
@@ -233,17 +235,17 @@ describe Masamune::JobFixture do
         }
       end
 
-      subject(:instance) { described_class.load(path: fixture_path, name: 'other') }
+      subject(:instance) { described_class.load(path: fixture_path, name: 'reference') }
 
       it 'loads referenced fixture' do
-        expect(instance.inputs).to include(other_data['inputs'].first)
+        expect(instance.inputs).to include(reference_data['inputs'].first)
         expect(instance.inputs).to include(basic_data['outputs'].first)
-        expect(instance.outputs).to eq(other_data['outputs'])
+        expect(instance.outputs).to eq(reference_data['outputs'])
       end
     end
 
     context 'with reference fixture from file' do
-      let(:other_data) do
+      let(:reference_data) do
         {
           'inputs' => [
             {
@@ -265,18 +267,18 @@ describe Masamune::JobFixture do
         }
       end
 
-      subject(:instance) { described_class.load(path: fixture_path, name: 'other') }
+      subject(:instance) { described_class.load(path: fixture_path, name: 'reference') }
 
       it 'loads referenced fixture' do
-        expect(instance.inputs).to include(other_data['inputs'].first)
+        expect(instance.inputs).to include(reference_data['inputs'].first)
         expect(instance.inputs).to include(basic_data['outputs'].first)
-        expect(instance.outputs).to eq(other_data['outputs'])
+        expect(instance.outputs).to eq(reference_data['outputs'])
       end
     end
 
 
     context 'with reference fixture and section' do
-      let(:other_data) do
+      let(:reference_data) do
         {
           'inputs' => [
             {
@@ -299,17 +301,17 @@ describe Masamune::JobFixture do
         }
       end
 
-      subject(:instance) { described_class.load(path: fixture_path, name: 'other') }
+      subject(:instance) { described_class.load(path: fixture_path, name: 'reference') }
 
       it 'loads referenced fixture' do
-        expect(instance.inputs).to include(other_data['inputs'].first)
+        expect(instance.inputs).to include(reference_data['inputs'].first)
         expect(instance.inputs).to include(basic_data['inputs'].first)
-        expect(instance.outputs).to eq(other_data['outputs'])
+        expect(instance.outputs).to eq(reference_data['outputs'])
       end
     end
 
     context 'with reference fixture that does not exist' do
-      let(:other_data) do
+      let(:reference_data) do
         {
           'inputs' => [
             {
@@ -331,13 +333,13 @@ describe Masamune::JobFixture do
         }
       end
 
-      subject(:instance) { described_class.load(path: fixture_path, name: 'other') }
+      subject(:instance) { described_class.load(path: fixture_path, name: 'reference') }
 
       it { expect { instance.inputs }.to raise_error(ArgumentError) }
     end
 
     context 'with invalid reference fixture' do
-      let(:other_data) do
+      let(:reference_data) do
         {
           'inputs' => [
             {
@@ -357,9 +359,66 @@ describe Masamune::JobFixture do
         }
       end
 
-      subject(:instance) { described_class.load(path: fixture_path, name: 'other') }
+      subject(:instance) { described_class.load(path: fixture_path, name: 'reference') }
 
       it { expect { instance.inputs }.to raise_error(ArgumentError) }
+    end
+
+    context 'with reference fixture that includes reference' do
+      let(:another_reference_data) do
+        {
+          'inputs' => [
+            {
+              'file' => 'another_input_file',
+              'data' => 'another_input_data'
+            },
+            {
+              'reference' => {
+                'fixture' => 'basic',
+                'section' => 'inputs'
+              }
+            }
+          ],
+          'outputs' => [
+            {
+              'file' => 'another_output_file',
+              'data' => 'another_output_data'
+            }
+          ]
+        }
+      end
+
+      let(:reference_data) do
+        {
+          'inputs' => [
+            {
+              'file' => 'other_input_file',
+              'data' => 'other_input_data'
+            },
+            {
+              'reference' => {
+                'fixture' => 'another_reference',
+                'section' => 'inputs'
+              }
+            }
+          ],
+          'outputs' => [
+            {
+              'file' => 'other_output_file',
+              'data' => 'other_output_data'
+            }
+          ]
+        }
+      end
+
+      subject(:instance) { described_class.load(path: fixture_path, name: 'reference') }
+
+      it 'loads both referenced fixtures' do
+        expect(instance.inputs).to include(reference_data['inputs'].first)
+        expect(instance.inputs).to include(basic_data['inputs'].first)
+        expect(instance.inputs).to include(another_reference_data['inputs'].first)
+        expect(instance.outputs).to eq(reference_data['outputs'])
+      end
     end
   end
 end
