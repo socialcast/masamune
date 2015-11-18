@@ -49,7 +49,10 @@ class Masamune::MockFilesystem < Delegator
   end
 
   def glob_sort(pattern, options = {})
-    glob(pattern)
+    return to_enum(:glob_sort, pattern, options).to_a unless block_given?
+    glob(pattern) do |file|
+      yield file
+    end
   end
 
   def glob_stat(pattern)

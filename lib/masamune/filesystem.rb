@@ -256,12 +256,16 @@ module Masamune
     end
 
     def glob_sort(pattern, options = {})
-      result = glob(pattern)
+      return to_enum(:glob_sort, pattern, options).to_a unless block_given?
       case options[:order]
       when :basename
-        result.sort { |x,y| File.basename(x) <=> File.basename(y) }
+        glob(pattern).sort { |x,y| File.basename(x) <=> File.basename(y) }.each do |result|
+          yield result
+        end
       else
-        result
+        glob(pattern) do |result|
+          yield result
+        end
       end
     end
 

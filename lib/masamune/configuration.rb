@@ -89,7 +89,7 @@ class Masamune::Configuration
 
   def load_catalog(paths = [])
     paths.each do |path|
-      filesystem.glob_sort(path, order: :basename).each do |file|
+      filesystem.glob_sort(path, order: :basename) do |file|
         configuration.with_quiet do
           catalog.load(file)
         end
