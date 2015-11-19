@@ -135,11 +135,8 @@ module Masamune::Commands
     end
 
     def load_setup_files
-      files = []
-      @setup_files.each do |path|
-        filesystem.glob_sort(path, order: :basename).each do |file|
-          files << file
-        end
+      files = @setup_files.map do |path|
+        filesystem.glob_sort(path, order: :basename)
       end
       files.flatten.compact.map { |file| {'-i' => file} }
     end
