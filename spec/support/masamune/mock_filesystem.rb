@@ -40,8 +40,8 @@ class Masamune::MockFilesystem < Delegator
     @files.keys.include?(file)
   end
 
-  def glob(pattern)
-    return Set.new(to_enum(:glob, pattern)) unless block_given?
+  def glob(pattern, options = {})
+    return Set.new(to_enum(:glob, pattern, options)) unless block_given?
     file_regexp = glob_to_regexp(pattern)
     @files.keys.each do |name|
       yield name if name =~ file_regexp
@@ -55,8 +55,8 @@ class Masamune::MockFilesystem < Delegator
     end
   end
 
-  def glob_stat(pattern)
-    return Set.new(to_enum(:glob_stat, pattern)) unless block_given?
+  def glob_stat(pattern, options = {})
+    return Set.new(to_enum(:glob_stat, pattern, options)) unless block_given?
     file_regexp = glob_to_regexp(pattern, recursive: true)
     @files.each do |name, stat|
       yield stat if name =~ file_regexp

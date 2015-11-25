@@ -36,9 +36,9 @@ module Masamune
       @cache[file].any? || glob(file).include?(file) || @cache[file].any?
     end
 
-    def glob(file_or_glob)
-      return Set.new(to_enum(:glob, file_or_glob)) unless block_given?
-      glob_stat(file_or_glob) do |entry|
+    def glob(file_or_glob, options = {})
+      return Set.new(to_enum(:glob, file_or_glob, options)) unless block_given?
+      glob_stat(file_or_glob, options) do |entry|
         yield entry.name unless entry.name == dirname(file_or_glob)
       end
     end
@@ -75,7 +75,8 @@ module Masamune
       return if file_or_glob.blank?
       return if root_path?(file_or_glob)
       depth = options.fetch(:depth, 0)
-      return if depth > MAX_DEPTH || depth > CACHE_DEPTH
+      max_depth = options.fetch(:max_depth, CACHE_DEPTH)
+      return if depth > MAX_DEPTH || depth > max_depth
 
       glob_stat(dirname(file_or_glob), depth: depth + 1, &block)
 

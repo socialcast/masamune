@@ -174,8 +174,8 @@ module Masamune
       end
     end
 
-    def glob_stat(pattern)
-      return Set.new(to_enum(:glob_stat, pattern)) unless block_given?
+    def glob_stat(pattern, options = {})
+      return Set.new(to_enum(:glob_stat, pattern, options)) unless block_given?
       case type(pattern)
       when :hdfs
         hadoop_fs('-ls', '-R', pattern, safe: true) do |line|
@@ -227,8 +227,8 @@ module Masamune
       end
     end
 
-    def glob(pattern)
-      return Set.new(to_enum(:glob, pattern)) unless block_given?
+    def glob(pattern, options = {})
+      return Set.new(to_enum(:glob, pattern, options)) unless block_given?
       case type(pattern)
       when :hdfs
         file_glob, file_regexp = glob_split(pattern)
