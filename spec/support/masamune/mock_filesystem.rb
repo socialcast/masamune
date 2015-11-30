@@ -37,7 +37,7 @@ class Masamune::MockFilesystem < Delegator
   end
 
   def exists?(file)
-    @files.keys.include?(file)
+    @files.keys.any? { |path| file == path || path.start_with?(File.join(file, '/')) }
   end
 
   def glob(pattern, options = {})

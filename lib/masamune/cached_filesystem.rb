@@ -33,7 +33,7 @@ module Masamune
     end
 
     def exists?(file)
-      @cache[file].any? || glob(file).include?(file) || @cache[file].any?
+      @cache[file].any? || glob(file, max_depth: 0).include?(file) || @cache[file].any?
     end
 
     def glob(file_or_glob, options = {})
@@ -68,14 +68,15 @@ module Masamune
     private
 
     MAX_DEPTH   = 10
-    CACHE_DEPTH = 1
     EMPTY_SET   = Set.new
 
+    # TODO: add simple heirarchical cache class - nested hash with get, put operations
+    # TODO: separate max_depth frontier lookahead from caching concern
     def glob_stat(file_or_glob, options = {}, &block)
       return if file_or_glob.blank?
       return if root_path?(file_or_glob)
       depth = options.fetch(:depth, 0)
-      max_depth = options.fetch(:max_depth, CACHE_DEPTH)
+      max_depth = options.fetch(:max_depth, 1)
       return if depth > MAX_DEPTH || depth > max_depth
 
       glob_stat(dirname(file_or_glob), depth: depth + 1, &block)
