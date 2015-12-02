@@ -212,12 +212,17 @@ shared_examples_for 'Filesystem' do
 
     context 'with local blank' do
       let(:path) { '' }
-      it { is_expected.to be_blank }
+      it { is_expected.to eq('.') }
     end
 
     context 'with local path with slash' do
       let(:path) { '/a/b/c' }
       it { is_expected.to eq('/a/b') }
+    end
+
+    context 'with local file without slash' do
+      let(:path) { 'a' }
+      it { is_expected.to eq('.') }
     end
 
     context 'with local path without slash' do
@@ -227,7 +232,12 @@ shared_examples_for 'Filesystem' do
 
     context 'with local relative path' do
       let(:path) { '/a/b/../c' }
-      it { is_expected.to eq('/a/c') }
+      it { is_expected.to eq('/a') }
+    end
+
+    context 'with local another relative path' do
+      let(:path) { '/a/b/.' }
+      it { is_expected.to eq('/a') }
     end
 
     context 'with s3 bucket with blank' do
@@ -237,7 +247,7 @@ shared_examples_for 'Filesystem' do
 
     context 'with s3 bucket with slash' do
       let(:path) { 's3://bucket/' }
-      it { is_expected.to eq('s3://bucket/') }
+      it { is_expected.to eq('s3://bucket') }
     end
 
     context 'with s3 bucket with path' do
@@ -247,7 +257,7 @@ shared_examples_for 'Filesystem' do
 
     context 'with s3 bucket with relative path' do
       let(:path) { 's3://bucket/a/b/../c' }
-      it { is_expected.to eq('s3://bucket/a/c') }
+      it { is_expected.to eq('s3://bucket/a') }
     end
 
     context 'with hdfs directory with path' do
@@ -262,7 +272,7 @@ shared_examples_for 'Filesystem' do
 
     context 'with hdfs directory with relative path' do
       let(:path) { 'hdfs:///a/b/../c' }
-      it { is_expected.to eq('hdfs:///a/c') }
+      it { is_expected.to eq('hdfs:///a') }
     end
   end
 
@@ -549,7 +559,7 @@ shared_examples_for 'Filesystem' do
 
       describe '#name' do
         subject { stat.name }
-        it { is_expected.to eq('s3://bucket/dir/file.txt') }
+        it { is_expected.to eq('s3://bucket/dir') }
       end
 
       describe '#mtime' do

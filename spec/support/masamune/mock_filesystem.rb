@@ -32,6 +32,9 @@ class Masamune::MockFilesystem < Delegator
   def touch!(*args)
     opts = args.last.is_a?(Hash) ? args.pop : {}
     args.each do |file|
+      parent_paths(file).each do |parent|
+        @files[parent] = OpenStruct.new(opts.merge(name: parent))
+      end
       @files[file] = OpenStruct.new(opts.merge(name: file))
     end
   end
@@ -44,7 +47,9 @@ class Masamune::MockFilesystem < Delegator
     return Set.new(to_enum(:glob, pattern, options)) unless block_given?
     file_regexp = glob_to_regexp(pattern)
     @files.keys.each do |name|
-      yield name if name =~ file_regexp
+      next if name == dirname(pattern)
+      next unless name =~ file_regexp
+      yield name
     end
   end
 
@@ -59,7 +64,9 @@ class Masamune::MockFilesystem < Delegator
     return Set.new(to_enum(:glob_stat, pattern, options)) unless block_given?
     file_regexp = glob_to_regexp(pattern, recursive: true)
     @files.each do |name, stat|
-      yield stat if name =~ file_regexp
+      next if stat.name == dirname(pattern)
+      next unless stat.name =~ file_regexp
+      yield stat
     end
   end
 

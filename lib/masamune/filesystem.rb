@@ -111,9 +111,9 @@ module Masamune
       parent_paths.each do |part|
         tmp << part
         current_path = prefix + File.join(tmp)
-        break if current_path == path
         result << current_path
       end
+      result.pop
       result
     end
 
@@ -129,7 +129,7 @@ module Masamune
     end
 
     def dirname(path)
-      parent_paths(path).last || path
+      parent_paths(path).last || remote_prefix(path) || local_prefix(path)
     end
 
     def basename(path)
@@ -206,7 +206,6 @@ module Masamune
       raise ArgumentError, 'cannot contain wildcard' if file_or_dir.include?('*')
       result = glob_stat(file_or_dir)
       return unless result.any?
-      return result.first if result.size == 1
       max_time = result.map { |stat| stat.try(:mtime) }.compact.max
       sum_size = result.map { |stat| stat.try(:size) }.compact.reduce(:+)
       OpenStruct.new(name: file_or_dir, mtime: max_time, size: sum_size)
@@ -462,7 +461,12 @@ module Masamune
       dir[%r{\Ahdfs://}]
     end
 
-    def local_prefix(file)
+    def local_prefix(dir)
+      dir[%r{\A/}] ||
+      '.'
+    end
+
+    def local_file_prefix(file)
       return file if remote_prefix(file)
       "file://#{file}"
     end
@@ -529,7 +533,7 @@ module Masamune
       when [:hdfs, :hdfs]
         hadoop_fs('-cp', src, dst)
       when [:hdfs, :local]
-        hadoop_fs('-copyToLocal', src, local_prefix(dst))
+        hadoop_fs('-copyToLocal', src, local_file_prefix(dst))
       when [:hdfs, :s3]
         hadoop_fs('-cp', src, s3n(dst))
       when [:s3, :s3]
@@ -541,7 +545,7 @@ module Masamune
       when [:local, :local]
         FileUtils.cp(src, dst, file_util_args)
       when [:local, :hdfs]
-        hadoop_fs('-copyFromLocal', local_prefix(src), dst)
+        hadoop_fs('-copyFromLocal', local_file_prefix(src), dst)
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: dir))
       end
@@ -553,7 +557,7 @@ module Masamune
         hadoop_fs('-mv', src, dst)
       when [:hdfs, :local]
         # NOTE: moveToLocal: Option '-moveToLocal' is not implemented yet
-        hadoop_fs('-copyToLocal', src, local_prefix(dst))
+        hadoop_fs('-copyToLocal', src, local_file_prefix(dst))
         hadoop_fs('-rm', src)
       when [:hdfs, :s3]
         copy_file_to_file(src, s3n(dst, dir: dir))
@@ -569,7 +573,7 @@ module Masamune
         FileUtils.mv(src, dst, file_util_args)
         FileUtils.chmod(FILE_MODE, dst, file_util_args)
       when [:local, :hdfs]
-        hadoop_fs('-moveFromLocal', local_prefix(src), dst)
+        hadoop_fs('-moveFromLocal', local_file_prefix(src), dst)
       when [:local, :s3]
         s3cmd('put', src, s3b(dst, dir: dir))
         FileUtils.rm(src, file_util_args)
