@@ -92,7 +92,6 @@ module Masamune
     end
 
     class PathCache
-      # TODO use LRU
       def initialize(filesystem)
         @filesystem = filesystem
         @cache = {}
