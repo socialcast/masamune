@@ -99,13 +99,22 @@ describe Masamune::Commands::Hive do
     let(:buffer) { StringIO.new }
     let(:delimiter) { "\t" }
     let(:attrs) { {buffer: buffer, delimiter: delimiter, csv: true} }
-    let(:input_row) { ['A', 'NULL', 'B', 'C', '', 'E'].join(delimiter) }
-    let(:output_row) { ['A', nil, 'B', 'C', nil, 'E'].join(',') }
 
-    before do
-      instance.handle_stdout(input_row, 0)
+    context 'encode NULL' do
+      let(:input_row) { ['A', 'NULL', 'B', 'C', '', 'E'].join(delimiter) }
+      let(:output_row) { ['A', nil, 'B', 'C', nil, 'E'].join(',') }
+
+      before do
+        instance.handle_stdout(input_row, 0)
+      end
+
+      it { expect(buffer.string).to eq(output_row + "\n") }
     end
 
-    it { expect(buffer.string).to eq(output_row + "\n") }
+    context 'non zero exit' do
+      let(:input_row) { 'Query returned non-zero code: 1, cause: Problem compiling' }
+
+      it { expect { instance.handle_stdout(input_row, 0) }.to raise_error(SystemExit, input_row) }
+    end
   end
 end

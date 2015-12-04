@@ -115,10 +115,11 @@ module Masamune::Commands
       filesystem.move_file_to_file(@buffer.path, @output)
     end
 
-    # FIXME use temporary tables with delimiters for CSV output format
     def handle_stdout(line, line_no)
       if line =~ /\A#{PROMPT}/
         logger.debug(line)
+      elsif line =~ /\AQuery returned non-zero code:/
+        raise SystemExit, line
       else
         @block.call(line) if @block
 
