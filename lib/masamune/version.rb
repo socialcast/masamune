@@ -21,5 +21,5 @@
 #  THE SOFTWARE.
 
 module Masamune
-  VERSION = '0.15.3'
+  VERSION = '0.15.4'
 end
