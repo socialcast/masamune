@@ -27,8 +27,9 @@ describe Masamune::CachedFilesystem do
   context 'when path is present, top down traversal' do
     before do
       filesystem.touch!('/a/b/c/1.txt', '/a/b/c/2.txt', '/a/b/c/3.txt')
-      expect(filesystem).to receive(:glob_stat).with('/a/b/*').once.and_call_original
-      expect(filesystem).to receive(:glob_stat).with('/a').never
+      expect(filesystem).to receive(:glob_stat).with('/a/b/c/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/a/b/*').never
+      expect(filesystem).to receive(:glob_stat).with('/a/*').never
       expect(filesystem).to receive(:glob_stat).with('/*').never
     end
 
@@ -39,7 +40,13 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/a/b/c/4.txt')).to eq(false)
       expect(cached_filesystem.exists?('/a/b/c')).to eq(true)
       expect(cached_filesystem.glob('/a/b/c/*').count).to eq(3)
+      expect(cached_filesystem.glob('/a/b/c/*')).to include '/a/b/c/1.txt'
+      expect(cached_filesystem.glob('/a/b/c/*')).to include '/a/b/c/2.txt'
+      expect(cached_filesystem.glob('/a/b/c/*')).to include '/a/b/c/3.txt'
       expect(cached_filesystem.glob('/a/b/c/*.txt').count).to eq(3)
+      expect(cached_filesystem.glob('/a/b/c/*.txt')).to include '/a/b/c/1.txt'
+      expect(cached_filesystem.glob('/a/b/c/*.txt')).to include '/a/b/c/2.txt'
+      expect(cached_filesystem.glob('/a/b/c/*.txt')).to include '/a/b/c/3.txt'
       expect(cached_filesystem.stat('/a/b/c/1.txt')).to_not be_nil
       expect(cached_filesystem.stat('/a/b/c/2.txt')).to_not be_nil
       expect(cached_filesystem.stat('/a/b/c/3.txt')).to_not be_nil
@@ -53,7 +60,8 @@ describe Masamune::CachedFilesystem do
   context 'when path is present, bottom up traversal' do
     before do
       filesystem.touch!('/a/b/c/1.txt', '/a/b/c/2.txt', '/a/b/c/3.txt')
-      expect(filesystem).to receive(:glob_stat).with('/a/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/a/b/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/a/*').never
       expect(filesystem).to receive(:glob_stat).with('/*').never
     end
 
@@ -78,7 +86,8 @@ describe Masamune::CachedFilesystem do
   context 'when path is present, checking for similar non existant paths' do
     before do
       filesystem.touch!('/y=2013/m=1/d=22/00000')
-      expect(filesystem).to receive(:glob_stat).with('/y=2013/m=1/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/y=2013/m=1/d=22/*').once.and_call_original
+      expect(filesystem).to receive(:glob_stat).with('/y=2013/m=1/*').never
       expect(filesystem).to receive(:glob_stat).with('/y=2013/*').never
       expect(filesystem).to receive(:glob_stat).with('/*').never
     end
@@ -88,7 +97,10 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.exists?('/y=2013/m=1/d=22')).to eq(true)
       expect(cached_filesystem.exists?('/y=2013/m=1/d=2')).to eq(false)
       expect(cached_filesystem.glob('/y=2013/m=1/*').count).to eq(2)
+      expect(cached_filesystem.glob('/y=2013/m=1/*')).to include('/y=2013/m=1/d=22')
+      expect(cached_filesystem.glob('/y=2013/m=1/*')).to include('/y=2013/m=1/d=22/00000')
       expect(cached_filesystem.glob('/y=2013/m=1/d=22/*').count).to eq(1)
+      expect(cached_filesystem.glob('/y=2013/m=1/d=22/*')).to include('/y=2013/m=1/d=22/00000')
       expect(cached_filesystem.stat('/y=2013/m=1/d=22/00000')).not_to be_nil
       expect(cached_filesystem.stat('/y=2013/m=1/d=22')).not_to be_nil
       expect(cached_filesystem.stat('/y=2013/m=1')).not_to be_nil
@@ -116,9 +128,15 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.glob('/logs/*').count).to eq(3)
       expect(cached_filesystem.glob('/logs/*.txt').count).to eq(3)
       expect(cached_filesystem.glob('/logs/box1_*.txt').count).to eq(1)
+      expect(cached_filesystem.glob('/logs/box1_*.txt')).to include('/logs/box1_123.txt')
       expect(cached_filesystem.glob('/logs/box2_*.txt').count).to eq(1)
+      expect(cached_filesystem.glob('/logs/box2_*.txt')).to include('/logs/box2_123.txt')
       expect(cached_filesystem.glob('/logs/box3_*.txt').count).to eq(1)
+      expect(cached_filesystem.glob('/logs/box3_*.txt')).to include('/logs/box3_123.txt')
       expect(cached_filesystem.glob('/logs/box*.txt').count).to eq(3)
+      expect(cached_filesystem.glob('/logs/box*.txt')).to include('/logs/box2_123.txt')
+      expect(cached_filesystem.glob('/logs/box*.txt')).to include('/logs/box1_123.txt')
+      expect(cached_filesystem.glob('/logs/box*.txt')).to include('/logs/box3_123.txt')
       expect(cached_filesystem.glob('/logs/box*.csv').count).to eq(0)
       expect(cached_filesystem.glob('/logs/box').count).to eq(0)
       expect(cached_filesystem.glob('/logs/box/*').count).to eq(0)
@@ -168,6 +186,54 @@ describe Masamune::CachedFilesystem do
       expect(cached_filesystem.stat('/a/b/c')).to_not be_nil
       expect(cached_filesystem.stat('/a/b')).to_not be_nil
       expect(cached_filesystem.stat('/a')).to_not be_nil
+    end
+  end
+
+  describe '#glob_stat' do
+    before do
+      filesystem.touch!('/a/b/c/1.txt', '/a/b/c/2.txt', '/a/b/c/3.txt')
+    end
+
+    context 'without options' do
+      before do
+        expect(filesystem).to receive(:glob_stat).with('/a/b/c/*').once.and_call_original
+        expect(filesystem).to receive(:glob_stat).with('/a/b/*').never
+        expect(filesystem).to receive(:glob_stat).with('/a/*').never
+        expect(filesystem).to receive(:glob_stat).with('/*').never
+      end
+      it do
+        expect(cached_filesystem.glob_stat('/a/b/c/1.txt').count).to eq(1)
+      end
+    end
+
+    context 'with max_depth=1' do
+      before do
+        expect(filesystem).to receive(:glob_stat).with('/a/b/c/*').never
+        expect(filesystem).to receive(:glob_stat).with('/a/b/*').once.and_call_original
+        expect(filesystem).to receive(:glob_stat).with('/a/*').never
+        expect(filesystem).to receive(:glob_stat).with('/*').never
+      end
+      it { expect(cached_filesystem.glob_stat('/a/b/c/1.txt', max_depth: 1).count).to eq(1) }
+    end
+
+    context 'with max_depth=2' do
+      before do
+        expect(filesystem).to receive(:glob_stat).with('/a/b/c/*').never
+        expect(filesystem).to receive(:glob_stat).with('/a/b/*').never
+        expect(filesystem).to receive(:glob_stat).with('/a/*').once.and_call_original
+        expect(filesystem).to receive(:glob_stat).with('/*').never
+      end
+      it { expect(cached_filesystem.glob_stat('/a/b/c/1.txt', max_depth: 2).count).to eq(1) }
+    end
+
+    context 'with max_depth=3' do
+      before do
+        expect(filesystem).to receive(:glob_stat).with('/a/b/c/*').never
+        expect(filesystem).to receive(:glob_stat).with('/a/b/*').never
+        expect(filesystem).to receive(:glob_stat).with('/a/*').once.and_call_original
+        expect(filesystem).to receive(:glob_stat).with('/*').never
+      end
+      it { expect(cached_filesystem.glob_stat('/a/b/c/1.txt', max_depth: 3).count).to eq(1) }
     end
   end
 

@@ -22,6 +22,9 @@
 
 module Masamune
   class CachedFilesystem < SimpleDelegator
+    MAX_DEPTH   = 10
+    EMPTY_SET   = Set.new
+
     def initialize(filesystem)
       super filesystem
       @filesystem = filesystem
@@ -52,28 +55,15 @@ module Masamune
       OpenStruct.new(name: file_or_dir, mtime: max_time, size: sum_size)
     end
 
-    # FIXME cache eviction policy can be more precise
-    [:touch!, :mkdir!, :copy_file_to_file, :copy_file_to_dir, :copy_dir, :remove_file, :remove_dir, :move_file_to_file, :move_file_to_dir, :move_dir, :write].each do |method|
-      define_method(method) do |*args|
-        clear!
-        @filesystem.send(method, *args)
-      end
-    end
-
-    private
-
-    MAX_DEPTH   = 10
-    EMPTY_SET   = Set.new
-
     def glob_stat(file_or_glob, options = {}, &block)
       return Set.new(to_enum(:glob_stat, file_or_glob, options)) unless block_given?
       return if file_or_glob.blank?
       return if root_path?(file_or_glob)
       depth = options.fetch(:depth, 0)
-      max_depth = options.fetch(:max_depth, 1)
+      max_depth = options.fetch(:max_depth, 0)
       return if depth > MAX_DEPTH || depth > max_depth
 
-      glob_stat(dirname(file_or_glob), depth: depth + 1, &block)
+      glob_stat(dirname(file_or_glob), depth: depth + 1, max_depth: max_depth, &block)
 
       dirname = dirname(file_or_glob)
       unless @cache.any?(dirname)
@@ -90,6 +80,16 @@ module Masamune
         yield entry
       end if depth == 0
     end
+
+    # FIXME cache eviction policy can be more precise
+    [:touch!, :mkdir!, :copy_file_to_file, :copy_file_to_dir, :copy_dir, :remove_file, :remove_dir, :move_file_to_file, :move_file_to_dir, :move_dir, :write].each do |method|
+      define_method(method) do |*args|
+        clear!
+        @filesystem.send(method, *args)
+      end
+    end
+
+    private
 
     class PathCache
       def initialize(filesystem)

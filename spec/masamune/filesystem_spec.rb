@@ -372,7 +372,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs missing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}")
         expect(filesystem).to receive(:hadoop_fs).with('-test', '-e', 'file://' + new_file, safe: true).at_most(:once).and_return(mock_failure)
       end
@@ -395,7 +395,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs existing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}").
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
         expect(filesystem).to receive(:hadoop_fs).with('-test', '-e', 'file://' + old_file, safe: true).at_most(:once).and_return(mock_success)
@@ -444,7 +444,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs missing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
           and_yield('')
         expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_dir + '/*', safe: true).at_most(:once).
           and_yield('')
@@ -499,7 +499,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs existing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}").
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
         expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_file, safe: true).at_most(:once).
