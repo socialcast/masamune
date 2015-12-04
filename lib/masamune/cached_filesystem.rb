@@ -117,7 +117,7 @@ module Masamune
 
       def any?(path)
         if elem = get(path)
-          elem.any? { |entry| entry.name.include?(path) }
+          elem.any? { |entry| entry.name.start_with?(path) }
         else
           false
         end
