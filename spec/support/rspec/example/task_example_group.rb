@@ -72,6 +72,7 @@ module TaskExampleGroup
   def self.included(base)
     base.before :all do
       ENV['THOR_DEBUG'] = '1'
+      Masamune::Actions::DataFlow.reset_module!
     end
 
     base.let(:thor_class) { described_class }

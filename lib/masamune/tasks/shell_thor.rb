@@ -27,7 +27,7 @@ require 'pry'
 module Masamune::Tasks
   class ShellThor < Thor
     include Masamune::Thor
-    include Masamune::Actions::DateParse
+    include Masamune::Actions::DataFlow
 
     # FIXME need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
@@ -35,6 +35,7 @@ module Masamune::Tasks
     skip_lock!
 
     desc 'shell', 'Launch an interactive shell'
+    skip
     method_option :prompt, :desc => 'Set shell prompt', :default => 'masamune'
     class_option :start, :aliases => '-a', :desc => 'Start time', default: '1 month ago'
     def shell_exec

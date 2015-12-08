@@ -73,6 +73,11 @@ module Masamune::Actions
       engine.execute(current_command_name, options)
     end
 
+    def reset_module!
+      ClassMethods.reset_module!
+    end
+    module_function :reset_module!
+
     private
 
     included do |base|
@@ -94,27 +99,26 @@ module Masamune::Actions
     end
 
     module ClassMethods
-      @@namespaces = []
-      @@commands = []
-      @@sources = []
-      @@targets = []
-
       def skip
+        initialize_module!
         @@namespaces << namespace
         @@sources << {skip: true}
         @@targets << {skip: true}
       end
 
       def source(source_options = {})
+        initialize_module!
         @@namespaces << namespace
         @@sources << source_options
       end
 
       def target(target_options = {})
+        initialize_module!
         @@targets << target_options
       end
 
       def create_command(*a)
+        initialize_module!
         super.tap do
           @@commands += a
         end
@@ -125,6 +129,22 @@ module Masamune::Actions
       end
 
       private
+
+      def reset_module!
+        @@namespaces = []
+        @@targets = []
+        @@sources = []
+        @@commands = []
+        @@engine = nil
+      end
+      module_function :reset_module!
+
+      def initialize_module!
+        @@namespaces ||= []
+        @@targets ||= []
+        @@sources ||= []
+        @@commands ||= []
+      end
 
       # If internal call to Thor::Base.start fails, exit
       def exit_on_failure?

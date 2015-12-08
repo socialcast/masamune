@@ -34,4 +34,8 @@ describe Masamune::Tasks::ShellThor do
       cli_invocation
     end
   end
+
+  context 'includes reference to engine' do
+    it { expect(described_class.engine).to_not be_nil }
+  end
 end
