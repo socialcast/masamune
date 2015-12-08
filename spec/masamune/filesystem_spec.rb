@@ -212,12 +212,17 @@ shared_examples_for 'Filesystem' do
 
     context 'with local blank' do
       let(:path) { '' }
-      it { is_expected.to be_blank }
+      it { is_expected.to eq('.') }
     end
 
     context 'with local path with slash' do
       let(:path) { '/a/b/c' }
       it { is_expected.to eq('/a/b') }
+    end
+
+    context 'with local file without slash' do
+      let(:path) { 'a' }
+      it { is_expected.to eq('.') }
     end
 
     context 'with local path without slash' do
@@ -227,7 +232,12 @@ shared_examples_for 'Filesystem' do
 
     context 'with local relative path' do
       let(:path) { '/a/b/../c' }
-      it { is_expected.to eq('/a/c') }
+      it { is_expected.to eq('/a') }
+    end
+
+    context 'with local another relative path' do
+      let(:path) { '/a/b/.' }
+      it { is_expected.to eq('/a') }
     end
 
     context 'with s3 bucket with blank' do
@@ -237,7 +247,7 @@ shared_examples_for 'Filesystem' do
 
     context 'with s3 bucket with slash' do
       let(:path) { 's3://bucket/' }
-      it { is_expected.to eq('s3://bucket/') }
+      it { is_expected.to eq('s3://bucket') }
     end
 
     context 'with s3 bucket with path' do
@@ -247,7 +257,7 @@ shared_examples_for 'Filesystem' do
 
     context 'with s3 bucket with relative path' do
       let(:path) { 's3://bucket/a/b/../c' }
-      it { is_expected.to eq('s3://bucket/a/c') }
+      it { is_expected.to eq('s3://bucket/a') }
     end
 
     context 'with hdfs directory with path' do
@@ -262,7 +272,7 @@ shared_examples_for 'Filesystem' do
 
     context 'with hdfs directory with relative path' do
       let(:path) { 'hdfs:///a/b/../c' }
-      it { is_expected.to eq('hdfs:///a/c') }
+      it { is_expected.to eq('hdfs:///a') }
     end
   end
 
@@ -362,7 +372,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs missing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}")
         expect(filesystem).to receive(:hadoop_fs).with('-test', '-e', 'file://' + new_file, safe: true).at_most(:once).and_return(mock_failure)
       end
@@ -385,7 +395,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs existing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}").
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
         expect(filesystem).to receive(:hadoop_fs).with('-test', '-e', 'file://' + old_file, safe: true).at_most(:once).and_return(mock_success)
@@ -434,7 +444,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs missing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
           and_yield('')
         expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_dir + '/*', safe: true).at_most(:once).
           and_yield('')
@@ -489,7 +499,7 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs existing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}").
           and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
         expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_file, safe: true).at_most(:once).
@@ -549,7 +559,7 @@ shared_examples_for 'Filesystem' do
 
       describe '#name' do
         subject { stat.name }
-        it { is_expected.to eq('s3://bucket/dir/file.txt') }
+        it { is_expected.to eq('s3://bucket/dir') }
       end
 
       describe '#mtime' do

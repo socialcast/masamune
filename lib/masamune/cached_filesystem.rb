@@ -22,6 +22,9 @@
 
 module Masamune
   class CachedFilesystem < SimpleDelegator
+    MAX_DEPTH   = 10
+    EMPTY_SET   = Set.new
+
     def initialize(filesystem)
       super filesystem
       @filesystem = filesystem
@@ -29,32 +32,53 @@ module Masamune
     end
 
     def clear!
-      @cache = Hash.new { |h,k| h[k] = Set.new }
+      @cache = PathCache.new(@filesystem)
     end
 
     def exists?(file)
-      @cache[file].any? || glob(file).include?(file) || @cache[file].any?
+      glob(file, max_depth: 0).include?(file) || @cache.any?(file)
     end
 
-    def glob(file_or_glob)
-      return Set.new(to_enum(:glob, file_or_glob)) unless block_given?
-      glob_stat(file_or_glob) do |entry|
-        yield entry.name unless entry.name == dirname(file_or_glob)
+    def glob(file_or_glob, options = {})
+      return Set.new(to_enum(:glob, file_or_glob, options)) unless block_given?
+      glob_stat(file_or_glob, options) do |entry|
+        yield entry.name
       end
     end
 
     def stat(file_or_dir)
       raise ArgumentError, 'cannot contain wildcard' if file_or_dir.include?('*')
-      result = Set.new
-      glob_stat(file_or_dir) do |entry|
-        result << entry
-      end
-      result += @cache[file_or_dir]
+      result = glob_stat(file_or_dir, recursive: true)
       return unless result.any?
-      return result.first if result.size == 1
       max_time = result.map { |stat| stat.try(:mtime) }.compact.max
       sum_size = result.map { |stat| stat.try(:size) }.compact.reduce(:+)
       OpenStruct.new(name: file_or_dir, mtime: max_time, size: sum_size)
+    end
+
+    def glob_stat(file_or_glob, options = {}, &block)
+      return Set.new(to_enum(:glob_stat, file_or_glob, options)) unless block_given?
+      return if file_or_glob.blank?
+      return if root_path?(file_or_glob)
+      depth = options.fetch(:depth, 0)
+      max_depth = options.fetch(:max_depth, 0)
+      return if depth > MAX_DEPTH || depth > max_depth
+
+      glob_stat(dirname(file_or_glob), depth: depth + 1, max_depth: max_depth, &block)
+
+      dirname = dirname(file_or_glob)
+      unless @cache.any?(dirname)
+        pattern = root_path?(dirname) ? file_or_glob : File.join(dirname, '*')
+        @filesystem.glob_stat(pattern) do |entry|
+          @cache.put(entry.name, entry)
+        end
+      end
+
+      file_regexp = glob_to_regexp(file_or_glob, options)
+      @cache.get(dirname).each do |entry|
+        next if entry.name == dirname
+        next unless entry.name =~ file_regexp
+        yield entry
+      end if depth == 0
     end
 
     # FIXME cache eviction policy can be more precise
@@ -67,42 +91,59 @@ module Masamune
 
     private
 
-    MAX_DEPTH   = 10
-    CACHE_DEPTH = 1
-    EMPTY_SET   = Set.new
+    class PathCache
+      def initialize(filesystem)
+        @filesystem = filesystem
+        @cache = {}
+      end
 
-    def glob_stat(file_or_glob, options = {}, &block)
-      return if file_or_glob.blank?
-      return if root_path?(file_or_glob)
-      depth = options.fetch(:depth, 0)
-      return if depth > MAX_DEPTH || depth > CACHE_DEPTH
+      def put(path, entry)
+        return unless path
+        return if @filesystem.root_path?(path)
+        put(File.join(@filesystem.dirname(path), '.'), OpenStruct.new(name: @filesystem.dirname(path)))
+        paths = path_split(path)
+        elems = paths.reverse.inject(entry) { |a, n| { n => a } }
+        @cache.deep_merge!(elems)
+      end
 
-      glob_stat(dirname(file_or_glob), depth: depth + 1, &block)
+      def get(path)
+        return unless path
+        paths = path_split(path)
+        elem = paths.inject(@cache) { |level, path| level.is_a?(Hash) ? level.fetch(path, {}) : level }
+        emit(elem)
+      rescue KeyError
+        EMPTY_SET
+      end
 
-      dirname = dirname(file_or_glob)
-      unless @cache.key?(dirname)
-        pattern = root_path?(dirname) ? file_or_glob : File.join(dirname, '*')
-        @filesystem.glob_stat(pattern) do |entry|
-          recursive_paths(dirname, entry.name) do |path|
-            @cache[path] << entry
-          end
+      def any?(path)
+        if elem = get(path)
+          elem.any? { |entry| entry.name.start_with?(path) }
+        else
+          false
         end
       end
-      @cache[dirname] ||= EMPTY_SET
 
-      file_regexp = glob_to_regexp(file_or_glob)
-      @cache[dirname].each do |entry|
-        yield entry if entry.name =~ file_regexp
-      end if depth == 0
-    end
+      private
 
-    def recursive_paths(root, path, options = {}, &block)
-      depth = options.fetch(:depth, 0)
-      return if depth > MAX_DEPTH
-      return if root == path
-      yield path
-      yield dirname(path)
-      recursive_paths(root, dirname(path), depth: depth + 1, &block)
+      def emit(elem)
+        return Set.new(to_enum(:emit, elem)).flatten unless block_given?
+        case elem
+        when Array, Set
+          elem.each do |e|
+            yield emit(e)
+          end
+        when Hash
+          elem.values.each do |e|
+            yield emit(e)
+          end
+        else
+          yield elem
+        end
+      end
+
+      def path_split(path)
+        path.split('/').reject { |x| x.blank? }
+      end
     end
   end
 end

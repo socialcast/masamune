@@ -70,9 +70,8 @@ class Masamune::DataPlan::Elem
     return Set.new(to_enum(__method__)) unless block_given?
     if rule.for_path? && rule.free?
       file_glob = path
-      file_glob += '/' unless path.include?('*') || path.include?('.')
-      file_glob += '*' unless path.include?('*')
-      rule.engine.filesystem.glob(file_glob) do |new_path|
+      file_glob += '/*' unless path.include?('*') || path.include?('.')
+      rule.engine.filesystem.glob(file_glob, max_depth: rule.cache_depth) do |new_path|
         yield rule.bind_input(new_path)
       end
     elsif rule.for_path? && rule.bound?

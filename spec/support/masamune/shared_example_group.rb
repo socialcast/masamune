@@ -118,7 +118,6 @@ module Masamune::SharedExampleGroup
         expect_data = expect_data.split("\n").sort.join("\n")
       end
       yield [actual_data, output_file, expect_data]
-      FileUtils.rm(output_file) if File.exists?(output_file)
     end
   end
 

@@ -250,6 +250,17 @@ class Masamune::DataPlan::Rule
     self.class.new(engine, name, type, options.merge(path: new_pattern))
   end
 
+  def cache_depth
+    case time_step
+    when :hour, :hours
+      2
+    when :day, :days
+      1
+    else
+      0
+    end
+  end
+
   private
 
   def time_step_to_format(step)
