@@ -36,7 +36,7 @@ module Masamune
     end
 
     def exists?(file)
-      glob(file, max_depth: 0).include?(file) || @cache.any?(file)
+      glob(file, max_depth: 0).include?(file)
     end
 
     def glob(file_or_glob, options = {})
