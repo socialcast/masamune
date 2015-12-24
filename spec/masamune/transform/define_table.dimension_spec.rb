@@ -65,6 +65,7 @@ describe Masamune::Transform::DefineTable do
           source_kind STRING,
           source_uuid STRING,
           start_at STRING,
+          start_at_ms INT,
           last_modified_at STRING,
           delta INT
         )
@@ -101,6 +102,7 @@ describe Masamune::Transform::DefineTable do
           source_kind STRING,
           source_uuid STRING,
           start_at STRING,
+          start_at_ms INT,
           last_modified_at STRING,
           delta INT
         )
@@ -130,6 +132,7 @@ describe Masamune::Transform::DefineTable do
           source_kind STRING,
           source_uuid STRING,
           start_at STRING,
+          start_at_ms INT,
           last_modified_at STRING,
           delta INT
         )
@@ -272,6 +275,7 @@ describe Masamune::Transform::DefineTable do
           source_kind VARCHAR NOT NULL,
           source_uuid VARCHAR NOT NULL,
           start_at TIMESTAMP NOT NULL,
+          start_at_ms INTEGER NOT NULL DEFAULT 0,
           last_modified_at TIMESTAMP NOT NULL DEFAULT NOW(),
           delta INTEGER NOT NULL
         );
@@ -292,8 +296,8 @@ describe Masamune::Transform::DefineTable do
         END IF; END $$;
 
         DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_ff54dba_key') THEN
-        ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_ff54dba_key UNIQUE(cluster_type_id, tenant_id, user_id, source_kind, source_uuid, start_at);
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_ledger_53096dc_key') THEN
+        ALTER TABLE user_dimension_ledger ADD CONSTRAINT user_dimension_ledger_53096dc_key UNIQUE(cluster_type_id, tenant_id, user_id, source_kind, source_uuid, start_at, start_at_ms);
         END IF; END $$;
 
         DO $$ BEGIN
