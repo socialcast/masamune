@@ -111,6 +111,7 @@ module Masamune::Schema
         initialize_column! id: 'source_kind', type: :string, index: :natural, unique: :natural
         initialize_column! id: 'source_uuid', type: :string, index: :natural, unique: :natural
         initialize_column! id: 'start_at', type: :timestamp, index: :natural, unique: :natural
+        initialize_column! id: 'start_at_ms', type: :integer, unique: :natural, default: 0
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
         initialize_column! id: 'delta', type: :integer
       when :stage
