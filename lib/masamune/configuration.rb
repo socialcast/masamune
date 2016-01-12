@@ -42,7 +42,7 @@ class Masamune::Configuration
   attr_accessor :backoff
   attr_accessor :params
 
-  COMMANDS = %w(hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd postgres postgres_admin)
+  COMMANDS = %w(aws_emr hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd postgres postgres_admin)
   COMMANDS.each do |command|
     attr_accessor command
     define_method(command) do
