@@ -39,6 +39,7 @@ describe Masamune::Actions::HadoopStreaming do
     before do
       allow(instance).to receive_message_chain(:configuration, :hadoop_streaming).and_return({})
       allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({})
+      allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return({})
       mock_command(/\Ahadoop/, mock_success)
     end
 

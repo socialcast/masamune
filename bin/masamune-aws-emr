@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #  The MIT License (MIT)
 #
 #  Copyright (c) 2014-2015, VMware, Inc. All Rights Reserved.
@@ -20,23 +21,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-module Masamune::Actions
-  module HadoopStreaming
-    def hadoop_streaming(opts = {})
-      opts = opts.to_hash.symbolize_keys
-
-      command = if configuration.elastic_mapreduce[:jobflow]
-        Masamune::Commands::HadoopStreaming.new(environment, opts.merge(quote: true, upload: false))
-      else
-        Masamune::Commands::HadoopStreaming.new(environment, opts)
-      end
-
-      command = Masamune::Commands::ElasticMapReduce.new(command, opts.except(:extra)) if configuration.elastic_mapreduce[:jobflow]
-      command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.aws_emr[:cluster_id]
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.hadoop_streaming.slice(:retries, :backoff).merge(opts))
-      command = Masamune::Commands::Shell.new(command, opts)
-
-      command.execute
-    end
-  end
-end
+$: << File.expand_path('../../lib/', __FILE__)
+require 'masamune/tasks/aws_emr_thor'
+Masamune::Tasks::AwsEmrThor.start(ARGV)

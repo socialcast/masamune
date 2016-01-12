@@ -22,10 +22,10 @@
 
 describe Masamune::Commands::AwsEmr do
   let(:configuration) { {} }
-  let(:args) { {} }
+  let(:attrs) { {} }
 
   let(:delegate) { double }
-  let(:instance) { described_class.new(delegate, args) }
+  let(:instance) { described_class.new(delegate, attrs) }
 
   before do
     allow(delegate).to receive(:logger).and_return(double)
@@ -49,7 +49,7 @@ describe Masamune::Commands::AwsEmr do
 
     context 'with --cluster-id j-XYZ' do
       let(:delegate) { double(command_args: ['hive', '-e', "'show tables;'"]) }
-      let(:args) { { cluster_id: 'j-XYZ' } }
+      let(:attrs) { { cluster_id: 'j-XYZ' } }
 
       before do
         expect(instance).to receive(:execute).with('aws', 'emr', 'ssh', '--cluster-id', 'j-XYZ', '--command', 'exit', {fail_fast: true, safe: true}).
@@ -60,8 +60,8 @@ describe Masamune::Commands::AwsEmr do
       it { is_expected.to eq(['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'ServerAliveInterval=10', '-i', '/etc/ssh/aws.key', 'hadoop@ec2-10.0.0.1.compute-1.amazonaws.com', 'hive' , '-e', "'show tables;'"]) }
     end
 
-    context 'with action create-cluster' do
-      let(:args) { { action: 'create-cluster', options: {'--ami-version' =>  '3.5.0'}, extra: ['--instance-type', 'm1.large'] } }
+    context 'with action' do
+      let(:attrs) { { action: 'create-cluster', options: {'--ami-version' =>  '3.5.0'}, extra: ['--instance-type', 'm1.large'] } }
       it { is_expected.to eq(['aws', 'emr', 'create-cluster', '--ami-version', '3.5.0', '--instance-type', 'm1.large']) }
     end
   end

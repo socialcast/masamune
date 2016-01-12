@@ -35,7 +35,8 @@ module Masamune::Commands
       :extra        => [],
       :config_file  => nil,
       :action       => nil,
-      :cluster_id   => nil
+      :cluster_id   => nil,
+      :interactive  => false
     }
 
     def initialize(delegate, attrs = {})
@@ -47,11 +48,7 @@ module Masamune::Commands
     end
 
     def interactive?
-      if @delegate.respond_to?(:interactive?)
-        @delegate.interactive?
-      elsif @extra.any?
-        true
-      end
+      @interactive
     end
 
     def aws_emr_command

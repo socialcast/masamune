@@ -34,6 +34,7 @@ module Masamune::Actions
 
       command = Masamune::Commands::Hive.new(environment, opts)
       command = Masamune::Commands::ElasticMapReduce.new(command, opts.except(:extra)) if configuration.elastic_mapreduce[:jobflow]
+      command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.aws_emr[:cluster_id]
       command = Masamune::Commands::RetryWithBackoff.new(command, configuration.hive.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
