@@ -51,7 +51,7 @@ FROM (
     END AS duplicate
   FROM
     consolidated
-  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at desc)
+  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at DESC)
 ) tmp
 WHERE
   duplicate = 0

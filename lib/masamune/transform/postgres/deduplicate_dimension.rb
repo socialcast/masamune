@@ -58,9 +58,7 @@ module Masamune::Transform::Postgres
           x = consolidated_columns
           x[:dimension_grain] = OpenStruct.new(name: 'dimension_grain', null: false)
           x.map do |_, column|
-            if column.null
-              result << "((LAG(#{column.name}) OVER #{window} = #{column.name}) OR (LAG(#{column.name}) OVER #{window} IS NULL AND #{column.name} IS NULL))"
-            else
+            unless column.null
               result << "(LAG(#{column.name}) OVER #{window} = #{column.name})"
             end
           end

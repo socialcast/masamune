@@ -71,14 +71,14 @@ describe Masamune::Transform::DeduplicateDimension do
             preferences,
             dimension_grain as start_at,
             CASE
-            WHEN (LAG(user_account_state_type_id) OVER w = user_account_state_type_id) AND (LAG(tenant_id) OVER w = tenant_id) AND (LAG(user_id) OVER w = user_id) AND ((LAG(preferences) OVER w = preferences) OR (LAG(preferences) OVER w IS NULL AND preferences IS NULL)) AND (LAG(dimension_grain) OVER w = dimension_grain)  THEN
+            WHEN (LAG(user_account_state_type_id) OVER w = user_account_state_type_id) AND (LAG(tenant_id) OVER w = tenant_id) AND (LAG(user_id) OVER w = user_id) AND (LAG(dimension_grain) OVER w = dimension_grain)  THEN
               1
             ELSE
               0
             END AS duplicate
           FROM
             consolidated
-          WINDOW w AS (PARTITION BY tenant_id, user_id ORDER BY start_at desc)
+          WINDOW w AS (PARTITION BY tenant_id, user_id ORDER BY start_at DESC)
         ) tmp
         WHERE
           duplicate = 0
