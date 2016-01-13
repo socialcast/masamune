@@ -54,7 +54,10 @@ module Masamune::Transform::Postgres
 
       def duplicate_value_conditions(window)
         [].tap do |result|
-          consolidated_columns.map do |_, column|
+          # FIXME: add dimension_grain to dimension.rb, make grain as an attribute for a dimension
+          x = consolidated_columns
+          x[:dimension_grain] = OpenStruct.new(name: 'dimension_grain', null: false)
+          x.map do |_, column|
             if column.null
               result << "((LAG(#{column.name}) OVER #{window} = #{column.name}) OR (LAG(#{column.name}) OVER #{window} IS NULL AND #{column.name} IS NULL))"
             else
