@@ -25,18 +25,19 @@ module Masamune::Actions
     def hadoop_streaming(opts = {})
       opts = opts.to_hash.symbolize_keys
 
-      command = if configuration.elastic_mapreduce[:jobflow]
-        Masamune::Commands::HadoopStreaming.new(environment, opts.merge(quote: true, upload: false))
-      else
-        Masamune::Commands::HadoopStreaming.new(environment, opts)
-      end
-
-      command = Masamune::Commands::ElasticMapReduce.new(command, opts.except(:extra)) if configuration.elastic_mapreduce[:jobflow]
+      command = Masamune::Commands::HadoopStreaming.new(environment, aws_emr_options(opts))
       command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.aws_emr[:cluster_id]
       command = Masamune::Commands::RetryWithBackoff.new(command, configuration.hadoop_streaming.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.execute
+    end
+
+    private
+
+    def aws_emr_options(opts = {})
+      return opts unless configuration.aws_emr[:cluster_id]
+      opts.merge(quote: true, upload: false)
     end
   end
 end

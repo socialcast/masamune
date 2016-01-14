@@ -37,7 +37,6 @@ describe Masamune::Actions::Hive do
     filesystem.add_path(:tmp_dir, File.join(Dir.tmpdir, SecureRandom.hex))
     allow(instance).to receive(:filesystem) { filesystem }
     allow(instance).to receive_message_chain(:configuration, :hive).and_return(configuration)
-    allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({})
     allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return({})
     allow(instance).to receive_message_chain(:define_schema, :to_file) { 'schema.hql' }
     allow_any_instance_of(Masamune::MockFilesystem).to receive(:copy_file_to_dir)
@@ -51,19 +50,6 @@ describe Masamune::Actions::Hive do
     subject { instance.hive }
 
     it { is_expected.to be_success }
-
-    context 'with jobflow' do
-      before do
-        allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return({jobflow: 'j-XYZ'})
-        mock_command(/\Ahive/, mock_failure)
-        mock_command(/\Aelastic-mapreduce/, mock_success, StringIO.new('ssh fakehost exit'))
-        mock_command(/\Assh fakehost hive/, mock_success)
-      end
-
-      subject { instance.hive }
-
-      it { is_expected.to be_success }
-    end
 
     context 'with cluster_id' do
       before do
