@@ -72,6 +72,31 @@ describe Masamune::Actions::HadoopStreaming do
       it { is_expected.to be_success }
     end
 
+    context 'with cluster_id' do
+      before do
+        allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return(cluster_id: 'j-XYZ')
+        mock_command(/\Ahadoop/, mock_failure)
+        mock_command(/\Aaws emr/, mock_success, StringIO.new('ssh fakehost exit'))
+        mock_command(/\Assh fakehost hadoop/, mock_success)
+      end
+
+      it { is_expected.to be_success }
+    end
+
+    context 'with cluster_id and extra' do
+      let(:extra) { ['-D', 'EXTRA'] }
+
+      before do
+        allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return(cluster_id: 'j-XYZ')
+        mock_command(/\Ahadoop/, mock_failure)
+        mock_command(/\Aaws emr/, mock_success, StringIO.new('ssh fakehost exit'))
+        mock_command(/\Assh fakehost -D EXTRA hadoop/, mock_failure)
+        mock_command(/\Assh fakehost hadoop .*? -D EXTRA/, mock_success)
+      end
+
+      it { is_expected.to be_success }
+    end
+
     context 'with retries and backoff' do
       before do
         allow(instance).to receive_message_chain(:configuration, :hadoop_streaming).and_return(retries: 1, backoff: 10)
