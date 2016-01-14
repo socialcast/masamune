@@ -31,7 +31,6 @@ module Masamune::Commands
     DEFAULT_ATTRIBUTES =
     {
       :path         => ['aws', 'emr'],
-      :options      => [],
       :extra        => [],
       :config_file  => nil,
       :action       => nil,
@@ -54,8 +53,8 @@ module Masamune::Commands
     def aws_emr_command
       args = []
       args << @path
-      args << (@action ? @action : 'ssh')
-      args << @options.map(&:to_a)
+      args << action
+      args << action_options.map(&:to_a)
       args << ['--cluster-id', @cluster_id] if @cluster_id
       args.flatten
     end
@@ -107,6 +106,14 @@ module Masamune::Commands
     end
 
     private
+
+    def action
+      @action || 'ssh'
+    end
+
+    def action_options
+      configuration.aws_emr.fetch(action.underscore.to_sym, {}).fetch(:options, {}).reject { |key, _| @extra.include?(key) }
+    end
 
     def ssh_command?
       @delegate.respond_to?(:command_args)
