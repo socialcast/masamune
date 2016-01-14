@@ -30,7 +30,7 @@ module Masamune::Commands
 
     DEFAULT_ATTRIBUTES =
     {
-      :path         => ['aws', 'emr'],
+      :path         => 'aws',
       :extra        => [],
       :config_file  => nil,
       :action       => nil,
@@ -53,6 +53,7 @@ module Masamune::Commands
     def aws_emr_command
       args = []
       args << @path
+      args << 'emr'
       args << action
       args << action_options.map(&:to_a)
       args << ['--cluster-id', @cluster_id] if @cluster_id

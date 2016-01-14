@@ -43,7 +43,7 @@
     options:
       - --config: <%= ENV['HOME'] %>/.s3cfg
   aws_emr:
-    path: aws emr
+    path: aws
     enabled: <%= ARGV.include?('--cluster-id') %>
     config_file: <%= ENV['HOME'] %>/.aws/config
     ssh:
