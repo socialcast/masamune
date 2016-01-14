@@ -42,7 +42,7 @@ class Masamune::Configuration
   attr_accessor :backoff
   attr_accessor :params
 
-  COMMANDS = %w(aws_emr hive hadoop_streaming hadoop_filesystem elastic_mapreduce s3cmd postgres postgres_admin)
+  COMMANDS = %w(aws_emr hive hadoop_streaming hadoop_filesystem s3cmd postgres postgres_admin)
   COMMANDS.each do |command|
     attr_accessor command
     define_method(command) do
@@ -60,8 +60,6 @@ class Masamune::Configuration
     self.retries  = 3
     self.backoff  = 5
     self.params   = HashWithIndifferentAccess.new
-
-    @templates    = Hash.new { |h,k| h[k] = {} }
 
     COMMANDS.each do |command|
       instance_variable_set("@#{command}", {})
@@ -112,20 +110,6 @@ class Masamune::Configuration
     environment.reload_logger!
   end
 
-  def bind_template(section, template, input_args = {})
-    free_command = load_template(section, template)[:command].split(/\s+/)
-    [].tap do |bind_command|
-      free_command.each do |free_expr|
-        if free_expr =~ /(%.*)/
-          free_param = $1
-          bind_command << free_expr.gsub!(free_param, bind_param(section, template, free_param, input_args))
-        elsif param = free_expr
-          bind_command << param
-        end
-      end
-    end
-  end
-
   def as_options
     opts = []
     opts << '--quiet'   if quiet
@@ -165,26 +149,6 @@ class Masamune::Configuration
   end
 
   private
-
-  def load_template(section, template_name)
-    @templates[section][template_name] ||= begin
-      raise ArgumentError, "no configuration section #{section}" unless COMMANDS.include?(section.to_s)
-      raise ArgumentError, 'no template_name' unless template_name
-      templates = send(section).fetch(:templates, {}).symbolize_keys!
-      template = templates[template_name.to_sym] or raise ArgumentError, "no template for #{template_name}"
-      template.symbolize_keys!
-      template.has_key?(:command) or raise ArgumentError, "no command for template #{template_name}"
-      template[:default] ||= {}
-      template[:default] = Hash[ template[:default].collect { |key,val| [key.to_sym, val.to_s] } ]
-      template
-    end
-  end
-
-  def bind_param(section, template, free_param, input_args = {})
-    default = load_template(section, template).fetch(:default, {})
-    param = free_param[/(?<=%).*/].to_sym
-    default.merge(input_args.symbolize_keys || {})[param] or raise ArgumentError, "no param for #{free_param}"
-  end
 
   def load_paths(paths)
     paths.each do |value|
