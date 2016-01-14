@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.files = Dir['{bin,lib,spec/support/masamune}/**/*'] + ['LICENSE.txt', 'Rakefile', 'README.md']
   s.test_files = Dir['spec/**/*']
   s.require_path = 'lib'
-  s.executables = ['masamune-shell', 'masamune-hive', 'masamune-elastic-mapreduce', 'masamune-psql', 'masamune-dump']
+  s.executables = ['masamune-shell', 'masamune-hive', 'masamune-aws-emr', 'masamune-psql', 'masamune-dump']
 
   s.add_dependency('thor')
   s.add_dependency('activesupport')
