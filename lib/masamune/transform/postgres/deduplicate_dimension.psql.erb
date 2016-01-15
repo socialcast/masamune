@@ -26,7 +26,7 @@ WITH consolidated AS (
     <%= value %><%= ',' %>
     <%- end -%>
     start_at,
-    date_trunc('hour',start_at) as dimension_grain
+    date_trunc('hour',start_at) AS dimension_grain
   FROM
     <%= source.name %>
 )
@@ -42,9 +42,9 @@ FROM (
     <%- target.insert_view_values.each do |value| -%>
     <%= value %><%= ',' %>
     <%- end -%>
-    dimension_grain as start_at,
+    dimension_grain AS start_at,
     CASE
-    WHEN <%= target.duplicate_value_conditions('w',).join(' AND ') %>  THEN
+    WHEN <%= target.duplicate_value_conditions('w',).join(' AND ') %> THEN
       1
     ELSE
       0

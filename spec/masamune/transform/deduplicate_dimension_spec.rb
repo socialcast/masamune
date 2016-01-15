@@ -51,7 +51,7 @@ describe Masamune::Transform::DeduplicateDimension do
             user_id,
             preferences,
             start_at,
-            date_trunc('hour',start_at) as dimension_grain
+            date_trunc('hour',start_at) AS dimension_grain
           FROM
             user_consolidated_dimension_stage
         )
@@ -69,9 +69,9 @@ describe Masamune::Transform::DeduplicateDimension do
             tenant_id,
             user_id,
             preferences,
-            dimension_grain as start_at,
+            dimension_grain AS start_at,
             CASE
-            WHEN (LAG(user_account_state_type_id) OVER w = user_account_state_type_id) AND (LAG(tenant_id) OVER w = tenant_id) AND (LAG(user_id) OVER w = user_id) AND (LAG(dimension_grain) OVER w = dimension_grain)  THEN
+            WHEN (LAG(user_account_state_type_id) OVER w = user_account_state_type_id) AND (LAG(tenant_id) OVER w = tenant_id) AND (LAG(user_id) OVER w = user_id) AND (LAG(dimension_grain) OVER w = dimension_grain) THEN
               1
             ELSE
               0
