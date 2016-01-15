@@ -67,7 +67,7 @@ describe Masamune::Commands::AwsEmr do
     end
 
     context 'with action and option override (symbolized)' do
-      let(:configuration) { { create_cluster: { options: {'--ami-version': '3.5.0'} } } }
+      let(:configuration) { { create_cluster: { options: {:'--ami-version' => '3.5.0'} } } }
       let(:attrs) { { action: 'create-cluster', extra: ['--ami-version', '4.0.0', '--instance-type', 'm1.large'] } }
       it { is_expected.to eq(['aws', 'emr', 'create-cluster', '--ami-version', '4.0.0', '--instance-type', 'm1.large']) }
     end
