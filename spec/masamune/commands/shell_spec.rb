@@ -23,10 +23,12 @@
 describe Masamune::Commands::Shell do
   let(:input) { nil }
   let(:options) { {fail_fast: false} }
-  let(:delegate) { Masamune::MockDelegate.new(command, input) }
+  let(:delegate) { double }
   let(:instance) { described_class.new(delegate, options) }
 
   describe '#execute' do
+    let(:delegate) { Masamune::MockDelegate.new(command, input) }
+
     subject do
       instance.execute
     end
@@ -118,6 +120,57 @@ describe Masamune::Commands::Shell do
       end
 
       it { expect { subject }.to raise_error RuntimeError, /IO stdin not ready/ }
+    end
+  end
+
+  context '#command_args' do
+    subject do
+      instance.command_args
+    end
+
+    context 'when delegate does not implement command_args' do
+      it { expect { subject }.to raise_error RuntimeError, /no command_args/ }
+    end
+
+    context 'when delegate implements command_args' do
+      before do
+        allow(delegate).to receive(:command_args).and_return(command_args) 
+      end
+
+      context 'with nil command_args' do
+        let(:command_args) { nil }
+        it { expect { subject }.to raise_error RuntimeError, /no command_args/ }
+      end
+
+      context 'with empty command_args' do
+        let(:command_args) { [] }
+        it { is_expected.to be_empty }
+      end
+
+      context 'with expected command_args (array)' do
+        let(:command_args) { ['cat'] }
+        it { is_expected.to eq(['cat']) }
+      end
+
+      context 'with expected command_args (string)' do
+        let(:command_args) { 'cat' }
+        it { is_expected.to eq(['cat']) }
+      end
+
+      context 'with command_args containing nil' do
+        let(:command_args) { ['echo', nil, 'foo'] }
+        it { is_expected.to eq(['echo', 'foo']) }
+      end
+
+      context 'with command_args containing an integer' do
+        let(:command_args) { ['echo', nil, 5] }
+        it { is_expected.to eq(['echo', '5']) }
+      end
+
+      context 'with nested command_args' do
+        let(:command_args) { [['echo'], ['foo']] }
+        it { is_expected.to eq(['echo', 'foo']) }
+      end
     end
   end
 end

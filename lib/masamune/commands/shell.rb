@@ -89,8 +89,8 @@ module Masamune::Commands
     end
 
     def command_args
-      if @delegate.respond_to?(:command_args)
-        @delegate.command_args
+      if @delegate.respond_to?(:command_args) && @delegate.command_args
+        Array.wrap(@delegate.command_args).flatten.compact.map(&:to_s)
       else
         raise 'no command_args'
       end

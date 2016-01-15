@@ -62,7 +62,7 @@ module Masamune::Commands
       args << 'cluster-running' if @action == 'wait'
       args << action_options.map(&:to_a)
       args << ['--cluster-id', @cluster_id] if @cluster_id
-      args.flatten
+      args
     end
 
     def ssh_args
