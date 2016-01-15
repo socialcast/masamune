@@ -71,6 +71,11 @@ describe Masamune::Commands::AwsEmr do
       let(:attrs) { { action: 'create-cluster', extra: ['--ami-version', '4.0.0', '--instance-type', 'm1.large'] } }
       it { is_expected.to eq(['aws', 'emr', 'create-cluster', '--ami-version', '4.0.0', '--instance-type', 'm1.large']) }
     end
+
+    context 'with action: wait' do
+      let(:attrs) { { action: 'wait', cluster_id: 'j-XYZ' } }
+      it { is_expected.to eq(['aws', 'emr', 'wait', 'cluster-running', '--cluster-id', 'j-XYZ']) }
+    end
   end
 
   context '#interactive?' do

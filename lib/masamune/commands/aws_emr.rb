@@ -59,6 +59,7 @@ module Masamune::Commands
       args << @path
       args << 'emr'
       args << action
+      args << 'cluster-running' if @action == 'wait'
       args << action_options.map(&:to_a)
       args << ['--cluster-id', @cluster_id] if @cluster_id
       args.flatten
