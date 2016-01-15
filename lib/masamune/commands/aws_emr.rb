@@ -118,7 +118,7 @@ module Masamune::Commands
     end
 
     def action_options
-      configuration.aws_emr.fetch(action.underscore.to_sym, {}).fetch(:options, {}).reject { |key, _| @extra.include?(key) }
+      configuration.aws_emr.fetch(action.underscore.to_sym, {}).with_indifferent_access.fetch(:options, {}).reject { |key, _| @extra.include?(key.to_s) }
     end
 
     def ssh_command?
