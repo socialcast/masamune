@@ -25,7 +25,8 @@ WITH consolidated AS (
     <%- target.insert_view_values(coalesce: true).each do |value| -%>
     <%= value %><%= ',' %>
     <%- end -%>
-    start_at
+    start_at,
+    date_trunc('hour',start_at) AS dimension_grain
   FROM
     <%= source.name %>
 )
@@ -41,16 +42,16 @@ FROM (
     <%- target.insert_view_values.each do |value| -%>
     <%= value %><%= ',' %>
     <%- end -%>
-    start_at,
+    dimension_grain AS start_at,
     CASE
-    WHEN <%= target.duplicate_value_conditions('w').join(' AND ') %> THEN
+    WHEN <%= target.duplicate_value_conditions('w',).join(' AND ') %> THEN
       1
     ELSE
       0
     END AS duplicate
   FROM
     consolidated
-  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at)
+  WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at DESC)
 ) tmp
 WHERE
   duplicate = 0
