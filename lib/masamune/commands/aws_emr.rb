@@ -47,7 +47,11 @@ module Masamune::Commands
     end
 
     def interactive?
-      @interactive
+      if @delegate.respond_to?(:interactive?)
+        @delegate.interactive?
+      else
+        @interactive
+      end
     end
 
     def aws_emr_command

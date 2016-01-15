@@ -72,4 +72,33 @@ describe Masamune::Commands::AwsEmr do
       it { is_expected.to eq(['aws', 'emr', 'create-cluster', '--ami-version', '4.0.0', '--instance-type', 'm1.large']) }
     end
   end
+
+  context '#interactive?' do
+    subject { instance.interactive? }
+    it { is_expected.to eq(false) }
+
+    context 'with interactive: true' do
+      let(:attrs) { { interactive: true } }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'with interactive: false' do
+      let(:attrs) { { interactive: false } }
+      it { is_expected.to eq(false) }
+    end
+
+    context 'when delegate.interactive? is true' do
+      before do
+        allow(delegate).to receive(:interactive?).and_return(true)
+      end
+      it { is_expected.to eq(true) }
+    end
+
+    context 'when delegate.interactive? is false' do
+      before do
+        allow(delegate).to receive(:interactive?).and_return(false)
+      end
+      it { is_expected.to eq(false) }
+    end
+  end
 end
