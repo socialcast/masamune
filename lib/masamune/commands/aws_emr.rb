@@ -73,9 +73,9 @@ module Masamune::Commands
       @ssh_command ||= begin
         result = nil
         execute(*ssh_args, fail_fast: true, safe: true) do |line|
+          next if result
           if line =~ /exit\Z/
             result = line.sub(/ exit\Z/, '').split(' ')
-            break
           else
             logger.debug(line)
           end
