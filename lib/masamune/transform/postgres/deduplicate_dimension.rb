@@ -74,6 +74,17 @@ module Masamune::Transform::Postgres
         (columns.values.select { |column| extra.delete(column.name) || column.natural_key || column.auto_reference }.map(&:name) + extra).uniq
       end
 
+      def start_at_with_grain
+        case grain
+        when :hourly
+          "date_trunc('hour', start_at)"
+        when :daily
+          "date_trunc('day', start_at)"
+        when :monthly
+          "date_trunc('month', start_at)"
+        end
+      end
+
       private
 
       def consolidated_columns

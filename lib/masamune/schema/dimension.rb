@@ -22,9 +22,29 @@
 
 module Masamune::Schema
   class Dimension < Table
+    SUPPORTED_GRAINS = [:hourly, :daily, :monthly]
+
     def initialize(opts = {})
-      super
+      opts.symbolize_keys!
+      self.grain = opts.delete(:grain)
+      super opts
       initialize_dimension_columns!
+    end
+
+    def grain
+      return @grain if @grain
+      case type
+      when :date
+        :daily
+      else
+        :hourly
+      end
+    end
+
+    def grain=(grain = nil)
+      return unless grain
+      raise ArgumentError, "unknown grain '#{grain}'" unless SUPPORTED_GRAINS.include?(grain.to_sym)
+      @grain = grain.to_sym
     end
 
     def suffix

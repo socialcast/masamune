@@ -25,10 +25,10 @@ WITH consolidated AS (
     <%- target.insert_view_last_values('w').each do |value| -%>
     <%= value %><%= ',' %>
     <%- end -%>
-    date_trunc('hour', start_at) AS start_at
+    <%= target.start_at_with_grain %> AS start_at
   FROM
     <%= source.name %>
-  WINDOW w AS (PARTITION BY <%= target.window("date_trunc('hour', start_at)").join(', ') %> ORDER BY start_at ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+  WINDOW w AS (PARTITION BY <%= target.window(target.start_at_with_grain).join(', ') %> ORDER BY start_at ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 )
 INSERT INTO
   <%= target.name %> (<%= target.insert_columns.join(', ') %>, start_at)
