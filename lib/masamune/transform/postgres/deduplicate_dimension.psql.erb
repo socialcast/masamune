@@ -28,6 +28,16 @@ WITH consolidated AS (
     start_at
   FROM
     <%= source.name %>
+),
+consolidated_at_grain AS (
+  SELECT
+    <%- target.insert_view_values.each do |value| -%>
+    LAST_VALUE(<%= value %>) OVER w AS <%= value %><%= ',' %>
+    <%- end -%>
+    date_trunc('hour', start_at) AS start_at
+  FROM
+    consolidated
+  WINDOW w AS (PARTITION BY <%= target.window("date_trunc('hour', start_at)").join(', ') %> ORDER BY start_at ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 )
 INSERT INTO
   <%= target.name %> (<%= target.insert_columns.join(', ') %>, start_at)
@@ -49,7 +59,7 @@ FROM (
       0
     END AS duplicate
   FROM
-    consolidated
+    consolidated_at_grain
   WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at)
 ) tmp
 WHERE
