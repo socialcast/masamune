@@ -22,21 +22,12 @@
 
 WITH consolidated AS (
   SELECT
-    <%- target.insert_view_values(coalesce: true).each do |value| -%>
+    <%- target.insert_view_last_values('w').each do |value| -%>
     <%= value %><%= ',' %>
-    <%- end -%>
-    start_at
-  FROM
-    <%= source.name %>
-),
-consolidated_at_grain AS (
-  SELECT
-    <%- target.insert_view_values.each do |value| -%>
-    LAST_VALUE(<%= value %>) OVER w AS <%= value %><%= ',' %>
     <%- end -%>
     date_trunc('hour', start_at) AS start_at
   FROM
-    consolidated
+    <%= source.name %>
   WINDOW w AS (PARTITION BY <%= target.window("date_trunc('hour', start_at)").join(', ') %> ORDER BY start_at ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 )
 INSERT INTO
@@ -59,7 +50,7 @@ FROM (
       0
     END AS duplicate
   FROM
-    consolidated_at_grain
+    consolidated
   WINDOW w AS (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at)
 ) tmp
 WHERE
