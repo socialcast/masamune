@@ -20,36 +20,34 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-describe Masamune::Actions::ElasticMapreduce do
+describe Masamune::Actions::AwsEmr do
   let(:klass) do
     Class.new do
       include Masamune::HasEnvironment
       include Masamune::AfterInitializeCallbacks
-      include Masamune::Actions::ElasticMapreduce
+      include Masamune::Actions::AwsEmr
     end
   end
 
   let(:instance) { klass.new }
   let(:configuration) { {} }
-  let(:extra) { [] }
 
   before do
-    allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return(configuration)
-    allow(instance).to receive(:extra).and_return(extra)
+    allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return(configuration)
   end
 
-  describe '.elastic_mapreduce' do
+  describe '.aws_emr' do
     before do
-      mock_command(/\Aelastic-mapreduce/, mock_success)
+      mock_command(/\Aaws emr/, mock_success)
     end
 
-    subject { instance.elastic_mapreduce }
+    subject { instance.aws_emr }
 
     it { is_expected.to be_success }
 
     context 'with retries and backoff' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :elastic_mapreduce).and_return(retries: 1, backoff: 10)
+        allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return(retries: 1, backoff: 10)
         expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
       end
 
@@ -68,59 +66,41 @@ describe Masamune::Actions::ElasticMapreduce do
       it { expect { subject }.to_not raise_error }
     end
 
-    context 'when jobflow not required due to extra options' do
+    context 'when cluster_id is missing' do
       let(:configuration) { {enabled: true} }
-      let(:extra) { ['--create', '--name', 'zombo_cluster'] }
-      it { expect { subject }.to_not raise_error }
+      it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--cluster-id'/ }
     end
 
-    context 'when jobflow is missing' do
+    context 'when cluster_id is present without initialize' do
       let(:configuration) { {enabled: true} }
-      it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--jobflow'/ }
-    end
-
-    context 'when jobflow is present without initialize' do
-      let(:configuration) { {enabled: true} }
-      let(:options) { {jobflow: 'j-XYZ'} }
+      let(:options) { {cluster_id: 'j-XYZ'} }
       before do
-        expect(instance).to_not receive(:elastic_mapreduce)
+        expect(instance).to_not receive(:aws_emr)
       end
       it do
         expect { subject }.to_not raise_error
-        expect(instance.configuration.elastic_mapreduce[:jobflow]).to eq('j-XYZ')
+        expect(instance.configuration.aws_emr[:cluster_id]).to eq('j-XYZ')
       end
     end
 
-    context 'when jobflow does not exist' do
+    context 'when cluster_id does not exist' do
       let(:configuration) { {enabled: true} }
-      let(:options) { {initialize: true, jobflow: 'j-XYZ'} }
+      let(:options) { {initialize: true, cluster_id: 'j-XYZ'} }
       before do
-        mock_command(/\Aelastic-mapreduce/, mock_failure)
+        mock_command(/\Aaws emr/, mock_failure)
       end
-      it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /Value 'j-XYZ' for '--jobflow' doesn't exist/ }
+      it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /AWS EMR cluster 'j-XYZ' does not exist/ }
     end
 
-    context 'when jobflow exists' do
+    context 'when cluster_id exists' do
       let(:configuration) { {enabled: true} }
-      let(:options) { {initialize: true, jobflow: 'j-XYZ'} }
+      let(:options) { {initialize: true, cluster_id: 'j-XYZ'} }
       before do
-        mock_command(/\Aelastic-mapreduce/, mock_success)
+        mock_command(/\Aaws emr/, mock_success)
       end
       it do
         expect { subject }.to_not raise_error
-        expect(instance.configuration.elastic_mapreduce[:jobflow]).to eq('j-XYZ')
-      end
-    end
-
-    context 'when jobflow is symbolic' do
-      let(:configuration) { {enabled: true, jobflows: {'build' => 'j-XYZ'}} }
-      let(:options) { {initialize: true, jobflow: 'build', } }
-      before do
-        mock_command(/\Aelastic-mapreduce/, mock_success)
-      end
-      it do
-        expect { subject }.to_not raise_error
-        expect(instance.configuration.elastic_mapreduce[:jobflow]).to eq('j-XYZ')
+        expect(instance.configuration.aws_emr[:cluster_id]).to eq('j-XYZ')
       end
     end
   end

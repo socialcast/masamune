@@ -42,7 +42,7 @@ module Masamune::Commands
     end
 
     def replace(opts = {})
-      logger.debug('replace: ' + command_args.join(' '))
+      logger.debug("replace: #{command_info}")
       before_execute
       around_execute do
         pid = Process.fork
@@ -57,8 +57,6 @@ module Masamune::Commands
     end
 
     def before_execute
-      logger.debug(command_args)
-
       if configuration.verbose
         trace(command_args)
       end
@@ -91,8 +89,8 @@ module Masamune::Commands
     end
 
     def command_args
-      if @delegate.respond_to?(:command_args)
-        @delegate.command_args
+      if @delegate.respond_to?(:command_args) && @delegate.command_args
+        Array.wrap(@delegate.command_args).flatten.compact.map(&:to_s)
       else
         raise 'no command_args'
       end
@@ -122,6 +120,8 @@ module Masamune::Commands
     end
 
     def execute_block
+      logger.debug("execute: #{command_info}")
+
       Open3.popen3(command_env, *command_args) do |p_stdin, p_stdout, p_stderr, t_stdin|
         p_stdin.wait_writable(PIPE_TIMEOUT) or raise "IO stdin not ready for write in #{PIPE_TIMEOUT}"
 
@@ -158,7 +158,7 @@ module Masamune::Commands
         }
 
         [t_stderr, t_stdout, t_stdin].compact.each { |t| t.join }
-        logger.debug(t_stdin.value)
+        logger.debug("status: #{t_stdin.value.to_s}")
         t_stdin.value
       end
     end
@@ -201,6 +201,10 @@ module Masamune::Commands
 
     def detach
       STDIN.close; STDOUT.close; STDERR.close
+    end
+
+    def command_info
+      (command_env.map { |key, val| "#{key}=#{val}" } + command_args).join(' ')
     end
   end
 end

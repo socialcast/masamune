@@ -21,23 +21,34 @@
 #  THE SOFTWARE.
 
 module Masamune::Actions
-  module HadoopStreaming
-    def hadoop_streaming(opts = {})
+  module AwsEmr
+    extend ActiveSupport::Concern
+
+    def aws_emr(opts = {})
       opts = opts.to_hash.symbolize_keys
 
-      command = Masamune::Commands::HadoopStreaming.new(environment, aws_emr_options(opts))
-      command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.aws_emr[:cluster_id]
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.hadoop_streaming.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::AwsEmr.new(environment, opts)
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.aws_emr.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
-      command.execute
+      command.interactive? ? command.replace : command.execute
     end
 
-    private
+    def validate_cluster_id!
+      cluster_id = configuration.aws_emr[:cluster_id]
+      raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--cluster-id'" unless cluster_id
+      raise ::Thor::RequiredArgumentMissingError, %Q(AWS EMR cluster '#{cluster_id}' does not exist) unless aws_emr(action: 'describe-cluster', cluster_id: cluster_id, fail_fast: false).success?
+    end
 
-    def aws_emr_options(opts = {})
-      return opts unless configuration.aws_emr[:cluster_id]
-      opts.merge(quote: true, upload: false)
+    included do |base|
+      base.class_option :cluster_id, :desc => "AWS EMR cluster_id ID (Hint: `masamune-emr-aws list-clusters`)" if defined?(base.class_option)
+      base.after_initialize(:early) do |thor, options|
+        next unless thor.configuration.aws_emr.any?
+        next unless thor.configuration.aws_emr.fetch(:enabled, true)
+        thor.configuration.aws_emr[:cluster_id] = options[:cluster_id] if options[:cluster_id]
+        next unless options[:initialize]
+        thor.validate_cluster_id!
+      end if defined?(base.after_initialize)
     end
   end
 end

@@ -22,5 +22,5 @@
 #  THE SOFTWARE.
 
 $: << File.expand_path('../../lib/', __FILE__)
-require 'masamune/tasks/elastic_mapreduce_thor'
-Masamune::Tasks::ElasticMapreduceThor.start(ARGV)
+require 'masamune/tasks/aws_emr_thor'
+Masamune::Tasks::AwsEmrThor.start(ARGV)

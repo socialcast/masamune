@@ -25,22 +25,23 @@ require 'delegate'
 require 'masamune/actions/execute'
 
 module Masamune::Commands
-  class ElasticMapReduce < SimpleDelegator
+  class AwsEmr < SimpleDelegator
     include Masamune::Actions::Execute
 
     DEFAULT_ATTRIBUTES =
     {
-      :path       => 'elastic-mapreduce',
-      :options    => [],
-      :extra      => [],
-      :jobflow    => nil,
-      :input      => nil,
+      :path         => 'aws',
+      :extra        => [],
+      :config_file  => nil,
+      :action       => nil,
+      :cluster_id   => nil,
+      :interactive  => false
     }
 
     def initialize(delegate, attrs = {})
       super delegate
       @delegate = delegate
-      DEFAULT_ATTRIBUTES.merge(configuration.elastic_mapreduce).merge(attrs).each do |name, value|
+      DEFAULT_ATTRIBUTES.merge(configuration.aws_emr).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
     end
@@ -48,55 +49,55 @@ module Masamune::Commands
     def interactive?
       if @delegate.respond_to?(:interactive?)
         @delegate.interactive?
-      elsif @extra.any?
-        true
       else
-        @input == nil
+        @interactive
       end
     end
 
-    def stdin
-      if @delegate.respond_to?(:stdin)
-        @delegate.stdin
-      elsif @input
-        @stdin ||= StringIO.new(@input)
-      end
-    end
-
-    def elastic_mapreduce_command
+    def aws_emr_command
       args = []
       args << @path
-      args << @options.map(&:to_a)
-      args << ['--jobflow', @jobflow] if @jobflow
-      args.flatten
+      args << 'emr'
+      args << action
+      args << 'cluster-running' if @action == 'wait'
+      args << action_options.map(&:to_a)
+      args << ['--cluster-id', @cluster_id] if @cluster_id
+      args
     end
 
     def ssh_args
       args = []
-      args << elastic_mapreduce_command
-      args << '--ssh'
+      args << aws_emr_command
+      args << '--command'
       args << 'exit'
       args.flatten
     end
 
-    # Use elastic-mapreduce to translate jobflow into raw ssh command
+    # Use `aws emr` to translate cluster_id into raw ssh command
     def ssh_command
       @ssh_command ||= begin
         result = nil
         execute(*ssh_args, fail_fast: true, safe: true) do |line|
+          next if result
           if line =~ /exit\Z/
             result = line.sub(/ exit\Z/, '').split(' ')
           else
-            logger.error(line)
+            logger.debug(line)
           end
         end
         result
       end
     end
 
+    def command_env
+      {}.tap do |env|
+        env['AWS_CONFIG_FILE'] = @config_file if @config_file
+      end
+    end
+
     def command_args
       args = []
-      args << (ssh_command? ? ssh_command : elastic_mapreduce_command)
+      args << (ssh_command? ? ssh_command : aws_emr_command)
       args << @extra
       args << @delegate.command_args if @delegate.respond_to?(:command_args)
       args.flatten
@@ -112,8 +113,16 @@ module Masamune::Commands
 
     private
 
+    def action
+      @action || 'ssh'
+    end
+
+    def action_options
+      configuration.aws_emr.fetch(action.underscore.to_sym, {}).with_indifferent_access.fetch(:options, {}).reject { |key, _| @extra.include?(key.to_s) }
+    end
+
     def ssh_command?
-      @delegate.respond_to?(:command_args) || @input.present?
+      @delegate.respond_to?(:command_args)
     end
   end
 end

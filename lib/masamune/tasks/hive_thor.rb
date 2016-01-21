@@ -26,7 +26,7 @@ require 'thor'
 module Masamune::Tasks
   class HiveThor < Thor
     include Masamune::Thor
-    include Masamune::Actions::ElasticMapreduce
+    include Masamune::Actions::AwsEmr
     include Masamune::Actions::Hive
 
     # FIXME need to add an unnecessary namespace until this issue is fixed:
