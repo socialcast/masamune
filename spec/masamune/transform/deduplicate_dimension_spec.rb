@@ -46,13 +46,14 @@ describe Masamune::Transform::DeduplicateDimension do
       is_expected.to eq <<-EOS.strip_heredoc
         WITH consolidated AS (
           SELECT
-            user_account_state_type_id,
-            tenant_id,
-            user_id,
-            preferences,
-            start_at
+            LAST_VALUE(user_account_state_type_id) OVER w AS user_account_state_type_id,
+            LAST_VALUE(tenant_id) OVER w AS tenant_id,
+            LAST_VALUE(user_id) OVER w AS user_id,
+            LAST_VALUE(preferences) OVER w AS preferences,
+            date_trunc('hour', start_at) AS start_at
           FROM
             user_consolidated_dimension_stage
+          WINDOW w AS (PARTITION BY tenant_id, user_id, date_trunc('hour', start_at) ORDER BY start_at ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
         )
         INSERT INTO
           user_deduplicated_dimension_stage (user_account_state_type_id, tenant_id, user_id, preferences, start_at)

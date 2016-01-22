@@ -33,6 +33,7 @@ describe Masamune::Schema::Dimension do
 
     it { expect(dimension.name).to eq('date_dimension') }
     it { expect(dimension.type).to eq(:date) }
+    it { expect(dimension.grain).to eq(:daily) }
   end
 
   context 'for type :one' do
@@ -46,6 +47,7 @@ describe Masamune::Schema::Dimension do
 
     it { expect(dimension.name).to eq('user_dimension') }
     it { expect(dimension.type).to eq(:one) }
+    it { expect(dimension.grain).to eq(:hourly) }
   end
 
   context 'for type :two' do
@@ -59,6 +61,7 @@ describe Masamune::Schema::Dimension do
 
     it { expect(dimension.name).to eq('user_dimension') }
     it { expect(dimension.type).to eq(:two) }
+    it { expect(dimension.grain).to eq(:hourly) }
   end
 
   context 'with invalid values' do
@@ -106,6 +109,7 @@ describe Masamune::Schema::Dimension do
 
     it { expect(dimension.name).to eq('user_dimension') }
     it { expect(dimension.type).to eq(:four) }
+    it { expect(dimension.grain).to eq(:hourly) }
 
     describe '#stage_table' do
       let!(:stage_table) { dimension.stage_table }
@@ -131,5 +135,21 @@ describe Masamune::Schema::Dimension do
         expect(stage_table.reserved_columns.keys).to eq(dimension.reserved_columns.keys)
       end
     end
+  end
+
+  context 'dimension with daily grain' do
+    let(:dimension) { described_class.new id: 'users', type: :one, grain: :daily }
+
+    it { expect(dimension.name).to eq('users_dimension') }
+    it { expect(dimension.type).to eq(:one) }
+    it { expect(dimension.grain).to eq(:daily) }
+  end
+
+  context 'dimension with unknown grain' do
+    subject(:dimension) do
+      described_class.new id: 'users', grain: :quarterly
+    end
+
+    it { expect { dimension }.to raise_error ArgumentError, "unknown grain 'quarterly'" }
   end
 end

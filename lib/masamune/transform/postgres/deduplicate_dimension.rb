@@ -42,12 +42,18 @@ module Masamune::Transform::Postgres
         consolidated_columns.map { |_, column| column.name }
       end
 
-      def insert_view_values(coalesce: false)
+      def insert_view_values
         consolidated_columns.map do |_, column|
-          if !column.default.nil? && coalesce
-            "COALESCE(#{column.name}, #{column.sql_value(column.default)}) AS #{column.name}"
+          column.name
+        end
+      end
+
+      def insert_view_last_values(window)
+        consolidated_columns.map do |_, column|
+          if column.default.nil?
+            "LAST_VALUE(#{column.name}) OVER #{window} AS #{column.name}"
           else
-            column.name
+            "COALESCE(LAST_VALUE(#{column.name}) OVER #{window}, #{column.sql_value(column.default)}) AS #{column.name}"
           end
         end
       end
@@ -66,6 +72,17 @@ module Masamune::Transform::Postgres
 
       def window(*extra)
         (columns.values.select { |column| extra.delete(column.name) || column.natural_key || column.auto_reference }.map(&:name) + extra).uniq
+      end
+
+      def start_at_with_grain
+        case grain
+        when :hourly
+          "date_trunc('hour', start_at)"
+        when :daily
+          "date_trunc('day', start_at)"
+        when :monthly
+          "date_trunc('month', start_at)"
+        end
       end
 
       private

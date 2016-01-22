@@ -22,12 +22,13 @@
 
 WITH consolidated AS (
   SELECT
-    <%- target.insert_view_values(coalesce: true).each do |value| -%>
+    <%- target.insert_view_last_values('w').each do |value| -%>
     <%= value %><%= ',' %>
     <%- end -%>
-    start_at
+    <%= target.start_at_with_grain %> AS start_at
   FROM
     <%= source.name %>
+  WINDOW w AS (PARTITION BY <%= target.window(target.start_at_with_grain).join(', ') %> ORDER BY start_at ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 )
 INSERT INTO
   <%= target.name %> (<%= target.insert_columns.join(', ') %>, start_at)
