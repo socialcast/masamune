@@ -31,10 +31,6 @@ describe Masamune::Actions::HadoopStreaming do
   let(:extra) { [] }
   let(:instance) { klass.new }
 
-  before do
-    instance.environment = Masamune::ExampleGroup
-  end
-
   describe '.hadoop_streaming' do
     before do
       allow(instance).to receive_message_chain(:configuration, :hadoop_streaming).and_return({})
