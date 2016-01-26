@@ -24,6 +24,7 @@ module ActionExampleGroup
   def self.included(base)
     base.let(:run_dir) { Dir.mktmpdir('masamune') }
     base.before do
+      instance.environment = Masamune::ExampleGroup
       Masamune::ExampleGroup.filesystem.add_path(:run_dir, run_dir)
     end
   end

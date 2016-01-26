@@ -26,7 +26,14 @@ module Masamune::Actions
       opts = args.last.is_a?(Hash) ? args.pop : {}
       opts = opts.to_hash.symbolize_keys
 
-      klass = Class.new(SimpleDelegator)
+      klass = Class.new do
+        include Masamune::HasEnvironment
+
+        def initialize(delegate)
+          self.environment = delegate
+        end
+      end
+
       klass.class_eval do
         define_method(:command_args) do
           args

@@ -25,6 +25,14 @@ describe Masamune::Actions::Execute do
     Class.new do
       include Masamune::HasEnvironment
       include Masamune::Actions::Execute
+
+      def before_execute
+        fail
+      end
+
+      def after_execute
+        fail
+      end
     end
   end
 

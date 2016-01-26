@@ -72,10 +72,6 @@ describe Masamune::Actions::Transform do
   let(:instance) { klass.new }
   let(:postgres) { catalog.postgres }
 
-  before do
-    instance.environment = Masamune::ExampleGroup
-  end
-
   describe '.load_dimension' do
     subject { instance.load_dimension(source_file, postgres.user_file, postgres.user_dimension) }
 
