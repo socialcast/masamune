@@ -49,10 +49,10 @@ describe Masamune::Commands::AwsEmr do
 
     context 'with --cluster-id j-XYZ' do
       let(:delegate) { double(command_args: ['hive', '-e', "'show tables;'"]) }
-      let(:attrs) { { cluster_id: 'j-XYZ' } }
+      let(:attrs) { { config_file: '/etc/aws_config', cluster_id: 'j-XYZ' } }
 
       before do
-        expect(instance).to receive(:execute).with('aws', 'emr', 'ssh', '--cluster-id', 'j-XYZ', '--command', 'exit', {fail_fast: true, safe: true}).
+        expect(instance).to receive(:execute).with('aws', 'emr', 'ssh', '--cluster-id', 'j-XYZ', '--command', 'exit', {env: {"AWS_CONFIG_FILE"=>"/etc/aws_config"}, fail_fast: true, safe: true}).
           and_yield('ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=10 -i /etc/ssh/aws.key hadoop@ec2-10.0.0.1.compute-1.amazonaws.com exit').
           and_yield("Warning: Permanently added 'ec2-10.0.0.1.compute-1.amazonaws.com,10.0.0.1' (ECDSA) to the list of known hosts.")
       end

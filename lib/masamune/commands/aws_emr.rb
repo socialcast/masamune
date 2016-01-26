@@ -77,7 +77,7 @@ module Masamune::Commands
     def ssh_command
       @ssh_command ||= begin
         result = nil
-        execute(*ssh_args, fail_fast: true, safe: true) do |line|
+        execute(*ssh_args, env: command_env, fail_fast: true, safe: true) do |line|
           next if result
           if line =~ /exit\Z/
             result = line.sub(/ exit\Z/, '').split(' ')
