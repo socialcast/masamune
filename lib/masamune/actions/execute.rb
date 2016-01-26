@@ -38,6 +38,10 @@ module Masamune::Actions
         define_method(:command_args) do
           args
         end
+
+        define_method(:command_env) do
+          opts[:env] || {}
+        end
       end
 
       klass.class_eval do

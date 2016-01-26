@@ -52,5 +52,12 @@ describe Masamune::Actions::Execute do
 
       it { expect { |b| instance.execute(*command, options, &b) }.to yield_with_args('pong', 0) }
     end
+
+    context 'with a simple command with env' do
+      let(:command) { %Q(bash -c "echo $MESSAGE") }
+      let(:options) { {env: { 'MESSAGE' => 'pong' }, fail_fast: true} }
+
+      it { expect { |b| instance.execute(*command, options, &b) }.to yield_with_args('pong', 0) }
+    end
   end
 end
