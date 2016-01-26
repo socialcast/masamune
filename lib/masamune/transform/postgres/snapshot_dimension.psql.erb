@@ -41,15 +41,15 @@ WITH ranges AS (
     <%- end -%>
     consolidated.start_at
   FROM (
-    SELECT DISTINCT ON (<%= target.window('start_at', 'id').join(', ') %>)
+    SELECT DISTINCT ON (<%= target.window('start_at', 'start_at_ms', 'id').join(', ') %>)
       <%- target.insert_values(window: 'w').each do |value, last| -%>
       <%= value %><%= ',' %>
       <%- end -%>
       start_at AS start_at
     FROM
       windows
-    WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at <%= order %>)
-    ORDER BY <%= target.window("start_at #{order}", "id DESC", 'window_id').join(', ') %>
+    WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at <%= order %>, start_at_ms <%= order%>)
+    ORDER BY <%= target.window("start_at #{order}, start_at_ms #{order}", "id DESC", 'window_id').join(', ') %>
   ) consolidated
   WHERE
     <%- target.insert_view_constraints.each do |constraint, last| -%>

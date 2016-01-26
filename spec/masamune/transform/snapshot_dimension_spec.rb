@@ -61,7 +61,7 @@ describe Masamune::Transform::SnapshotDimension do
             consolidated.preferences,
             consolidated.start_at
           FROM (
-            SELECT DISTINCT ON (tenant_id, user_id, start_at, id)
+            SELECT DISTINCT ON (tenant_id, user_id, start_at, start_at_ms, id)
               coalesce_merge(user_account_state_type_id) OVER w AS user_account_state_type_id,
               tenant_id AS tenant_id,
               user_id AS user_id,
@@ -69,8 +69,8 @@ describe Masamune::Transform::SnapshotDimension do
               start_at AS start_at
             FROM
               windows
-            WINDOW w AS (PARTITION BY tenant_id, user_id, window_id ORDER BY start_at DESC)
-            ORDER BY tenant_id, user_id, start_at DESC, id DESC, window_id
+            WINDOW w AS (PARTITION BY tenant_id, user_id, window_id ORDER BY start_at DESC, start_at_ms DESC)
+            ORDER BY tenant_id, user_id, start_at DESC, start_at_ms DESC, id DESC, window_id
           ) consolidated
           WHERE
             consolidated.user_account_state_type_id IS NOT NULL AND

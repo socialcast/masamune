@@ -159,11 +159,12 @@ describe Masamune::Transform::BulkUpsert do
           user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
           user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
           user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
-          user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
+          user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at AND
+          user_dimension_ledger.start_at_ms = user_dimension_ledger_stage.start_at_ms
         ;
 
         INSERT INTO
-          user_dimension_ledger (department_type_id, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, name, preferences, source_kind, source_uuid, start_at, last_modified_at, delta)
+          user_dimension_ledger (department_type_id, user_account_state_type_id, hr_user_account_state_type_id, tenant_id, user_id, name, preferences, source_kind, source_uuid, start_at, start_at_ms, last_modified_at, delta)
         SELECT
           user_dimension_ledger_stage.department_type_id,
           user_dimension_ledger_stage.user_account_state_type_id,
@@ -175,6 +176,7 @@ describe Masamune::Transform::BulkUpsert do
           user_dimension_ledger_stage.source_kind,
           user_dimension_ledger_stage.source_uuid,
           user_dimension_ledger_stage.start_at,
+          user_dimension_ledger_stage.start_at_ms,
           user_dimension_ledger_stage.last_modified_at,
           user_dimension_ledger_stage.delta
         FROM
@@ -186,13 +188,15 @@ describe Masamune::Transform::BulkUpsert do
           user_dimension_ledger.user_id = user_dimension_ledger_stage.user_id AND
           user_dimension_ledger.source_kind = user_dimension_ledger_stage.source_kind AND
           user_dimension_ledger.source_uuid = user_dimension_ledger_stage.source_uuid AND
-          user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at
+          user_dimension_ledger.start_at = user_dimension_ledger_stage.start_at AND
+          user_dimension_ledger.start_at_ms = user_dimension_ledger_stage.start_at_ms
         WHERE
           user_dimension_ledger.tenant_id IS NULL AND
           user_dimension_ledger.user_id IS NULL AND
           user_dimension_ledger.source_kind IS NULL AND
           user_dimension_ledger.source_uuid IS NULL AND
-          user_dimension_ledger.start_at IS NULL
+          user_dimension_ledger.start_at IS NULL AND
+          user_dimension_ledger.start_at_ms IS NULL
         ;
 
         COMMIT;
