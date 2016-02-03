@@ -39,6 +39,7 @@ describe Masamune::Commands::Hive do
     allow(filesystem).to receive(:mktempdir!) { filesystem.path(:tmp_dir, mock_tmpdir) }
 
     allow(delegate).to receive(:filesystem) { filesystem }
+    allow(delegate).to receive(:logger).and_return(double)
     allow(delegate).to receive(:console).and_return(double)
     allow(delegate).to receive_message_chain(:configuration, :hive).and_return(configuration)
   end
@@ -71,6 +72,11 @@ describe Masamune::Commands::Hive do
       it { is_expected.to eq([*default_command, '-f', remote_file]) }
     end
 
+    context 'with file and exec' do
+      let(:attrs) { {file: local_file, exec: 'SELECT * FROM table;'} }
+      it { expect { instance }.to raise_error ArgumentError, 'Cannot specify both file and exec' }
+    end
+
     context 'with variables' do
       let(:attrs) { {file: local_file, variables: {R: 'R2DO', C: 'C3PO'}} }
       it { is_expected.to eq([*default_command, '-f', remote_file, '-d', 'R=R2DO', '-d', 'C=C3PO']) }
@@ -88,7 +94,18 @@ describe Masamune::Commands::Hive do
     context 'with template file' do
       let(:attrs) { {file: 'zomg.hql.erb'} }
       before do
-        expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('XXX')
+        expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
+        expect_any_instance_of(Masamune::MockFilesystem).to receive(:copy_file_to_file)
+      end
+      it { is_expected.to eq([*default_command, '-f', filesystem.get_path(:tmp_dir, mock_tmpdir, 'zomg.hql')]) }
+    end
+
+    context 'with template file and debug' do
+      let(:attrs) { {file: 'zomg.hql.erb', debug: true} }
+      before do
+        expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
+        expect(File).to receive(:read).with('zomg.hql').and_return('SHOW TABLES;')
+        expect(instance.logger).to receive(:debug).with("zomg.hql:\nSHOW TABLES;")
         expect_any_instance_of(Masamune::MockFilesystem).to receive(:copy_file_to_file)
       end
       it { is_expected.to eq([*default_command, '-f', filesystem.get_path(:tmp_dir, mock_tmpdir, 'zomg.hql')]) }

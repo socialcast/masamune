@@ -55,6 +55,7 @@ module Masamune::Commands
       DEFAULT_ATTRIBUTES.merge(configuration.postgres).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
+      raise ArgumentError, 'Cannot specify both file and exec' if @file && @exec
     end
 
     def stdin
@@ -89,7 +90,7 @@ module Masamune::Commands
 
     def before_execute
       console("psql with file #{@file}") if @file
-      if @debug and output = @rendered_file || @file
+      if @debug and output = rendered_template || @file
         logger.debug("#{output}:\n" + File.read(output))
       end
 
@@ -127,8 +128,7 @@ module Masamune::Commands
     end
 
     def command_args_for_template
-      @rendered_file = Masamune::Template.render_to_file(@file, @variables)
-      ['--file=%s' % @rendered_file]
+      ['--file=%s' % rendered_template]
     end
 
     def exec_file
@@ -136,6 +136,10 @@ module Masamune::Commands
         tmp.write(@exec)
         tmp.flush
       end.path
+    end
+
+    def rendered_template
+      @rendered_template ||= Masamune::Template.render_to_file(@file, @variables)
     end
   end
 end

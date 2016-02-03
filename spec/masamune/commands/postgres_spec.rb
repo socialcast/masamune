@@ -29,6 +29,7 @@ describe Masamune::Commands::Postgres do
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
+    allow(delegate).to receive(:logger).and_return(double)
     allow(delegate).to receive(:console).and_return(double)
     allow(delegate).to receive_message_chain(:configuration, :postgres).and_return(configuration)
   end
@@ -75,10 +76,25 @@ describe Masamune::Commands::Postgres do
       it { is_expected.to eq([*default_command, '--file=zomg.psql']) }
     end
 
+    context 'with file and exec' do
+      let(:attrs) { {file: 'zomg.psql', exec: 'SELECT * FROM table;'} }
+      it { expect { subject }.to raise_error(/Cannot specify both file and exec/) }
+    end
+
     context 'with template file' do
       let(:attrs) { {file: 'zomg.psql.erb'} }
       before do
         expect(Masamune::Template).to receive(:render_to_file).with('zomg.psql.erb', {}).and_return('zomg.psql')
+      end
+      it { is_expected.to eq([*default_command, '--file=zomg.psql']) }
+    end
+
+    context 'with template file and debug' do
+      let(:attrs) { {file: 'zomg.psql.erb', debug: true} }
+      before do
+        expect(Masamune::Template).to receive(:render_to_file).with('zomg.psql.erb', {}).and_return('zomg.psql')
+        expect(File).to receive(:read).with('zomg.psql').and_return('SHOW TABLES;')
+        expect(instance.logger).to receive(:debug).with("zomg.psql:\nSHOW TABLES;")
       end
       it { is_expected.to eq([*default_command, '--file=zomg.psql']) }
     end
