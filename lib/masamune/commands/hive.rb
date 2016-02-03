@@ -57,6 +57,7 @@ module Masamune::Commands
       DEFAULT_ATTRIBUTES.merge(configuration.hive).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
+      raise ArgumentError, 'Cannot specify both file and exec' if @file && @exec
     end
 
     def interactive?
@@ -86,7 +87,7 @@ module Masamune::Commands
         console("hive with file #{@file}")
       end
 
-      if @debug and output = @rendered_file || @file
+      if @debug and output = rendered_template || @file
         logger.debug("#{output}:\n" + File.read(output))
       end
 
@@ -156,8 +157,7 @@ module Masamune::Commands
     end
 
     def command_args_for_template
-      @rendered_file = Masamune::Template.render_to_file(@file, @variables)
-      filesystem.copy_file_to_file(@rendered_file, remote_file)
+      filesystem.copy_file_to_file(rendered_template, remote_file)
       ['-f', remote_file]
     end
 
@@ -172,6 +172,10 @@ module Masamune::Commands
         tmp.write(@exec)
         tmp.flush
       end.path
+    end
+
+    def rendered_template
+      @rendered_template ||= Masamune::Template.render_to_file(@file, @variables)
     end
   end
 end
