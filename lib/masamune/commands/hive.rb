@@ -144,7 +144,7 @@ module Masamune::Commands
     end
 
     def command_args_for_file
-      @file =~ /\.erb\Z/ ? command_args_for_template : command_args_for_simple_file
+      @command_args_for_file ||= (@file =~ /\.erb\Z/ ? command_args_for_template : command_args_for_simple_file)
     end
 
     def command_args_for_simple_file
