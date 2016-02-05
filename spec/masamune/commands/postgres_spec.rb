@@ -76,6 +76,15 @@ describe Masamune::Commands::Postgres do
       it { is_expected.to eq([*default_command, '--file=zomg.psql']) }
     end
 
+    context 'with file and debug' do
+      let(:attrs) { {file: 'zomg.psql', debug: true} }
+      before do
+        expect(File).to receive(:read).with('zomg.psql').and_return('SHOW TABLES;')
+        expect(instance.logger).to receive(:debug).with("zomg.psql:\nSHOW TABLES;")
+      end
+      it { is_expected.to eq([*default_command, '--file=zomg.psql']) }
+    end
+
     context 'with file and exec' do
       let(:attrs) { {file: 'zomg.psql', exec: 'SELECT * FROM table;'} }
       it { expect { subject }.to raise_error(/Cannot specify both file and exec/) }

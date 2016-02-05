@@ -64,6 +64,15 @@ describe Masamune::Commands::Hive do
       it { is_expected.to eq([*default_command, '-f', remote_file]) }
     end
 
+    context 'with file and debug' do
+      let(:attrs) { {file: local_file, debug: true} }
+      before do
+        expect(File).to receive(:read).with(local_file).and_return('SHOW TABLES;')
+        expect(instance.logger).to receive(:debug).with("#{local_file}:\nSHOW TABLES;")
+      end
+      it { is_expected.to eq([*default_command, '-f', remote_file]) }
+    end
+
     context 'with exec' do
       let(:attrs) { {exec: 'SELECT * FROM table;'} }
       before do
