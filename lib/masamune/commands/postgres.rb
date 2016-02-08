@@ -115,8 +115,12 @@ module Masamune::Commands
 
     private
 
+    def template_file?
+      @file =~ /\.erb\Z/
+    end
+
     def command_args_for_file
-      @file =~ /\.erb\Z/ ? command_args_for_template : command_args_for_simple_file
+      template_file? ? command_args_for_template : command_args_for_simple_file
     end
 
     def command_args_for_simple_file
@@ -139,6 +143,7 @@ module Masamune::Commands
     end
 
     def rendered_template
+      return unless template_file?
       @rendered_template ||= Masamune::Template.render_to_file(@file, @variables)
     end
   end

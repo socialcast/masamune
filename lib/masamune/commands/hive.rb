@@ -144,7 +144,7 @@ module Masamune::Commands
     end
 
     def command_args_for_file
-      @command_args_for_file ||= (@file =~ /\.erb\Z/ ? command_args_for_template : command_args_for_simple_file)
+      @command_args_for_file ||= (template_file? ? command_args_for_template : command_args_for_simple_file)
     end
 
     def command_args_for_simple_file
@@ -163,6 +163,10 @@ module Masamune::Commands
 
     private
 
+    def template_file?
+      @file =~ /\.erb\Z/
+    end
+
     def remote_file
       @remote_file ||= File.join(filesystem.mktempdir!(:tmp_dir), filesystem.basename(@file)).gsub(/.erb\z/,'')
     end
@@ -175,6 +179,7 @@ module Masamune::Commands
     end
 
     def rendered_template
+      return unless template_file?
       @rendered_template ||= Masamune::Template.render_to_file(@file, @variables)
     end
   end
