@@ -90,7 +90,7 @@ module Masamune::Transform::Postgres
     end
 
     def insert_rows?
-      !post_section?
+      !pre_section? && !post_section?
     end
 
     def load_files?
