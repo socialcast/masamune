@@ -21,7 +21,8 @@
 #  THE SOFTWARE.
 
 describe Masamune::Transform::DefineTable do
-  subject { transform.define_table(table).to_s }
+  let(:options) { {} }
+  subject { transform.define_table(table, options).to_s }
 
   context 'for hive implicit dimension' do
     before do
@@ -412,6 +413,72 @@ describe Masamune::Transform::DefineTable do
         CREATE INDEX user_consolidated_forward_dimension_stage_3854361_index ON user_consolidated_forward_dimension_stage (tenant_id);
         CREATE INDEX user_consolidated_forward_dimension_stage_e8701ad_index ON user_consolidated_forward_dimension_stage (user_id);
         CREATE INDEX user_consolidated_forward_dimension_stage_e6c3d91_index ON user_consolidated_forward_dimension_stage (tenant_id, user_id, start_at);
+      EOS
+    end
+  end
+
+  context 'for postgres dimension type: four with exclude /.*ledger/' do
+    before do
+      catalog.schema :postgres do
+        dimension 'user', type: :four do
+          column 'tenant_id', natural_key: true
+          column 'user_id', natural_key: true
+          column 'preferences', type: :key_value, null: true
+        end
+      end
+    end
+
+    let(:options) { { exclude: /.*ledger\z/ } }
+    let(:table) { catalog.postgres.user_dimension }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_dimension
+        (
+          id SERIAL,
+          tenant_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          preferences HSTORE,
+          start_at TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+          end_at TIMESTAMP,
+          version INTEGER DEFAULT 1,
+          last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_pkey') THEN
+        ALTER TABLE user_dimension ADD PRIMARY KEY (id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_e6c3d91_key') THEN
+        ALTER TABLE user_dimension ADD CONSTRAINT user_dimension_e6c3d91_key UNIQUE(tenant_id, user_id, start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_2c8e908_index') THEN
+        CREATE INDEX user_dimension_2c8e908_index ON user_dimension (end_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_23563d3_index') THEN
+        CREATE INDEX user_dimension_23563d3_index ON user_dimension (start_at);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_3854361_index') THEN
+        CREATE INDEX user_dimension_3854361_index ON user_dimension (tenant_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_e8701ad_index') THEN
+        CREATE INDEX user_dimension_e8701ad_index ON user_dimension (user_id);
+        END IF; END $$;
+
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_dimension_e6c3d91_index') THEN
+        CREATE UNIQUE INDEX user_dimension_e6c3d91_index ON user_dimension (tenant_id, user_id, start_at);
+        END IF; END $$;
       EOS
     end
   end

@@ -118,10 +118,6 @@ module Masamune::Transform::Postgres
     end
 
     class TargetPresenter < SimpleDelegator
-      def children
-        super.map { |child| self.class.new(child) }
-      end
-
       def inherited?
         type == :fact && inheritance_constraints
       end
