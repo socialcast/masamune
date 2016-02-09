@@ -23,8 +23,9 @@
 describe Masamune::Transform::DefineTable do
   let(:files) { [] }
   let(:section) { :all }
+  let(:options) { { section: section } }
 
-  subject { transform.define_table(target, files, section).to_s }
+  subject { transform.define_table(target, files, options).to_s }
 
   context 'for postgres table with columns' do
     before do

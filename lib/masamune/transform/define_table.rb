@@ -24,9 +24,9 @@ module Masamune::Transform
   module DefineTable
     extend ActiveSupport::Concern
 
-    def define_table(target, files = [], section = nil)
+    def define_table(target, files = [], options = {})
       return if target.implicit
-      Operator.new(__method__, target: target, files: files, section: section).tap do |operator|
+      Operator.new(__method__, target: target, files: files, section: options[:section]).tap do |operator|
         logger.debug("#{target.id}\n" + operator.to_s) if target.debug
       end
     end

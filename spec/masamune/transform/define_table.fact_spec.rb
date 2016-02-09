@@ -149,7 +149,7 @@ describe Masamune::Transform::DefineTable do
   context 'for postgres fact partition with :post' do
     let(:target) { catalog.postgres.visits_fact.partition_table(Date.civil(2015, 01, 01)) }
 
-    subject(:result) { transform.define_table(target, [], :post).to_s }
+    subject(:result) { transform.define_table(target, [], section: :post).to_s }
 
     it 'should eq render table template' do
       is_expected.to match /ALTER TABLE visits_fact_y2015m01 INHERIT visits_fact;/
