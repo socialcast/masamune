@@ -79,7 +79,7 @@ describe Masamune::Transform::LoadFact do
 
     it 'should render combined template' do
       is_expected.to eq Masamune::Template.combine \
-        transform.define_table(source_table, files),
+        transform.define_table(source_table, files: files),
         transform.insert_reference_values(source_table, target),
         transform.stage_fact(source_table, target, date)
     end

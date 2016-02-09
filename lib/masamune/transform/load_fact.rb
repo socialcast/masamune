@@ -37,7 +37,7 @@ module Masamune::Transform
     def load_fact(files, source, target, date)
       source = source.stage_table(suffix: 'file', table: target, inherit: false)
       Operator.new \
-        define_table(source, files),
+        define_table(source, files: files),
         insert_reference_values(source, target),
         stage_fact(source, target, date)
     end

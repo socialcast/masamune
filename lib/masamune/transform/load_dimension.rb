@@ -38,7 +38,7 @@ module Masamune::Transform
       target = target.type == :four ? target.ledger_table : target
       source = source.stage_table(suffix: 'file', table: target, inherit: false)
       Operator.new \
-        define_table(source, files),
+        define_table(source, files: files),
         insert_reference_values(source, target),
         stage_dimension(source, target),
         bulk_upsert(target.stage_table, target)

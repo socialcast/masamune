@@ -149,7 +149,7 @@ describe Masamune::Transform::DefineTable do
   context 'for postgres fact partition with :post' do
     let(:target) { catalog.postgres.visits_fact.partition_table(Date.civil(2015, 01, 01)) }
 
-    subject(:result) { transform.define_table(target, [], section: :post).to_s }
+    subject(:result) { transform.define_table(target, section: :post).to_s }
 
     it 'should eq render table template' do
       is_expected.to match /ALTER TABLE visits_fact_y2015m01 INHERIT visits_fact;/
@@ -162,7 +162,7 @@ describe Masamune::Transform::DefineTable do
     let(:target) { catalog.postgres.visits_fact }
     let(:source) { catalog.postgres.visits_file }
 
-    subject(:result) { transform.define_table(source.stage_table(suffix: 'file', table: target, inherit: false), files).to_s }
+    subject(:result) { transform.define_table(source.stage_table(suffix: 'file', table: target, inherit: false), files: files).to_s }
 
     it 'should eq render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -201,14 +201,14 @@ describe Masamune::Transform::DefineTable do
     end
 
     context 'with file' do
-      subject(:result) { transform.define_table(source.stage_table(table: target), files.first).to_s }
+      subject(:result) { transform.define_table(source.stage_table(table: target), files: files.first).to_s }
       it 'should eq render table template' do
         is_expected.to_not be_nil
       end
     end
 
     context 'with Set' do
-      subject(:result) { transform.define_table(source.stage_table(table: target), Set.new(files)).to_s }
+      subject(:result) { transform.define_table(source.stage_table(table: target), files: Set.new(files)).to_s }
       it 'should eq render table template' do
         is_expected.to_not be_nil
       end
