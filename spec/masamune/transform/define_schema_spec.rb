@@ -81,8 +81,19 @@ describe Masamune::Transform::DefineSchema do
       end
     end
 
-    context 'with exclude' do
+    context 'with exclude Regexp' do
       subject(:result) { transform.define_schema(catalog, :postgres, exclude: /.*dimension/).to_s }
+
+      it 'should render combined template' do
+        is_expected.to eq Masamune::Template.combine \
+          Masamune::Transform::Operator.new('define_schema', source: catalog.postgres),
+          transform.define_table(catalog.postgres.dimensions['user_account_state']),
+          transform.define_table(catalog.postgres.facts['visits'])
+      end
+    end
+
+    context 'with exclude glob' do
+      subject(:result) { transform.define_schema(catalog, :postgres, exclude: '*dimension').to_s }
 
       it 'should render combined template' do
         is_expected.to eq Masamune::Template.combine \

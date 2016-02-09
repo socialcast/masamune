@@ -37,7 +37,7 @@ module Masamune::Tasks
     desc 'dump', 'Dump schema'
     method_option :type, :enum => ['psql', 'hql'], :desc => 'Schema type', :default => 'psql'
     method_option :section, :enum => ['pre', 'post', 'all'], :desc => 'Schema section', :default => 'all'
-    method_option :exclude, :type => :array, :desc => 'Exclude tables matching Regex', :default => []
+    method_option :exclude, :type => :array, :desc => 'Exclude tables matching globs', :default => []
     def dump_exec
       print_catalog
       exit
@@ -57,7 +57,7 @@ module Masamune::Tasks
 
     def define_schema_options
       {
-        exclude: options[:exclude].map { |x| Regexp.new(x) },
+        exclude: options[:exclude],
         section: options[:section].to_sym,
         start_date: start_date,
         stop_date: stop_date

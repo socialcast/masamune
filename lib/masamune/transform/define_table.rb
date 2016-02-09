@@ -26,10 +26,35 @@ module Masamune::Transform
 
     def define_table(target, options = {})
       return if target.implicit
-      return if Array.wrap(options[:exclude]).any? { |exclude| exclude =~ target.name }
+      return if exclude_table?(target, options)
       child_tables = target.children.map { |child| define_table(child, options.except(:files)) }
       Operator.new(*child_tables, __method__, target: target, files: options[:files], section: options[:section]).tap do |operator|
         logger.debug("#{target.id}\n" + operator.to_s) if target.debug
+      end
+    end
+
+    private
+
+    def exclude_table?(table, options = {})
+      exclude_matchers(options[:exclude]).any? { |matcher| matcher =~ table.name }
+    end
+
+    def exclude_matchers(exclude)
+      Array.wrap(exclude).map do |input|
+        case input
+        when String
+          glob_to_regexp(input)
+        when Regexp
+          input
+        end
+      end
+    end
+
+    def glob_to_regexp(input)
+      if input.include?('*')
+        %r|\A#{Regexp.escape(input).gsub('\\*', '.*?')}|
+      else
+        /\A#{Regexp.escape(input)}\z/
       end
     end
   end
