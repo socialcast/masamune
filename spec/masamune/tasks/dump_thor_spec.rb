@@ -67,6 +67,16 @@ describe Masamune::Tasks::DumpThor do
     it_behaves_like 'raises Thor::MalformattedArgumentError', %q{Expected '--section' to be one of pre, post, all; got unknown}
   end
 
+  context %q{with --exclude='.*dimension'} do
+    let(:options) { [%q{--exclude='.*dimension'}] }
+    it_behaves_like 'executes with success'
+  end
+
+  context %q{with --exclude='.*dimension' '.*fact'} do
+    let(:options) { [%q{--exclude='.*dimension' '.*fact'}] }
+    it_behaves_like 'executes with success'
+  end
+
   context 'with --start=yesterday' do
     let(:options) { ['--start=yesterday'] }
     it_behaves_like 'executes with success'

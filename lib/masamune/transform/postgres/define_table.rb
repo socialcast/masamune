@@ -90,7 +90,7 @@ module Masamune::Transform::Postgres
     end
 
     def insert_rows?
-      !post_section?
+      !pre_section? && !post_section?
     end
 
     def load_files?
@@ -118,10 +118,6 @@ module Masamune::Transform::Postgres
     end
 
     class TargetPresenter < SimpleDelegator
-      def children
-        super.map { |child| self.class.new(child) }
-      end
-
       def inherited?
         type == :fact && inheritance_constraints
       end

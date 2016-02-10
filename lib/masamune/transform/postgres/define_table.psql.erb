@@ -24,10 +24,6 @@
   files ||= []
 %>
 
-<%- target.children.each do |child| -%>
-<%= render 'define_table.psql.erb', target: child, **locals.except(:target, :files)  %>
-<%- end -%>
-
 <%- if helper.define_types? %>
 <%- target.enum_columns.each do |_, column| -%>
 DO $$ BEGIN

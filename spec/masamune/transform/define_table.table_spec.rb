@@ -23,8 +23,9 @@
 describe Masamune::Transform::DefineTable do
   let(:files) { [] }
   let(:section) { :all }
+  let(:options) { { files: files, section: section } }
 
-  subject { transform.define_table(target, files, section).to_s }
+  subject { transform.define_table(target, options).to_s }
 
   context 'for postgres table with columns' do
     before do
@@ -871,6 +872,39 @@ describe Masamune::Transform::DefineTable do
           tenant_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL
         );
+      EOS
+    end
+  end
+
+  context 'for postgres table with row data and section :pre' do
+    before do
+      catalog.schema :postgres do
+        table 'user_account_state' do
+          column 'name', type: :string, unique: true
+          column 'description', type: :string
+          row name: 'registered', description: 'Registered'
+          row name: 'active', description: 'Active', attributes: {default: true}
+          row name: 'inactive', description: 'Inactive'
+        end
+      end
+    end
+
+    let(:section) { :pre }
+    let(:target) { catalog.postgres.user_account_state_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        CREATE TABLE IF NOT EXISTS user_account_state_table
+        (
+          id SERIAL,
+          name VARCHAR NOT NULL,
+          description VARCHAR NOT NULL
+        );
+
+        CREATE OR REPLACE FUNCTION default_user_account_state_table_id()
+        RETURNS INTEGER IMMUTABLE AS $$
+          SELECT id FROM user_account_state_table WHERE name = 'active' AND description = 'Active';
+        $$ LANGUAGE SQL;
       EOS
     end
   end

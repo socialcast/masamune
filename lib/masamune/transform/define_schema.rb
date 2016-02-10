@@ -35,13 +35,13 @@ module Masamune::Transform
       operators += context.extra(:pre)
 
       context.dimensions.each do |_, dimension|
-        operators << define_table(dimension, [], options[:section])
+        operators << define_table(dimension, options)
       end
 
       context.facts.each do |_, fact|
-        operators << define_table(fact, [], options[:section])
+        operators << define_table(fact, options)
         fact.partition_tables(options[:start_date], options[:stop_date]) do |fact_partition_table|
-          operators << define_table(fact_partition_table, [], options[:section])
+          operators << define_table(fact_partition_table, options)
         end
       end
 

@@ -66,7 +66,7 @@ describe Masamune::Transform::DefineSchema do
       end
     end
 
-    context 'without start_date and stop_date' do
+    context 'with start_date and stop_date' do
       subject(:result) { transform.define_schema(catalog, :postgres, start_date: Date.civil(2015, 01, 01), stop_date: Date.civil(2015, 03, 15)).to_s }
 
       it 'should render combined template' do
@@ -78,6 +78,28 @@ describe Masamune::Transform::DefineSchema do
           transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 01, 01))),
           transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 02, 01))),
           transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 03, 01)))
+      end
+    end
+
+    context 'with exclude Regexp' do
+      subject(:result) { transform.define_schema(catalog, :postgres, exclude: /.*dimension/).to_s }
+
+      it 'should render combined template' do
+        is_expected.to eq Masamune::Template.combine \
+          Masamune::Transform::Operator.new('define_schema', source: catalog.postgres),
+          transform.define_table(catalog.postgres.dimensions['user_account_state']),
+          transform.define_table(catalog.postgres.facts['visits'])
+      end
+    end
+
+    context 'with exclude glob' do
+      subject(:result) { transform.define_schema(catalog, :postgres, exclude: '*dimension').to_s }
+
+      it 'should render combined template' do
+        is_expected.to eq Masamune::Template.combine \
+          Masamune::Transform::Operator.new('define_schema', source: catalog.postgres),
+          transform.define_table(catalog.postgres.dimensions['user_account_state']),
+          transform.define_table(catalog.postgres.facts['visits'])
       end
     end
   end

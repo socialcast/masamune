@@ -54,18 +54,18 @@ describe Masamune::Transform::LoadDimension do
     end
   end
 
-  let(:data) { double(path: 'output.csv') }
+  let(:files) { double(path: 'output.csv') }
   let(:target) { catalog.postgres.user_dimension }
   let(:source) { catalog.postgres.user_file }
   let(:target_ledger) { target.ledger_table }
   let(:source_table) { source.stage_table(suffix: 'file', table: target_ledger, inherit: false) }
 
   context 'with postgres dimension' do
-    subject(:result) { transform.load_dimension(data, source, target).to_s }
+    subject(:result) { transform.load_dimension(files, source, target).to_s }
 
     it 'should render combined template' do
       is_expected.to eq Masamune::Template.combine \
-        transform.define_table(source_table, data),
+        transform.define_table(source_table, files: files),
         transform.insert_reference_values(source_table, target_ledger),
         transform.stage_dimension(source_table, target_ledger),
         transform.bulk_upsert(target_ledger.stage_table, target_ledger)

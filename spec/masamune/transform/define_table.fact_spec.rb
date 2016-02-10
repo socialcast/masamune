@@ -122,10 +122,11 @@ describe Masamune::Transform::DefineTable do
     end
   end
 
+  let(:options) { {} }
+  subject(:result) { transform.define_table(target, options).to_s }
+
   context 'for postgres fact' do
     let(:target) { catalog.postgres.visits_fact }
-
-    subject(:result) { transform.define_table(target).to_s }
 
     it 'should eq render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -149,7 +150,7 @@ describe Masamune::Transform::DefineTable do
   context 'for postgres fact partition with :post' do
     let(:target) { catalog.postgres.visits_fact.partition_table(Date.civil(2015, 01, 01)) }
 
-    subject(:result) { transform.define_table(target, [], :post).to_s }
+    let(:options)  { {section: :post} }
 
     it 'should eq render table template' do
       is_expected.to match /ALTER TABLE visits_fact_y2015m01 INHERIT visits_fact;/
@@ -159,10 +160,10 @@ describe Masamune::Transform::DefineTable do
 
   describe 'for fact table from file with sources files' do
     let(:files) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
-    let(:target) { catalog.postgres.visits_fact }
+    let(:intermediate) { catalog.postgres.visits_fact }
     let(:source) { catalog.postgres.visits_file }
-
-    subject(:result) { transform.define_table(source.stage_table(suffix: 'file', table: target, inherit: false), files).to_s }
+    let(:target) { source.stage_table(suffix: 'file', table: intermediate, inherit: false) }
+    let(:options) { { files: files} }
 
     it 'should eq render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -200,15 +201,19 @@ describe Masamune::Transform::DefineTable do
       EOS
     end
 
-    context 'with file' do
-      subject(:result) { transform.define_table(source.stage_table(table: target), files.first).to_s }
+    context 'with single file' do
+      let(:target) { source.stage_table(table: intermediate) }
+      let(:options) { { files: files.first } }
+
       it 'should eq render table template' do
         is_expected.to_not be_nil
       end
     end
 
     context 'with Set' do
-      subject(:result) { transform.define_table(source.stage_table(table: target), Set.new(files)).to_s }
+      let(:target) { source.stage_table(table: intermediate) }
+      let(:options) { { files: Set.new(files) } }
+
       it 'should eq render table template' do
         is_expected.to_not be_nil
       end
@@ -228,8 +233,6 @@ describe Masamune::Transform::DefineTable do
 
     let(:target) { catalog.postgres.visits_fact }
 
-    subject(:result) { transform.define_table(target).to_s }
-
     it 'should eq render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
         CREATE TABLE IF NOT EXISTS visits_fact
@@ -245,8 +248,6 @@ describe Masamune::Transform::DefineTable do
 
   context 'for hive fact' do
     let(:target) { catalog.hive.visits_hourly_fact }
-
-    subject(:result) { transform.define_table(target).to_s }
 
     it 'should eq render table template' do
       is_expected.to eq <<-EOS.strip_heredoc
