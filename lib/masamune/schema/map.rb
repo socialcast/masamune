@@ -89,11 +89,11 @@ module Masamune::Schema
 
       def_delegators :@io, :flush, :path
 
-      def initialize(table, options = {})
+      def initialize(map, table)
+        @map      = map
         @table    = table
         @store    = table.store
         @lines    = 0
-        @options  = options
       end
 
       def bind(io)
@@ -116,7 +116,7 @@ module Masamune::Schema
         @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: write_headers))
         if row.missing_required_columns.any?
           missing_required_column_names = row.missing_required_columns.map(&:name)
-          @store.logger.warn("row '#{row.to_hash}' is missing required columns '#{missing_required_column_names.join(', ')}', skipping")
+          @map.log("row '#{row.to_hash}' is missing required columns '#{missing_required_column_names.join(', ')}', skipping")
         else
           @csv << row.serialize if append?(row.serialize)
         end
@@ -135,11 +135,11 @@ module Masamune::Schema
         row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
         row.to_hash
       rescue
-        @store.logger.warn("failed to parse '#{data.to_hash}' for #{@table.name}, skipping")
+        @map.log("failed to parse '#{data.to_hash}' for #{@table.name}, skipping")
       end
 
       def append?(elem)
-        return true unless @options[:distinct]
+        return true unless @map.distinct
         @seen ||= Set.new
         @seen.add?(elem)
       end
@@ -153,6 +153,7 @@ module Masamune::Schema
       store:     nil,
       function:  ->(row) { row },
       distinct:  false,
+      fail_fast: false,
       debug:     false
     }
 
@@ -167,6 +168,7 @@ module Masamune::Schema
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         public_send("#{name}=", value)
       end
+      @skipped = 0
     end
 
     def source=(source)
@@ -190,8 +192,8 @@ module Masamune::Schema
     end
 
     def apply(input_files, output_file)
-      input_buffer  = Buffer.new(source)
-      output_buffer = Buffer.new(intermediate, distinct: distinct)
+      input_buffer  = Buffer.new(self, source)
+      output_buffer = Buffer.new(self, intermediate)
       self.class.convert_files(input_files).each do |input_file|
         open_stream(input_file, 'r') do |input_stream|
           input_buffer.bind(input_stream)
@@ -201,6 +203,7 @@ module Masamune::Schema
           end
         end
       end
+      raise "A total of #{@skipped} skipped records detected, failing fast" if fail_fast && @skipped > 0
       intermediate
     end
 
@@ -214,6 +217,11 @@ module Masamune::Schema
           yield io
         end
       end
+    end
+
+    def log(message)
+      @skipped += 1
+      @store.logger.warn(message)
     end
 
     class << self
@@ -263,7 +271,7 @@ module Masamune::Schema
         yield output
       end
     rescue => e
-      @store.logger.warn("failed to process row for #{target.name}, skipping: #{e.message}")
+      log("failed to process row for #{target.name}, skipping: #{e.message}")
     end
   end
 end

@@ -596,6 +596,54 @@ describe Masamune::Schema::Map do
 
       it_behaves_like 'apply input/output'
     end
+
+    context 'with map that raises exception and fail_fast' do
+      before do
+        catalog.schema :files do
+          file 'input' do
+            column 'id', type: :integer
+          end
+
+          file 'output' do
+            column 'id', type: :integer
+          end
+
+          map from: files.input, to: files.output, columns: [:id], fail_fast: true do |row|
+            raise
+          end
+        end
+      end
+
+      let(:source) do
+        catalog.files.input
+      end
+
+      let(:target) do
+        catalog.files.output
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          1
+          2
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          1
+          2
+        EOS
+      end
+
+      before do
+        expect(environment.logger).to receive(:warn).with(/failed to process.*/).twice
+      end
+
+      it 'raises exception' do
+        expect { subject }.to raise_error /A total of 2 skipped records detected, failing fast/
+      end
+    end
   end
 
   describe Masamune::Schema::Map::JSONEncoder do
