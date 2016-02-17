@@ -33,7 +33,7 @@ module Masamune::TaskExampleGroup
       let(:command) { nil }
       let(:options) { [] }
 
-      subject(:execute_command) do
+      let(:execute_command) do
         n = context_options.fetch(:idempotent, false) ? 2 : 1
         n = 1 if ENV['MASAMUNE_FASTER_SPEC']
         capture(!default_options.include?('--debug')) do
@@ -44,6 +44,10 @@ module Masamune::TaskExampleGroup
           end
         end
       end
+
+      before do
+        expect { execute_command }.to_not raise_error
+      end unless context_options[:execute_command] == false
     end
   end
 
