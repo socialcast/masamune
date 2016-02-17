@@ -101,6 +101,7 @@ describe Masamune::Thor do
       it 'exits with status code 0 and prints version' do
         expect { cli_invocation }.to raise_error { |e|
           expect(e).to be_a(SystemExit)
+          expect(e.message).to eq('exit')
           expect(e.status).to eq(0)
         }
         expect(stdout.string).to match(/\Amasamune/)
@@ -206,13 +207,13 @@ describe Masamune::Thor do
       it 'exits with status code 1 and prints error to stderr' do
         expect { cli_invocation }.to raise_error { |e|
           expect(e).to be_a(SystemExit)
+          expect(e.message).to eq('Path :unknown_dir not defined')
           expect(e.status).to eq(1)
         }
         expect(stdout.string).to be_blank
         expect(stderr.string).to match(/Path :unknown_dir not defined/)
       end
     end
-
   end
 
   context 'with command that prints :current_dir' do

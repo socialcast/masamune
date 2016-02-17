@@ -79,7 +79,7 @@ module Masamune
         e.backtrace.each { |x| instance.logger.error(x) }
         $stderr.puts e.to_s
         $stderr.puts "For complete debug log see: #{instance.log_file_name.to_s}"
-        exit 1
+        abort e.message
       end
     end
 
