@@ -176,7 +176,24 @@ describe Masamune::Schema::Map do
       end
 
       before do
-        expect(environment.logger).to receive(:warn).with(/row .* missing required columns 'user_id'/)
+        expect(environment.logger).to receive(:warn).with(/missing required columns 'user_id'/).ordered
+        expect(environment.logger).to receive(:debug).with(
+          :message => %q(missing required columns 'user_id'),
+          :source  => 'user_stage',
+          :target  => 'user_dimension_ledger',
+          :file    => output.path,
+          :line    => 3,
+          :row     => {
+            'tenant_id'                  => 50,
+            'user_id'                    => nil,
+            'user_account_state.name'    => 'active',
+            'hr_user_account_state.name' => 'active',
+            'admin'                      => false,
+            'preferences'                => {},
+            'source'                     => 'users_file',
+            'cluster_id'                 => 100
+          }
+        ).ordered
       end
 
       it 'should match target data' do
@@ -221,8 +238,36 @@ describe Masamune::Schema::Map do
       end
 
       before do
-        expect(environment.logger).to receive(:warn).with(/failed to process row for #{target.name}/).ordered
-        expect(environment.logger).to receive(:warn).with(/failed to parse '{.*}' for #{source.name}/).ordered
+        expect(environment.logger).to receive(:warn).with(/failed to process/).ordered
+        expect(environment.logger).to receive(:debug).with(
+          :message => "failed to process",
+          :source  => "input_stage",
+          :target  => "user_dimension_ledger",
+          :file    => input.path,
+          :line    => 2,
+          :row     => {
+            "id"          => 1,
+            "tenant_id"   => 42,
+            "admin"       => false,
+            "preferences" => {},
+            "deleted_at"  => nil
+          }
+        ).ordered
+        expect(environment.logger).to receive(:warn).with(/failed to parse/).ordered
+        expect(environment.logger).to receive(:debug).with(
+          :message => "failed to parse",
+          :source  => "input_stage",
+          :target  => "user_dimension_ledger",
+          :file    => input.path,
+          :line    => 4,
+          :row     => {
+            :id          => "3",
+            :tenant_id   => "50",
+            :admin       => "0",
+            :preferences => "INVALID_JSON",
+            :deleted_at  => nil
+          }
+        ).ordered
       end
 
       let(:target_data) do
@@ -495,6 +540,53 @@ describe Masamune::Schema::Map do
       it_behaves_like 'apply input/output'
     end
 
+    context 'with line_number' do
+      before do
+        catalog.schema :files do
+          file 'input' do
+            column 'id', type: :integer
+          end
+
+          file 'output' do
+            column 'id', type: :integer
+            column 'line_no', type: :integer
+          end
+
+          map from: files.input, to: files.output do |row, line_no|
+            { id: row[:id], line_no: line_no }
+          end
+        end
+      end
+
+      let(:source) do
+        catalog.files.input
+      end
+
+      let(:target) do
+        catalog.files.output
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          1
+          2
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          1,0
+          2,1
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+
+      it_behaves_like 'apply input/output'
+    end
+
     context 'from file to table' do
       before do
         catalog.schema :postgres do
@@ -609,7 +701,7 @@ describe Masamune::Schema::Map do
           end
 
           map from: files.input, to: files.output, columns: [:id], fail_fast: true do |row|
-            raise
+            raise 'wha happen'
           end
         end
       end
@@ -637,11 +729,19 @@ describe Masamune::Schema::Map do
       end
 
       before do
-        expect(environment.logger).to receive(:warn).with(/failed to process.*/).twice
+        expect(environment.logger).to receive(:error).with(/wha happen/).ordered
+        expect(environment.logger).to receive(:debug).with(
+          :message => "wha happen",
+          :source  => "input_stage",
+          :target  => "output_stage",
+          :file    => input.path,
+          :line    => 0,
+          :row     => {"id" => 1}
+        ).ordered
       end
 
       it 'raises exception' do
-        expect { subject }.to raise_error /A total of 2 skipped records detected, failing fast/
+        expect { subject }.to raise_error /wha happen/
       end
     end
   end

@@ -93,7 +93,7 @@ module Masamune::Schema
         @map      = map
         @table    = table
         @store    = table.store
-        @lines    = 0
+        @line     = 0
       end
 
       def bind(io)
@@ -106,21 +106,26 @@ module Masamune::Schema
         CSV.parse(JSONEncoder.new(@io, @store), options.merge(headers: @store.headers || @table.columns.keys)) do |data|
           next if data.to_s =~ /\A#/
           yield safe_row(data)
+          @line += 1
         end
       end
 
       def append(data)
         raise 'must call Buffer#bind first' unless @io
         row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash)
-        write_headers = @store.headers && @lines < 1
+        write_headers = @store.headers && @line < 1
         @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: write_headers))
         if row.missing_required_columns.any?
           missing_required_column_names = row.missing_required_columns.map(&:name)
-          @map.log("row '#{row.to_hash}' is missing required columns '#{missing_required_column_names.join(', ')}', skipping")
+          @map.skip_or_raise(self, row, "missing required columns '#{missing_required_column_names.join(', ')}'")
         else
           @csv << row.serialize if append?(row.serialize)
         end
-        @lines += 1
+        @line += 1
+      end
+
+      def line
+        @line
       end
 
       private
@@ -135,7 +140,7 @@ module Masamune::Schema
         row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
         row.to_hash
       rescue
-        @map.log("failed to parse '#{data.to_hash}' for #{@table.name}, skipping")
+        @map.skip_or_raise(self, data, 'failed to parse')
       end
 
       def append?(elem)
@@ -151,7 +156,7 @@ module Masamune::Schema
       target:    nil,
       columns:   nil,
       store:     nil,
-      function:  ->(row) { row },
+      function:  ->(row, *_) { row },
       distinct:  false,
       fail_fast: false,
       debug:     false
@@ -181,7 +186,7 @@ module Masamune::Schema
     end
 
     def intermediate_columns
-      output = function.call(default_row(source.columns))
+      output = function.call(default_row(source.columns), 0)
       example = Array.wrap(output).first
       raise ArgumentError, "function for map between '#{source.name}' and '#{target.name}' does not return output for default input" unless example
       example.keys
@@ -203,7 +208,6 @@ module Masamune::Schema
           end
         end
       end
-      raise "A total of #{@skipped} skipped records detected, failing fast" if fail_fast && @skipped > 0
       intermediate
     end
 
@@ -219,9 +223,17 @@ module Masamune::Schema
       end
     end
 
-    def log(message)
-      @skipped += 1
-      @store.logger.warn(message)
+    def skip_or_raise(buffer, row, message)
+      message = 'failed to process' if message.nil? || message.blank?
+      trace = { message: message, source: source.name, target: target.name, file: buffer.try(:path), line: buffer.try(:line), row: row.try(:to_hash) }
+      if fail_fast
+        @store.logger.error(message)
+        @store.logger.debug(trace)
+        raise message
+      else
+        @store.logger.warn(message)
+        @store.logger.debug(trace)
+      end
     end
 
     class << self
@@ -258,20 +270,20 @@ module Masamune::Schema
 
     def apply_buffer(input_buffer, output_buffer)
       input_buffer.each do |input|
-        safe_apply_function(input) do |output|
+        safe_apply_function(input_buffer, input) do |output|
           output_buffer.append output
         end
       end
       output_buffer.flush
     end
 
-    def safe_apply_function(input, &block)
+    def safe_apply_function(input_buffer, input, &block)
       return unless input
-      Array.wrap(function.call(input)).each do |output|
+      Array.wrap(function.call(input, input_buffer.line)).each do |output|
         yield output
       end
     rescue => e
-      log("failed to process row for #{target.name}, skipping: #{e.message}")
+      skip_or_raise(input_buffer, input, e.message)
     end
   end
 end
