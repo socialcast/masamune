@@ -116,7 +116,7 @@ module Masamune::Commands
     end
 
     def failure_message(status)
-      @error
+      @error || 'psql failed without error'
     end
 
     def prompt
