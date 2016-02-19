@@ -77,7 +77,6 @@ module Masamune
       rescue => e
         instance.logger.error("#{e.message} (#{e.class}) backtrace:")
         e.backtrace.each { |x| instance.logger.error(x) }
-        $stderr.puts e.to_s
         $stderr.puts "For complete debug log see: #{instance.log_file_name.to_s}"
         abort e.message
       end
