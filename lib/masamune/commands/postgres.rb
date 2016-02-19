@@ -56,6 +56,7 @@ module Masamune::Commands
         instance_variable_set("@#{name}", value)
       end
       raise ArgumentError, 'Cannot specify both file and exec' if @file && @exec
+      @error = nil
     end
 
     def stdin
@@ -107,6 +108,15 @@ module Masamune::Commands
         @block.call(line) if @block
         console(line) if print?
       end
+    end
+
+    def handle_stderr(line, line_no)
+      @error = line.split(/ERROR:\s*/).last if line =~ /ERROR:/
+      logger.debug(line)
+    end
+
+    def failure_message(status)
+      @error
     end
 
     def prompt

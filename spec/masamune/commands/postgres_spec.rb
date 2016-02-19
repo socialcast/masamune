@@ -129,5 +129,20 @@ describe Masamune::Commands::Postgres do
     end
   end
 
+  describe '#failure_message' do
+    let(:status_code) { 1 }
+
+    before do
+      expect(instance.logger).to receive(:debug).at_least(3).times
+      instance.handle_stderr('Everything is OK', 0)
+      instance.handle_stderr('psql:/var/tmp/schema.psql ERROR: Something went wrong', 1)
+      instance.handle_stderr('Wha happen', 2)
+    end
+
+    subject { instance.failure_message(status_code) }
+
+    it { is_expected.to eq('Something went wrong') }
+  end
+
   it_should_behave_like Masamune::Commands::PostgresCommon
 end
