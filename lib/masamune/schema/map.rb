@@ -124,6 +124,26 @@ module Masamune::Schema
         @line += 1
       end
 
+      def to_s
+        case @io
+        when File, Tempfile
+          @io.path
+        when IO
+          case @io.fileno
+          when 0
+            'STDIN'
+          when 1
+            'STDOUT'
+          when 2
+            'STDERR'
+          else
+            'UNKNOWN'
+          end
+        when StringIO
+          'StringIO'
+        end
+      end
+
       def line
         @line
       end
@@ -225,7 +245,7 @@ module Masamune::Schema
 
     def skip_or_raise(buffer, row, message)
       message = 'failed to process' if message.nil? || message.blank?
-      trace = { message: message, source: source.name, target: target.name, file: buffer.try(:path), line: buffer.try(:line), row: row.try(:to_hash) }
+      trace = { message: message, source: source.name, target: target.name, file: buffer.try(:to_s), line: buffer.try(:line), row: row.try(:to_hash) }
       if fail_fast
         @store.logger.error(message)
         @store.logger.debug(trace)

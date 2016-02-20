@@ -746,6 +746,56 @@ describe Masamune::Schema::Map do
     end
   end
 
+  describe Masamune::Schema::Map::Buffer do
+    let(:map) { double }
+    let(:table) { double }
+    let(:instance) { described_class.new(map, table) }
+
+    before do
+      allow(table).to receive(:store).and_return(double)
+      instance.bind(io_delegate)
+    end
+
+    describe '#to_s' do
+      subject { instance.to_s }
+
+      context ' with STDIN' do
+        let(:io_delegate) { STDIN }
+        it { is_expected.to eq('STDIN') }
+      end
+
+      context ' with STDOUT' do
+        let(:io_delegate) { STDOUT }
+        it { is_expected.to eq('STDOUT') }
+      end
+
+      context ' with STDERR' do
+        let(:io_delegate) { STDERR }
+        it { is_expected.to eq('STDERR') }
+      end
+
+      context ' with unknown IO' do
+        let(:io_delegate) { IO.new(IO.sysopen('/dev/null', 'r')) }
+        it { is_expected.to eq('UNKNOWN') }
+      end
+
+      context ' with StringIO' do
+        let(:io_delegate) { StringIO.new }
+        it { is_expected.to eq('StringIO') }
+      end
+
+      context ' with File' do
+        let(:io_delegate) { File.new('/dev/null', 'r') }
+        it { is_expected.to eq(io_delegate.path) }
+      end
+
+      context ' with Tempfile' do
+        let(:io_delegate) { Tempfile.new }
+        it { is_expected.to eq(io_delegate.path) }
+      end
+    end
+  end
+
   describe Masamune::Schema::Map::JSONEncoder do
     let(:io) { StringIO.new }
     let(:store) { double(json_encoding: :raw, format: :csv) }
