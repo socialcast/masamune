@@ -790,7 +790,7 @@ describe Masamune::Schema::Map do
       end
 
       context ' with Tempfile' do
-        let(:io_delegate) { Tempfile.new }
+        let(:io_delegate) { Tempfile.new('masamune') }
         it { is_expected.to eq(io_delegate.path) }
       end
     end
