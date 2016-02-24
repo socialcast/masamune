@@ -36,7 +36,10 @@ module Masamune::Schema
       attr_accessor attr
     end
 
+    attr_reader :errors
+
     def initialize(opts = {})
+      @errors = Set.new
       opts.symbolize_keys!
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         public_send("#{name}=", value)
@@ -54,7 +57,8 @@ module Masamune::Schema
 
     def parent=(parent)
       @parent = parent
-      normalize_values! if @parent
+      normalize! if @parent
+      validate! if @parent
     end
 
     def name(column = nil)
@@ -104,18 +108,22 @@ module Masamune::Schema
       column.sql_value(values[column.name])
     end
 
-    def missing_required_columns
-      Set.new.tap do |missing|
-        values.select do |key, value|
-          column = @columns[key]
-          missing << column if column.required_value? && value.nil?
-        end
-      end
+    def valid?
+      errors.empty?
+    end
+
+    def invalid?
+      errors.any?
+    end
+
+    def validate!
+      validate_required_columns!
+      raise errors.first if invalid?
     end
 
     private
 
-    def normalize_values!
+    def normalize!
       result = {}
       @columns = {}
       values.each do |key, value|
@@ -124,10 +132,23 @@ module Masamune::Schema
           @columns[column.compact_name] = column
           result[column.compact_name] = column.ruby_value(value)
         elsif strict
-          raise ArgumentError, "#{@values} contains undefined columns #{key}"
+          @errors << "#{@values} contains undefined columns #{key}"
         end
       end
       @values = result
+    end
+
+    def validate_required_columns!
+      @errors << "missing required columns '#{missing_required_columns.map(&:name).join(', ')}'" if missing_required_columns.any?
+    end
+
+    def missing_required_columns
+      Set.new.tap do |missing|
+        values.select do |key, value|
+          column = @columns[key]
+          missing << column if column.required_value? && value.nil?
+        end
+      end
     end
   end
 end

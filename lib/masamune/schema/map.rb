@@ -105,22 +105,18 @@ module Masamune::Schema
         raise 'must call Buffer#bind first' unless @io
         CSV.parse(JSONEncoder.new(@io, @store), options.merge(headers: @store.headers || @table.columns.keys)) do |data|
           next if data.to_s =~ /\A#/
-          yield safe_row(data)
+          yield safe_row(data).try(:to_hash)
           @line += 1
         end
       end
 
       def append(data)
         raise 'must call Buffer#bind first' unless @io
-        row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash)
+        row = safe_row(data)
         write_headers = @store.headers && @line < 1
         @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: write_headers))
-        if row.missing_required_columns.any?
-          missing_required_column_names = row.missing_required_columns.map(&:name)
-          @map.skip_or_raise(self, row, "missing required columns '#{missing_required_column_names.join(', ')}'")
-        else
-          @csv << row.serialize if append?(row.serialize)
-        end
+        @csv << row.serialize if row.valid? && append?(row.serialize)
+      ensure
         @line += 1
       end
 
@@ -157,8 +153,7 @@ module Masamune::Schema
       end
 
       def safe_row(data)
-        row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: @map.fail_fast)
-        row.to_hash
+        Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: @map.fail_fast)
       rescue => e
         @map.skip_or_raise(self, data, e.message || 'failed to parse')
       end

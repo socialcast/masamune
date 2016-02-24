@@ -176,22 +176,20 @@ describe Masamune::Schema::Map do
       end
 
       before do
-        expect(environment.logger).to receive(:warn).with(/missing required columns 'user_id'/).ordered
+        expect(environment.logger).to receive(:warn).with(/missing required columns 'id'/).ordered
         expect(environment.logger).to receive(:debug).with(
-          :message => %q(missing required columns 'user_id'),
+          :message => %q(missing required columns 'id'),
           :source  => 'user_stage',
           :target  => 'user_dimension_ledger',
-          :file    => output.path,
+          :file    => input.path,
           :line    => 3,
           :row     => {
-            'tenant_id'                  => 50,
-            'user_id'                    => nil,
-            'user_account_state.name'    => 'active',
-            'hr_user_account_state.name' => 'active',
-            'admin'                      => false,
-            'preferences'                => {},
-            'source'                     => 'users_file',
-            'cluster_id'                 => 100
+            'id'          => nil,
+            'tenant_id'   => '50',
+            'junk_id'     => 'X',
+            'deleted_at'  => nil,
+            'admin'       => '0',
+            'preferences' => nil
           }
         ).ordered
       end
