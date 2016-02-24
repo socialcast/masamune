@@ -288,7 +288,7 @@ module Masamune::Schema
           {}
         end
       when :string
-        value.to_s
+        value.blank? ? nil : value.to_s
       else
         value
       end
