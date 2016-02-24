@@ -157,10 +157,10 @@ module Masamune::Schema
       end
 
       def safe_row(data)
-        row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
+        row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: @map.fail_fast)
         row.to_hash
-      rescue
-        @map.skip_or_raise(self, data, 'failed to parse')
+      rescue => e
+        @map.skip_or_raise(self, data, e.message || 'failed to parse')
       end
 
       def append?(elem)

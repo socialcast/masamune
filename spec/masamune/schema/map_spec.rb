@@ -253,9 +253,9 @@ describe Masamune::Schema::Map do
             "deleted_at"  => nil
           }
         ).ordered
-        expect(environment.logger).to receive(:warn).with(/failed to parse/).ordered
+        expect(environment.logger).to receive(:warn).with("Could not coerce 'INVALID_JSON' into :json for column 'preferences'").ordered
         expect(environment.logger).to receive(:debug).with(
-          :message => "failed to parse",
+          :message => "Could not coerce 'INVALID_JSON' into :json for column 'preferences'",
           :source  => "input_stage",
           :target  => "user_dimension_ledger",
           :file    => input.path,
