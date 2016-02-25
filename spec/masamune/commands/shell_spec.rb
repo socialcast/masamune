@@ -73,6 +73,19 @@ describe Masamune::Commands::Shell do
       it { expect { subject }.to raise_error RuntimeError, "fail_fast: #{command}" }
     end
 
+    context 'with fail_fast and simple command that fails and delegate.failure_message' do
+      let(:command) { %Q{bash -c 'exit 1'} }
+      let(:options) { {fail_fast: true} }
+
+      before do
+        allow(delegate).to receive(:failure_message).and_return('Wha happen')
+        expect(instance.logger).to receive(:debug).with(%q(execute: TZ=UTC bash -c 'exit 1'))
+        expect(instance.logger).to receive(:debug).with(/\Astatus: .* exit 1\z/)
+      end
+
+      it { expect { subject }.to raise_error RuntimeError, 'Wha happen' }
+    end
+
     context 'when command is interrupted' do
       let(:command) { %Q{bash -c "echo 'test'"} }
 

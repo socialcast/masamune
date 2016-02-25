@@ -28,7 +28,6 @@ module Masamune::TaskExampleGroup
 
       let(:stdout) { @stdout }
       let(:stderr) { @stderr }
-      let(:status) { @status }
 
       let(:command) { nil }
       let(:options) { [] }

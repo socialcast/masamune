@@ -41,8 +41,6 @@ module Masamune::SharedExampleGroup
     tmp_stdout, $stdout = $stdout, @stdout
     tmp_stderr, $stderr = $stderr, @stderr
     yield
-  rescue SystemExit => e
-    @status = e.status
   ensure
     $stdout, $stderr = tmp_stdout, tmp_stderr
   end

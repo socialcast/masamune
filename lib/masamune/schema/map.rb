@@ -89,11 +89,11 @@ module Masamune::Schema
 
       def_delegators :@io, :flush, :path
 
-      def initialize(table, options = {})
+      def initialize(map, table)
+        @map      = map
         @table    = table
         @store    = table.store
-        @lines    = 0
-        @options  = options
+        @line     = 0
       end
 
       def bind(io)
@@ -106,21 +106,46 @@ module Masamune::Schema
         CSV.parse(JSONEncoder.new(@io, @store), options.merge(headers: @store.headers || @table.columns.keys)) do |data|
           next if data.to_s =~ /\A#/
           yield safe_row(data)
+          @line += 1
         end
       end
 
       def append(data)
         raise 'must call Buffer#bind first' unless @io
         row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash)
-        write_headers = @store.headers && @lines < 1
+        write_headers = @store.headers && @line < 1
         @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: write_headers))
         if row.missing_required_columns.any?
           missing_required_column_names = row.missing_required_columns.map(&:name)
-          @store.logger.warn("row '#{row.to_hash}' is missing required columns '#{missing_required_column_names.join(', ')}', skipping")
+          @map.skip_or_raise(self, row, "missing required columns '#{missing_required_column_names.join(', ')}'")
         else
           @csv << row.serialize if append?(row.serialize)
         end
-        @lines += 1
+        @line += 1
+      end
+
+      def to_s
+        case @io
+        when File, Tempfile
+          @io.path
+        when IO
+          case @io.fileno
+          when 0
+            'STDIN'
+          when 1
+            'STDOUT'
+          when 2
+            'STDERR'
+          else
+            'UNKNOWN'
+          end
+        when StringIO
+          'StringIO'
+        end
+      end
+
+      def line
+        @line
       end
 
       private
@@ -135,11 +160,11 @@ module Masamune::Schema
         row = Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: false)
         row.to_hash
       rescue
-        @store.logger.warn("failed to parse '#{data.to_hash}' for #{@table.name}, skipping")
+        @map.skip_or_raise(self, data, 'failed to parse')
       end
 
       def append?(elem)
-        return true unless @options[:distinct]
+        return true unless @map.distinct
         @seen ||= Set.new
         @seen.add?(elem)
       end
@@ -151,8 +176,9 @@ module Masamune::Schema
       target:    nil,
       columns:   nil,
       store:     nil,
-      function:  ->(row) { row },
+      function:  ->(row, *_) { row },
       distinct:  false,
+      fail_fast: false,
       debug:     false
     }
 
@@ -167,6 +193,7 @@ module Masamune::Schema
       DEFAULT_ATTRIBUTES.merge(opts).each do |name, value|
         public_send("#{name}=", value)
       end
+      @skipped = 0
     end
 
     def source=(source)
@@ -179,7 +206,7 @@ module Masamune::Schema
     end
 
     def intermediate_columns
-      output = function.call(default_row(source.columns))
+      output = function.call(default_row(source.columns), 0)
       example = Array.wrap(output).first
       raise ArgumentError, "function for map between '#{source.name}' and '#{target.name}' does not return output for default input" unless example
       example.keys
@@ -190,8 +217,8 @@ module Masamune::Schema
     end
 
     def apply(input_files, output_file)
-      input_buffer  = Buffer.new(source)
-      output_buffer = Buffer.new(intermediate, distinct: distinct)
+      input_buffer  = Buffer.new(self, source)
+      output_buffer = Buffer.new(self, intermediate)
       self.class.convert_files(input_files).each do |input_file|
         open_stream(input_file, 'r') do |input_stream|
           input_buffer.bind(input_stream)
@@ -213,6 +240,19 @@ module Masamune::Schema
         File.open(file, mode) do |io|
           yield io
         end
+      end
+    end
+
+    def skip_or_raise(buffer, row, message)
+      message = 'failed to process' if message.nil? || message.blank?
+      trace = { message: message, source: source.name, target: target.name, file: buffer.try(:to_s), line: buffer.try(:line), row: row.try(:to_hash) }
+      if fail_fast
+        @store.logger.error(message)
+        @store.logger.debug(trace)
+        raise message
+      else
+        @store.logger.warn(message)
+        @store.logger.debug(trace)
       end
     end
 
@@ -250,20 +290,20 @@ module Masamune::Schema
 
     def apply_buffer(input_buffer, output_buffer)
       input_buffer.each do |input|
-        safe_apply_function(input) do |output|
+        safe_apply_function(input_buffer, input) do |output|
           output_buffer.append output
         end
       end
       output_buffer.flush
     end
 
-    def safe_apply_function(input, &block)
+    def safe_apply_function(input_buffer, input, &block)
       return unless input
-      Array.wrap(function.call(input)).each do |output|
+      Array.wrap(function.call(input, input_buffer.line)).each do |output|
         yield output
       end
     rescue => e
-      @store.logger.warn("failed to process row for #{target.name}, skipping: #{e.message}")
+      skip_or_raise(input_buffer, input, e.message)
     end
   end
 end

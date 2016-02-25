@@ -46,33 +46,33 @@ module Masamune::Actions
 
     FILE_MODE = 0777 - File.umask
 
-    def load_dimension(source_files, source, target)
+    def load_dimension(source_files, source, target, options = {})
       optional_apply_map(source_files, source, target) do |intermediate_files, intermediate|
         transform = Wrapper.load_dimension(intermediate_files, intermediate, target)
-        postgres file: transform.to_file, debug: (source.debug || target.debug || intermediate.debug)
+        postgres file: transform.to_file, debug: (source.debug || target.debug || intermediate.debug), **options
       end
     end
 
-    def consolidate_dimension(target)
+    def consolidate_dimension(target, options = {})
       transform = Wrapper.consolidate_dimension(target)
-      postgres file: transform.to_file, debug: target.debug
+      postgres file: transform.to_file, debug: target.debug, **options
     end
 
-    def relabel_dimension(target)
+    def relabel_dimension(target, options = {})
       transform = Wrapper.relabel_dimension(target)
-      postgres file: transform.to_file, debug: target.debug
+      postgres file: transform.to_file, debug: target.debug, **options
     end
 
-    def load_fact(source_files, source, target, date)
+    def load_fact(source_files, source, target, date, options = {})
       optional_apply_map(source_files, source, target) do |intermediate_files, intermediate|
         transform = Wrapper.load_fact(intermediate_files, intermediate, target, date)
-        postgres file: transform.to_file, debug: (source.debug || target.debug || intermediate.debug)
+        postgres file: transform.to_file, debug: (source.debug || target.debug || intermediate.debug), **options
       end
     end
 
-    def rollup_fact(source, target, date)
+    def rollup_fact(source, target, date, options = {})
       transform = Wrapper.rollup_fact(source, target, date)
-      postgres file: transform.to_file, debug: (source.debug || target.debug)
+      postgres file: transform.to_file, debug: (source.debug || target.debug), **options
     end
 
     private

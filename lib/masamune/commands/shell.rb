@@ -189,7 +189,15 @@ module Masamune::Commands
       if @delegate.respond_to?(:handle_failure)
         @delegate.handle_failure(status)
       end
-      raise "fail_fast: #{command_args.join(' ')}" if fail_fast
+      raise failure_message(status) if fail_fast
+    end
+
+    def failure_message(status)
+      if @delegate.respond_to?(:failure_message)
+        @delegate.failure_message(status)
+      else
+        "fail_fast: #{command_args.join(' ')}"
+      end
     end
 
     private
