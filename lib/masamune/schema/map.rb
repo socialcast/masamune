@@ -105,7 +105,8 @@ module Masamune::Schema
         raise 'must call Buffer#bind first' unless @io
         CSV.parse(JSONEncoder.new(@io, @store), options.merge(headers: @store.headers || @table.columns.keys)) do |data|
           next if data.to_s =~ /\A#/
-          yield safe_row(data).try(:to_hash)
+          row = safe_row(data)
+          yield row.to_hash if row
           @line += 1
         end
       end
@@ -113,6 +114,7 @@ module Masamune::Schema
       def append(data)
         raise 'must call Buffer#bind first' unless @io
         row = safe_row(data)
+        return unless row
         write_headers = @store.headers && @line < 1
         @csv ||= CSV.new(@io, options.merge(headers: row.headers, write_headers: write_headers))
         @csv << row.serialize if row.valid? && append?(row.serialize)
@@ -156,6 +158,7 @@ module Masamune::Schema
         Masamune::Schema::Row.new(parent: @table, values: data.to_hash, strict: @map.fail_fast)
       rescue => e
         @map.skip_or_raise(self, data, e.message || 'failed to parse')
+        nil
       end
 
       def append?(elem)
