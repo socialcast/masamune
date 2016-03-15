@@ -80,7 +80,7 @@ describe Masamune::Schema::Dimension do
         ]
     end
 
-    it { expect { dimension }.to raise_error ArgumentError, /contains undefined columns/ }
+    it { expect { dimension }.to raise_error /contains undefined columns/ }
   end
 
   context 'for type :four' do

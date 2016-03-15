@@ -135,7 +135,7 @@ describe Masamune::Schema::Table do
         ]
     end
 
-    it { expect { table }.to raise_error ArgumentError, /contains undefined columns/ }
+    it { expect { table }.to raise_error /contains undefined columns/ }
   end
 
   context 'with partial values' do
