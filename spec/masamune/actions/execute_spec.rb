@@ -39,6 +39,10 @@ describe Masamune::Actions::Execute do
   let(:instance) { klass.new }
 
   describe '.execute' do
+    before do
+      expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, anything).once.and_call_original
+    end
+
     context 'with a simple command' do
       let(:command) { %w(echo ping) }
       let(:options) { {fail_fast: true} }
