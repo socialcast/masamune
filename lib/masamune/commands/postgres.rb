@@ -146,7 +146,7 @@ module Masamune::Commands
     end
 
     def exec_file
-      @exec_file ||= Tempfile.create('masamune').tap do |tmp|
+      @exec_file ||= Tempfile.create('masamune_psql_input').tap do |tmp|
         tmp.write(@exec)
         tmp.close
       end.path
