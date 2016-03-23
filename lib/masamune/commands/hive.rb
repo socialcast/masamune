@@ -114,6 +114,8 @@ module Masamune::Commands
       return unless @output
 
       filesystem.move_file_to_file(@buffer.path, @output)
+    ensure
+      File.delete(@buffer.path) if @buffer && @buffer.path && File.exists?(@buffer.path)
     end
 
     def handle_stdout(line, line_no)
