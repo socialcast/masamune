@@ -52,7 +52,7 @@ module Masamune
 
     class << self
       def render_to_file(template, parameters = {})
-        Tempfile.new('masamune').tap do |file|
+        Tempfile.create('masamune').tap do |file|
           file.write(render_to_string(template, parameters))
           file.close
         end.path

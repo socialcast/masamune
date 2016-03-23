@@ -97,7 +97,7 @@ module Masamune::Commands
       end
 
       if @output
-        @buffer = Tempfile.new('masamune')
+        @buffer = Tempfile.create('masamune')
       end
     end
 
@@ -172,9 +172,9 @@ module Masamune::Commands
     end
 
     def exec_file
-      Tempfile.new('masamune').tap do |tmp|
+      @exec_file ||= Tempfile.create('masamune').tap do |tmp|
         tmp.write(@exec)
-        tmp.flush
+        tmp.close
       end.path
     end
 

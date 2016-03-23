@@ -42,7 +42,7 @@ module Masamune::Transform
     end
 
     def to_file
-      Tempfile.new('masamune').tap do |file|
+      Tempfile.create('masamune').tap do |file|
         file.write(to_s)
         file.close
       end.path
