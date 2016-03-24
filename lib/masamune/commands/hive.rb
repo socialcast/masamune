@@ -97,7 +97,7 @@ module Masamune::Commands
       end
 
       if @output
-        @buffer = Tempfile.new('masamune')
+        @buffer = Tempfile.create('masamune_hive_output')
       end
     end
 
@@ -114,6 +114,8 @@ module Masamune::Commands
       return unless @output
 
       filesystem.move_file_to_file(@buffer.path, @output)
+    ensure
+      File.delete(@buffer.path) if @buffer && @buffer.path && File.exists?(@buffer.path)
     end
 
     def handle_stdout(line, line_no)
@@ -172,9 +174,9 @@ module Masamune::Commands
     end
 
     def exec_file
-      Tempfile.new('masamune').tap do |tmp|
+      @exec_file ||= Tempfile.create('masamune_hive_input').tap do |tmp|
         tmp.write(@exec)
-        tmp.flush
+        tmp.close
       end.path
     end
 

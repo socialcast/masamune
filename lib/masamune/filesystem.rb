@@ -147,7 +147,7 @@ module Masamune
         when :hdfs
           hadoop_fs('-touchz', *file_set)
         when :s3
-          empty = Tempfile.new('masamune')
+          empty = Tempfile.new('masamune_empty')
           file_set.each do |file|
             s3cmd('put', empty.path, s3b(file, dir: false))
           end

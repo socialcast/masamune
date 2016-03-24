@@ -86,7 +86,7 @@ module Masamune::Actions
     end
 
     def apply_map(map, source_files, source, target)
-      Tempfile.open('masamune') do |output|
+      Tempfile.open('masamune_transform') do |output|
         begin
           FileUtils.chmod(FILE_MODE, output.path)
           result = map.apply(source_files, output)
