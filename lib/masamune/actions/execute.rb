@@ -56,7 +56,9 @@ module Masamune::Actions
         end
       end if block_given?
 
-      command = Masamune::Commands::Shell.new(klass.new(self), {fail_fast: false}.merge(opts))
+      command = klass.new(self)
+      command = Masamune::Commands::RetryWithBackoff.new(command, opts)
+      command = Masamune::Commands::Shell.new(command, {fail_fast: false}.merge(opts))
       opts.fetch(:interactive, false) ? command.replace(opts) : command.execute
     end
   end
