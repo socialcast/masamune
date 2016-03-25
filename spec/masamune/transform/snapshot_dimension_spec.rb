@@ -51,7 +51,7 @@ describe Masamune::Transform::SnapshotDimension do
           FROM user_dimension_ledger
         ), windows AS (
           SELECT *,
-          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at DESC, delta, source_uuid) window_id
+          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at DESC, delta, source_uuid DESC) window_id
           FROM ranges
         ), snapshot AS (
           SELECT
