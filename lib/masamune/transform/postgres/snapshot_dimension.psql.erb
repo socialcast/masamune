@@ -32,7 +32,7 @@ WITH ranges AS (
   FROM <%= source.name %>
 ), windows AS (
   SELECT *,
-  SUM(r) OVER (ORDER BY <%= target.window("start_at #{order}", 'delta', 'source_uuid').join(', ') %>) window_id
+  SUM(r) OVER (ORDER BY <%= target.window("start_at #{order}", 'delta', 'source_uuid DESC').join(', ') %>) window_id
   FROM ranges
 ), snapshot AS (
   SELECT
