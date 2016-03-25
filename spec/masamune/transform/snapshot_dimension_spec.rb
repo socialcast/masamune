@@ -39,8 +39,61 @@ describe Masamune::Transform::SnapshotDimension do
 
   let(:target) { catalog.postgres.user_dimension }
 
-  context 'with postgres dimension' do
-    subject(:result) { transform.snapshot_dimension(target.ledger_table, target.stage_table).to_s }
+  context 'with postgres dimension forward snapshot' do
+    subject(:result) { transform.snapshot_dimension(target.ledger_table, target.stage_table, 'ASC').to_s }
+
+    it 'should eq render snapshot_dimension template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        WITH ranges AS (
+          SELECT *,
+          CASE WHEN delta = 0
+          THEN 1 ELSE NULL END r
+          FROM user_dimension_ledger
+        ), windows AS (
+          SELECT *,
+          SUM(r) OVER (ORDER BY tenant_id, user_id, start_at ASC, delta, source_uuid DESC) window_id
+          FROM ranges
+        ), snapshot AS (
+          SELECT
+            consolidated.user_account_state_type_id,
+            consolidated.tenant_id,
+            consolidated.user_id,
+            consolidated.preferences,
+            consolidated.start_at
+          FROM (
+            SELECT DISTINCT ON (tenant_id, user_id, start_at, id)
+              coalesce_merge(user_account_state_type_id) OVER w AS user_account_state_type_id,
+              tenant_id AS tenant_id,
+              user_id AS user_id,
+              hstore_merge(preferences) OVER w AS preferences,
+              start_at AS start_at
+            FROM
+              windows
+            WINDOW w AS (PARTITION BY tenant_id, user_id, window_id ORDER BY start_at ASC)
+            ORDER BY tenant_id, user_id, start_at ASC, id DESC, window_id
+          ) consolidated
+          WHERE
+            consolidated.user_account_state_type_id IS NOT NULL AND
+            consolidated.tenant_id IS NOT NULL AND
+            consolidated.user_id IS NOT NULL
+        )
+        INSERT INTO
+          user_dimension_stage (user_account_state_type_id, tenant_id, user_id, preferences, start_at)
+        SELECT
+          user_account_state_type_id,
+          tenant_id,
+          user_id,
+          preferences,
+          start_at
+        FROM
+          snapshot
+        ;
+      EOS
+    end
+  end
+
+  context 'with postgres dimension reverse snapshot' do
+    subject(:result) { transform.snapshot_dimension(target.ledger_table, target.stage_table, 'DESC').to_s }
 
     it 'should eq render snapshot_dimension template' do
       is_expected.to eq <<-EOS.strip_heredoc
