@@ -28,11 +28,11 @@ http://www.postgresql.org/message-id/CAGnEbohhKmW55oB0FpQd3naXBkwi74E=8DRZBGFjS-
 WITH ranges AS (
   SELECT *,
   CASE WHEN delta = 0
-  THEN 1 ELSE NULL END r
+  THEN 1 ELSE 0 END r
   FROM <%= source.name %>
 ), windows AS (
   SELECT *,
-  SUM(r) OVER (ORDER BY <%= target.window("start_at #{order}", 'delta', 'source_uuid DESC').join(', ') %>) window_id
+  SUM(r) OVER (PARTITION BY <%= target.window.join(', ') %> ORDER BY <%= ["start_at #{order}", 'delta', "source_uuid #{order}"].join(', ') %>) AS window_id
   FROM ranges
 ), snapshot AS (
   SELECT
@@ -41,15 +41,15 @@ WITH ranges AS (
     <%- end -%>
     consolidated.start_at
   FROM (
-    SELECT DISTINCT ON (<%= target.window('start_at', 'id').join(', ') %>)
+    SELECT DISTINCT ON (<%= target.window('start_at').join(', ') %>)
       <%- target.insert_values(window: 'w').each do |value, last| -%>
       <%= value %><%= ',' %>
       <%- end -%>
       start_at AS start_at
     FROM
       windows
-    WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY start_at <%= order %>)
-    ORDER BY <%= target.window("start_at #{order}", "id DESC", 'window_id').join(', ') %>
+    WINDOW w AS (PARTITION BY <%= target.window('window_id').join(', ') %> ORDER BY <%= ["start_at #{order}", "source_uuid #{order}"].join(', ') %>)
+    ORDER BY <%= target.window("start_at #{order}", "source_uuid DESC", 'window_id').join(', ') %>
   ) consolidated
   WHERE
     <%- target.insert_view_constraints.each do |constraint, last| -%>
