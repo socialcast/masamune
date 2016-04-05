@@ -67,8 +67,9 @@ describe Masamune::Transform::StageFact do
 
         column 'tenant_id', type: :integer, natural_key: true
         column 'group_id', type: :integer, natural_key: true
-        column 'group_mode', type: :enum, sub_type: 'group_mode', values: %(missing public private), index: true, natural_key: true, default: 'missing'
+        column 'group_mode', type: :enum, sub_type: 'group_mode', values: %(missing unknown public private), index: true, natural_key: true, default: 'missing'
         row group_id: -1, group_mode: 'missing', attributes: {id: :missing}
+        row group_id: -2, group_mode: 'unknown', attributes: {id: :unknown}
       end
 
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
@@ -76,8 +77,8 @@ describe Masamune::Transform::StageFact do
         references :date
         references :tenant, through: [:user, :from_group, :group]
         references :user
-        references :group, label: 'from', default: :missing
-        references :group, default: :missing
+        references :group, label: 'from', default: :missing, unknown: :unknown
+        references :group, default: :missing, unknown: :unknown
         references :user_agent, insert: true
         references :feature, insert: true
         references :session, degenerate: true
@@ -127,8 +128,8 @@ describe Masamune::Transform::StageFact do
           date_dimension.id,
           tenant_dimension.id,
           user_dimension.id,
-          from_group_dimension.id,
-          group_dimension.id,
+          COALESCE(from_group_dimension.id, unknown_group_dimension_id()),
+          COALESCE(group_dimension.id, unknown_group_dimension_id()),
           user_agent_type.id,
           feature_type.id,
           visits_hourly_file_fact_stage.session_type_id,
@@ -136,44 +137,44 @@ describe Masamune::Transform::StageFact do
           visits_hourly_file_fact_stage.time_key
         FROM
           visits_hourly_file_fact_stage
-        JOIN
+        INNER JOIN
           date_dimension
         ON
           date_dimension.date_id = visits_hourly_file_fact_stage.date_dimension_date_id
-        JOIN
+        INNER JOIN
           user_dimension
         ON
           user_dimension.cluster_type_id = default_cluster_type_id() AND
           user_dimension.user_id = visits_hourly_file_fact_stage.user_dimension_user_id AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN user_dimension.start_at AND COALESCE(user_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < user_dimension.start_at AND user_dimension.version = 1))
-        JOIN
+        LEFT JOIN
           group_dimension AS from_group_dimension
         ON
           from_group_dimension.cluster_type_id = default_cluster_type_id() AND
           from_group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.from_group_dimension_group_id, missing_group_dimension_group_id()) AND
           from_group_dimension.group_mode = COALESCE(visits_hourly_file_fact_stage.from_group_dimension_group_mode, missing_group_dimension_group_mode()) AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN from_group_dimension.start_at AND COALESCE(from_group_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < from_group_dimension.start_at AND from_group_dimension.version = 1))
-        JOIN
+        LEFT JOIN
           group_dimension
         ON
           group_dimension.cluster_type_id = default_cluster_type_id() AND
           group_dimension.group_id = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_id, missing_group_dimension_group_id()) AND
           group_dimension.group_mode = COALESCE(visits_hourly_file_fact_stage.group_dimension_group_mode, missing_group_dimension_group_mode()) AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN group_dimension.start_at AND COALESCE(group_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < group_dimension.start_at AND group_dimension.version = 1))
-        JOIN
+        INNER JOIN
           tenant_dimension
         ON
           tenant_dimension.cluster_type_id = default_cluster_type_id() AND
           tenant_dimension.tenant_id = COALESCE(visits_hourly_file_fact_stage.tenant_dimension_tenant_id, user_dimension.tenant_id, from_group_dimension.tenant_id, group_dimension.tenant_id) AND
           ((TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) BETWEEN tenant_dimension.start_at AND COALESCE(tenant_dimension.end_at, 'INFINITY')) OR (TO_TIMESTAMP(visits_hourly_file_fact_stage.time_key) < tenant_dimension.start_at AND tenant_dimension.version = 1))
-        JOIN
+        INNER JOIN
           user_agent_type
         ON
           user_agent_type.cluster_type_id = default_cluster_type_id() AND
           user_agent_type.name = visits_hourly_file_fact_stage.user_agent_type_name AND
           user_agent_type.version = COALESCE(visits_hourly_file_fact_stage.user_agent_type_version, 'Unknown') AND
           user_agent_type.mobile = COALESCE(visits_hourly_file_fact_stage.user_agent_type_mobile, FALSE)
-        JOIN
+        INNER JOIN
           feature_type
         ON
           feature_type.name = visits_hourly_file_fact_stage.feature_type_name
