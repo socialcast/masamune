@@ -28,6 +28,7 @@ module Masamune::Schema
       insert:          false,
       null:            false,
       default:         nil,
+      unknown:         nil,
       natural_key:     false,
       denormalize:     false,
       multiple:        false,
@@ -71,6 +72,14 @@ module Masamune::Schema
       return if @default == :null
       if default_row = @table.rows.detect { |row| @default ? row.id == @default : row.default }
         default_row.name(column)
+      end
+    end
+
+    def unknown(column = nil)
+      return unless @unknown
+      return if @unknown == :null
+      if unknown_row = @table.rows.detect { |row| row.id == @unknown }
+        unknown_row.name(column)
       end
     end
 

@@ -40,11 +40,11 @@ SELECT
   <%- end -%>
 FROM
   <%= source.name %>
-<%- target.join_conditions(source).each do |table, conditions| -%>
-JOIN
+<%- target.join_conditions(source).each do |table, clause| -%>
+<%= clause.type %> JOIN
   <%= table %>
 ON
-  <%= conditions.join(" AND\n  ") %>
+  <%= clause.conditions.join(" AND\n  ") %>
 <%- end -%>
 ;
 
