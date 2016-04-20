@@ -67,6 +67,16 @@ describe Masamune::Tasks::DumpThor do
     it_behaves_like 'raises Thor::MalformattedArgumentError', %q{Expected '--section' to be one of pre, post, all; got unknown}
   end
 
+  context 'with --skip-indexes' do
+    let(:options) { ['--skip-indexes'] }
+    it_behaves_like 'executes with success'
+  end
+
+  context 'with --no-skip-indexes' do
+    let(:options) { ['--no-skip-indexes'] }
+    it_behaves_like 'executes with success'
+  end
+
   context %q{with --exclude='.*dimension'} do
     let(:options) { [%q{--exclude='.*dimension'}] }
     it_behaves_like 'executes with success'

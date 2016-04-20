@@ -28,7 +28,7 @@ module Masamune::Transform
       return if target.implicit
       return if exclude_table?(target, options)
       child_tables = target.children.map { |child| define_table(child, options.except(:files)) }
-      Operator.new(*child_tables, __method__, target: target, files: options[:files], section: options[:section]).tap do |operator|
+      Operator.new(*child_tables, __method__, target: target, **options).tap do |operator|
         logger.debug("#{target.id}\n" + operator.to_s) if target.debug
       end
     end
