@@ -23,9 +23,10 @@
 module Masamune::Transform::Postgres
   class DefineTable 
     def initialize(options = {})
-      @target   = options[:target]
-      @files    = options[:files] || []
-      @section  = options[:section]
+      @target       = options[:target]
+      @files        = options[:files] || []
+      @section      = options[:section]
+      @skip_indexes = options[:skip_indexes]
     end
 
     def locals
@@ -42,6 +43,10 @@ module Masamune::Transform::Postgres
 
     def section
       @section || :all
+    end
+
+    def skip_indexes?
+      !!@skip_indexes
     end
 
     def define_types?
@@ -73,6 +78,7 @@ module Masamune::Transform::Postgres
 
     def define_indexes?
       return false if pre_section?
+      return false if skip_indexes?
       return true if post_section?
       !target.delay_indexes?
     end

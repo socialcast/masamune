@@ -38,6 +38,7 @@ module Masamune::Tasks
     method_option :type, :enum => ['psql', 'hql'], :desc => 'Schema type', :default => 'psql'
     method_option :section, :enum => ['pre', 'post', 'all'], :desc => 'Schema section', :default => 'all'
     method_option :exclude, :type => :array, :desc => 'Exclude tables matching globs', :default => []
+    method_option :skip_indexes, :type => :boolean, :desc => 'Disable indexes', :default => false
     def dump_exec
       print_catalog
       exit
@@ -59,6 +60,7 @@ module Masamune::Tasks
       {
         exclude: options[:exclude],
         section: options[:section].to_sym,
+        skip_indexes: options[:skip_indexes],
         start_date: start_date,
         stop_date: stop_date
       }.reject { |_, v| v.blank? }

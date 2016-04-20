@@ -25,7 +25,9 @@ describe Masamune::Transform::DefineTable do
   let(:section) { :all }
   let(:options) { { files: files, section: section } }
 
-  subject { transform.define_table(target, options).to_s }
+  subject do
+    transform.define_table(target, options).to_s
+  end
 
   context 'for postgres table with columns' do
     before do
@@ -1005,6 +1007,31 @@ describe Masamune::Transform::DefineTable do
         DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conname = 'user_table_bd2027e_fkey') THEN
         ALTER TABLE user_table ADD CONSTRAINT user_table_bd2027e_fkey FOREIGN KEY (user_account_state_table_id) REFERENCES user_account_state_table(id);
+        END IF; END $$;
+
+        ANALYZE user_table;
+      EOS
+    end
+  end
+
+  context 'for postgres table with index columns and section :post and skip_indexes' do
+    before do
+      catalog.schema :postgres do
+        table 'user' do
+          column 'tenant_id', index: true
+          column 'user_id', index: true
+        end
+      end
+    end
+
+    let(:options) { { section: :post, skip_indexes: true } }
+    let(:target) { catalog.postgres.user_table }
+
+    it 'should render table template' do
+      is_expected.to eq <<-EOS.strip_heredoc
+        DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.relname = 'user_table_pkey') THEN
+        ALTER TABLE user_table ADD PRIMARY KEY (id);
         END IF; END $$;
 
         ANALYZE user_table;
