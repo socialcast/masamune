@@ -35,10 +35,8 @@ module Masamune::Transform::Postgres
       TargetPresenter.new(@target)
     end
 
-    private
-
     class TargetPresenter < SimpleDelegator
-      def insert_columns(source = nil)
+      def insert_columns(_source = nil)
         consolidated_columns.map { |_, column| column.name }
       end
 
@@ -61,10 +59,11 @@ module Masamune::Transform::Postgres
       def duplicate_value_conditions(window)
         [].tap do |result|
           consolidated_columns.map do |_, column|
+            result <<
             if column.null
-              result << "((LAG(#{column.name}) OVER #{window} = #{column.name}) OR (LAG(#{column.name}) OVER #{window} IS NULL AND #{column.name} IS NULL))"
+              "((LAG(#{column.name}) OVER #{window} = #{column.name}) OR (LAG(#{column.name}) OVER #{window} IS NULL AND #{column.name} IS NULL))"
             else
-              result << "(LAG(#{column.name}) OVER #{window} = #{column.name})"
+              "(LAG(#{column.name}) OVER #{window} = #{column.name})"
             end
           end
         end
@@ -93,4 +92,3 @@ module Masamune::Transform::Postgres
     end
   end
 end
-

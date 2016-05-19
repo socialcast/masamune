@@ -129,22 +129,22 @@ shared_examples_for 'Filesystem' do
 
     context 'with nil' do
       let(:path) { nil }
-      it { expect { |b| subject }.to raise_error ArgumentError }
+      it { expect { |_b| subject }.to raise_error ArgumentError }
     end
 
     context 'with blank' do
       let(:path) { ' ' }
-      it { expect { |b| subject }.to raise_error ArgumentError }
+      it { expect { |_b| subject }.to raise_error ArgumentError }
     end
 
     context 'with empty' do
       let(:path) { '' }
-      it { expect { |b| subject }.to raise_error ArgumentError }
+      it { expect { |_b| subject }.to raise_error ArgumentError }
     end
 
     context 'with relative path' do
       let(:path) { 'tmp' }
-      it { expect { |b| subject }.to raise_error ArgumentError }
+      it { expect { |_b| subject }.to raise_error ArgumentError }
     end
 
     context 'with local root' do
@@ -337,7 +337,7 @@ shared_examples_for 'Filesystem' do
 
   describe '#touch!' do
     subject do
-      File.exists?(new_file) && File.exists?(other_new_file)
+      File.exist?(new_file) && File.exist?(other_new_file)
     end
 
     context 'local' do
@@ -372,8 +372,8 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs missing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
-          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once)
+          .and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}")
         expect(filesystem).to receive(:hadoop_fs).with('-test', '-e', 'file://' + new_file, safe: true).at_most(:once).and_return(mock_failure)
       end
       subject { instance.exists?('file://' + new_file) }
@@ -395,9 +395,9 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs existing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
-          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}").
-          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once)
+          .and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}")
+          .and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
         expect(filesystem).to receive(:hadoop_fs).with('-test', '-e', 'file://' + old_file, safe: true).at_most(:once).and_return(mock_success)
       end
       subject { instance.exists?('file://' + old_file) }
@@ -406,12 +406,12 @@ shared_examples_for 'Filesystem' do
 
     context 's3 existing file' do
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', 's3://bucket/00', safe: true).at_most(:once).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/00)).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/01))
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', 's3://bucket/00', safe: true).at_most(:once).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/00)).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/01))
+        expect(filesystem).to receive(:s3cmd).with('ls', 's3://bucket/00', safe: true).at_most(:once)
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/00')
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/01')
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', 's3://bucket/00', safe: true).at_most(:once)
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/00')
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/01')
       end
 
       subject { instance.exists?('s3://bucket/00') }
@@ -421,12 +421,12 @@ shared_examples_for 'Filesystem' do
 
     context 's3 missing file' do
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', 's3://bucket/0', safe: true).at_most(:once).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/00)).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/01))
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', 's3://bucket/0', safe: true).at_most(:once).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/00)).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/01))
+        expect(filesystem).to receive(:s3cmd).with('ls', 's3://bucket/0', safe: true).at_most(:once)
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/00')
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/01')
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', 's3://bucket/0', safe: true).at_most(:once)
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/00')
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/01')
       end
 
       subject { instance.exists?('s3://bucket/0') }
@@ -444,14 +444,14 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs missing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
-          and_yield('')
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_dir + '/*', safe: true).at_most(:once).
-          and_yield('')
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + new_file + '/*', safe: true).at_most(:once).
-          and_yield('')
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + new_file, safe: true).at_most(:once).
-          and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once)
+          .and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_dir + '/*', safe: true).at_most(:once)
+          .and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + new_file + '/*', safe: true).at_most(:once)
+          .and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + new_file, safe: true).at_most(:once)
+          .and_yield('')
       end
       let(:result) { instance.stat('file://' + new_file) }
       it { is_expected.to be_nil }
@@ -460,8 +460,8 @@ shared_examples_for 'Filesystem' do
     context 's3 missing file' do
       before do
         expect(filesystem).to receive(:s3cmd).with('ls', 's3://bucket/', safe: true).at_most(:once)
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|file.txt]}, safe: true).
-          and_yield('')
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|file.txt]}, safe: true)
+          .and_yield('')
       end
       let(:result) { instance.stat('s3://bucket/file.txt') }
       it { is_expected.to be_nil }
@@ -494,16 +494,16 @@ shared_examples_for 'Filesystem' do
 
     context 'local existing file (recursive)' do
       let(:result) { instance.stat(File.join(tmp_dir, '*')) }
-      it { expect { result }.to raise_error /cannot contain wildcard/ }
+      it { expect { result }.to raise_error(/cannot contain wildcard/) }
     end
 
     context 'hdfs existing file' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once).
-          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}").
-          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_file, safe: true).at_most(:once).
-          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.join(old_dir, '/*'), safe: true).at_most(:once)
+          .and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_dir}")
+          .and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_file, safe: true).at_most(:once)
+          .and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
       end
 
       let(:result) { instance.stat('file://' + old_file) }
@@ -527,8 +527,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 existing file' do
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|file.txt]}, safe: true).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/file.txt))
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|file.txt]}, safe: true)
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/file.txt')
       end
       let(:result) { instance.stat('s3://bucket/file.txt') }
 
@@ -551,8 +551,8 @@ shared_examples_for 'Filesystem' do
 
     context 's3 existing directory' do
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir]}, safe: true).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt))
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir]}, safe: true)
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/dir/file.txt')
       end
 
       let(:result) { instance.stat('s3://bucket/dir') }
@@ -577,7 +577,7 @@ shared_examples_for 'Filesystem' do
 
   describe '#mkdir!' do
     subject do
-      Dir.exists?(new_dir) && Dir.exists?(other_new_dir)
+      Dir.exist?(new_dir) && Dir.exist?(other_new_dir)
     end
 
     context 'local directory' do
@@ -588,7 +588,7 @@ shared_examples_for 'Filesystem' do
     end
 
     context 'local existing directory' do
-      subject { Dir.exists?(old_dir) }
+      subject { Dir.exist?(old_dir) }
       before do
         expect(FileUtils).to receive(:mkdir_p).never
         instance.mkdir!(old_dir)
@@ -660,12 +660,12 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs no matches' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', 'file://' + new_dir + '/*', safe: true).at_most(:once).
-          and_yield('')
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + new_dir + '/*', safe: true).at_most(:once).
-          and_yield('')
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(new_dir) + '/*', safe: true).at_most(:once).
-          and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', 'file://' + new_dir + '/*', safe: true).at_most(:once)
+          .and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + new_dir + '/*', safe: true).at_most(:once)
+          .and_yield('')
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(new_dir) + '/*', safe: true).at_most(:once)
+          .and_yield('')
       end
       let(:pattern) { File.join(new_dir, '*') }
       it { expect(subject.count).to eq(0) }
@@ -674,12 +674,12 @@ shared_examples_for 'Filesystem' do
 
     context 'hdfs one matches' do
       before do
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', 'file://' + old_dir + '/*', safe: true).at_most(:once).
-          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_dir + '/*', safe: true).at_most(:once).
-          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
-        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once).
-          and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', 'file://' + old_dir + '/*', safe: true).at_most(:once)
+          .and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_dir + '/*', safe: true).at_most(:once)
+          .and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + File.dirname(old_dir) + '/*', safe: true).at_most(:once)
+          .and_yield("drwxrwxrwt   - root     wheel         68 2015-02-24 12:09 #{old_file}")
       end
       let(:pattern) { File.join(File.dirname(old_file), '*') }
       it { expect(subject.count).to eq(1) }
@@ -690,8 +690,8 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir", safe: true).at_most(:once)
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', "s3://bucket/dir/*", safe: true).at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', 's3://bucket/dir', safe: true).at_most(:once)
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', 's3://bucket/dir/*', safe: true).at_most(:once)
       end
 
       it { expect(subject.count).to eq(0) }
@@ -701,9 +701,9 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/0' }
 
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir/*]}, safe: true).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/01.txt)).
-          and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/02.txt))
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir/*]}, safe: true)
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/dir/01.txt')
+          .and_yield('2013-05-24 18:53      2912   s3://bucket/dir/02.txt')
       end
 
       it { expect(subject.count).to eq(0) }
@@ -713,9 +713,9 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*.txt' }
 
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir/*]}, safe: true).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
-          and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir/*]}, safe: true)
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/dir/file.txt')
+          .and_yield('2013-05-24 18:53      2912   s3://bucket/dir/file.csv')
       end
 
       it { is_expected.to include 's3://bucket/dir/file.txt' }
@@ -726,10 +726,10 @@ shared_examples_for 'Filesystem' do
       let(:pattern) { 's3://bucket/dir/*' }
 
       before do
-        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir/*]}, safe: true).
-          and_yield(%q(                       DIR   s3://bucket/dir/file_$folder$)).
-          and_yield(%q(2013-05-24 18:52      2912   s3://bucket/dir/file.txt)).
-          and_yield(%q(2013-05-24 18:53      2912   s3://bucket/dir/file.csv))
+        expect(filesystem).to receive(:s3cmd).with('ls', '--recursive', %r{s3://bucket/[\*|dir/*]}, safe: true)
+          .and_yield('                       DIR   s3://bucket/dir/file_$folder$')
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/dir/file.txt')
+          .and_yield('2013-05-24 18:53      2912   s3://bucket/dir/file.csv')
       end
 
       it { is_expected.to include 's3://bucket/dir/file.txt' }
@@ -754,7 +754,7 @@ shared_examples_for 'Filesystem' do
     let(:result_file) { File.join(new_dir, File.basename(old_file)) }
 
     subject do
-      File.exists?(result_file)
+      File.exist?(result_file)
     end
 
     context 'local file to local file' do
@@ -829,7 +829,7 @@ shared_examples_for 'Filesystem' do
     let(:result_file) { File.join(new_dir, File.basename(old_file)) }
 
     subject do
-      File.exists?(result_file)
+      File.exist?(result_file)
     end
 
     context 'local file to local dir' do
@@ -910,7 +910,7 @@ shared_examples_for 'Filesystem' do
 
   describe '#copy_dir' do
     subject do
-      File.exists?(File.join(new_dir, File.basename(old_dir), File.basename(old_file)))
+      File.exist?(File.join(new_dir, File.basename(old_dir), File.basename(old_file)))
     end
 
     context 'local dir to local dir' do
@@ -983,7 +983,7 @@ shared_examples_for 'Filesystem' do
 
   describe '#remove_file' do
     subject do
-      File.exists?(old_file)
+      File.exist?(old_file)
     end
 
     context 'local false' do
@@ -991,7 +991,7 @@ shared_examples_for 'Filesystem' do
         instance.remove_file(old_file)
       end
 
-      it { is_expected.to eq(false)}
+      it { is_expected.to eq(false) }
     end
 
     context 'hdfs file' do
@@ -1011,7 +1011,7 @@ shared_examples_for 'Filesystem' do
 
   describe '#remove_dir' do
     subject do
-      File.exists?(old_dir)
+      File.exist?(old_dir)
     end
 
     context 'local dir' do
@@ -1020,7 +1020,7 @@ shared_examples_for 'Filesystem' do
         instance.remove_dir(old_dir)
       end
 
-      it { is_expected.to eq(false)}
+      it { is_expected.to eq(false) }
     end
 
     context 'local root dir' do
@@ -1028,7 +1028,7 @@ shared_examples_for 'Filesystem' do
         expect(filesystem).to receive(:root_path?).once.and_return(true)
       end
 
-      it { expect { instance.remove_dir(old_dir) }.to raise_error /root path/ }
+      it { expect { instance.remove_dir(old_dir) }.to raise_error(/root path/) }
     end
 
     context 'hdfs dir' do
@@ -1044,7 +1044,7 @@ shared_examples_for 'Filesystem' do
         expect(filesystem).to receive(:root_path?).once.and_return(true)
       end
 
-      it { expect { instance.remove_dir('file://' + old_dir) }.to raise_error /root path/ }
+      it { expect { instance.remove_dir('file://' + old_dir) }.to raise_error(/root path/) }
     end
 
     context 's3 dir' do
@@ -1060,17 +1060,17 @@ shared_examples_for 'Filesystem' do
         expect(filesystem).to receive(:s3cmd).never
       end
 
-      it { expect { instance.remove_dir('s3://bucket/') }.to raise_error /root path/ }
+      it { expect { instance.remove_dir('s3://bucket/') }.to raise_error(/root path/) }
     end
   end
 
   describe '#move_file_to_file' do
     subject(:removes_old_file) do
-      !File.exists?(old_file)
+      !File.exist?(old_file)
     end
 
     subject(:creates_new_file) do
-      File.exists?(new_file)
+      File.exist?(new_file)
     end
 
     context 'local file to local file' do
@@ -1095,7 +1095,7 @@ shared_examples_for 'Filesystem' do
     context 'local file to hdfs file' do
       it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + old_dir).once
-        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' +  old_file, 'file://' + new_file)
+        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' + old_file, 'file://' + new_file)
         instance.move_file_to_file(old_file, 'file://' + new_file)
       end
     end
@@ -1154,11 +1154,11 @@ shared_examples_for 'Filesystem' do
     end
 
     subject(:removes_old_file) do
-      !File.exists?(old_file)
+      !File.exist?(old_file)
     end
 
     subject(:creates_new_file) do
-      File.exists?(File.join(new_dir, File.basename(old_file)))
+      File.exist?(File.join(new_dir, File.basename(old_file)))
     end
 
     context 'local file to local dir' do
@@ -1183,7 +1183,7 @@ shared_examples_for 'Filesystem' do
     context 'local file to hdfs dir' do
       it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + new_dir).once
-        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' +  old_file, 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' + old_file, 'file://' + new_dir)
         instance.move_file_to_dir(old_file, 'file://' + new_dir)
       end
     end
@@ -1238,11 +1238,11 @@ shared_examples_for 'Filesystem' do
 
   describe '#move_dir' do
     subject(:removes_old_dir) do
-      !File.exists?(old_dir)
+      !File.exist?(old_dir)
     end
 
     subject(:creates_new_dir) do
-      File.exists?(new_dir)
+      File.exist?(new_dir)
     end
 
     context 'local dir to local dir' do
@@ -1266,7 +1266,7 @@ shared_examples_for 'Filesystem' do
     context 'local dir to hdfs dir' do
       it do
         expect(filesystem).to receive(:hadoop_fs).with('-mkdir', '-p', 'file://' + File.dirname(new_dir)).once
-        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' +  old_dir, 'file://' + new_dir)
+        expect(filesystem).to receive(:hadoop_fs).with('-moveFromLocal', 'file://' + old_dir, 'file://' + new_dir)
         instance.move_dir(old_dir, 'file://' + new_dir)
       end
     end

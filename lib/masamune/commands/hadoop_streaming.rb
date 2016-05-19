@@ -39,17 +39,17 @@ module Masamune::Commands
 
     DEFAULT_ATTRIBUTES =
     {
-      :path         => 'hadoop',
-      :options      => [],
-      :jar          => default_hadoop_streaming_jar,
-      :input        => [],
-      :output       => nil,
-      :mapper       => nil,
-      :reducer      => nil,
-      :extra        => [],
-      :upload       => true,
-      :quote        => false
-    }
+      path: 'hadoop',
+      options: [],
+      jar: default_hadoop_streaming_jar,
+      input: [],
+      output: nil,
+      mapper: nil,
+      reducer: nil,
+      extra: [],
+      upload: true,
+      quote: false
+    }.freeze
 
     attr_reader :input
 
@@ -61,7 +61,7 @@ module Masamune::Commands
       @input = Array.wrap(@input)
     end
 
-    # TODO ensure jar/ mapper/reduce exists, warn or remove if output exists
+    # TODO: ensure jar/ mapper/reduce exists, warn or remove if output exists
     def command_args
       args = []
       args << @path
@@ -95,10 +95,10 @@ module Masamune::Commands
           path + '/*'
         end
       end
-      console("hadoop_streaming %s -> %s (%s/%s)" % [@input.join(' '), @output, @mapper, @reducer])
+      console(format('hadoop_streaming %s -> %s (%s/%s)', @input.join(' '), @output, @mapper, @reducer))
     end
 
-    def around_execute(&block)
+    def around_execute
       Dir.chdir(filesystem.path(:run_dir)) do
         yield
       end
@@ -106,10 +106,10 @@ module Masamune::Commands
 
     private
 
-    # FIXME shell quoting is a separate concern
+    # FIXME: shell quoting is a separate concern
     def quote_arg(arg)
       out = arg.dup
-      out.gsub!(%q('\t'), %q('"'\\\\\\\\t'"'))
+      out.gsub!('\'\t\'', %q('"'\\\\\\\\t'"'))
       out
     end
   end

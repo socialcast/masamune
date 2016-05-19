@@ -23,15 +23,15 @@
 
 require 'user_agent_parser'
 
-APACHE_LOG_REGEX = /^(?<ip_address>\d+\.\d+\.\d+\.\d+) - (?<user_id>\d+) \[(?<timestamp>.*?)\] "GET (?<path>.*?) HTTP\/1.1" \d+ \d+ "-" "(?<user_agent>.*?)"/
-KFS = ':'
-OFS = "\t"
+APACHE_LOG_REGEX = %r{^(?<ip_address>\d+\.\d+\.\d+\.\d+) - (?<user_id>\d+) \[(?<timestamp>.*?)\] "GET (?<path>.*?) HTTP/1.1" \d+ \d+ "-" "(?<user_agent>.*?)"}
+KFS = ':'.freeze
+OFS = "\t".freeze
 
 user_agent_parser = UserAgentParser::Parser.new
 
 ARGF.each do |line|
-  next unless fields = APACHE_LOG_REGEX.match(line)
-  next unless fields[:timestamp] && fields[:ip_address] && fields[:path]
+  fields = APACHE_LOG_REGEX.match(line)
+  next unless fields && fields[:timestamp] && fields[:ip_address] && fields[:path]
   created_at = DateTime.strptime(fields[:timestamp], '%d/%b/%Y:%H:%M:%S %z').to_time.utc
   user_agent = user_agent_parser.parse(fields[:user_agent])
   date_key = created_at.strftime('%Y%m%d')

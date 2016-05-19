@@ -37,16 +37,16 @@ RSpec::Core::RakeTask.new(:spec)
 namespace :spec do
   desc 'Run Rspec unit code examples'
   RSpec::Core::RakeTask.new(:unit) do |spec|
-    spec.pattern = "spec/**/*_spec.rb"
+    spec.pattern = 'spec/**/*_spec.rb'
   end
 
   desc 'Run Rspec acceptance code examples'
   RSpec::Core::RakeTask.new(:acceptance) do |spec|
-    spec.pattern = "examples/**/*_spec.rb"
+    spec.pattern = 'examples/**/*_spec.rb'
   end
 
   desc 'Run All Rspec code examples'
   task all: [:unit, :acceptance]
 end
 
-task :default => :spec
+task default: :spec

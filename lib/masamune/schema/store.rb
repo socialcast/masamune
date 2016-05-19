@@ -28,7 +28,7 @@ module Masamune::Schema
   class Store
     include Masamune::HasEnvironment
 
-    SUPPORTED_ATTRIBUTES = %(table dimension fact file)
+    SUPPORTED_ATTRIBUTES = %(table dimension fact file).freeze
 
     DEFAULT_ATTRIBUTES =
     {
@@ -37,7 +37,7 @@ module Masamune::Schema
       json_encoding:   ->(store) { default_json_encoding(store) },
       headers:         ->(store) { default_headers(store) },
       debug:           false
-    }
+    }.freeze
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
       attr_accessor attr
@@ -72,26 +72,25 @@ module Masamune::Schema
       @extra      = []
     end
 
-    def method_missing(method, *args, &block)
+    def method_missing(method, *_args)
       if type == :files
         files[method]
       else
         *attribute_name, attribute_type = method.to_s.split('_')
         raise ArgumentError, "unknown attribute type '#{attribute_type}'" unless SUPPORTED_ATTRIBUTES.include?(attribute_type)
-        self.send(attribute_type.pluralize)[attribute_name.join('_')]
+        send(attribute_type.pluralize)[attribute_name.join('_')]
       end
     end
 
     def dereference_column(id, options = {})
       column_id, reference_id = id.to_s.split(/\./).reverse
       column_options = options.dup
-      column_options.merge!(id: column_id)
+      column_options[:id] = column_id
 
-      if reference = references[reference_id]
-        column_options.merge!(reference: reference)
-      else
-        raise ArgumentError, "dimension #{reference_id} not defined"
-      end if reference_id
+      if reference_id
+        raise ArgumentError, "dimension #{reference_id} not defined" unless references[reference_id]
+        column_options[:reference] = references[reference_id]
+      end
 
       Masamune::Schema::Column.new(column_options)
     end
@@ -105,16 +104,16 @@ module Masamune::Schema
           number = filename.split('_').first.to_i
           result << file if number <= 0 && order == :pre
           result << file if number > 0 && order == :post
-        else
-          result << file if order == :pre
+        elsif order == :pre
+          result << file
         end
       end
       result.to_a
     end
 
-    private
-
     class << self
+      private
+
       def default_format(store)
         case store.type
         when :postgres then :csv

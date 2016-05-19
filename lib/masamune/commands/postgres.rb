@@ -31,24 +31,24 @@ module Masamune::Commands
     include Masamune::Commands::PostgresCommon
 
     DEFAULT_ATTRIBUTES =
-    {
-      :path           => 'psql',
-      :options        => [],
-      :hostname       => 'localhost',
-      :database       => 'postgres',
-      :username       => 'postgres',
-      :pgpass_file    => nil,
-      :file           => nil,
-      :exec           => nil,
-      :input          => nil,
-      :output         => nil,
-      :print          => false,
-      :block          => nil,
-      :csv            => false,
-      :variables      => {},
-      :tuple_output   => false,
-      :debug          => false
-    }
+      {
+        path: 'psql',
+        options: [],
+        hostname: 'localhost',
+        database: 'postgres',
+        username: 'postgres',
+        pgpass_file: nil,
+        file: nil,
+        exec: nil,
+        input: nil,
+        output: nil,
+        print: false,
+        block: nil,
+        csv: false,
+        variables: {},
+        tuple_output: false,
+        debug: false
+      }.freeze
 
     def initialize(delegate, attrs = {})
       super delegate
@@ -60,9 +60,7 @@ module Masamune::Commands
     end
 
     def stdin
-      if @input
-        @stdin ||= StringIO.new(strip_sql(@input))
-      end
+      @stdin ||= StringIO.new(strip_sql(@input)) if @input
     end
 
     def interactive?
@@ -76,14 +74,14 @@ module Masamune::Commands
     def command_args
       args = []
       args << @path
-      args << '--host=%s' % @hostname if @hostname
-      args << '--dbname=%s' % @database
-      args << '--username=%s' % @username if @username
+      args << "--host=#{@hostname}" if @hostname
+      args << "--dbname=#{@database}"
+      args << "--username=#{@username}" if @username
       args << '--no-password'
       args << '--set=ON_ERROR_STOP=1'
       args << @options.map(&:to_a)
       args << command_args_for_file if @file
-      args << '--output=%s' % @output if @output
+      args << "--output=#{@output}" if @output
       args << '--no-align' << '--field-separator=,' << '--pset=footer' if @csv
       args << '--pset=tuples_only' if @tuple_output
       args.flatten.compact
@@ -91,7 +89,7 @@ module Masamune::Commands
 
     def before_execute
       console("psql with file #{@file}") if @file
-      if @debug and output = rendered_template || @file
+      if @debug && (output = rendered_template || @file)
         logger.debug("#{output}:\n" + File.read(output))
       end
 
@@ -101,7 +99,7 @@ module Masamune::Commands
       end
     end
 
-    def handle_stdout(line, line_no)
+    def handle_stdout(line, _line_no)
       if line =~ /\A#{prompt}/
         logger.debug(line)
       else
@@ -110,12 +108,12 @@ module Masamune::Commands
       end
     end
 
-    def handle_stderr(line, line_no)
+    def handle_stderr(line, _line_no)
       @error = line.split(/ERROR:\s*/).last if line =~ /ERROR:/
       logger.debug(line)
     end
 
-    def failure_message(status)
+    def failure_message(_status)
       @error || 'psql failed without error'
     end
 
@@ -134,15 +132,15 @@ module Masamune::Commands
     end
 
     def command_args_for_simple_file
-      ['--file=%s' % @file].tap do |args|
+      ["--file=#{@file}"].tap do |args|
         @variables.each do |key, val|
-          args << '--set=%s' % "#{key.to_s}='#{val.to_s}'"
+          args << "--set=#{key}='#{val}'"
         end
       end
     end
 
     def command_args_for_template
-      ['--file=%s' % rendered_template]
+      ["--file=#{rendered_template}"]
     end
 
     def exec_file

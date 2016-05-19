@@ -69,7 +69,7 @@ describe Masamune::Transform::LoadFact do
   end
 
   let(:files) { (1..3).map { |i| double(path: "output_#{i}.csv") } }
-  let(:date) { DateTime.civil(2014,8) }
+  let(:date) { DateTime.civil(2014, 8) }
   let(:target) { catalog.postgres.visits_fact }
   let(:source) { catalog.postgres.visits_file }
   let(:source_table) { source.stage_table(suffix: 'file', table: target, inherit: false) }

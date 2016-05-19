@@ -47,7 +47,7 @@ module Masamune::Schema
       reference:           nil,
       parent:              nil,
       debug:               false
-    }
+    }.freeze
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
       attr_accessor attr
@@ -139,7 +139,7 @@ module Masamune::Schema
     end
 
     def reference_name(label = nil)
-      qualified_name(label).to_s.gsub(/\./, '_').to_sym
+      qualified_name(label).to_s.tr('.', '_').to_sym
     end
 
     def sql_type(for_surrogate_key = false)
@@ -209,7 +209,11 @@ module Masamune::Schema
       return nil if value.nil?
       case type
       when :boolean
-        value ? 'TRUE' : (hive_encoding? ? nil : 'FALSE')
+        if value
+          'TRUE'
+        else
+          hive_encoding? ? nil : 'FALSE'
+        end
       when :yaml
         value.to_hash.to_yaml
       when :json, :key_value
@@ -298,14 +302,12 @@ module Masamune::Schema
 
     def default_ruby_value
       return [] if array_value?
-      return HashWithIndifferentAccess.new { |h,k| h[k] = HashWithIndifferentAccess.new(&h.default_proc) } if hash_value?
+      return HashWithIndifferentAccess.new { |h, k| h[k] = HashWithIndifferentAccess.new(&h.default_proc) } if hash_value?
       case type
       when :date
         Date.new(0)
       when :timestamp
         Time.new(0)
-      else
-        nil
       end
     end
 
@@ -348,7 +350,7 @@ module Masamune::Schema
     end
 
     def array_value?
-      !!(array || (reference && reference.respond_to?(:multiple) && reference.multiple))
+      (array || (reference && reference.respond_to?(:multiple) && reference.multiple)) == true
     end
 
     def hash_value?
@@ -364,7 +366,7 @@ module Masamune::Schema
     end
 
     def as_hash
-      {id: id}.tap do |hash|
+      { id: id }.tap do |hash|
         DEFAULT_ATTRIBUTES.keys.each do |attr|
           hash[attr] = public_send(attr)
         end
@@ -451,7 +453,7 @@ module Masamune::Schema
     def required_value?
       return false if reference && (reference.null || !reference.default.nil?)
       return false if null || !default.nil?
-      return false if !strict
+      return false unless strict
       true
     end
 
@@ -465,7 +467,7 @@ module Masamune::Schema
 
     def sql_default
       return if default.nil?
-      return if !strict
+      return unless strict
       "DEFAULT #{sql_value(default)}"
     end
 

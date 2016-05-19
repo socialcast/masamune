@@ -38,7 +38,7 @@ module Masamune
     class << self
       def load(options = {}, context = binding)
         file = options[:file]
-        raise ArgumentError, "Fixture '#{file}' does not exist" unless File.exists?(file)
+        raise ArgumentError, "Fixture '#{file}' does not exist" unless File.exist?(file)
         YAML.load(ERB.new(File.read(file)).result(context)).tap do |data|
           return new(options.merge(data: data))
         end

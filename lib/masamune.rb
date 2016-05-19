@@ -43,6 +43,6 @@ module Masamune
   require 'masamune/schema'
   require 'masamune/transform'
 
-  extend self
+  extend self # rubocop:disable Style/ModuleFunction
   extend Masamune::HasEnvironment
 end

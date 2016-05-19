@@ -21,27 +21,25 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-KFS = ':'
-OFS = "\t"
-IFS = "\t"
+KFS = ':'.freeze
+OFS = "\t".freeze
+IFS = "\t".freeze
 
 prev_key = nil
 total = 0
 
 ARGF.each do |line|
-   key, count = line.chomp.split(IFS)
+  key, count = line.chomp.split(IFS)
 
-   if prev_key && key != prev_key && total > 0
-      puts [*prev_key.split(KFS), total].join(OFS)
-      prev_key = key
-      total = 0
-   elsif !prev_key
-      prev_key = key
-   end
+  if prev_key && key != prev_key && total > 0
+    puts [*prev_key.split(KFS), total].join(OFS)
+    prev_key = key
+    total = 0
+  elsif !prev_key
+    prev_key = key
+  end
 
-   total += count.to_i
+  total += count.to_i
 end
 
-if prev_key && total > 0
-  puts [*prev_key.split(KFS), total].join(OFS)
-end
+puts [*prev_key.split(KFS), total].join(OFS) if prev_key && total > 0

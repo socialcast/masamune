@@ -29,8 +29,8 @@ describe Masamune::Thor do
       namespace :example
 
       desc 'command', 'command'
-      target path: fs.path(:tmp_dir, "target/%Y-%m-%d")
-      source path: fs.path(:tmp_dir, "source/%Y%m%d*.log")
+      target path: fs.path(:tmp_dir, 'target/%Y-%m-%d')
+      source path: fs.path(:tmp_dir, 'source/%Y%m%d*.log')
       def command_task
         # NOP
       end
@@ -48,8 +48,8 @@ describe Masamune::Thor do
       end
 
       desc 'unknown', 'unknown'
-      target path: fs.path(:unknown_dir, "target/%Y-%m-%d")
-      source path: fs.path(:unknown_dir, "source/%Y%m%d*.log")
+      target path: fs.path(:unknown_dir, 'target/%Y-%m-%d')
+      source path: fs.path(:unknown_dir, 'source/%Y%m%d*.log')
       def unknown_task
         # NOP
       end
@@ -188,7 +188,7 @@ describe Masamune::Thor do
         expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
         allow(thor_class).to receive(:dispatch).and_raise('random exception')
       end
-      it { expect { cli_invocation }.to raise_error /random exception/ }
+      it { expect { cli_invocation }.to raise_error(/random exception/) }
     end
 
     context 'with command that raises exception after initialization' do
@@ -198,7 +198,7 @@ describe Masamune::Thor do
         expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
         allow(thor_class).to receive(:after_initialize_invoke).and_raise('random exception')
       end
-      it { expect { cli_invocation }.to raise_error /random exception/ }
+      it { expect { cli_invocation }.to raise_error(/random exception/) }
     end
 
     context 'with command that raises exception during execution' do
@@ -243,12 +243,12 @@ describe Masamune::Thor do
 
     context 'without --' do
       let(:argv) { ['--flag', 'true'] }
-      it { is_expected.to eq([['--flag', 'true'],[]]) }
+      it { is_expected.to eq([['--flag', 'true'], []]) }
     end
 
     context 'with -- and no following arguments' do
       let(:argv) { ['--flag', 'true', '--'] }
-      it { is_expected.to eq([['--flag', 'true'],[]]) }
+      it { is_expected.to eq([['--flag', 'true'], []]) }
     end
 
     context 'with -- and a single extra argument' do

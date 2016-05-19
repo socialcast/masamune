@@ -20,4 +20,4 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-Dir["#{File.dirname(__FILE__)}/../../spec/support/masamune/**/*.rb"].each {|f| require f}
+Dir["#{File.dirname(__FILE__)}/../../spec/support/masamune/**/*.rb"].each { |f| require f }

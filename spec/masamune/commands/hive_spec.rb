@@ -22,7 +22,7 @@
 
 describe Masamune::Commands::Hive do
   let(:filesystem) { Masamune::MockFilesystem.new }
-  let(:configuration) { {:options => options} }
+  let(:configuration) { { options: options } }
   let(:options) { [] }
   let(:attrs) { {} }
 
@@ -55,17 +55,17 @@ describe Masamune::Commands::Hive do
     it { is_expected.to eq(default_command) }
 
     context 'with command attrs' do
-      let(:options) { [{'-d' => 'DATABASE=development'}] }
+      let(:options) { [{ '-d' => 'DATABASE=development' }] }
       it { is_expected.to eq([*default_command, '-d', 'DATABASE=development']) }
     end
 
     context 'with file' do
-      let(:attrs) { {file: local_file} }
+      let(:attrs) { { file: local_file } }
       it { is_expected.to eq([*default_command, '-f', remote_file]) }
     end
 
     context 'with file and debug' do
-      let(:attrs) { {file: local_file, debug: true} }
+      let(:attrs) { { file: local_file, debug: true } }
       before do
         expect(File).to receive(:read).with(local_file).and_return('SHOW TABLES;')
         expect(instance.logger).to receive(:debug).with("#{local_file}:\nSHOW TABLES;")
@@ -74,7 +74,7 @@ describe Masamune::Commands::Hive do
     end
 
     context 'with exec' do
-      let(:attrs) { {exec: 'SELECT * FROM table;'} }
+      let(:attrs) { { exec: 'SELECT * FROM table;' } }
       before do
         expect(instance).to receive(:exec_file).and_return(remote_file)
       end
@@ -82,12 +82,12 @@ describe Masamune::Commands::Hive do
     end
 
     context 'with file and exec' do
-      let(:attrs) { {file: local_file, exec: 'SELECT * FROM table;'} }
+      let(:attrs) { { file: local_file, exec: 'SELECT * FROM table;' } }
       it { expect { instance }.to raise_error ArgumentError, 'Cannot specify both file and exec' }
     end
 
     context 'with variables' do
-      let(:attrs) { {file: local_file, variables: {R: 'R2DO', C: 'C3PO'}} }
+      let(:attrs) { { file: local_file, variables: { R: 'R2DO', C: 'C3PO' } } }
       it { is_expected.to eq([*default_command, '-f', remote_file, '-d', 'R=R2DO', '-d', 'C=C3PO']) }
     end
 
@@ -96,12 +96,12 @@ describe Masamune::Commands::Hive do
         filesystem.touch!('setup_a.hql', 'setup_b.hql')
       end
 
-      let(:attrs) { {setup_files: ['setup_a.hql', 'setup_b.hql']} }
+      let(:attrs) { { setup_files: ['setup_a.hql', 'setup_b.hql'] } }
       it { is_expected.to eq([*default_command, '-i', 'setup_a.hql', '-i', 'setup_b.hql']) }
     end
 
     context 'with template file' do
-      let(:attrs) { {file: 'zomg.hql.erb'} }
+      let(:attrs) { { file: 'zomg.hql.erb' } }
       before do
         expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
         expect_any_instance_of(Masamune::MockFilesystem).to receive(:copy_file_to_file)
@@ -110,7 +110,7 @@ describe Masamune::Commands::Hive do
     end
 
     context 'with template file and debug' do
-      let(:attrs) { {file: 'zomg.hql.erb', debug: true} }
+      let(:attrs) { { file: 'zomg.hql.erb', debug: true } }
       before do
         expect(Masamune::Template).to receive(:render_to_file).with('zomg.hql.erb', {}).and_return('zomg.hql')
         expect(File).to receive(:read).with('zomg.hql').and_return('SHOW TABLES;')
@@ -124,7 +124,7 @@ describe Masamune::Commands::Hive do
   describe '#handle_stdout' do
     let(:buffer) { StringIO.new }
     let(:delimiter) { "\t" }
-    let(:attrs) { {buffer: buffer, delimiter: delimiter, csv: true} }
+    let(:attrs) { { buffer: buffer, delimiter: delimiter, csv: true } }
 
     context 'encode NULL' do
       let(:input_row) { ['A', 'NULL', 'B', 'C', '', 'E'].join(delimiter) }

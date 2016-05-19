@@ -38,14 +38,13 @@ module Masamune::Transform::Common
       TargetPresenter.new(@target)
     end
 
-    private
-
     class TargetPresenter < SimpleDelegator
       include Masamune::LastElement
 
       def select_columns(column_names)
         column_names.map do |column_name|
-          next unless column = dereference_column_name(column_name)
+          column = dereference_column_name(column_name)
+          next unless column
           if column.reference
             if column.reference.implicit || column.reference.degenerate
               "#{column.name} AS #{column.name}"
@@ -66,8 +65,8 @@ module Masamune::Transform::Common
       def join_conditions(column_names)
         {}.tap do |conditions|
           column_names.each do |column_name|
-            next unless column = dereference_column_name(column_name)
-            next unless column.reference
+            column = dereference_column_name(column_name)
+            next unless column && column.reference
             next if column.reference.degenerate
             adjacent_reference = references[column.reference.id]
             next unless adjacent_reference
@@ -80,7 +79,8 @@ module Masamune::Transform::Common
 
       def order_by_columns(column_names)
         column_names.map do |column_name|
-          next unless column = dereference_column_name(column_name)
+          column = dereference_column_name(column_name)
+          next unless column
           column.name
         end.compact
       end

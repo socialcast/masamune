@@ -36,12 +36,10 @@ module Masamune::Transform::Postgres
       TargetPresenter.new(@target)
     end
 
-    private
-
     class TargetPresenter < SimpleDelegator
       include Masamune::LastElement
 
-      def insert_columns(source = nil)
+      def insert_columns(_source = nil)
         consolidated_columns.map { |_, column| column.name }
       end
 
@@ -80,4 +78,3 @@ module Masamune::Transform::Postgres
     end
   end
 end
-

@@ -31,7 +31,7 @@ describe Masamune::Actions::Hive do
 
   let(:filesystem) { Masamune::MockFilesystem.new }
   let(:instance) { klass.new }
-  let(:configuration) { {database: 'test'} }
+  let(:configuration) { { database: 'test' } }
 
   before do
     filesystem.add_path(:tmp_dir, File.join(Dir.tmpdir, SecureRandom.hex))
@@ -53,7 +53,7 @@ describe Masamune::Actions::Hive do
 
     context 'with cluster_id' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return({cluster_id: 'j-XYZ'})
+        allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return(cluster_id: 'j-XYZ')
         mock_command(/\Ahive/, mock_failure)
         mock_command(/\Aaws emr/, mock_success, StringIO.new('ssh fakehost exit'))
         mock_command(/\Assh fakehost hive/, mock_success)
@@ -75,8 +75,8 @@ describe Masamune::Actions::Hive do
   end
 
   describe '.after_initialize' do
-    let(:options) { {initialize: true} }
-    let(:configuration) { {database: 'test'} }
+    let(:options) { { initialize: true } }
+    let(:configuration) { { database: 'test' } }
 
     subject(:after_initialize_invoke) do
       instance.after_initialize_invoke(options)
@@ -88,46 +88,51 @@ describe Masamune::Actions::Hive do
         expect(instance).to_not receive(:hive)
         after_initialize_invoke
       end
-      it 'should not call hive' do; end
+      it 'should not call hive' do
+      end
     end
 
     context 'with default database' do
-      let(:configuration) { {database: 'default'} }
+      let(:configuration) { { database: 'default' } }
       before do
         expect(instance).to receive(:hive).with(exec: an_instance_of(String)).never
         after_initialize_invoke
       end
-      it 'should not call hive with create database' do; end
+      it 'should not call hive with create database' do
+      end
     end
 
     context 'with database' do
       before do
-        expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
+        expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', database: nil).once.and_return(mock_success)
         expect(instance).to receive(:hive).with(file: an_instance_of(String)).once.and_return(mock_success)
         after_initialize_invoke
       end
-      it 'should call hive with create database' do; end
+      it 'should call hive with create database' do
+      end
     end
 
     context 'with location' do
-      let(:configuration) { {database: 'test', location: '/tmp'} }
+      let(:configuration) { { database: 'test', location: '/tmp' } }
       before do
-        expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test LOCATION "/tmp";', :database => nil).once.and_return(mock_success)
+        expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test LOCATION "/tmp";', database: nil).once.and_return(mock_success)
         expect(instance).to receive(:hive).with(file: an_instance_of(String)).once.and_return(mock_success)
         after_initialize_invoke
       end
-      it 'should call hive with create database' do; end
+      it 'should call hive with create database' do
+      end
     end
 
     context 'with dry_run' do
-      let(:options) { {initialize: true, dry_run: true} }
+      let(:options) { { initialize: true, dry_run: true } }
       before do
-        expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', :database => nil).once.and_return(mock_success)
+        expect(instance).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS test;', database: nil).once.and_return(mock_success)
         expect(instance).to receive(:hive).with(file: an_instance_of(String)).once.and_return(mock_success)
         expect(instance).to receive(:hive).with(exec: 'SHOW TABLES;', safe: true, fail_fast: false).once.and_return(mock_success)
         after_initialize_invoke
       end
-      it 'should call hive with show tables' do; end
+      it 'should call hive with show tables' do
+      end
     end
   end
 end

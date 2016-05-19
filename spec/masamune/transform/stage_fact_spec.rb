@@ -29,7 +29,7 @@ describe Masamune::Transform::StageFact do
         column 'id', type: :sequence, surrogate_key: true, auto: true
         column 'name', type: :string
 
-        row name: 'current_database()', attributes: {default: true}
+        row name: 'current_database()', attributes: { default: true }
       end
 
       dimension 'date', type: :date do
@@ -68,8 +68,8 @@ describe Masamune::Transform::StageFact do
         column 'tenant_id', type: :integer, natural_key: true
         column 'group_id', type: :integer, natural_key: true
         column 'group_mode', type: :enum, sub_type: 'group_mode', values: %(missing unknown public private), index: true, natural_key: true, default: 'missing'
-        row group_id: -1, group_mode: 'missing', attributes: {id: :missing}
-        row group_id: -2, group_mode: 'unknown', attributes: {id: :unknown}
+        row group_id: -1, group_mode: 'missing', attributes: { id: :missing }
+        row group_id: -2, group_mode: 'unknown', attributes: { id: :unknown }
       end
 
       fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
@@ -104,7 +104,7 @@ describe Masamune::Transform::StageFact do
     end
   end
 
-  let(:date) { DateTime.civil(2014,8) }
+  let(:date) { DateTime.civil(2014, 8) }
   let(:target) { catalog.postgres.visits_hourly_fact }
   let(:source) { catalog.postgres.visits_hourly_file.stage_table(suffix: 'file', table: target, inherit: false) }
 

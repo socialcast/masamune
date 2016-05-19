@@ -28,14 +28,14 @@ describe Masamune::Transform::BulkUpsert do
       dimension 'cluster', type: :mini do
         column 'id', type: :integer, surrogate_key: true, auto: true
         column 'name', type: :string, unique: true
-        row name: 'default', attributes: {default: true}
+        row name: 'default', attributes: { default: true }
       end
 
       dimension 'user_account_state', type: :mini do
         column 'name', type: :string, unique: true
         column 'description', type: :string
         row name: 'registered', description: 'Registered'
-        row name: 'active', description: 'Active', attributes: {default: true}
+        row name: 'active', description: 'Active', attributes: { default: true }
         row name: 'inactive', description: 'Inactive'
       end
 
@@ -43,7 +43,7 @@ describe Masamune::Transform::BulkUpsert do
         references :cluster
         column 'tenant_id', type: :integer, unique: true, natural_key: true
         column 'department_id', type: :integer, unique: true, natural_key: true
-        row tenant_id: -1, department_id: -1, attributes: {default: true}
+        row tenant_id: -1, department_id: -1, attributes: { default: true }
       end
 
       dimension 'user', type: :four do

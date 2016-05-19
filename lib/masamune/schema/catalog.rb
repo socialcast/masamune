@@ -37,7 +37,7 @@ module Masamune::Schema
       end
 
       def map(options = {})
-        self.maps[options[:to]]
+        maps[options[:to]]
       end
     end
 
@@ -66,8 +66,8 @@ module Masamune::Schema
       def initialize(store, options = {})
         super store
         @store    = store
-        @options  = Hash.new { |h,k| h[k] = [] }
-        @options.merge!(store: @store)
+        @options  = Hash.new { |h, k| h[k] = [] }
+        @options[:store] = @store
         @options.merge!(options)
       end
 
@@ -83,7 +83,7 @@ module Masamune::Schema
 
     def initialize(environment)
       self.environment = environment
-      @stores   = Hash.new { |h,k| h[k] = Masamune::Schema::Store.new(environment, type: k) }
+      @stores   = Hash.new { |h, k| h[k] = Masamune::Schema::Store.new(environment, type: k) }
       @context  = nil
     end
 
@@ -98,7 +98,7 @@ module Masamune::Schema
       stores.each do |id|
         begin
           @context = Context.new(@stores[id], options)
-          instance_eval &block
+          instance_eval(&block)
         ensure
           @context = nil
         end
@@ -187,9 +187,10 @@ module Masamune::Schema
     end
 
     def map(options = {}, &block)
-      raise ArgumentError, "invalid map, from: is missing" unless options.is_a?(Hash)
-      from, to = options.delete(:from), options.delete(:to)
-      raise ArgumentError, "invalid map, from: is missing" unless from && from.try(:id)
+      raise ArgumentError, 'invalid map, from: is missing' unless options.is_a?(Hash)
+      from = options.delete(:from)
+      to = options.delete(:to)
+      raise ArgumentError, 'invalid map, from: is missing' unless from && from.try(:id)
       raise ArgumentError, "invalid map from: '#{from.id}', to: is missing" unless to
       @context.push(options)
       @context.options[:function] = block.to_proc if block

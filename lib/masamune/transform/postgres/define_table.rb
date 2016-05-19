@@ -21,7 +21,7 @@
 #  THE SOFTWARE.
 
 module Masamune::Transform::Postgres
-  class DefineTable 
+  class DefineTable
     def initialize(options = {})
       @target       = options[:target]
       @files        = options[:files] || []
@@ -46,7 +46,7 @@ module Masamune::Transform::Postgres
     end
 
     def skip_indexes?
-      !!@skip_indexes
+      @skip_indexes == true
     end
 
     def define_types?

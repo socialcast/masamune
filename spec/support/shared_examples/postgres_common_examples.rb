@@ -31,7 +31,7 @@ shared_examples_for Masamune::Commands::PostgresCommon do
     end
 
     context 'with pgpass_file' do
-      let(:configuration) { {:pgpass_file => 'pgpass_file'} }
+      let(:configuration) { { pgpass_file: 'pgpass_file' } }
 
       before do
         allow(File).to receive(:readable?) { true }
@@ -41,7 +41,7 @@ shared_examples_for Masamune::Commands::PostgresCommon do
     end
 
     context 'with pgpass_file that is not readable' do
-      let(:configuration) { {:pgpass_file => 'pgpass_file'} }
+      let(:configuration) { { pgpass_file: 'pgpass_file' } }
 
       before do
         allow(File).to receive(:readable?) { false }

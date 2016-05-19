@@ -21,7 +21,7 @@
 #  THE SOFTWARE.
 
 describe Masamune::Commands::Postgres do
-  let(:configuration) { {:path => 'psql', :database => 'postgres', :options => options} }
+  let(:configuration) { { path: 'psql', database: 'postgres', options: options } }
   let(:options) { [] }
   let(:attrs) { {} }
 
@@ -36,14 +36,14 @@ describe Masamune::Commands::Postgres do
 
   describe '#stdin' do
     context 'with input' do
-      let(:attrs) { {input: %q(SELECT * FROM table;)} }
+      let(:attrs) { { input: 'SELECT * FROM table;' } }
       subject(:stdin) { instance.stdin }
 
       it { is_expected.to be_a(StringIO) }
 
       describe '#string' do
         subject { stdin.string }
-        it { is_expected.to eq(%q(SELECT * FROM table;)) }
+        it { is_expected.to eq('SELECT * FROM table;') }
       end
     end
   end
@@ -59,12 +59,12 @@ describe Masamune::Commands::Postgres do
     it { is_expected.to eq(default_command) }
 
     context 'with options' do
-      let(:options) { [{'-A' => nil}] }
+      let(:options) { [{ '-A' => nil }] }
       it { is_expected.to eq([*default_command, '-A']) }
     end
 
     context 'with exec' do
-      let(:attrs) { {exec: 'SELECT * FROM table;'} }
+      let(:attrs) { { exec: 'SELECT * FROM table;' } }
       before do
         expect(instance).to receive(:exec_file).and_return('zomg.psql')
       end
@@ -72,12 +72,12 @@ describe Masamune::Commands::Postgres do
     end
 
     context 'with file' do
-      let(:attrs) { {file: 'zomg.psql'} }
+      let(:attrs) { { file: 'zomg.psql' } }
       it { is_expected.to eq([*default_command, '--file=zomg.psql']) }
     end
 
     context 'with file and debug' do
-      let(:attrs) { {file: 'zomg.psql', debug: true} }
+      let(:attrs) { { file: 'zomg.psql', debug: true } }
       before do
         expect(File).to receive(:read).with('zomg.psql').and_return('SHOW TABLES;')
         expect(instance.logger).to receive(:debug).with("zomg.psql:\nSHOW TABLES;")
@@ -86,12 +86,12 @@ describe Masamune::Commands::Postgres do
     end
 
     context 'with file and exec' do
-      let(:attrs) { {file: 'zomg.psql', exec: 'SELECT * FROM table;'} }
+      let(:attrs) { { file: 'zomg.psql', exec: 'SELECT * FROM table;' } }
       it { expect { subject }.to raise_error(/Cannot specify both file and exec/) }
     end
 
     context 'with template file' do
-      let(:attrs) { {file: 'zomg.psql.erb'} }
+      let(:attrs) { { file: 'zomg.psql.erb' } }
       before do
         expect(Masamune::Template).to receive(:render_to_file).with('zomg.psql.erb', {}).and_return('zomg.psql')
       end
@@ -99,7 +99,7 @@ describe Masamune::Commands::Postgres do
     end
 
     context 'with template file and debug' do
-      let(:attrs) { {file: 'zomg.psql.erb', debug: true} }
+      let(:attrs) { { file: 'zomg.psql.erb', debug: true } }
       before do
         expect(Masamune::Template).to receive(:render_to_file).with('zomg.psql.erb', {}).and_return('zomg.psql')
         expect(File).to receive(:read).with('zomg.psql').and_return('SHOW TABLES;')
@@ -109,22 +109,22 @@ describe Masamune::Commands::Postgres do
     end
 
     context 'with variables and no file' do
-      let(:attrs) { {variables: {R: 'R2D2', C: 'C3PO'}} }
+      let(:attrs) { { variables: { R: 'R2D2', C: 'C3PO' } } }
       it { is_expected.to eq(default_command) }
     end
 
     context 'with variables and file' do
-      let(:attrs) { {file: 'zomg.psql', variables: {R: 'R2D2', C: 'C3PO'}} }
-      it { is_expected.to eq([*default_command, '--file=zomg.psql', %q(--set=R='R2D2'), %q(--set=C='C3PO')]) }
+      let(:attrs) { { file: 'zomg.psql', variables: { R: 'R2D2', C: 'C3PO' } } }
+      it { is_expected.to eq([*default_command, '--file=zomg.psql', "--set=R='R2D2'", "--set=C='C3PO'"]) }
     end
 
     context 'with csv' do
-      let(:attrs) { {csv: true} }
+      let(:attrs) { { csv: true } }
       it { is_expected.to eq([*default_command, '--no-align', '--field-separator=,', '--pset=footer']) }
     end
 
     context 'with tuple_output' do
-      let(:attrs) { {tuple_output: true} }
+      let(:attrs) { { tuple_output: true } }
       it { is_expected.to eq([*default_command, '--pset=tuples_only']) }
     end
   end

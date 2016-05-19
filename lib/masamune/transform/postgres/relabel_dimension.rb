@@ -23,7 +23,7 @@
 module Masamune::Transform::Postgres
   class RelabelDimension
     def initialize(options = {})
-      @target   = options[:target]
+      @target = options[:target]
     end
 
     def locals
@@ -33,8 +33,6 @@ module Masamune::Transform::Postgres
     def target
       TargetPresenter.new(@target)
     end
-
-    private
 
     class TargetPresenter < SimpleDelegator
       def window(*extra)

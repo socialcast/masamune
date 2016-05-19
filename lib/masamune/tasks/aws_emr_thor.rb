@@ -28,36 +28,36 @@ module Masamune::Tasks
     include Masamune::Thor
     include Masamune::Actions::AwsEmr
 
-    # FIXME need to add an unnecessary namespace until this issue is fixed:
+    # FIXME: need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
     namespace :aws_emr
     skip_lock!
 
-    REQUIRE_CLUSTER_ID_ACTIONS = 
+    REQUIRE_CLUSTER_ID_ACTIONS =
     {
       'describe-cluster'    => 'Describe an AWS EMR cluster',
       'list-instances'      => 'List instances for an AWS EMR cluster',
       'add-instance-groups' => 'Add instances to an AWS EMR cluster',
       'ssh'                 => 'Launch an AWS EMR ssh session',
       'wait'                => 'Wait for an AWS EMR cluster to start'
-    }
+    }.freeze
 
     REQUIRE_CLUSTER_ID_ACTIONS.each do |action, description|
       desc action, description
-      method_option :cluster_id, :desc => "AWS EMR cluster_id ID (Hint: `masamune-emr-aws list-clusters`)"
+      method_option :cluster_id, desc: 'AWS EMR cluster_id ID (Hint: `masamune-emr-aws list-clusters`)'
       define_method(action.underscore) do
         raise Thor::RequiredArgumentMissingError, "No value provided for required options '--cluster-id'" unless options[:cluster_id]
         aws_emr(aws_emr_options(action))
       end
     end
 
-    NO_REQUIRE_CLUSTER_ID_ACTIONS = 
+    NO_REQUIRE_CLUSTER_ID_ACTIONS =
     {
       'create-cluster'          => 'Create an AWS EMR cluster',
       'list-clusters'           => 'List existing AWS EMR clusters',
       'modify-instance-groups'  => 'Modify instance groups for an AWS EMR cluster',
       'terminate-clusters'      => 'Terminate one or more AWS EMR clusters'
-    }
+    }.freeze
 
     NO_REQUIRE_CLUSTER_ID_ACTIONS.each do |action, description|
       desc action, description
@@ -69,9 +69,9 @@ module Masamune::Tasks
     no_tasks do
       def aws_emr_options(action)
         options.dup.with_indifferent_access.tap do |opts|
-          opts.merge!(interactive: true)
-          opts.merge!(action: action)
-          opts.merge!(extra: self.extra)
+          opts[:interactive] = true
+          opts[:action] = action
+          opts.merge!(extra: extra)
         end
       end
     end

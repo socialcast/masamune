@@ -97,7 +97,7 @@ class Masamune::DataPlan::Rule
       if for_path?
         engine.filesystem.eval_path(path)
       elsif for_table_with_partition?
-        [table , partition].join('_')
+        [table, partition].join('_')
       elsif for_table?
         table
       end.to_s
@@ -151,10 +151,11 @@ class Masamune::DataPlan::Rule
     return Set.new(to_enum(:generate, start_time, stop_time)) unless block_given?
     instance = bind_date_or_time(start_time)
 
-    begin
+    loop do
       yield instance
       instance = instance.next
-    end while instance.start_time <= stop_time
+      break unless instance.start_time <= stop_time
+    end
   end
 
   def generate_via_unify(elem, rule)
@@ -162,10 +163,11 @@ class Masamune::DataPlan::Rule
     instance = unify(elem, rule)
 
     stop_time = instance.start_time.advance(time_step => 1)
-    begin
+    loop do
       yield instance
       instance = instance.next
-    end while instance.start_time < stop_time
+      break unless instance.start_time < stop_time
+    end
   end
 
   def tz
@@ -219,17 +221,17 @@ class Masamune::DataPlan::Rule
 
   def adjacent_matches(instance)
     return Set.new(to_enum(:adjacent_matches, instance)) unless block_given?
-    (-window .. -1).each do |i|
+    (-window..-1).each do |i|
       yield instance.prev(i.abs)
     end
     yield instance
-    (1 .. window).each do |i|
+    (1..window).each do |i|
       yield instance.next(i)
     end
   end
 
   def inspect
-    {type: type, pattern: pattern, options: options}.to_s
+    { type: type, pattern: pattern, options: options }.to_s
   end
 
   def strftime_format
@@ -296,7 +298,7 @@ class Masamune::DataPlan::Rule
 
   def match_data_hash(match_data = nil)
     return unless match_data.present?
-    Hash.new.tap do |hash|
+    {}.tap do |hash|
       match_data.names.map(&:to_sym).each do |key|
         hash[key] = match_data[key.to_sym]
       end
@@ -304,8 +306,8 @@ class Masamune::DataPlan::Rule
   end
 
   def matched_date(matched_data)
-    if timestamp = matched_data[:timestamp]
-      Time.at(timestamp.to_i).to_datetime
+    if matched_data[:timestamp]
+      Time.at(matched_data[:timestamp].to_i).to_datetime
     else
       DateTime.new(*matched_data.values_at(:year, :month, :day, :hour).compact.map(&:to_i))
     end
@@ -316,6 +318,6 @@ class Masamune::DataPlan::Rule
   end
 
   def options_for_elem
-    @options.reject { |k,_| [:path, :table].include?(k) }
+    @options.reject { |k, _| [:path, :table].include?(k) }
   end
 end

@@ -32,7 +32,7 @@ module Masamune::Actions
 
     def postgres(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
-      opts.merge!(block: block.to_proc) if block_given?
+      opts[:block] = block.to_proc if block_given?
 
       command = Masamune::Commands::Postgres.new(environment, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, configuration.postgres.slice(:retries, :backoff).merge(opts))
@@ -42,9 +42,9 @@ module Masamune::Actions
     end
 
     def create_postgres_database_if_not_exists
-      unless postgres_helper.database_exists?
-        postgres_admin(action: :create, database: configuration.postgres[:database], safe: true)
-      end if configuration.postgres.has_key?(:database)
+      if configuration.postgres.key?(:database)
+        postgres_admin(action: :create, database: configuration.postgres[:database], safe: true) unless postgres_helper.database_exists?
+      end
     end
 
     def load_postgres_setup_files
@@ -52,7 +52,7 @@ module Masamune::Actions
         configuration.with_quiet do
           postgres(file: file, retries: 0)
         end
-      end if configuration.postgres.has_key?(:setup_files)
+      end if configuration.postgres.key?(:setup_files)
     end
 
     def load_postgres_schema
@@ -60,7 +60,7 @@ module Masamune::Actions
       postgres(file: transform.to_file, retries: 0)
     rescue => e
       logger.error(e)
-      logger.error("Could not load schema")
+      logger.error('Could not load schema')
       logger.error("\n" + transform.to_s)
       exit
     end

@@ -4,7 +4,16 @@ AllCops:
 Metrics/AbcSize:
   Enabled: false
 
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
 Metrics/ClassLength:
+  Enabled: false
+
+Metrics/ModuleLength:
   Enabled: false
 
 Metrics/LineLength:
@@ -20,4 +29,13 @@ Style/AlignHash:
   Enabled: false
 
 Style/IndentHash:
+  Enabled: false
+
+Style/IndentAssignment:
+  Enabled: false
+
+Style/MultilineOperationIndentation:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
   Enabled: false

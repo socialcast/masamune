@@ -273,8 +273,10 @@ describe Masamune::DataPlan::Set do
   end
 
   describe '#with_grain' do
-    let(:paths) { ['/table/y=2012/m=12/d=29', '/table/y=2012/m=12/d=30', '/table/y=2012/m=12/d=31',
-                   '/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=02/d=01', ] }
+    let(:paths) do
+      ['/table/y=2012/m=12/d=29', '/table/y=2012/m=12/d=30', '/table/y=2012/m=12/d=31',
+       '/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=02/d=01']
+    end
 
     let(:instance) { Masamune::DataPlan::Set.new(target_rule, paths) }
 
@@ -346,7 +348,7 @@ describe Masamune::DataPlan::Set do
       let(:enum) { ['/log/20130101.*.log', '/log/20130102.*.log'] }
       let(:elem) { '/log/20130101.random_1.log' }
 
-      it { is_expected.to eq(false)  }
+      it { is_expected.to eq(false) }
     end
   end
 
@@ -371,7 +373,7 @@ describe Masamune::DataPlan::Set do
     context 'when some incomplete' do
       before do
         (1..31).each do |day|
-          fs.touch!('/log/201401%02d.random_1.log' % day)
+          fs.touch!(format('/log/201401%02d.random_1.log', day))
         end
       end
 
@@ -382,8 +384,8 @@ describe Masamune::DataPlan::Set do
     context 'when none incomplete' do
       before do
         (1..31).each do |day|
-          fs.touch!('/log/201401%02d.random_1.log' % day)
-          fs.touch!('/log/201402%02d.random_1.log' % day)
+          fs.touch!(format('/log/201401%02d.random_1.log', day))
+          fs.touch!(format('/log/201402%02d.random_1.log', day))
         end
       end
 

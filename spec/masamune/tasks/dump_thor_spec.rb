@@ -44,7 +44,7 @@ describe Masamune::Tasks::DumpThor do
 
   context 'with --type=unknown' do
     let(:options) { ['--type=unknown'] }
-    it_behaves_like 'raises Thor::MalformattedArgumentError', %q{Expected '--type' to be one of psql, hql; got unknown}
+    it_behaves_like 'raises Thor::MalformattedArgumentError', "Expected '--type' to be one of psql, hql; got unknown"
   end
 
   context 'with --section=pre' do
@@ -64,7 +64,7 @@ describe Masamune::Tasks::DumpThor do
 
   context 'with --section=unknown' do
     let(:options) { ['--section=unknown'] }
-    it_behaves_like 'raises Thor::MalformattedArgumentError', %q{Expected '--section' to be one of pre, post, all; got unknown}
+    it_behaves_like 'raises Thor::MalformattedArgumentError', "Expected '--section' to be one of pre, post, all; got unknown"
   end
 
   context 'with --skip-indexes' do
@@ -77,13 +77,13 @@ describe Masamune::Tasks::DumpThor do
     it_behaves_like 'executes with success'
   end
 
-  context %q{with --exclude='.*dimension'} do
-    let(:options) { [%q{--exclude='.*dimension'}] }
+  context "with --exclude='.*dimension'" do
+    let(:options) { ["--exclude='.*dimension'"] }
     it_behaves_like 'executes with success'
   end
 
-  context %q{with --exclude='.*dimension' '.*fact'} do
-    let(:options) { [%q{--exclude='.*dimension' '.*fact'}] }
+  context "with --exclude='.*dimension' '.*fact'" do
+    let(:options) { ["--exclude='.*dimension' '.*fact'"] }
     it_behaves_like 'executes with success'
   end
 

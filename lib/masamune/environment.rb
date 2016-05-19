@@ -54,7 +54,7 @@ module Masamune
     end
 
     def with_exclusive_lock(name)
-      raise 'filesystem path :run_dir not defined' unless filesystem.has_path?(:run_dir)
+      raise 'filesystem path :run_dir not defined' unless filesystem.path?(:run_dir)
       lock_name = [name, configuration.lock].compact.join(':')
       logger.debug("acquiring lock '#{lock_name}'")
       lock_file = lock_file(lock_name)
@@ -80,7 +80,7 @@ module Masamune
     end
 
     def log_file_template
-      @log_file_template || "#{Time.now.to_i}-#{$$}.log"
+      @log_file_template || "#{Time.now.to_i}-#{$PROCESS_ID}.log"
     end
 
     def log_file_template=(log_file_template)
@@ -149,7 +149,7 @@ module Masamune
     end
 
     def log_file_io
-      if filesystem.has_path?(:log_dir)
+      if filesystem.path?(:log_dir)
         log_file = File.open(log_file_name, 'a')
         log_file.sync = true
         configuration.debug ? Masamune::MultiIO.new($stderr, log_file) : log_file

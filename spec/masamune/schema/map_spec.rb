@@ -113,7 +113,7 @@ describe Masamune::Schema::Map do
           file 'input'
           file 'output'
 
-          map from: files.input , to: files.output do |row|
+          map from: files.input, to: files.output do |_row|
             # Empty
           end
         end
@@ -178,12 +178,12 @@ describe Masamune::Schema::Map do
       before do
         expect(environment.logger).to receive(:warn).with(/missing required columns 'id'/).ordered
         expect(environment.logger).to receive(:debug).with(
-          :message => %q(missing required columns 'id'),
-          :source  => 'user_stage',
-          :target  => 'user_dimension_ledger',
-          :file    => input.path,
-          :line    => 3,
-          :row     => {
+          message: "missing required columns 'id'",
+          source: 'user_stage',
+          target: 'user_dimension_ledger',
+          file: input.path,
+          line: 3,
+          row: {
             'id'          => nil,
             'tenant_id'   => '50',
             'junk_id'     => 'X',
@@ -238,32 +238,32 @@ describe Masamune::Schema::Map do
       before do
         expect(environment.logger).to receive(:warn).with(/failed to process/).ordered
         expect(environment.logger).to receive(:debug).with(
-          :message => "failed to process",
-          :source  => "input_stage",
-          :target  => "user_dimension_ledger",
-          :file    => input.path,
-          :line    => 2,
-          :row     => {
-            "id"          => 1,
-            "tenant_id"   => 42,
-            "admin"       => false,
-            "preferences" => {},
-            "deleted_at"  => nil
+          message: 'failed to process',
+          source: 'input_stage',
+          target: 'user_dimension_ledger',
+          file: input.path,
+          line: 2,
+          row: {
+            'id'          => 1,
+            'tenant_id'   => 42,
+            'admin'       => false,
+            'preferences' => {},
+            'deleted_at'  => nil
           }
         ).ordered
         expect(environment.logger).to receive(:warn).with("Could not coerce 'INVALID_JSON' into :json for column 'preferences'").ordered
         expect(environment.logger).to receive(:debug).with(
-          :message => "Could not coerce 'INVALID_JSON' into :json for column 'preferences'",
-          :source  => "input_stage",
-          :target  => "user_dimension_ledger",
-          :file    => input.path,
-          :line    => 4,
-          :row     => {
-            :id          => "3",
-            :tenant_id   => "50",
-            :admin       => "0",
-            :preferences => "INVALID_JSON",
-            :deleted_at  => nil
+          message: "Could not coerce 'INVALID_JSON' into :json for column 'preferences'",
+          source: 'input_stage',
+          target: 'user_dimension_ledger',
+          file: input.path,
+          line: 4,
+          row: {
+            id: '3',
+            tenant_id: '50',
+            admin: '0',
+            preferences: 'INVALID_JSON',
+            deleted_at: nil
           }
         ).ordered
       end
@@ -698,7 +698,7 @@ describe Masamune::Schema::Map do
             column 'id', type: :integer
           end
 
-          map from: files.input, to: files.output, columns: [:id], fail_fast: true do |row|
+          map from: files.input, to: files.output, columns: [:id], fail_fast: true do |_row|
             raise 'wha happen'
           end
         end
@@ -729,17 +729,17 @@ describe Masamune::Schema::Map do
       before do
         expect(environment.logger).to receive(:error).with(/wha happen/).ordered
         expect(environment.logger).to receive(:debug).with(
-          :message => "wha happen",
-          :source  => "input_stage",
-          :target  => "output_stage",
-          :file    => input.path,
-          :line    => 0,
-          :row     => {"id" => 1}
+          message: 'wha happen',
+          source: 'input_stage',
+          target: 'output_stage',
+          file: input.path,
+          line: 0,
+          row: { 'id' => 1 }
         ).ordered
       end
 
       it 'raises exception' do
-        expect { subject }.to raise_error /wha happen/
+        expect { subject }.to raise_error(/wha happen/)
       end
     end
   end
@@ -806,7 +806,7 @@ describe Masamune::Schema::Map do
         io.write '{},{}'
         io.rewind
       end
-      it { is_expected.to eq(%Q{"{}","{}"}) }
+      it { is_expected.to eq(%("{}","{}")) }
     end
 
     context 'with quoted empty json' do
@@ -814,7 +814,7 @@ describe Masamune::Schema::Map do
         io.write '"{}","{}"'
         io.rewind
       end
-      it { is_expected.to eq(%Q{"{}","{}"}) }
+      it { is_expected.to eq(%("{}","{}")) }
     end
 
     context 'with raw json' do
@@ -822,7 +822,7 @@ describe Masamune::Schema::Map do
         io.write '{"enabled":true,"state":""}'
         io.rewind
       end
-      it { is_expected.to eq(%Q{"{""enabled"":true,""state"":""""}"}) }
+      it { is_expected.to eq(%("{""enabled"":true,""state"":""""}")) }
     end
 
     context 'with quoted json' do
@@ -830,7 +830,7 @@ describe Masamune::Schema::Map do
         io.write '"{""enabled"":true,""state"":""""}"'
         io.rewind
       end
-      it { is_expected.to eq(%Q{"{""enabled"":true,""state"":""""}"}) }
+      it { is_expected.to eq(%("{""enabled"":true,""state"":""""}")) }
     end
   end
 end

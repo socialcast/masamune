@@ -57,30 +57,22 @@ module Masamune::Commands
     end
 
     def before_execute
-      if configuration.verbose
-        trace(command_args)
-      end
+      trace(command_args) if configuration.verbose
 
-      if @delegate.respond_to?(:before_execute)
-        @delegate.before_execute
-      end
+      @delegate.before_execute if @delegate.respond_to?(:before_execute)
     end
 
     def after_execute
-      if @delegate.respond_to?(:after_execute)
-        @delegate.after_execute
-      end
+      @delegate.after_execute if @delegate.respond_to?(:after_execute)
     end
 
     def around_execute(&block)
-      if configuration.dry_run && !safe
-        return OpenStruct.new(:success? => true)
-      end
+      return OpenStruct.new(success?: true) if configuration.dry_run && !safe
 
       if @delegate.respond_to?(:around_execute)
         @delegate.around_execute(&block)
       else
-        block.call
+        yield
       end
     end
 
@@ -101,7 +93,7 @@ module Masamune::Commands
     end
 
     def execute
-      status = OpenStruct.new(:success? => false, :exitstatus => 1)
+      status = OpenStruct.new(success?: false, exitstatus: 1)
 
       before_execute
       status = around_execute do
@@ -109,9 +101,7 @@ module Masamune::Commands
       end
       after_execute
 
-      unless status.success?
-        handle_failure(exit_code(status))
-      end
+      handle_failure(exit_code(status)) unless status.success?
       status
     rescue Interrupt
       handle_failure(SIGINT_EXIT_STATUS)
@@ -123,42 +113,39 @@ module Masamune::Commands
       logger.debug("execute: #{command_info}")
 
       Open3.popen3(command_env, *command_args) do |p_stdin, p_stdout, p_stderr, t_stdin|
-        p_stdin.wait_writable(PIPE_TIMEOUT) or raise "IO stdin not ready for write in #{PIPE_TIMEOUT}"
+        p_stdin.wait_writable(PIPE_TIMEOUT) || raise("IO stdin not ready for write in #{PIPE_TIMEOUT}")
 
-        Thread.new {
+        Thread.new do
           if @delegate.respond_to?(:stdin)
             @delegate.stdin.rewind
-            while line = @delegate.stdin.gets
+            until @delegate.stdin.eof?
+              line = @delegate.stdin.gets
               trace(line.chomp)
               p_stdin.puts line
               p_stdin.flush
             end
           else
-            while !p_stdin.closed? do
+            until p_stdin.closed?
               input = Readline.readline('', true).strip
               p_stdin.puts input
               p_stdin.flush
             end
           end
           p_stdin.close unless p_stdin.closed?
-        }
+        end
 
-        t_stderr = Thread.new {
-          while !p_stderr.eof?  do
-            handle_stderr(p_stderr)
-          end
+        t_stderr = Thread.new do
+          handle_stderr(p_stderr) until p_stderr.eof?
           p_stderr.close unless p_stderr.closed?
-        }
+        end
 
-        t_stdout = Thread.new {
-          while !p_stdout.eof?  do
-            handle_stdout(p_stdout)
-          end
+        t_stdout = Thread.new do
+          handle_stdout(p_stdout) until p_stdout.eof?
           p_stdout.close unless p_stdout.closed?
-        }
+        end
 
-        [t_stderr, t_stdout, t_stdin].compact.each { |t| t.join }
-        logger.debug("status: #{t_stdin.value.to_s}")
+        [t_stderr, t_stdout, t_stdin].compact.each(&:join)
+        logger.debug("status: #{t_stdin.value}")
         t_stdin.value
       end
     end
@@ -186,9 +173,7 @@ module Masamune::Commands
     end
 
     def handle_failure(status)
-      if @delegate.respond_to?(:handle_failure)
-        @delegate.handle_failure(status)
-      end
+      @delegate.handle_failure(status) if @delegate.respond_to?(:handle_failure)
       raise failure_message(status) if fail_fast
     end
 
@@ -208,7 +193,9 @@ module Masamune::Commands
     end
 
     def detach
-      STDIN.close; STDOUT.close; STDERR.close
+      STDIN.close
+      STDOUT.close
+      STDERR.close
     end
 
     def command_info

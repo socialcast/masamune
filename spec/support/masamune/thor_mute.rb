@@ -25,8 +25,9 @@ module Masamune::ThorMute
   def self.included(base)
     base.instance_eval do
       def create_command(*a)
-        $stdout, tmp_stdout = StringIO.new, $stdout
-        super *a
+        tmp_stdout = $stdout
+        $stdout = StringIO.new
+        super(*a)
       ensure
         $stdout = tmp_stdout
       end

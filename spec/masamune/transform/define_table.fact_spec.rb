@@ -27,7 +27,7 @@ describe Masamune::Transform::DefineTable do
         column 'id', type: :sequence, surrogate_key: true, auto: true
         column 'name', type: :string
 
-        row name: 'current_database()', attributes: {default: true}
+        row name: 'current_database()', attributes: { default: true }
       end
 
       dimension 'date', type: :date do
@@ -150,11 +150,11 @@ describe Masamune::Transform::DefineTable do
   context 'for postgres fact partition with :post' do
     let(:target) { catalog.postgres.visits_fact.partition_table(Date.civil(2015, 01, 01)) }
 
-    let(:options)  { {section: :post} }
+    let(:options)  { { section: :post } }
 
     it 'should eq render table template' do
-      is_expected.to match /ALTER TABLE visits_fact_y2015m01 INHERIT visits_fact;/
-      is_expected.to match /ALTER TABLE visits_fact_y2015m01 ADD CONSTRAINT visits_fact_y2015m01_time_key_check CHECK \(time_key >= 1420070400 AND time_key < 1422748800\);/
+      is_expected.to match(/ALTER TABLE visits_fact_y2015m01 INHERIT visits_fact;/)
+      is_expected.to match(/ALTER TABLE visits_fact_y2015m01 ADD CONSTRAINT visits_fact_y2015m01_time_key_check CHECK \(time_key >= 1420070400 AND time_key < 1422748800\);/)
     end
   end
 
@@ -163,7 +163,7 @@ describe Masamune::Transform::DefineTable do
     let(:intermediate) { catalog.postgres.visits_fact }
     let(:source) { catalog.postgres.visits_file }
     let(:target) { source.stage_table(suffix: 'file', table: intermediate, inherit: false) }
-    let(:options) { { files: files} }
+    let(:options) { { files: files } }
 
     it 'should eq render table template' do
       is_expected.to eq <<-EOS.strip_heredoc

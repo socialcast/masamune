@@ -29,18 +29,18 @@ module Masamune::Commands
     include Masamune::Commands::PostgresCommon
 
     DEFAULT_ATTRIBUTES =
-    {
-      :create_db_path => 'createdb',
-      :drop_db_path   => 'dropdb',
-      :pg_dump_path   => 'pg_dump',
-      :options        => [],
-      :hostname       => 'localhost',
-      :username       => 'postgres',
-      :pgpass_file    => nil,
-      :action         => nil,
-      :database       => nil,
-      :output         => nil
-    }
+      {
+        create_db_path: 'createdb',
+        drop_db_path: 'dropdb',
+        pg_dump_path: 'pg_dump',
+        options: [],
+        hostname: 'localhost',
+        username: 'postgres',
+        pgpass_file: nil,
+        action: nil,
+        database: nil,
+        output: nil
+      }.freeze
 
     def initialize(delegate, attrs = {})
       super delegate
@@ -53,8 +53,8 @@ module Masamune::Commands
       raise ArgumentError, ':database must be given' unless @database
       args = []
       args << command_path
-      args << '--host=%s' % @hostname if @hostname
-      args << '--username=%s' % @username if @username
+      args << "--host=#{@hostname}" if @hostname
+      args << "--username=#{@username}" if @username
       args << '--no-password'
       args << database
       args << @options
@@ -79,12 +79,13 @@ module Masamune::Commands
 
     def database
       return @database unless @action == :dump
-      '--dbname=%s' % @database
+      "--dbname=#{@database}"
     end
 
     def output
       return unless @action == :dump
-      '--file=%s' % @output if @output
+      return unless @output
+      "--file=#{@output}"
     end
   end
 end

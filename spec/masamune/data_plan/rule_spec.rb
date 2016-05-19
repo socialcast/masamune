@@ -25,7 +25,7 @@ describe Masamune::DataPlan::Rule do
   let(:name) { 'primary' }
   let(:type) { :target }
   let(:pattern) { 'report/%Y-%m-%d/%H' }
-  let(:options) { {path: pattern} }
+  let(:options) { { path: pattern } }
 
   let(:instance) { described_class.new(engine, name, type, options) }
 
@@ -40,7 +40,7 @@ describe Masamune::DataPlan::Rule do
     end
 
     context 'with lambda' do
-      let(:pattern) { lambda { |_| 'report/%Y-%m-%d/%H' } }
+      let(:pattern) { ->(_) { 'report/%Y-%m-%d/%H' } }
       it { is_expected.to eq('report/%Y-%m-%d/%H') }
     end
   end
@@ -59,7 +59,7 @@ describe Masamune::DataPlan::Rule do
     end
 
     context 'with DateTime input' do
-      let(:input) { DateTime.civil(2013,04,05,23,13) }
+      let(:input) { DateTime.civil(2013, 04, 05, 23, 13) }
 
       describe '#path' do
         subject { elem.path }
@@ -69,7 +69,7 @@ describe Masamune::DataPlan::Rule do
 
     context 'with DateTime input and unix timestamp pattern' do
       let(:pattern) { 'logs/%H-s.log' }
-      let(:input) { DateTime.civil(2013,04,05,23,13) }
+      let(:input) { DateTime.civil(2013, 04, 05, 23, 13) }
 
       describe '#path' do
         subject { elem.path }
@@ -78,7 +78,7 @@ describe Masamune::DataPlan::Rule do
     end
 
     context 'with Date input' do
-      let(:input) { Date.civil(2013,04,05) }
+      let(:input) { Date.civil(2013, 04, 05) }
 
       describe '#path' do
         subject { elem.path }
@@ -92,7 +92,7 @@ describe Masamune::DataPlan::Rule do
 
     context 'with default' do
       let(:input) { 'report/2013-04-05/23' }
-      let(:output_date) { DateTime.civil(2013,04,05,23) }
+      let(:output_date) { DateTime.civil(2013, 04, 05, 23) }
 
       describe '#path' do
         subject { elem.path }
@@ -113,7 +113,7 @@ describe Masamune::DataPlan::Rule do
     context 'with unix timestamp pattern' do
       let(:pattern) { 'logs/%H-s.log' }
       let(:input) { 'logs/1365202800.log' }
-      let(:output_date) { DateTime.civil(2013,04,05,23) }
+      let(:output_date) { DateTime.civil(2013, 04, 05, 23) }
 
       describe '#path' do
         subject { elem.path }
@@ -140,7 +140,7 @@ describe Masamune::DataPlan::Rule do
     context 'with wildcard pattern' do
       let(:pattern) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k/*' }
       let(:input) { 'requests/y=2013/m=4/d=30/h=20/part-00000' }
-      let(:output_date) { DateTime.civil(2013,04,30,20) }
+      let(:output_date) { DateTime.civil(2013, 04, 30, 20) }
 
       describe '#path' do
         subject { elem.path }
@@ -160,8 +160,8 @@ describe Masamune::DataPlan::Rule do
   end
 
   describe '#unify' do
-    let(:primary) { described_class.new(engine, name, type, {path: 'report/%Y-%m-%d/%H'}) }
-    let(:induced) { described_class.new(engine, name, type, {path: 'table/y=%Y/m=%m/d=%d/h=%H'}) }
+    let(:primary) { described_class.new(engine, name, type, path: 'report/%Y-%m-%d/%H') }
+    let(:induced) { described_class.new(engine, name, type, path: 'table/y=%Y/m=%m/d=%d/h=%H') }
     let(:elem) { primary.bind_input(input) }
 
     subject(:new_elem) { instance.unify(elem, induced) }
@@ -176,7 +176,7 @@ describe Masamune::DataPlan::Rule do
     end
 
     context 'when input partially matches basis pattern' do
-      let(:induced) { described_class.new(engine, name, type, {path: 'table/%Y-%m'}) }
+      let(:induced) { described_class.new(engine, name, type, path: 'table/%Y-%m') }
 
       let(:input) { 'report/2013-01-02/00' }
 
@@ -240,14 +240,14 @@ describe Masamune::DataPlan::Rule do
 
   describe '#generate' do
     context 'with a block' do
-      let(:start_date) { DateTime.civil(2013,04,05,20) }
-      let(:stop_date) { DateTime.civil(2013,04,05,20) }
+      let(:start_date) { DateTime.civil(2013, 04, 05, 20) }
+      let(:stop_date) { DateTime.civil(2013, 04, 05, 20) }
       specify { expect { |b| instance.generate(start_date, stop_date, &b) }.to yield_control }
     end
 
     context 'without a block' do
-      let(:start_date) { DateTime.civil(2013,04,05,20) }
-      let(:stop_date) { DateTime.civil(2013,04,05,22) }
+      let(:start_date) { DateTime.civil(2013, 04, 05, 20) }
+      let(:stop_date) { DateTime.civil(2013, 04, 05, 22) }
 
       subject(:elems) do
         instance.generate(start_date, stop_date)
@@ -307,7 +307,7 @@ describe Masamune::DataPlan::Rule do
   end
 
   describe '#time_round' do
-    let(:input_time) { DateTime.civil(2013,9,13,23,13) }
+    let(:input_time) { DateTime.civil(2013, 9, 13, 23, 13) }
     subject { instance.time_round(input_time) }
 
     before do
@@ -316,15 +316,15 @@ describe Masamune::DataPlan::Rule do
 
     context 'hourly' do
       let(:time_step) { :hours }
-      it { is_expected.to eq(DateTime.civil(2013,9,13,23)) }
+      it { is_expected.to eq(DateTime.civil(2013, 9, 13, 23)) }
     end
     context 'daily' do
       let(:time_step) { :days }
-      it { is_expected.to eq(DateTime.civil(2013,9,13)) }
+      it { is_expected.to eq(DateTime.civil(2013, 9, 13)) }
     end
     context 'monthly' do
       let(:time_step) { :months }
-      it { is_expected.to eq(DateTime.civil(2013,9)) }
+      it { is_expected.to eq(DateTime.civil(2013, 9)) }
     end
     context 'yearly' do
       let(:time_step) { :years }

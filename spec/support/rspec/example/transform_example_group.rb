@@ -32,5 +32,5 @@ module TransformExampleGroup
 end
 
 RSpec.configure do |config|
-  config.include TransformExampleGroup, :type => :action, :file_path => %r{spec/masamune/transform}
+  config.include TransformExampleGroup, type: :action, file_path: %r{spec/masamune/transform}
 end

@@ -30,10 +30,8 @@ module Masamune::Actions
       value = options[key]
       Chronic.parse(value).tap do |datetime_value|
         logger.debug("Using '#{datetime_value}' for --#{key}") if value != datetime_value
-      end or raise Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}"
+      end || raise(Thor::MalformattedArgumentError, "Expected date time value for '--#{key}'; got #{value}")
     end
-
-    private
 
     included do |base|
       base.class_eval do
@@ -41,9 +39,9 @@ module Masamune::Actions
         attr_accessor :stop_value
         attr_accessor :exact_value
 
-        class_option :start, :aliases => '-a', :desc => 'Start time'
-        class_option :stop, :aliases => '-b', :desc => 'Stop time'
-        class_option :at, :desc => 'Exact time'
+        class_option :start, aliases: '-a', desc: 'Start time'
+        class_option :stop, aliases: '-b', desc: 'Stop time'
+        class_option :at, desc: 'Exact time'
 
         no_tasks do
           def start_date

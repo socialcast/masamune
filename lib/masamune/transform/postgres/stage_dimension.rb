@@ -35,16 +35,14 @@ module Masamune::Transform::Postgres
       TargetPresenter.new(@target)
     end
 
-    private
-
     class TargetPresenter < SimpleDelegator
       include Masamune::LastElement
 
       def insert_columns(source)
         shared_columns(source).values.map do |columns|
           column = columns.first
-          if reference = column.reference
-            reference.foreign_key_name
+          if column.reference
+            column.reference.foreign_key_name
           else
             column.name
           end
@@ -54,8 +52,8 @@ module Masamune::Transform::Postgres
       def insert_values(source)
         shared_columns(source).values.map do |columns|
           column = columns.first
-          if reference = column.reference
-            reference.surrogate_key.qualified_name(reference.label)
+          if column.reference
+            column.reference.surrogate_key.qualified_name(column.reference.label)
           elsif column.type == :json || column.type == :yaml || column.type == :key_value
             "json_to_hstore(#{column.qualified_name})"
           else
@@ -67,10 +65,10 @@ module Masamune::Transform::Postgres
 
       def join_conditions(source)
         join_columns = shared_columns(source).values.flatten
-        join_columns = join_columns.select { |column| column.reference }
-        join_columns = join_columns.group_by { |column| column.reference }
+        join_columns = join_columns.select(&:reference)
+        join_columns = join_columns.group_by(&:reference)
 
-        conditions = Hash.new { |h,k| h[k] = Set.new }
+        conditions = Hash.new { |h, k| h[k] = Set.new }
         join_columns.each do |reference, columns|
           left_uniq = Set.new
           (columns + lateral_references(source, reference)).each do |column|
@@ -83,7 +81,7 @@ module Masamune::Transform::Postgres
       end
 
       def lateral_references(source, reference)
-        source.shared_columns(reference).keys.reject { |column| column.auto_reference }
+        source.shared_columns(reference).keys.reject(&:auto_reference)
       end
     end
   end

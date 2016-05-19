@@ -54,7 +54,7 @@ module Masamune
     def get_path(symbol, *args)
       options = args.last.is_a?(Hash) ? args.pop : {}
       lazy_path = lambda do |fs|
-        fs.has_path?(symbol) or raise "Path :#{symbol} not defined"
+        fs.path?(symbol) || raise("Path :#{symbol} not defined")
         path, options = fs.paths[symbol]
 
         mkdir!(path) if options[:mkdir]
@@ -67,15 +67,13 @@ module Masamune
         lazy_path
       end
     end
-    alias :path :get_path
+    alias path get_path
 
-    def has_path?(symbol)
-      @paths.has_key?(symbol)
+    def path?(symbol)
+      @paths.key?(symbol)
     end
 
-    def paths
-      @paths
-    end
+    attr_reader :paths
 
     def eval_path(path)
       path.respond_to?(:call) ? path.call(self) : path
@@ -84,7 +82,7 @@ module Masamune
     def expand_params(fs, path)
       new_path = path.dup
       fs.environment.configuration.params.each do |key, value|
-        new_path.gsub!("%#{key.to_s}", value.to_s)
+        new_path.gsub!("%#{key}", value.to_s)
       end
       new_path
     end
@@ -95,7 +93,8 @@ module Masamune
     end
 
     def parent_paths(path)
-      if prefix = remote_prefix(path)
+      prefix = remote_prefix(path)
+      if prefix
         node = path.split(prefix).last
       else
         prefix = ''
@@ -104,7 +103,7 @@ module Masamune
 
       return [] if prefix.blank? && node.blank?
       parent_paths = node ? File.expand_path(node, '/').split('/') : []
-      parent_paths.reject! { |x| x.blank? }
+      parent_paths.reject!(&:blank?)
       parent_paths.prepend('/') if node =~ %r{\A/}
       tmp = []
       result = []
@@ -125,7 +124,7 @@ module Masamune
     end
 
     def resolve_file(paths = [])
-      Array.wrap(paths).select { |path| File.exists?(path) && File.file?(path) }.first
+      Array.wrap(paths).select { |path| File.exist?(path) && File.file?(path) }.first
     end
 
     def dirname(path)
@@ -165,12 +164,12 @@ module Masamune
       when :s3
         result = Set.new
         s3cmd('ls', s3b(file), safe: true) do |line|
-          date, time, size, name = line.split(/\s+/)
+          _date, _time, _size, name = line.split(/\s+/)
           result << (name == file)
         end
         result.any?
       when :local
-        File.exists?(file)
+        File.exist?(file)
       end
     end
 
@@ -218,9 +217,9 @@ module Masamune
         when :hdfs
           hadoop_fs('-mkdir', '-p', *dir_set)
         when :s3
-          touch! *dir_set.map { |dir| File.join(dir, '.not_empty') }
+          touch!(*dir_set.map { |dir| File.join(dir, '.not_empty') })
         when :local
-          missing_dir_set = dir_set.reject { |dir| File.exists?(dir) }
+          missing_dir_set = dir_set.reject { |dir| File.exist?(dir) }
           FileUtils.mkdir_p(missing_dir_set, file_util_args) if missing_dir_set.any?
         end
       end
@@ -230,7 +229,7 @@ module Masamune
       return Set.new(to_enum(:glob, pattern, options)) unless block_given?
       case type(pattern)
       when :hdfs
-        file_glob, file_regexp = glob_split(pattern)
+        _file_glob, file_regexp = glob_split(pattern)
         hadoop_fs('-ls', pattern, safe: true) do |line|
           next if line =~ /\AFound \d+ items/
           name = line.split(/\s+/).last
@@ -258,7 +257,7 @@ module Masamune
       return to_enum(:glob_sort, pattern, options).to_a unless block_given?
       case options[:order]
       when :basename
-        glob(pattern).sort { |x,y| File.basename(x) <=> File.basename(y) }.each do |result|
+        glob(pattern).sort { |x, y| File.basename(x) <=> File.basename(y) }.each do |result|
           yield result
         end
       else
@@ -381,7 +380,7 @@ module Masamune
           case type
           when :local
             file_set.map do |file|
-              next unless File.exists?(file)
+              next unless File.exist?(file)
               next if File.directory?(file)
               buf << File.read(file)
             end
@@ -403,7 +402,8 @@ module Masamune
 
     def chown!(*files)
       opts = files.last.is_a?(Hash) ? files.pop : {}
-      user, group = opts.fetch(:user, current_user), opts.fetch(:group, current_group)
+      user = opts.fetch(:user, current_user)
+      group = opts.fetch(:group, current_group)
 
       files.group_by { |path| type(path) }.each do |type, file_set|
         case type
@@ -430,12 +430,12 @@ module Masamune
     end
 
     def glob_split(input, options = {})
-      [ input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input, options) ]
+      [input.include?('*') ? input.split('*').first + '*' : input, glob_to_regexp(input, options)]
     end
 
     def glob_to_regexp(input, options = {})
       if input.include?('*') || options.fetch(:recursive, false)
-        %r|\A#{Regexp.escape(input).gsub('\\*', '.*?').gsub(%r{\/\.\*\?\z}, '/?.*?')}|
+        /\A#{Regexp.escape(input).gsub('\\*', '.*?').gsub(%r{\/\.\*\?\z}, '/?.*?')}/
       else
         /\A#{Regexp.escape(input)}\z/
       end
@@ -472,7 +472,7 @@ module Masamune
     end
 
     def eager_load_paths?
-      @paths.reject { |key,_| key == :root_dir }.any?
+      @paths.reject { |key, _| key == :root_dir }.any?
     end
 
     def type(path)
@@ -487,27 +487,27 @@ module Masamune
     end
 
     def file_util_args
-      {noop: configuration.dry_run, verbose: configuration.verbose}
+      { noop: configuration.dry_run, verbose: configuration.verbose }
     end
 
     def qualify_file(dir, file)
-      if prefix = remote_prefix(dir) and file !~ /\A#{Regexp.escape(prefix)}/
+      if (prefix = remote_prefix(dir)) && file !~ /\A#{Regexp.escape(prefix)}/
         "#{prefix}/#{file.sub(%r{\A/+}, '')}"
       else
         file
       end
     end
-    alias :q :qualify_file
+    alias q qualify_file
 
     def ensure_dir(dir)
       File.join(dir, '/')
     end
-    alias :d :ensure_dir
+    alias d ensure_dir
 
     def ensure_file(file)
       file.chomp('/')
     end
-    alias :f :ensure_file
+    alias f ensure_file
 
     def add_immutable_path(path)
       @immutable_paths[path] = /\A#{Regexp.escape(path)}/
@@ -526,6 +526,7 @@ module Masamune
     def current_group
       Etc.getgrgid(Etc.getpwnam(current_user).gid).name
     rescue
+      nil
     end
 
     def copy_file_helper(src, dst, dir)
@@ -569,7 +570,7 @@ module Masamune
         s3cmd('del', src)
       when [:s3, :hdfs]
         hadoop_fs('-mv', s3n(src), dst)
-     when [:local, :local]
+      when [:local, :local]
         FileUtils.mv(src, dst, file_util_args)
         FileUtils.chmod(FILE_MODE, dst, file_util_args)
       when [:local, :hdfs]

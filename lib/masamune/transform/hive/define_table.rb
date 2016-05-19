@@ -34,8 +34,6 @@ module Masamune::Transform::Hive
       TargetPresenter.new(@target)
     end
 
-    private
-
     class TargetPresenter < SimpleDelegator
       def partition_by
         return unless partitions.any?

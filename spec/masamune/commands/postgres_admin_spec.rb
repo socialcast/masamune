@@ -21,7 +21,7 @@
 #  THE SOFTWARE.
 
 describe Masamune::Commands::PostgresAdmin do
-  let(:configuration) { {:create_db_path => 'createdb', :drop_db_path => 'dropdb', :hostname => 'localhost', :username => 'postgres'} }
+  let(:configuration) { { create_db_path: 'createdb', drop_db_path: 'dropdb', hostname: 'localhost', username: 'postgres' } }
   let(:attrs) { {} }
 
   let(:delegate) { double }
@@ -38,42 +38,42 @@ describe Masamune::Commands::PostgresAdmin do
     end
 
     context 'action :create with database' do
-      let(:attrs) { {action: :create, database: 'zombo'} }
+      let(:attrs) { { action: :create, database: 'zombo' } }
       it { is_expected.to eq(['createdb', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
     end
 
     context 'action :create without database' do
-      let(:attrs) { {action: :create} }
+      let(:attrs) { { action: :create } }
       it { expect { subject }.to raise_error ArgumentError, ':database must be given' }
     end
 
     context 'action :drop with database' do
-      let(:attrs) { {action: :drop, database: 'zombo'} }
+      let(:attrs) { { action: :drop, database: 'zombo' } }
       it { is_expected.to eq(['dropdb', '--if-exists', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
     end
 
     context 'action :drop with database and :output' do
-      let(:attrs) { {action: :drop, database: 'zombo', output: 'zombo.csv'} }
+      let(:attrs) { { action: :drop, database: 'zombo', output: 'zombo.csv' } }
       it { is_expected.to eq(['dropdb', '--if-exists', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
     end
 
     context 'action :dump with database' do
-      let(:attrs) { {action: :dump, database: 'zombo'} }
+      let(:attrs) { { action: :dump, database: 'zombo' } }
       it { is_expected.to eq(['pg_dump', '--no-owner', '--no-privileges', '--oids', '--schema=public', '--host=localhost', '--username=postgres', '--no-password', '--dbname=zombo']) }
     end
 
     context 'action :dump with database and :output' do
-      let(:attrs) { {action: :dump, database: 'zombo', output: 'zombo.csv'} }
+      let(:attrs) { { action: :dump, database: 'zombo', output: 'zombo.csv' } }
       it { is_expected.to eq(['pg_dump', '--no-owner', '--no-privileges', '--oids', '--schema=public', '--host=localhost', '--username=postgres', '--no-password', '--dbname=zombo', '--file=zombo.csv']) }
     end
 
     context 'action :drop without database' do
-      let(:attrs) { {action: :drop} }
+      let(:attrs) { { action: :drop } }
       it { expect { subject }.to raise_error ArgumentError, ':database must be given' }
     end
 
     context 'action unfuddle with database' do
-      let(:attrs) { {action: :unfuddle, database: 'zombo'} }
+      let(:attrs) { { action: :unfuddle, database: 'zombo' } }
       it { expect { subject }.to raise_error ArgumentError, ':action must be :create, :drop, or :dump' }
     end
   end

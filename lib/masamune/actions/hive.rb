@@ -30,7 +30,7 @@ module Masamune::Actions
 
     def hive(opts = {}, &block)
       opts = opts.to_hash.symbolize_keys
-      opts.merge!(block: block.to_proc) if block_given?
+      opts[:block] = block.to_proc if block_given?
 
       command = Masamune::Commands::Hive.new(environment, opts)
       command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.aws_emr[:cluster_id]
@@ -40,12 +40,12 @@ module Masamune::Actions
       command.interactive? ? command.replace : command.execute
     end
 
-    # TODO warn or error if database is not defined
+    # TODO: warn or error if database is not defined
     def create_hive_database_if_not_exists
       return if configuration.hive[:database] == 'default'
       sql = []
-      sql << %Q(CREATE DATABASE IF NOT EXISTS #{configuration.hive[:database]})
-      sql << %Q(LOCATION "#{configuration.hive[:location]}") if configuration.hive[:location]
+      sql << %(CREATE DATABASE IF NOT EXISTS #{configuration.hive[:database]})
+      sql << %(LOCATION "#{configuration.hive[:location]}") if configuration.hive[:location]
       hive(exec: sql.join(' ') + ';', database: nil)
     end
 
@@ -54,7 +54,7 @@ module Masamune::Actions
       hive(file: transform.to_file)
     rescue => e
       logger.error(e)
-      logger.error("Could not load schema")
+      logger.error('Could not load schema')
       logger.error("\n" + transform.to_s)
       exit
     end

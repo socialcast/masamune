@@ -52,7 +52,7 @@ module Masamune::Transform
 
     def glob_to_regexp(input)
       if input.include?('*')
-        %r|\A#{Regexp.escape(input).gsub('\\*', '.*?')}|
+        /\A#{Regexp.escape(input).gsub('\\*', '.*?')}/
       else
         /\A#{Regexp.escape(input)}\z/
       end

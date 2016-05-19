@@ -38,7 +38,7 @@ module Masamune::JobExampleGroup
       it "should match #{fixture_file}" do
         aggregate_failures 'generates expected output' do
           gather_example_output(fixture) do |actual_data, expect_file, expect_data|
-            expect(File.exists?(expect_file)).to eq(true)
+            expect(File.exist?(expect_file)).to eq(true)
             expect(actual_data).to eq(expect_data)
           end
         end
@@ -57,6 +57,6 @@ module Masamune::JobExampleGroup
 end
 
 RSpec.configure do |config|
-  config.include Masamune::JobExampleGroup, :type => :job, :file_path => %r{.*/spec/.*job_spec\.rb}
-  config.include Masamune::JobExampleGroup, :type => :task, :file_path => %r{.*/spec/.*task_spec\.rb}
+  config.include Masamune::JobExampleGroup, type: :job, file_path: %r{.*/spec/.*job_spec\.rb}
+  config.include Masamune::JobExampleGroup, type: :task, file_path: %r{.*/spec/.*task_spec\.rb}
 end

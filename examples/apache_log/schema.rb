@@ -26,7 +26,7 @@ schema :postgres do
   end
 
   dimension :user, type: :one do
-    column 'user_id',   type: :integer, natural_key: true
+    column 'user_id', type: :integer, natural_key: true
     column 'gender', type: :enum, values: %w(none unknown male female)
     column 'nationality', type: :string
     column 'ab_test_group', type: :enum, values: %w(none unknown control a b)
@@ -48,7 +48,7 @@ schema :postgres do
   end
 
   fact :visits, partition: 'y%Ym%m', grain: %w(hourly) do
-    # TODO add date dimension generator
+    # TODO: add date dimension generator
     references :date, degenerate: true
     references :user
     references :user_agent, insert: true

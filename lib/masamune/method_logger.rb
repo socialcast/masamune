@@ -20,7 +20,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-# FIXME refactor as Command
+# FIXME: refactor as Command
 module Masamune
   class MethodLogger < SimpleDelegator
     def initialize(target, *methods)

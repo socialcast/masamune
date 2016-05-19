@@ -26,18 +26,23 @@ describe Masamune::AfterInitializeCallbacks do
       include Masamune::AfterInitializeCallbacks
 
       def first_callback; end
+
       def early_callback; end
+
       def default_callback; end
+
       def unknown_callback; end
+
       def later_callback; end
+
       def final_callback; end
 
-      after_initialize(:first) { |o| o.first_callback }
-      after_initialize(:early) { |o| o.early_callback }
-      after_initialize(:default) { |o| o.default_callback }
-      after_initialize(:unknown) { |o| o.unknown_callback }
-      after_initialize(:later) { |o| o.later_callback }
-      after_initialize(:final) { |o| o.final_callback}
+      after_initialize(:first, &:first_callback)
+      after_initialize(:early, &:early_callback)
+      after_initialize(:default, &:default_callback)
+      after_initialize(:unknown, &:unknown_callback)
+      after_initialize(:later, &:later_callback)
+      after_initialize(:final, &:final_callback)
     end
   end
 
@@ -54,6 +59,7 @@ describe Masamune::AfterInitializeCallbacks do
       instance.after_initialize_invoke
     end
 
-    it 'should call callbacks in priority order' do; end
+    it 'should call callbacks in priority order' do
+    end
   end
 end

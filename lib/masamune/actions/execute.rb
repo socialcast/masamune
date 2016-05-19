@@ -22,7 +22,7 @@
 
 module Masamune::Actions
   module Execute
-    def execute(*args, &block)
+    def execute(*args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
       opts = opts.to_hash.symbolize_keys
 
@@ -52,13 +52,13 @@ module Masamune::Actions
 
       klass.class_eval do
         define_method(:handle_stdout) do |line, line_no|
-          block.call(line, line_no)
+          yield(line, line_no)
         end
       end if block_given?
 
       command = klass.new(self)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)
-      command = Masamune::Commands::Shell.new(command, {fail_fast: false}.merge(opts))
+      command = Masamune::Commands::Shell.new(command, { fail_fast: false }.merge(opts))
       opts.fetch(:interactive, false) ? command.replace(opts) : command.execute
     end
   end

@@ -20,7 +20,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-$: << File.dirname(__FILE__)
+$LOAD_PATH << File.dirname(__FILE__)
 
 require 'masamune'
 require 'random_apache_log_generator'
@@ -33,11 +33,11 @@ class ApacheLogTask < Thor
   include Masamune::Actions::Transform
 
   namespace :'examples:apache_log'
-  class_option :config, :desc => 'Configuration file', :default => fs.get_path(:current_dir, 'config.yml.erb')
-  class_option :min_users, :type => :numeric, :desc => 'Min number of users in sample', :default => 10
-  class_option :max_users, :type => :numeric, :desc => 'Max number of users in sample', :default => 20
-  class_option :min_visits, :type => :numeric, :desc => 'Min number of visits per day in sample', :default => 10
-  class_option :max_visits, :type => :numeric, :desc => 'Max number of visits per day in sample', :default => 100
+  class_option :config, desc: 'Configuration file', default: fs.get_path(:current_dir, 'config.yml.erb')
+  class_option :min_users, type: :numeric, desc: 'Min number of users in sample', default: 10
+  class_option :max_users, type: :numeric, desc: 'Max number of users in sample', default: 20
+  class_option :min_visits, type: :numeric, desc: 'Min number of visits per day in sample', default: 10
+  class_option :max_visits, type: :numeric, desc: 'Max number of visits per day in sample', default: 100
 
   desc 'generate_users', 'Generate sample users'
   source none: true

@@ -25,13 +25,13 @@ require 'delegate'
 module Masamune::Commands
   class HadoopFilesystem < SimpleDelegator
     DEFAULT_ATTRIBUTES =
-    {
-      :path         => 'hadoop',
-      :options      => [],
-      :extra        => [],
-      :block        => nil,
-      :print        => false
-    }
+      {
+        path: 'hadoop',
+        options: [],
+        extra: [],
+        block: nil,
+        print: false
+      }.freeze
 
     def initialize(delegate, attrs = {})
       super delegate
@@ -49,7 +49,7 @@ module Masamune::Commands
       args.flatten
     end
 
-    def handle_stdout(line, line_no)
+    def handle_stdout(line, _line_no)
       @block.call(line) if @block
       console(line) if @print
     end

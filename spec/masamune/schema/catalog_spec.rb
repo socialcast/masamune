@@ -87,7 +87,7 @@ describe Masamune::Schema::Catalog do
         end
       end
 
-      it { expect { schema }.to raise_error ArgumentError, "schema store arguments required" }
+      it { expect { schema }.to raise_error ArgumentError, 'schema store arguments required' }
     end
 
     context 'when schema defines unknown store' do
@@ -203,7 +203,7 @@ describe Masamune::Schema::Catalog do
             column 'name', type: :string, unique: true
             column 'description', type: :string
 
-            row name: 'current_database()', attributes: {default: true}
+            row name: 'current_database()', attributes: { default: true }
           end
         end
       end
@@ -237,10 +237,10 @@ describe Masamune::Schema::Catalog do
       let(:fact_one) { postgres.fact_one_fact }
       let(:fact_two) { postgres.fact_two_fact }
 
-      it { expect(fact_one.references).to include :dimension_one}
+      it { expect(fact_one.references).to include :dimension_one }
       it { expect(fact_one.measures).to include :measure_one }
       it { expect(fact_one.measures[:measure_one].aggregate).to eq(:sum) }
-      it { expect(fact_two.references).to include :dimension_one}
+      it { expect(fact_two.references).to include :dimension_one }
       it { expect(fact_two.measures).to include :measure_two }
       it { expect(fact_two.measures[:measure_two].aggregate).to eq(:average) }
     end
@@ -373,8 +373,8 @@ describe Masamune::Schema::Catalog do
     context 'when schema contains file with headers & format override' do
       before do
         instance.schema :postgres do
-          file 'override', headers: false, format: :tsv do; end
-          file 'default' do; end
+          file 'override', headers: false, format: :tsv
+          file 'default'
         end
       end
 
@@ -399,7 +399,7 @@ describe Masamune::Schema::Catalog do
       end
 
       it 'should raise an exception' do
-        expect { schema }.to raise_error /dimension user_account not defined/
+        expect { schema }.to raise_error(/dimension user_account not defined/)
       end
     end
 
@@ -429,7 +429,7 @@ describe Masamune::Schema::Catalog do
             {
               'tenant_id'               => row[:tenant_id],
               'user_id'                 => row[:id],
-              'user_account_state.name' => row[:deleted_at] ? 'deleted' :  'active',
+              'user_account_state.name' => row[:deleted_at] ? 'deleted' : 'active',
               'start_at'                => row[:updated_at],
               'delta'                   => 0
             }
@@ -456,7 +456,7 @@ describe Masamune::Schema::Catalog do
       end
 
       it 'should raise an exception' do
-        expect { schema }.to raise_error /invalid map, from: is missing/
+        expect { schema }.to raise_error(/invalid map, from: is missing/)
       end
     end
 
@@ -472,14 +472,14 @@ describe Masamune::Schema::Catalog do
       end
 
       it 'should raise an exception' do
-        expect { schema }.to raise_error /invalid map, from: is missing/
+        expect { schema }.to raise_error(/invalid map, from: is missing/)
       end
     end
 
     context 'when schema contains map missing the to: field' do
       subject(:schema) do
         instance.schema :postgres do
-          file 'users' do; end
+          file 'users'
 
           map from: postgres.users_file do
             field 'tenant_id'
@@ -488,15 +488,15 @@ describe Masamune::Schema::Catalog do
       end
 
       it 'should raise an exception' do
-        expect { schema }.to raise_error /invalid map from: 'users', to: is missing/
+        expect { schema }.to raise_error(/invalid map from: 'users', to: is missing/)
       end
     end
 
     context 'when schema addressed with symbols' do
       before do
         instance.schema :postgres do
-          dimension 'user', type: :one do; end
-          file 'users' do; end
+          dimension 'user', type: :one
+          file 'users'
 
           map from: postgres.files[:users], to: postgres.dimensions[:user] do
             field 'tenant_id'
@@ -514,8 +514,8 @@ describe Masamune::Schema::Catalog do
     context 'when schema addressed with strings' do
       before do
         instance.schema :postgres do
-          dimension 'user', type: :one do; end
-          file 'users' do; end
+          dimension 'user', type: :one
+          file 'users'
 
           map from: postgres.files['users'], to: postgres.dimensions['user'] do
             field 'tenant_id'

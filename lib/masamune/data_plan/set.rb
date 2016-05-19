@@ -23,7 +23,7 @@
 require 'set'
 
 class Masamune::DataPlan::Set < Set
-  EMPTY = self.new
+  EMPTY = new
 
   attr_reader :rule
 
@@ -46,14 +46,14 @@ class Masamune::DataPlan::Set < Set
 
   def missing
     return self.class.new(rule, to_enum(__method__)) unless block_given?
-    self.each do |elem|
+    each do |elem|
       yield elem if elem.explode.none?
     end
   end
 
   def existing
     return self.class.new(rule, to_enum(__method__)) unless block_given?
-    self.each do |elem|
+    each do |elem|
       elem.explode.each do |new_elem|
         yield new_elem
       end
@@ -62,7 +62,7 @@ class Masamune::DataPlan::Set < Set
 
   def adjacent
     return self.class.new(rule, to_enum(__method__)) unless block_given?
-    self.each do |elem|
+    each do |elem|
       @rule.adjacent_matches(elem).each do |adj_elem|
         yield adj_elem
       end
@@ -72,7 +72,7 @@ class Masamune::DataPlan::Set < Set
   def stale
     return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
     return self.class.new(rule, to_enum(__method__)) unless block_given?
-    self.each do |target|
+    each do |target|
       yield target if target.sources.existing.any? { |source| target_stale?(source, target) }
     end
   end
@@ -81,8 +81,8 @@ class Masamune::DataPlan::Set < Set
     return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
     return self.class.new(rule, to_enum(__method__)) unless block_given?
     set = Set.new
-    self.each do |target|
-      yield target if set.add?(target) unless target.complete?
+    each do |target|
+      yield target unless target.complete? || !set.add?(target)
     end
   end
 
@@ -110,11 +110,11 @@ class Masamune::DataPlan::Set < Set
     end
   end
 
-  # TODO detect & warn or correct if coarser grain set is incomplete
+  # TODO: detect & warn or correct if coarser grain set is incomplete
   def with_grain(grain)
     return self.class.new(rule.round(grain), to_enum(:with_grain, grain)) unless block_given?
     seen = Set.new
-    self.each do |elem|
+    each do |elem|
       granular_elem = elem.round(grain)
       yield granular_elem if seen.add?(granular_elem)
     end
@@ -122,8 +122,8 @@ class Masamune::DataPlan::Set < Set
 
   def targets
     return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_targets?
-    return self.class.new(self.first.targets.rule, to_enum(__method__)) unless block_given?
-    self.each do |elem|
+    return self.class.new(first.targets.rule, to_enum(__method__)) unless block_given?
+    each do |elem|
       elem.targets do |target|
         yield target
       end
@@ -132,8 +132,8 @@ class Masamune::DataPlan::Set < Set
 
   def sources
     return Masamune::DataPlan::Set::EMPTY if empty? || @rule.for_sources?
-    return self.class.new(self.first.sources.rule, to_enum(__method__)) unless block_given?
-    self.each do |elem|
+    return self.class.new(first.sources.rule, to_enum(__method__)) unless block_given?
+    each do |elem|
       elem.sources do |source|
         yield source
       end

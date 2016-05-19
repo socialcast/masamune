@@ -31,18 +31,18 @@ module Masamune
       default:   0,
       later:   -10,
       final:   -20
-    }
+    }.freeze
 
     module ClassMethods
       # Callbacks registered with the highest priority are executed first, ties are broken by callback registration order
       def after_initialize(priority = :default, &block)
-        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
+        @after_initialize ||= Hash.new { |h, k| h[k] = [] }
         @after_initialize[PRIORITY.fetch(priority, 0)] << block
       end
 
       def after_initialize_invoke(*a)
-        @after_initialize ||= Hash.new { |h,k| h[k] = [] }
-        @after_initialize.sort.reverse.each { |p, x| x.each { |y| y.call(*a) } }
+        @after_initialize ||= Hash.new { |h, k| h[k] = [] }
+        @after_initialize.sort.reverse.each { |_p, x| x.each { |y| y.call(*a) } }
       end
     end
 

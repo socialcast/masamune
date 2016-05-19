@@ -70,8 +70,8 @@ describe Masamune::Schema::Table do
     let(:table) do
       described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', index: ['tenant_id', 'shared']),
-          Masamune::Schema::Column.new(id: 'user_id', index: ['user_id', 'shared'])
+          Masamune::Schema::Column.new(id: 'tenant_id', index: %w(tenant_id shared)),
+          Masamune::Schema::Column.new(id: 'user_id', index: %w(user_id shared))
         ]
     end
 
@@ -83,7 +83,7 @@ describe Masamune::Schema::Table do
       described_class.new id: 'user',
         columns: [
           Masamune::Schema::Column.new(id: 'tenant_id', unique: ['shared']),
-          Masamune::Schema::Column.new(id: 'user_id', unique: ['user_id', 'shared'])
+          Masamune::Schema::Column.new(id: 'user_id', unique: %w(user_id shared))
         ]
     end
 
@@ -135,7 +135,7 @@ describe Masamune::Schema::Table do
         ]
     end
 
-    it { expect { table }.to raise_error /contains undefined columns/ }
+    it { expect { table }.to raise_error(/contains undefined columns/) }
   end
 
   context 'with partial values' do
@@ -182,11 +182,11 @@ describe Masamune::Schema::Table do
         rows: [
           Masamune::Schema::Row.new(values: {
             tenant_id: 'default_tenant_id()',
-            user_id: -1,
+            user_id: -1
           }, default: true),
           Masamune::Schema::Row.new(values: {
             tenant_id: 'default_tenant_id()',
-            user_id: -2,
+            user_id: -2
           }, id: 'unknown')
         ]
     end
@@ -208,7 +208,7 @@ describe Masamune::Schema::Table do
           }),
           Masamune::Schema::Row.new(values: {
             name: 'active',
-            description: 'Active',
+            description: 'Active'
           }, default: true),
           Masamune::Schema::Row.new(values: {
             name: 'inactive',
@@ -236,15 +236,15 @@ describe Masamune::Schema::Table do
           Masamune::Schema::Column.new(id: 'description', type: :string)
         ],
         rows: [
-          Masamune::Schema::Row.new(values: {name: 'active'}, default: true)
+          Masamune::Schema::Row.new(values: { name: 'active' }, default: true)
         ]
     end
 
     let(:table) do
       described_class.new id: 'user', references: [
-          Masamune::Schema::TableReference.new(mini_table),
-          Masamune::Schema::TableReference.new(mini_table, label: 'actor', null: true, default: :null)
-        ],
+        Masamune::Schema::TableReference.new(mini_table),
+        Masamune::Schema::TableReference.new(mini_table, label: 'actor', null: true, default: :null)
+      ],
         columns: [
           Masamune::Schema::Column.new(id: 'name', type: :string)
         ]
@@ -286,9 +286,9 @@ describe Masamune::Schema::Table do
 
     let(:table) do
       described_class.new id: 'user', references: [
-          Masamune::Schema::TableReference.new(mini_table),
-          Masamune::Schema::TableReference.new(mini_table, label: 'hr')
-        ],
+        Masamune::Schema::TableReference.new(mini_table),
+        Masamune::Schema::TableReference.new(mini_table, label: 'hr')
+      ],
         columns: [
           Masamune::Schema::Column.new(id: 'user_id', type: :integer),
           Masamune::Schema::Column.new(id: 'name', type: :string),
@@ -384,8 +384,8 @@ describe Masamune::Schema::Table do
     context 'with specified target table (referenced tables)' do
       let(:target) do
         described_class.new id: 'user_data', references: [
-            Masamune::Schema::TableReference.new(mini_table, label: 'hr')
-          ],
+          Masamune::Schema::TableReference.new(mini_table, label: 'hr')
+        ],
           columns: [
             Masamune::Schema::Column.new(id: 'user_id', type: :integer),
             Masamune::Schema::Column.new(id: 'name', type: :string)

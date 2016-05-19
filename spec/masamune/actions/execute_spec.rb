@@ -27,11 +27,11 @@ describe Masamune::Actions::Execute do
       include Masamune::Actions::Execute
 
       def before_execute
-        fail
+        raise
       end
 
       def after_execute
-        fail
+        raise
       end
     end
   end
@@ -45,21 +45,21 @@ describe Masamune::Actions::Execute do
 
     context 'with a simple command' do
       let(:command) { %w(echo ping) }
-      let(:options) { {fail_fast: true} }
+      let(:options) { { fail_fast: true } }
 
       it { expect { |b| instance.execute(*command, options, &b) }.to yield_with_args('ping', 0) }
     end
 
     context 'with a simple command with input' do
       let(:command) { %w(cat) }
-      let(:options) { {input: 'pong', fail_fast: true} }
+      let(:options) { { input: 'pong', fail_fast: true } }
 
       it { expect { |b| instance.execute(*command, options, &b) }.to yield_with_args('pong', 0) }
     end
 
     context 'with a simple command with env' do
-      let(:command) { %Q(bash -c "echo $MESSAGE") }
-      let(:options) { {env: { 'MESSAGE' => 'pong' }, fail_fast: true} }
+      let(:command) { %(bash -c "echo $MESSAGE") }
+      let(:options) { { env: { 'MESSAGE' => 'pong' }, fail_fast: true } }
 
       it { expect { |b| instance.execute(*command, options, &b) }.to yield_with_args('pong', 0) }
     end

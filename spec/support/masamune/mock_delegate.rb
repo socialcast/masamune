@@ -38,11 +38,11 @@ class Masamune::MockDelegate
   end
 
   def handle_stdout(line, line_no)
-    self.stdout[line_no] = line
+    stdout[line_no] = line
   end
 
   def handle_stderr(line, line_no)
-    self.stderr[line_no] = line
+    stderr[line_no] = line
   end
 
   def handle_failure(code)

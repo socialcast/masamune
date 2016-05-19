@@ -21,12 +21,15 @@
 #  THE SOFTWARE.
 
 module TaskExampleGroup
-  def capture(stdout, stderr, &block)
-    tmp_stdout, $stdout = $stdout, stdout
-    tmp_stderr, $stderr = $stderr, stderr
+  def capture(stdout, stderr)
+    tmp_stdout = $stdout
+    $stdout = stdout
+    tmp_stderr = $stderr
+    $stderr = stderr
     yield
   ensure
-    $stdout, $stderr = tmp_stdout, tmp_stderr
+    $stdout = tmp_stdout
+    $stderr = tmp_stderr
   end
 
   shared_examples 'general usage' do

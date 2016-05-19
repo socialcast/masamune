@@ -50,11 +50,11 @@ module Masamune::Actions
       sources.first
     end
 
-    # TODO sources from file or input array
+    # TODO: sources from file or input array
     def parse_file_type(key)
       return Set.new unless key
-      value = options[key] or return Set.new
-      File.exists?(value) or raise Thor::MalformattedArgumentError, "Expected file value for '--#{key}'; got #{value}"
+      (value = options[key]) || (return Set.new)
+      File.exist?(value) || raise(Thor::MalformattedArgumentError, "Expected file value for '--#{key}'; got #{value}")
       Set.new File.read(value).split(/\s+/)
     end
 
@@ -78,14 +78,12 @@ module Masamune::Actions
     end
     module_function :reset_module!
 
-    private
-
     included do |base|
       base.extend ClassMethods
       base.class_eval do
-        class_option :sources, :desc => 'File of data sources to process'
-        class_option :targets, :desc => 'File of data targets to process'
-        class_option :resolve, :type => :boolean, :desc => 'Recursively resolve data dependencies', :default => true
+        class_option :sources, desc: 'File of data sources to process'
+        class_option :targets, desc: 'File of data targets to process'
+        class_option :resolve, type: :boolean, desc: 'Recursively resolve data dependencies', default: true
       end
 
       base.after_initialize(:final) do |thor, options|
@@ -98,12 +96,13 @@ module Masamune::Actions
       end if defined?(base.after_initialize)
     end
 
+    # rubocop:disable Style/ClassVars
     module ClassMethods
       def skip
         initialize_module!
         @@namespaces << namespace
-        @@sources << {skip: true}
-        @@targets << {skip: true}
+        @@sources << { skip: true }
+        @@targets << { skip: true }
       end
 
       def source(source_options = {})
@@ -151,5 +150,6 @@ module Masamune::Actions
         true
       end
     end
+    # rubocop:enable Style/ClassVars
   end
 end

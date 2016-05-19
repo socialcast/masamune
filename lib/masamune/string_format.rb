@@ -26,7 +26,7 @@ module Masamune
       out = sql.dup
       out.gsub!(/\A'|\A"|"\z|'\z/, '')
       out.gsub!(/\s\s+/, ' ')
-      out.gsub!(/\s*;+\s*$/,'')
+      out.gsub!(/\s*;+\s*$/, '')
       out.strip!
       out + ';'
     end

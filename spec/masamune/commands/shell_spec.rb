@@ -22,7 +22,7 @@
 
 describe Masamune::Commands::Shell do
   let(:input) { nil }
-  let(:options) { {fail_fast: false} }
+  let(:options) { { fail_fast: false } }
   let(:delegate) { double }
   let(:instance) { described_class.new(delegate, options) }
 
@@ -34,7 +34,7 @@ describe Masamune::Commands::Shell do
     end
 
     context 'with simple command that succeeds' do
-      let(:command) { %Q{bash -c "echo 'stdout 1'; echo 'stderr 1' 1>&2; echo 'stdout 2'; echo 'stderr 2' 1>&2"} }
+      let(:command) { %(bash -c "echo 'stdout 1'; echo 'stderr 1' 1>&2; echo 'stdout 2'; echo 'stderr 2' 1>&2") }
 
       before do
         expect(instance.logger).to receive(:debug).with(/\Aexecute: TZ=UTC bash -c .*\z/)
@@ -48,10 +48,10 @@ describe Masamune::Commands::Shell do
     end
 
     context 'with simple command that fails' do
-      let(:command) { %Q{bash -c 'exit 1'} }
+      let(:command) { %(bash -c 'exit 1') }
 
       before do
-        expect(instance.logger).to receive(:debug).with(%q(execute: TZ=UTC bash -c 'exit 1'))
+        expect(instance.logger).to receive(:debug).with("execute: TZ=UTC bash -c 'exit 1'")
         expect(instance.logger).to receive(:debug).with(/\Astatus: .* exit 1\z/)
         subject
       end
@@ -62,11 +62,11 @@ describe Masamune::Commands::Shell do
     end
 
     context 'with fail_fast and simple command that fails' do
-      let(:command) { %Q{bash -c 'exit 1'} }
-      let(:options) { {fail_fast: true} }
+      let(:command) { %(bash -c 'exit 1') }
+      let(:options) { { fail_fast: true } }
 
       before do
-        expect(instance.logger).to receive(:debug).with(%q(execute: TZ=UTC bash -c 'exit 1'))
+        expect(instance.logger).to receive(:debug).with("execute: TZ=UTC bash -c 'exit 1'")
         expect(instance.logger).to receive(:debug).with(/\Astatus: .* exit 1\z/)
       end
 
@@ -74,12 +74,12 @@ describe Masamune::Commands::Shell do
     end
 
     context 'with fail_fast and simple command that fails and delegate.failure_message' do
-      let(:command) { %Q{bash -c 'exit 1'} }
-      let(:options) { {fail_fast: true} }
+      let(:command) { %(bash -c 'exit 1') }
+      let(:options) { { fail_fast: true } }
 
       before do
         allow(delegate).to receive(:failure_message).and_return('Wha happen')
-        expect(instance.logger).to receive(:debug).with(%q(execute: TZ=UTC bash -c 'exit 1'))
+        expect(instance.logger).to receive(:debug).with("execute: TZ=UTC bash -c 'exit 1'")
         expect(instance.logger).to receive(:debug).with(/\Astatus: .* exit 1\z/)
       end
 
@@ -87,7 +87,7 @@ describe Masamune::Commands::Shell do
     end
 
     context 'when command is interrupted' do
-      let(:command) { %Q{bash -c "echo 'test'"} }
+      let(:command) { %(bash -c "echo 'test'") }
 
       before do
         expect(instance.logger).to receive(:debug).with(%q(execute: TZ=UTC bash -c "echo 'test'"))
@@ -116,7 +116,7 @@ describe Masamune::Commands::Shell do
       end
 
       it { expect(delegate.status).to eq(0) }
-      it { expect(delegate.stdout).to eq(['ping', 'pong']) }
+      it { expect(delegate.stdout).to eq(%w(ping pong)) }
       it { expect(delegate.stderr).to eq([]) }
     end
 
@@ -147,7 +147,7 @@ describe Masamune::Commands::Shell do
 
     context 'when delegate implements command_args' do
       before do
-        allow(delegate).to receive(:command_args).and_return(command_args) 
+        allow(delegate).to receive(:command_args).and_return(command_args)
       end
 
       context 'with nil command_args' do
@@ -172,17 +172,17 @@ describe Masamune::Commands::Shell do
 
       context 'with command_args containing nil' do
         let(:command_args) { ['echo', nil, 'foo'] }
-        it { is_expected.to eq(['echo', 'foo']) }
+        it { is_expected.to eq(%w(echo foo)) }
       end
 
       context 'with command_args containing an integer' do
         let(:command_args) { ['echo', nil, 5] }
-        it { is_expected.to eq(['echo', '5']) }
+        it { is_expected.to eq(%w(echo 5)) }
       end
 
       context 'with nested command_args' do
         let(:command_args) { [['echo'], ['foo']] }
-        it { is_expected.to eq(['echo', 'foo']) }
+        it { is_expected.to eq(%w(echo foo)) }
       end
     end
   end

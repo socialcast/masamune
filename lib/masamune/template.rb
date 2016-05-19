@@ -37,14 +37,14 @@ module Masamune
 
     private
 
-    # TODO unify with resolve_path
+    # TODO: unify with resolve_path
     def resolve_file(partial_file)
       return partial_file if Pathname.new(partial_file).absolute?
       @paths.each do |path|
         file = File.expand_path(File.join(path, partial_file))
-        if File.exists?(file) && File.file?(file)
+        if File.exist?(file) && File.file?(file)
           @paths << File.dirname(file)
-          return file 
+          return file
         end
       end
       raise IOError, "File not found: #{partial_file}"
@@ -59,7 +59,7 @@ module Masamune
       end
 
       def render_to_string(template, parameters = {})
-        instance = self.new(File.dirname(template))
+        instance = new(File.dirname(template))
         combine instance.render(template, parameters)
       end
 

@@ -27,7 +27,7 @@ describe Masamune::Transform::DenormalizeTable do
         column 'id', type: :sequence, surrogate_key: true, auto: true
         column 'name', type: :string
 
-        row name: 'current_database()', attributes: {default: true}
+        row name: 'current_database()', attributes: { default: true }
       end
 
       dimension 'date', type: :date do
@@ -73,7 +73,7 @@ describe Masamune::Transform::DenormalizeTable do
 
   context 'with postgres dimension' do
     let(:target) { catalog.postgres.user_dimension }
-    let(:options) { { } }
+    let(:options) { {} }
 
     it 'should eq render denormalize_table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -106,7 +106,7 @@ describe Masamune::Transform::DenormalizeTable do
 
   context 'with postgres fact without :columns' do
     let(:target) { catalog.postgres.visits_fact }
-    let(:options) { { } }
+    let(:options) { {} }
 
     it 'should eq render denormalize_table template' do
       is_expected.to eq <<-EOS.strip_heredoc
@@ -322,18 +322,18 @@ describe Masamune::Transform::DenormalizeTable do
 
     let(:options) do
       {
-        columns: [
-          'tenant_id',
-          'tenant_account_state',
-          'tenant_premium_state',
-          'preferences',
-          'y',
-          'm'
-        ],
-        order: [
-          'tenant_id',
-          'start_at'
-        ]
+        columns: %w(
+          tenant_id
+          tenant_account_state
+          tenant_premium_state
+          preferences
+          y
+          m
+        ),
+        order: %w(
+          tenant_id
+          start_at
+        )
       }
     end
 

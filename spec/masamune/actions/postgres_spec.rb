@@ -32,7 +32,7 @@ describe Masamune::Actions::Postgres do
   end
 
   let(:instance) { klass.new }
-  let(:configuration) { {database: 'test'} }
+  let(:configuration) { { database: 'test' } }
   let(:postgres_helper) { double }
   let(:catalog) { double }
 
@@ -65,10 +65,10 @@ describe Masamune::Actions::Postgres do
   end
 
   describe '.after_initialize' do
-    let(:options) { {initialize: true} }
+    let(:options) { { initialize: true } }
     let(:setup_files) { [] }
     let(:schema_files) { [] }
-    let(:configuration) { {database: 'test', setup_files: setup_files, schema_files: schema_files} }
+    let(:configuration) { { database: 'test', setup_files: setup_files, schema_files: schema_files } }
 
     subject(:after_initialize_invoke) do
       instance.after_initialize_invoke(options)
@@ -81,7 +81,8 @@ describe Masamune::Actions::Postgres do
         expect(instance).to_not receive(:postgres)
         after_initialize_invoke
       end
-      it 'should not call postgres_admin or postgres' do; end
+      it 'should not call postgres_admin or postgres' do
+      end
     end
 
     context 'when database does not exist' do
@@ -91,7 +92,8 @@ describe Masamune::Actions::Postgres do
         expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
-      it 'should call posgres_admin once' do; end
+      it 'should call posgres_admin once' do
+      end
     end
 
     context 'when database exists' do
@@ -101,7 +103,8 @@ describe Masamune::Actions::Postgres do
         expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
-      it 'should not call postgres_admin' do; end
+      it 'should not call postgres_admin' do
+      end
     end
 
     context 'when setup_files are configured' do
@@ -112,7 +115,8 @@ describe Masamune::Actions::Postgres do
         expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
-      it 'should call postgres with setup_files' do; end
+      it 'should call postgres with setup_files' do
+      end
     end
 
     context 'when schema_files are configured' do
@@ -123,7 +127,8 @@ describe Masamune::Actions::Postgres do
         expect(instance).to receive(:postgres).once
         after_initialize_invoke
       end
-      it 'should call postgres with schema_files' do; end
+      it 'should call postgres with schema_files' do
+      end
     end
 
     context 'when schema_files that are globs are configured' do
@@ -134,7 +139,8 @@ describe Masamune::Actions::Postgres do
         expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
-      it 'should call postgres with schema_files' do; end
+      it 'should call postgres with schema_files' do
+      end
     end
 
     context 'when ruby schema_files configured' do
@@ -145,7 +151,8 @@ describe Masamune::Actions::Postgres do
         expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
         after_initialize_invoke
       end
-      it 'should call postgres with schema_files' do; end
+      it 'should call postgres with schema_files' do
+      end
     end
   end
 end

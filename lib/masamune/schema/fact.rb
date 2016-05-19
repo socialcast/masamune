@@ -22,7 +22,7 @@
 
 module Masamune::Schema
   class Fact < Table
-    SUPPORTED_GRAINS = [:transaction, :hourly, :daily, :monthly]
+    SUPPORTED_GRAINS = [:transaction, :hourly, :daily, :monthly].freeze
 
     attr_accessor :grain
     attr_accessor :partition
@@ -96,7 +96,7 @@ module Masamune::Schema
     def partition_tables(start_date = nil, stop_date = nil)
       return unless partition
       return unless start_date && stop_date
-      (start_date .. stop_date).each do |date|
+      (start_date..stop_date).each do |date|
         next unless date.day == 1
         yield partition_table(date)
       end

@@ -23,10 +23,10 @@
 describe Masamune::Commands::HadoopStreaming do
   let(:filesystem) { Masamune::MockFilesystem.new }
 
-  let(:configuration) { {options: options, input: input_option, output: 'output_dir', mapper: 'mapper.rb', reducer: 'reducer.rb', extra: extra} }
+  let(:configuration) { { options: options, input: input_option, output: 'output_dir', mapper: 'mapper.rb', reducer: 'reducer.rb', extra: extra } }
   let(:options) { [] }
   let(:input_option) { 'input.txt' }
-  let(:extra) { ['-D', %q(map.output.key.field.separator='\t')] }
+  let(:extra) { ['-D', 'map.output.key.field.separator=\'\t\''] }
   let(:attrs) { {} }
 
   let(:delegate) { double }
@@ -87,13 +87,13 @@ describe Masamune::Commands::HadoopStreaming do
     it { is_expected.to eq(pre_command_args + extra + post_command_args) }
 
     context 'with options' do
-      let(:options) { [{'-cacheFile' => 'cache.rb'}] }
+      let(:options) { [{ '-cacheFile' => 'cache.rb' }] }
 
       it { is_expected.to eq(pre_command_args + extra + options.map(&:to_a).flatten + post_command_args) }
     end
 
     context 'with quote' do
-      let(:attrs) { {quote: true} }
+      let(:attrs) { { quote: true } }
       let(:quoted_extra) { ['-D', %q(map.output.key.field.separator='"'\\\\t'"')] }
 
       subject { instance.command_args }

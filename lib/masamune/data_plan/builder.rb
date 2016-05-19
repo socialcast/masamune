@@ -33,8 +33,8 @@ class Masamune::DataPlan::Builder
       commands.each do |name|
         command_name = "#{namespaces.shift}:#{name}"
 
-        source_options = sources_for[name] || sources_anon.shift or next
-        target_options = targets_for[name] || targets_anon.shift or next
+        (source_options = sources_for[name] || sources_anon.shift) || next
+        (target_options = targets_for[name] || targets_anon.shift) || next
         next if source_options[:skip] || target_options[:skip]
 
         engine.add_source_rule(command_name, source_options)
@@ -48,16 +48,16 @@ class Masamune::DataPlan::Builder
   private
 
   def partition_by_for(annotations)
-    with_for, anon = annotations.partition { |opts| opts.has_key?(:for) }
+    with_for, anon = annotations.partition { |opts| opts.key?(:for) }
     decl = {}
     with_for.each do |opts|
-      decl[opts[:for]] = opts.reject { |k,_| k == :for }
+      decl[opts[:for]] = opts.reject { |k, _| k == :for }
     end
     [decl, anon]
   end
 
   def thor_command_wrapper
-    Proc.new do |engine, rule, _|
+    proc do |engine, rule, _|
       engine.environment.parent.invoke(rule)
     end
   end

@@ -43,7 +43,7 @@ module Masamune::Schema
       inherit:         false,
       debug:           false,
       properties:      {}
-    }
+    }.freeze
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
       attr_accessor attr
@@ -76,8 +76,8 @@ module Masamune::Schema
       columns = (instance.is_a?(Hash) ? instance.values : instance).compact
       raise ArgumentError, "table #{name} contains reserved columns" if columns.any? { |column| reserved_column_ids.include?(column.id) }
 
-      initialize_surrogate_key_column! unless columns.any? { |column| column.surrogate_key }
-      initialize_reference_columns! unless columns.any? { |column| column.reference }
+      initialize_surrogate_key_column! unless columns.any?(&:surrogate_key)
+      initialize_reference_columns! unless columns.any?(&:reference)
       columns.each do |column|
         initialize_column!(column)
       end
@@ -104,7 +104,7 @@ module Masamune::Schema
     end
 
     def surrogate_key
-      columns.values.detect { |column| column.surrogate_key }
+      columns.values.detect(&:surrogate_key)
     end
 
     def primary_keys
@@ -112,11 +112,11 @@ module Masamune::Schema
     end
 
     def natural_keys
-      columns.values.select { |column| column.natural_key }
+      columns.values.select(&:natural_key)
     end
 
     def defined_columns
-      columns.values.reject { |column| column.partition }
+      columns.values.reject(&:partition)
     end
     method_with_last_element :defined_columns
 
@@ -150,11 +150,11 @@ module Masamune::Schema
     end
 
     def reference_columns
-      columns.values.select { | column| column.reference }
+      columns.values.select(&:reference)
     end
 
     def foreign_key_columns
-      columns.values.select { | column| !column.degenerate? && column.reference && column.reference.foreign_key }
+      columns.values.select { |column| !column.degenerate? && column.reference && column.reference.foreign_key }
     end
 
     def partitions
@@ -166,7 +166,7 @@ module Masamune::Schema
     end
 
     def aliased_rows
-      rows.select { |row| row.name }
+      rows.select(&:name)
     end
 
     def insert_references
@@ -225,7 +225,7 @@ module Masamune::Schema
     end
 
     def shared_columns(other)
-      Hash.new { |h,k| h[k] = [] }.tap do |shared|
+      Hash.new { |h, k| h[k] = [] }.tap do |shared|
         columns.each do |_, column|
           other.columns.each do |_, other_column|
             shared[column] << other_column if column.references?(other_column)
@@ -235,13 +235,13 @@ module Masamune::Schema
     end
 
     def dereference_column_name(name)
-      reference_name, column_name = Column::dereference_column_name(name)
-      if reference = references[reference_name]
-        if column = reference.columns[column_name]
-          dereference_column(column.dup, reference)
-        end
-      elsif column = columns[column_name]
-        column
+      reference_name, column_name = Column.dereference_column_name(name)
+      reference = references[reference_name]
+      if reference
+        column = reference.columns[column_name]
+        dereference_column(column.dup, reference) if column
+      elsif columns[column_name]
+        columns[column_name]
       end
     end
 
@@ -287,17 +287,13 @@ module Masamune::Schema
           column = dereference_column_name(name)
           next unless column
           next if inherit && parent.reserved_column_ids.include?(column.id)
-          if column.parent == self
-            next if column.surrogate_key
-            result[name] = column
-          else
-            result[name] = column
-          end
+          next if column.parent == self && column.surrogate_key
+          result[name] = column
         end
       end
     end
 
-    def stage_table_references(parent, selected = [])
+    def stage_table_references(_parent, selected = [])
       selected = references.keys if selected.empty?
       {}.tap do |result|
         selected.each do |name|
@@ -325,7 +321,7 @@ module Masamune::Schema
             initialize_column! id: column.id, type: column.type, reference: reference, default: reference.default, null: reference.null, natural_key: reference.natural_key
           end
         elsif reference.foreign_key
-          # FIXME column.reference should point to reference.surrogate_key, only allow column references to Columns
+          # FIXME: column.reference should point to reference.surrogate_key, only allow column references to Columns
           initialize_column! id: reference.foreign_key_name, type: reference.foreign_key_type, reference: reference, default: reference.default, null: reference.null, natural_key: reference.natural_key
         end
       end
@@ -342,7 +338,7 @@ module Masamune::Schema
 
     def index_column_map
       @index_column_map ||= begin
-        map = Hash.new { |h,k| h[k] = [] }
+        map = Hash.new { |h, k| h[k] = [] }
         columns.each do |_, column|
           column.index.each do |index|
             map[index] << column.name
@@ -355,7 +351,7 @@ module Masamune::Schema
 
     def unique_constraints_map
       @unique_constraints_map ||= begin
-        map = Hash.new { |h,k| h[k] = [] }
+        map = Hash.new { |h, k| h[k] = [] }
         columns.each do |_, column|
           next if column.auto_reference
           column.unique.each do |unique|
@@ -369,7 +365,7 @@ module Masamune::Schema
     end
 
     def reverse_unique_constraints_map
-      @reverse_unique_constraints_map ||= Hash[unique_constraints_map.to_a.map { |k,v| [v.sort, k] }]
+      @reverse_unique_constraints_map ||= Hash[unique_constraints_map.to_a.map { |k, v| [v.sort, k] }]
     end
 
     def short_md5(*a)

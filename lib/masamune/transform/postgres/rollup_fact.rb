@@ -36,8 +36,6 @@ module Masamune::Transform::Postgres
       TargetPresenter.new(@target)
     end
 
-    private
-
     class TargetPresenter < SimpleDelegator
       include Masamune::LastElement
 
@@ -49,7 +47,7 @@ module Masamune::Transform::Postgres
           next if column.auto_reference
           values << column.name
         end
-        measures.each do |_ ,measure|
+        measures.each do |_, measure|
           values << measure.name
         end
         values << time_key.name
@@ -66,7 +64,7 @@ module Masamune::Transform::Postgres
           next if column.auto_reference
           values << column.qualified_name
         end
-        source.measures.each do |_ ,measure|
+        source.measures.each do |_, measure|
           values << measure.aggregate_value
         end
         values << calculated_time_key(source)
@@ -102,7 +100,7 @@ module Masamune::Transform::Postgres
       def calculated_date_key(source)
         case grain
         when :hourly, :daily
-          "#{source.date_column.qualified_name}"
+          source.date_column.qualified_name.to_s
         when :monthly
           "to_char(date_trunc('month',#{source.date_column.qualified_name}::text::date),'YYYYMMDD')::integer"
         end

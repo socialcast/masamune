@@ -29,26 +29,26 @@ module Masamune::Tasks
     include Masamune::Actions::AwsEmr
     include Masamune::Actions::Hive
 
-    # FIXME need to add an unnecessary namespace until this issue is fixed:
+    # FIXME: need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
     namespace :hive
     skip_lock!
 
     desc 'hive', 'Launch a Hive session'
-    method_option :file, :aliases => '-f', :desc => 'SQL from files'
-    method_option :exec, :aliases => '-e', :desc => 'SQL from command line'
-    method_option :output, :aliases => '-o', :desc => 'Save SQL output to file'
-    method_option :delimiter, :desc => 'Hive row format delimiter', :default => "\001"
-    method_option :csv, :type => :boolean, :desc => 'Report SQL output in CSV format', :default => false
-    method_option :variables, :aliases => '-X', :type => :hash, :desc => 'Variables to substitute in SQL', :default => {}
-    method_option :retry, :type => :boolean, :desc => 'Retry SQL query in event of failure', :default => false
-    method_option :service, :desc => 'Start as a service', :default => false
+    method_option :file, aliases: '-f', desc: 'SQL from files'
+    method_option :exec, aliases: '-e', desc: 'SQL from command line'
+    method_option :output, aliases: '-o', desc: 'Save SQL output to file'
+    method_option :delimiter, desc: 'Hive row format delimiter', default: "\001"
+    method_option :csv, type: :boolean, desc: 'Report SQL output in CSV format', default: false
+    method_option :variables, aliases: '-X', type: :hash, desc: 'Variables to substitute in SQL', default: {}
+    method_option :retry, type: :boolean, desc: 'Retry SQL query in event of failure', default: false
+    method_option :service, desc: 'Start as a service', default: false
     def hive_exec
       hive_options = options.dup.with_indifferent_access
-      hive_options.merge!(print: true)
-      hive_options.merge!(retries: 0) unless options[:retry]
-      hive_options.merge!(file: File.expand_path(options[:file])) if options[:file]
-      hive_options.merge!(output: File.expand_path(options[:output])) if options[:output]
+      hive_options[:print] = true
+      hive_options[:retries] = 0 unless options[:retry]
+      hive_options[:file] = File.expand_path(options[:file]) if options[:file]
+      hive_options[:output] = File.expand_path(options[:output]) if options[:output]
       hive(hive_options)
     end
     default_task :hive_exec

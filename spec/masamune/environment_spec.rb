@@ -26,15 +26,15 @@ describe Masamune::Environment do
 
   describe '#with_exclusive_lock' do
     context 'when run_dir not defined' do
-      it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to raise_error /filesystem path :run_dir not defined/ }
+      it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to raise_error(/filesystem path :run_dir not defined/) }
     end
 
     context 'when lock can be acquired' do
       before do
         instance.filesystem.add_path(:run_dir, run_dir)
         expect_any_instance_of(File).to receive(:flock).twice.and_return(0)
-        expect(instance.logger).to receive(:debug).with(%q{acquiring lock 'some_lock'})
-        expect(instance.logger).to receive(:debug).with(%q{releasing lock 'some_lock'})
+        expect(instance.logger).to receive(:debug).with("acquiring lock 'some_lock'")
+        expect(instance.logger).to receive(:debug).with("releasing lock 'some_lock'")
       end
       it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to yield_control }
     end
@@ -44,8 +44,8 @@ describe Masamune::Environment do
         instance.filesystem.add_path(:run_dir, run_dir)
         instance.configuration.lock = 'long_running'
         expect_any_instance_of(File).to receive(:flock).twice.and_return(0)
-        expect(instance.logger).to receive(:debug).with(%q{acquiring lock 'some_lock:long_running'})
-        expect(instance.logger).to receive(:debug).with(%q{releasing lock 'some_lock:long_running'})
+        expect(instance.logger).to receive(:debug).with("acquiring lock 'some_lock:long_running'")
+        expect(instance.logger).to receive(:debug).with("releasing lock 'some_lock:long_running'")
       end
       it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to yield_control }
     end
