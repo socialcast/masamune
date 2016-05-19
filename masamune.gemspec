@@ -1,4 +1,4 @@
-$:.push File.expand_path('../lib', __FILE__)
+$LOAD_PATH.push File.expand_path('../lib', __FILE__)
 
 require 'masamune/version'
 
@@ -29,10 +29,11 @@ Gem::Specification.new do |s|
 
   # Development
   s.add_development_dependency('rake', '>= 0.9')
+  s.add_development_dependency('rubocop')
   s.add_development_dependency('user_agent_parser')
 
   # Testing
   s.add_development_dependency('rspec', '> 2.99')
-  s.add_development_dependency('debugger') if RUBY_VERSION =~ /\A1/
-  s.add_development_dependency('byebug') if RUBY_VERSION =~ /\A2/
+  s.add_development_dependency('debugger') if RUBY_VERSION.start_with?('1')
+  s.add_development_dependency('byebug') if RUBY_VERSION.start_with?('2')
 end
