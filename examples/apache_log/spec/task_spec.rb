@@ -20,7 +20,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-$: << File.join(File.dirname(__FILE__), '..', '..')
+$LOAD_PATH << File.join(File.dirname(__FILE__), '..', '..')
 
 require 'apache_log/task'
 

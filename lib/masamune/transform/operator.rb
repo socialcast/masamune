@@ -51,8 +51,8 @@ module Masamune::Transform
     private
 
     def template_eval(template)
-      return File.read(template) if File.exists?(template.to_s) && template.to_s !~ /erb\Z/
-      template_file = File.exists?(template.to_s) ? template : template_file(template)
+      return File.read(template) if File.exist?(template.to_s) && template.to_s !~ /erb\Z/
+      template_file = File.exist?(template.to_s) ? template : template_file(template)
       if template_helper(template)
         Masamune::Template.render_to_string(template_file, template_helper(template).new(@options).locals)
       else
@@ -63,6 +63,7 @@ module Masamune::Transform
     def template_helper(template_name)
       "Masamune::Transform::#{template_type.to_s.camelize}::#{template_name.to_s.camelize}".constantize
     rescue NameError
+      nil
     end
 
     def template_file(template_name)

@@ -36,16 +36,14 @@ module Masamune::Transform::Postgres
       TargetPresenter.new(@target)
     end
 
-    private
-
     class TargetPresenter < SimpleDelegator
       include Masamune::LastElement
 
       def insert_columns(source)
         shared_columns(source).values.map do |columns|
           column = columns.first
-          if reference = column.reference
-            reference.foreign_key_name
+          if column.reference
+            column.reference.foreign_key_name
           else
             column.name
           end
@@ -55,8 +53,8 @@ module Masamune::Transform::Postgres
       def insert_values(source)
         shared_columns(source).values.map do |columns|
           column = columns.first
-          if !column.degenerate? && reference = column.reference
-            value = reference.surrogate_key.qualified_name(column.reference.label)
+          if !column.degenerate? && column.reference
+            value = column.reference.surrogate_key.qualified_name(column.reference.label)
             column.reference.unknown ? "COALESCE(#{value}, #{column.reference.unknown})" : value
           else
             column.qualified_name
@@ -71,11 +69,11 @@ module Masamune::Transform::Postgres
 
       def join_conditions(source)
         join_columns = shared_columns(source).values.flatten
-        join_columns = join_columns.select { |column| column.reference }
-        join_columns = join_columns.group_by { |column| column.reference }
+        join_columns = join_columns.select(&:reference)
+        join_columns = join_columns.group_by(&:reference)
 
         dependencies = Masamune::TopologicalHash.new
-        conditions = Hash.new { |h,k| h[k] = OpenStruct.new(type: 'INNER', conditions: []) }
+        conditions = Hash.new { |h, k| h[k] = OpenStruct.new(type: 'INNER', conditions: []) }
         join_columns.each do |reference, columns|
           reference_name = join_alias(reference)
           columns.each do |column|
@@ -86,8 +84,8 @@ module Masamune::Transform::Postgres
             coalesce_values = []
 
             if cross_references.any?
-              dependencies[reference_name] += cross_references.map { |reference, _| join_alias(reference) }
-              coalesce_values << cross_references.map { |reference, column| column.qualified_name(reference.label) }
+              dependencies[reference_name] += cross_references.map { |cross_reference, _| join_alias(cross_reference) }
+              coalesce_values << cross_references.map { |cross_reference, cross_column| cross_column.qualified_name(cross_reference.label) }
             end
 
             column.reference.auto_surrogate_keys.each do |auto_surrogate_key|
@@ -101,9 +99,12 @@ module Masamune::Transform::Postgres
               coalesce_values << column.adjacent.sql_value(column.adjacent.default)
             end
 
-            conditions[reference_name].conditions << (coalesce_values.any? ?
-              "#{column.foreign_key_name} = COALESCE(#{column.qualified_name}, #{coalesce_values.join(', ')})" :
-              "#{column.foreign_key_name} = #{column.qualified_name}")
+            conditions[reference_name].conditions <<
+            if coalesce_values.any?
+              "#{column.foreign_key_name} = COALESCE(#{column.qualified_name}, #{coalesce_values.join(', ')})"
+            else
+              "#{column.foreign_key_name} = #{column.qualified_name}"
+            end
           end
 
           if reference.type == :two || reference.type == :four

@@ -31,12 +31,12 @@ class Masamune::DataPlan::Engine
   include Masamune::HasEnvironment
 
   def initialize
-    @target_rules = Hash.new
-    @source_rules = Hash.new
-    @command_rules = Hash.new
-    @targets = Hash.new { |set,rule| set[rule] = Masamune::DataPlan::Set.new(@target_rules[rule]) }
-    @sources = Hash.new { |set,rule| set[rule] = Masamune::DataPlan::Set.new(@source_rules[rule]) }
-    @set_cache = Hash.new { |cache,level| cache[level] = Hash.new }
+    @target_rules = {}
+    @source_rules = {}
+    @command_rules = {}
+    @targets = Hash.new { |set, rule| set[rule] = Masamune::DataPlan::Set.new(@target_rules[rule]) }
+    @sources = Hash.new { |set, rule| set[rule] = Masamune::DataPlan::Set.new(@source_rules[rule]) }
+    @set_cache = Hash.new { |cache, level| cache[level] = {} }
     @current_depth = 0
   end
 
@@ -64,17 +64,14 @@ class Masamune::DataPlan::Engine
     @command_rules[rule] = command
   end
 
-  # TODO use constructed reference instead
+  # TODO: use constructed reference instead
   def rule_for_target(target)
-    target_matches = @target_rules.select { |rule, matcher| matcher.primary? && matcher.matches?(target) }
-    source_matches = @source_rules.select { |rule, matcher| matcher.matches?(target) }
+    target_matches = @target_rules.select { |_rule, matcher| matcher.primary? && matcher.matches?(target) }
+    source_matches = @source_rules.select { |_rule, matcher| matcher.matches?(target) }
 
     if target_matches.empty?
-      if source_matches.empty?
-        raise "No rule matches target #{target}"
-      else
-        Masamune::DataPlan::Rule::TERMINAL
-      end
+      raise "No rule matches target #{target}" if source_matches.empty?
+      Masamune::DataPlan::Rule::TERMINAL
     else
       logger.error("Multiple rules match target #{target}") if target_matches.length > 1
       target_matches.map(&:first).first
@@ -136,7 +133,7 @@ class Masamune::DataPlan::Engine
     return if targets(rule).actionable.empty?
 
     constrain_max_depth(rule) do
-      sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
+      sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, _sources|
         execute(derived_rule, options) if derived_rule != Masamune::DataPlan::Rule::TERMINAL
       end
     end if options.fetch(:resolve, true)

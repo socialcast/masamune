@@ -22,7 +22,7 @@
 
 module Masamune::Schema
   class Dimension < Table
-    SUPPORTED_GRAINS = [:hourly, :daily, :monthly]
+    SUPPORTED_GRAINS = [:hourly, :daily, :monthly].freeze
 
     def initialize(opts = {})
       opts.symbolize_keys!
@@ -48,7 +48,8 @@ module Masamune::Schema
     end
 
     def suffix
-      suffix = case type
+      suffix =
+      case type
       when :mini
         'type'
       when :one, :two, :four, :date
@@ -111,7 +112,7 @@ module Masamune::Schema
     end
 
     def initialize_dimension_columns!
-      # TODO assign index for load_fact
+      # TODO: assign index for load_fact
       case type
       when :one, :date
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
@@ -122,7 +123,7 @@ module Masamune::Schema
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :four
         children << ledger_table
-        # FIXME derive type from from parent
+        # FIXME: derive type from from parent
         initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: [:start_at, :natural], unique: :natural
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: :end_at
         initialize_column! id: 'version', type: :integer, default: 1, null: true

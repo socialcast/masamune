@@ -101,8 +101,8 @@ describe Masamune::Transform::DefineTable do
     before do
       catalog.schema :postgres do
         table 'user' do
-          column 'tenant_id', index: ['tenant_id', 'shared']
-          column 'user_id', index: ['user_id', 'shared']
+          column 'tenant_id', index: %w(tenant_id shared)
+          column 'user_id', index: %w(user_id shared)
         end
       end
     end
@@ -146,7 +146,7 @@ describe Masamune::Transform::DefineTable do
       catalog.schema :postgres do
         table 'user' do
           column 'tenant_id', unique: ['shared']
-          column 'user_id', unique: ['user_id', 'shared']
+          column 'user_id', unique: %w(user_id shared)
         end
       end
     end
@@ -525,8 +525,8 @@ describe Masamune::Transform::DefineTable do
         table 'user' do
           column 'tenant_id', type: :integer, natural_key: true
           column 'user_id', type: :integer, natural_key: true
-          row tenant_id: 'default_tenant_id()', user_id: -1, attributes: {default: true}
-          row tenant_id: 'default_tenant_id()', user_id: -2, attributes: {id: 'unknown'}
+          row tenant_id: 'default_tenant_id()', user_id: -1, attributes: { default: true }
+          row tenant_id: 'default_tenant_id()', user_id: -2, attributes: { id: 'unknown' }
         end
       end
     end
@@ -885,7 +885,7 @@ describe Masamune::Transform::DefineTable do
           column 'name', type: :string, unique: true
           column 'description', type: :string
           row name: 'registered', description: 'Registered'
-          row name: 'active', description: 'Active', attributes: {default: true}
+          row name: 'active', description: 'Active', attributes: { default: true }
           row name: 'inactive', description: 'Inactive'
         end
       end

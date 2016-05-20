@@ -20,7 +20,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-$: << File.expand_path('../lib/', __FILE__)
+$LOAD_PATH << File.expand_path('../lib/', __FILE__)
 require 'masamune'
 
 Dir["#{File.dirname(__FILE__)}/lib/masamune/tasks/*thor.rb"].each { |f| require f }

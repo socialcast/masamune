@@ -43,7 +43,7 @@ module Masamune
     class << self
       def load(options = {}, context = binding)
         file = file_name(options)
-        raise ArgumentError, "Fixture '#{file}' does not exist" unless File.exists?(file)
+        raise ArgumentError, "Fixture '#{file}' does not exist" unless File.exist?(file)
         YAML.load(ERB.new(File.read(file)).result(context)).tap do |data|
           return new(options.merge(data: data, context: context))
         end
@@ -77,7 +77,7 @@ module Masamune
         @data['inputs'].each do |input|
           file.puts '-'.indent(INDENT)
           serialize(input) do |elem|
-            file.puts elem.indent(INDENT*2)
+            file.puts elem.indent(INDENT * 2)
           end
         end
         file.puts
@@ -85,7 +85,7 @@ module Masamune
         @data['outputs'].each do |output|
           file.puts '-'.indent(INDENT)
           serialize(output) do |elem|
-            file.puts elem.indent(INDENT*2)
+            file.puts elem.indent(INDENT * 2)
           end
         end
       end
@@ -97,7 +97,7 @@ module Masamune
         @data['inputs'].map do |input|
           if input['reference']
             raise ArgumentError, "reference in #{file_name} requires fixture" unless input['reference']['fixture'] || input['reference']['file']
-            reference = self.class.load({path: input['reference']['path'] || path, name: input['reference']['fixture'], file: input['reference']['file'], type: @type}, @context)
+            reference = self.class.load({ path: input['reference']['path'] || path, name: input['reference']['fixture'], file: input['reference']['file'], type: @type }, @context)
             section = input['reference']['section'] || 'outputs'
             reference.send(section) if reference.respond_to?(section)
           else

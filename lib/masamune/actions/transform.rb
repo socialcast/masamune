@@ -35,7 +35,7 @@ module Masamune::Actions
 
     include Masamune::Actions::Postgres
 
-    # FIXME should eventually be able to include Transform directly instead of through wrapper
+    # FIXME: should eventually be able to include Transform directly instead of through wrapper
     class Wrapper
       extend Masamune::Transform::LoadDimension
       extend Masamune::Transform::ConsolidateDimension
@@ -78,20 +78,20 @@ module Masamune::Actions
     private
 
     def optional_apply_map(source_files, source, target, &block)
-      if source.respond_to?(:map) and map = source.map(to: target)
+      if source.respond_to?(:map) && (map = source.map(to: target))
         apply_map(map, source_files, source, target, &block)
       else
         yield source_files, source
       end
     end
 
-    def apply_map(map, source_files, source, target)
+    def apply_map(map, source_files, source, _target)
       Tempfile.open('masamune_transform') do |output|
         begin
           FileUtils.chmod(FILE_MODE, output.path)
           result = map.apply(source_files, output)
           result.debug = map.debug
-          logger.debug(File.read(output)) if (source.debug || result.debug)
+          logger.debug(File.read(output)) if source.debug || result.debug
           yield output, result
         ensure
           output.unlink

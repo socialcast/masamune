@@ -42,7 +42,7 @@ class Masamune::Configuration
   attr_accessor :backoff
   attr_accessor :params
 
-  COMMANDS = %w(aws_emr hive hadoop_streaming hadoop_filesystem s3cmd postgres postgres_admin)
+  COMMANDS = %w(aws_emr hive hadoop_streaming hadoop_filesystem s3cmd postgres postgres_admin).freeze
   COMMANDS.each do |command|
     attr_accessor command
     define_method(command) do
@@ -51,7 +51,7 @@ class Masamune::Configuration
   end
 
   def initialize(environment)
-    self.environment   = environment
+    self.environment = environment
     self.quiet    = false
     self.verbose  = false
     self.debug    = false
@@ -76,7 +76,7 @@ class Masamune::Configuration
           load_paths(value)
         elsif command == 'params'
           raise ArgumentError, 'params section must only contain key value pairs' unless value.is_a?(Hash)
-          self.params.merge! value
+          params.merge! value
         end
       end
       logger.debug("Loaded configuration #{config_file}")
@@ -97,7 +97,7 @@ class Masamune::Configuration
 
   def to_s
     io = StringIO.new
-    rep = {"path" => filesystem.paths}
+    rep = { 'path' => filesystem.paths }
     COMMANDS.each do |command|
       rep[command] = send(command)
     end
@@ -121,8 +121,9 @@ class Masamune::Configuration
 
   def_delegators :filesystem, :add_path, :get_path
 
-  def with_quiet(&block)
-    prev_quiet, self.quiet = quiet, true
+  def with_quiet
+    prev_quiet = quiet
+    self.quiet = true
     yield
   ensure
     self.quiet = prev_quiet
@@ -135,9 +136,7 @@ class Masamune::Configuration
   end
 
   class << self
-    def default_config_file=(config_file)
-      @default_config_file = config_file
-    end
+    attr_writer :default_config_file
 
     def default_config_file
       @default_config_file ||= File.join(File.expand_path('../../../', __FILE__), 'config', 'masamune.yml.erb')

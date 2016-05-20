@@ -21,7 +21,7 @@
 #  THE SOFTWARE.
 
 describe Masamune::Commands::HadoopFilesystem do
-  let(:configuration) { {options: options} }
+  let(:configuration) { { options: options } }
   let(:options) { [] }
   let(:attrs) { {} }
 
@@ -33,14 +33,14 @@ describe Masamune::Commands::HadoopFilesystem do
   end
 
   describe '#command_args' do
-    let(:attrs) { {extra: ['-ls', '/']} }
+    let(:attrs) { { extra: ['-ls', '/'] } }
 
     subject { instance.command_args }
 
     it { is_expected.to eq(['hadoop', 'fs', '-ls', '/']) }
 
     context 'with options' do
-      let(:options) { [{'--conf' => 'hadoop.conf'}] }
+      let(:options) { [{ '--conf' => 'hadoop.conf' }] }
 
       it { is_expected.to eq(['hadoop', 'fs', '--conf', 'hadoop.conf', '-ls', '/']) }
     end

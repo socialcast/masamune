@@ -29,16 +29,16 @@ module Masamune::Tasks
     include Masamune::Actions::DateParse
     include Masamune::Transform::DefineSchema
 
-    # FIXME need to add an unnecessary namespace until this issue is fixed:
+    # FIXME: need to add an unnecessary namespace until this issue is fixed:
     # https://github.com/wycats/thor/pull/247
     namespace :dump
     skip_lock!
 
     desc 'dump', 'Dump schema'
-    method_option :type, :enum => ['psql', 'hql'], :desc => 'Schema type', :default => 'psql'
-    method_option :section, :enum => ['pre', 'post', 'all'], :desc => 'Schema section', :default => 'all'
-    method_option :exclude, :type => :array, :desc => 'Exclude tables matching globs', :default => []
-    method_option :skip_indexes, :type => :boolean, :desc => 'Disable indexes', :default => false
+    method_option :type, enum: %w(psql hql), desc: 'Schema type', default: 'psql'
+    method_option :section, enum: %w(pre post all), desc: 'Schema section', default: 'all'
+    method_option :exclude, type: :array, desc: 'Exclude tables matching globs', default: []
+    method_option :skip_indexes, type: :boolean, desc: 'Disable indexes', default: false
     def dump_exec
       print_catalog
       exit

@@ -26,8 +26,8 @@ module Masamune::Actions
       opts = args.last.is_a?(Hash) ? args.pop : {}
       opts = opts.to_hash.symbolize_keys
       opts.reverse_merge!(fail_fast: false)
-      opts.merge!(extra: Array.wrap(args))
-      opts.merge!(block: block.to_proc) if block_given?
+      opts[:extra] = Array.wrap(args)
+      opts[:block] = block.to_proc if block_given?
 
       command = Masamune::Commands::HadoopFilesystem.new(environment, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, configuration.hadoop_filesystem.slice(:retries, :backoff).merge(opts))

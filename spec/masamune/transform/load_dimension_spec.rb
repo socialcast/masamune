@@ -31,7 +31,7 @@ describe Masamune::Transform::LoadDimension do
       dimension 'department', type: :mini do
         column 'tenant_id', type: :integer, unique: true, natural_key: true
         column 'department_id', type: :integer, unique: true, natural_key: true
-        row tenant_id: -1, department_id: -1, attributes: {default: true}
+        row tenant_id: -1, department_id: -1, attributes: { default: true }
       end
 
       dimension 'user', type: :four do

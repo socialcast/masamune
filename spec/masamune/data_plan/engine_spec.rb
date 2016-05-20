@@ -31,7 +31,7 @@ describe Masamune::DataPlan::Engine do
   end
 
   let(:command) do
-    Proc.new do |engine, rule|
+    proc do |engine, rule|
       missing_targets = []
       engine.targets(rule).missing.each do |target|
         missing_targets << target.path if target.sources.existing.any?
@@ -43,7 +43,7 @@ describe Masamune::DataPlan::Engine do
   before do
     engine.add_target_rule('non_primary', path: '/table/y=%Y/m=%m/d=%d', primary: false)
     engine.add_source_rule('non_primary', path: '/log/%Y%m%d.*.log', primary: false)
-    engine.add_command_rule('non_primary', ->(*_) { fail } )
+    engine.add_command_rule('non_primary', ->(*_) { raise })
     engine.add_target_rule('primary', path: '/table/y=%Y/m=%m/d=%d')
     engine.add_source_rule('primary', path: '/log/%Y%m%d.*.log')
     engine.add_command_rule('primary', command)
@@ -61,8 +61,8 @@ describe Masamune::DataPlan::Engine do
   end
 
   describe '#targets_for_date_range' do
-    let(:start) { Date.civil(2013,01,01) }
-    let(:stop) { Date.civil(2013,01,03) }
+    let(:start) { Date.civil(2013, 01, 01) }
+    let(:stop) { Date.civil(2013, 01, 03) }
 
     subject { engine.targets_for_date_range(rule, start, stop).map(&:path) }
 
@@ -104,26 +104,26 @@ describe Masamune::DataPlan::Engine do
       let(:rule) { 'primary' }
       let(:source) { '/log/20130101.random.log' }
 
-      it { expect(targets.first.start_time).to eq(Date.civil(2013,01,01)) }
-      it { expect(targets.first.stop_time).to eq(Date.civil(2013,01,02)) }
+      it { expect(targets.first.start_time).to eq(Date.civil(2013, 01, 01)) }
+      it { expect(targets.first.stop_time).to eq(Date.civil(2013, 01, 02)) }
       it { expect(targets.first.path).to eq('/table/y=2013/m=01/d=01') }
     end
 
     context 'derived_daily' do
       let(:rule) { 'derived_daily' }
-      let(:source)  { '/table/y=2013/m=01/d=01' }
+      let(:source) { '/table/y=2013/m=01/d=01' }
 
-      it { expect(targets.first.start_time).to eq(Date.civil(2013,01,01)) }
-      it { expect(targets.first.stop_time).to eq(Date.civil(2013,01,02)) }
+      it { expect(targets.first.start_time).to eq(Date.civil(2013, 01, 01)) }
+      it { expect(targets.first.stop_time).to eq(Date.civil(2013, 01, 02)) }
       it { expect(targets.first.path).to eq('/daily/2013-01-01') }
     end
 
     context 'derived_monthly' do
       let(:rule) { 'derived_monthly' }
-      let(:source)  { '/table/y=2013/m=01/d=01' }
+      let(:source) { '/table/y=2013/m=01/d=01' }
 
-      it { expect(targets.first.start_time).to eq(Date.civil(2013,01,01)) }
-      it { expect(targets.first.stop_time).to eq(Date.civil(2013,02,01)) }
+      it { expect(targets.first.start_time).to eq(Date.civil(2013, 01, 01)) }
+      it { expect(targets.first.stop_time).to eq(Date.civil(2013, 02, 01)) }
       it { expect(targets.first.path).to eq('/monthly/2013-01') }
     end
   end
@@ -167,15 +167,15 @@ describe Masamune::DataPlan::Engine do
       let(:target) { '/monthly/2013-01' }
 
       (1..31).each do |day|
-        it { expect(sources).to include '/table/y=2013/m=01/d=%02d' % day }
+        it { expect(sources).to include format('/table/y=2013/m=01/d=%02d', day) }
       end
       it { expect(sources.size).to eq(31) }
     end
 
     context 'invalid target' do
       let(:rule) { 'derived_daily' }
-      let(:target) {  '/table/y=2013/m=01/d=01' }
-      it { expect { subject }.to raise_error /Cannot bind_input/ }
+      let(:target) { '/table/y=2013/m=01/d=01' }
+      it { expect { subject }.to raise_error(/Cannot bind_input/) }
     end
   end
 
@@ -204,7 +204,7 @@ describe Masamune::DataPlan::Engine do
 
     context 'invalid target' do
       let(:target) { '/daily' }
-      it { expect { subject }.to raise_error /No rule matches/ }
+      it { expect { subject }.to raise_error(/No rule matches/) }
     end
   end
 
@@ -224,7 +224,7 @@ describe Masamune::DataPlan::Engine do
     context 'with :targets' do
       let(:rule) { 'primary' }
 
-      let(:options) { {targets: ['/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=02']} }
+      let(:options) { { targets: ['/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=02'] } }
 
       it { expect(targets).to include '/table/y=2013/m=01/d=01' }
       it { expect(targets).to include '/table/y=2013/m=01/d=02' }
@@ -235,10 +235,10 @@ describe Masamune::DataPlan::Engine do
     context 'with :sources' do
       let(:rule) { 'derived_daily' }
 
-      let(:options) { {sources: ['/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=02']} }
+      let(:options) { { sources: ['/table/y=2013/m=01/d=01', '/table/y=2013/m=01/d=02', '/table/y=2013/m=01/d=02'] } }
 
-      it { expect(targets).to include "/daily/2013-01-01" }
-      it { expect(targets).to include "/daily/2013-01-02" }
+      it { expect(targets).to include '/daily/2013-01-01' }
+      it { expect(targets).to include '/daily/2013-01-02' }
       it { expect(sources).to include '/table/y=2013/m=01/d=01' }
       it { expect(sources).to include '/table/y=2013/m=01/d=02' }
     end
@@ -257,10 +257,13 @@ describe Masamune::DataPlan::Engine do
 
     context 'primary rule' do
       let(:rule) { 'primary' }
-      let(:targets) {  [
-        '/table/y=2013/m=01/d=01',
-        '/table/y=2013/m=01/d=02',
-        '/table/y=2013/m=01/d=03' ] }
+      let(:targets) do
+        [
+          '/table/y=2013/m=01/d=01',
+          '/table/y=2013/m=01/d=02',
+          '/table/y=2013/m=01/d=03'
+        ]
+      end
 
       context 'when target data exists' do
         before do
@@ -269,7 +272,8 @@ describe Masamune::DataPlan::Engine do
           execute
         end
 
-        it 'should not call touch!' do; end
+        it 'should not call touch!' do
+        end
       end
 
       context 'when partial target data exists' do
@@ -280,7 +284,8 @@ describe Masamune::DataPlan::Engine do
           execute
         end
 
-        it 'should call touch!' do; end
+        it 'should call touch!' do
+        end
       end
 
       context 'when source data does not exist' do
@@ -289,13 +294,14 @@ describe Masamune::DataPlan::Engine do
           execute
         end
 
-        it 'should not call touch!' do; end
+        it 'should not call touch!' do
+        end
       end
     end
 
     shared_examples_for 'derived daily data' do
       context 'when primary target data exists' do
-        let(:derived_targets) {  ['/table/y=2013/m=01/d=01/DATA', '/table/y=2013/m=01/d=02/DATA', '/table/y=2013/m=01/d=03/DATA'] }
+        let(:derived_targets) { ['/table/y=2013/m=01/d=01/DATA', '/table/y=2013/m=01/d=02/DATA', '/table/y=2013/m=01/d=03/DATA'] }
 
         before do
           engine.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
@@ -304,11 +310,12 @@ describe Masamune::DataPlan::Engine do
           execute
         end
 
-        it 'should call touch!' do; end
+        it 'should call touch!' do
+        end
       end
 
       context 'when primary target data exists and :resolve is false' do
-        let(:options) { {resolve: false} }
+        let(:options) { { resolve: false } }
 
         before do
           engine.filesystem.touch!('/log/20130101.app1.log', '/log/20130102.app1.log', '/log/20130103.app1.log')
@@ -316,7 +323,8 @@ describe Masamune::DataPlan::Engine do
           execute
         end
 
-        it 'should not call touch!' do; end
+        it 'should not call touch!' do
+        end
       end
     end
 
@@ -331,7 +339,7 @@ describe Masamune::DataPlan::Engine do
 
     context 'derived_monthly rule' do
       let(:rule) { 'derived_monthly' }
-      let(:targets) {  ['/monthly/2013-01/DATA'] }
+      let(:targets) { ['/monthly/2013-01/DATA'] }
 
       it_behaves_like 'derived daily data' do
         let(:derived_command) { derived_monthly_command }
@@ -348,7 +356,7 @@ describe Masamune::DataPlan::Engine do
     end
 
     it 'should raise exception' do
-      expect { engine.prepare('derived', targets: ['/log/20140228.wtf.log']) }.to raise_error /Max depth .* exceeded for rule 'derived'/
+      expect { engine.prepare('derived', targets: ['/log/20140228.wtf.log']) }.to raise_error(/Max depth .* exceeded for rule 'derived'/)
     end
   end
 end

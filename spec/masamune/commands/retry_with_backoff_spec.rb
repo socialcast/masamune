@@ -21,7 +21,7 @@
 #  THE SOFTWARE.
 
 describe Masamune::Commands::RetryWithBackoff do
-  let(:options) { {retries: retries, backoff: 0} }
+  let(:options) { { retries: retries, backoff: 0 } }
   let(:delegate) { double }
   let(:instance) { described_class.new(delegate, options) }
 
@@ -45,14 +45,15 @@ describe Masamune::Commands::RetryWithBackoff do
         instance.around_execute do
           @retry_count += 1
           if @retry_count < retries
-            OpenStruct.new(:success? => false, :exitstatus => 42)
+            OpenStruct.new(success?: false, exitstatus: 42)
           else
-            OpenStruct.new(:success? => true)
+            OpenStruct.new(success?: true)
           end
         end
       end
 
-      it 'logs useful debug and error messages' do; end
+      it 'logs useful debug and error messages' do
+      end
       it 'attempts to retry the specified number of times' do
         expect(@retry_count).to eq(retries)
       end
@@ -73,11 +74,12 @@ describe Masamune::Commands::RetryWithBackoff do
         instance.around_execute do
           @retry_count += 1
           raise 'wtf' if @retry_count < retries
-          OpenStruct.new(:success? => true)
+          OpenStruct.new(success?: true)
         end
       end
 
-      it 'logs useful debug and error messages' do; end
+      it 'logs useful debug and error messages' do
+      end
       it 'attempts to retry the specified number of times' do
         expect(@retry_count).to eq(retries)
       end
@@ -102,7 +104,8 @@ describe Masamune::Commands::RetryWithBackoff do
         end
       end
 
-      it 'logs useful debug and error messages' do; end
+      it 'logs useful debug and error messages' do
+      end
       it 'attempts to retry the specified number of times' do
         expect(@retry_count).to eq(retries + 1)
       end

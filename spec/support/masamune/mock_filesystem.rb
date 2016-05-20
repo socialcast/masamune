@@ -63,7 +63,7 @@ class Masamune::MockFilesystem < Delegator
   def glob_stat(pattern, options = {})
     return Set.new(to_enum(:glob_stat, pattern, options)) unless block_given?
     file_regexp = glob_to_regexp(pattern, recursive: true)
-    @files.each do |name, stat|
+    @files.each do |_name, stat|
       next if stat.name == dirname(pattern)
       next unless stat.name =~ file_regexp
       yield stat
@@ -85,12 +85,12 @@ class Masamune::MockFilesystem < Delegator
   def clear!
   end
 
-  def check_immutable_path!(file)
+  def check_immutable_path!(_file)
     true
   end
 
   [:mkdir!, :copy_file_to_file, :copy_file_to_dir, :copy_dir, :remove_file, :remove_dir, :move_file_to_file, :move_file_to_dir, :move_dir, :write].each do |method|
-    define_method(method) do |*args|
+    define_method(method) do |*_args|
       # Empty
     end
   end

@@ -37,8 +37,6 @@ module Masamune::Transform::Postgres
       TargetPresenter.new(@target)
     end
 
-    private
-
     class TargetPresenter < SimpleDelegator
       include Masamune::LastElement
 
@@ -59,4 +57,3 @@ module Masamune::Transform::Postgres
     end
   end
 end
-

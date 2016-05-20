@@ -41,15 +41,16 @@ module Masamune
       '/opt/etc/masamune/config.yml',
       '/opt/etc/masamune/config.yml.erb',
       "#{ENV['HOME']}/.masamune/config.yml"
-    ]
+    ].freeze
 
     module ExtraArguments
       def parse_extra(argv)
-        if i = argv.index('--')
+        i = argv.index('--')
+        if i
           if i > 0
-            [argv[0 .. i-1], argv[i+1..-1]]
+            [argv[0..i - 1], argv[i + 1..-1]]
           else
-            [[], argv[i+1..-1]]
+            [[], argv[i + 1..-1]]
           end
         else
           [argv, []]
@@ -70,14 +71,14 @@ module Masamune
         super
       rescue SignalException => e
         raise e unless %w(SIGHUP SIGTERM).include?(e.to_s)
-        instance.logger.debug("Exiting at user request on #{e.to_s}")
+        instance.logger.debug("Exiting at user request on #{e}")
         exit 0
       rescue ::Thor::MalformattedArgumentError, ::Thor::RequiredArgumentMissingError => e
         raise e
       rescue => e
         instance.logger.error("#{e.message} (#{e.class}) backtrace:")
         e.backtrace.each { |x| instance.logger.error(x) }
-        $stderr.puts "For complete debug log see: #{instance.log_file_name.to_s}"
+        $stderr.puts "For complete debug log see: #{instance.log_file_name}"
         abort e.message
       end
     end
@@ -94,31 +95,31 @@ module Masamune
         attr_accessor :extra
 
         namespace :masamune
-        class_option :help, :type => :boolean, :aliases => '-h', :desc => 'Show help', :default => false
-        class_option :quiet, :type => :boolean, :aliases => '-q', :desc => 'Suppress all output', :default => false
-        class_option :verbose, :type => :boolean, :aliases => '-v', :desc => 'Print command execution information', :default => false
-        class_option :debug, :type => :boolean, :aliases => '-d', :desc => 'Print debugging information', :default => false
-        class_option :dry_run, :type => :boolean, :aliases => '-n', :desc => 'Do not execute commands that modify state', :default => false
-        class_option :config, :desc => 'Configuration file'
-        class_option :version, :desc => 'Print version and exit', :type => :boolean
-        class_option :lock, :desc => 'Optional job lock name', :type => :string
-        class_option :initialize, :aliases => '--init', :desc => 'Initialize configured data stores', :type => :boolean, :default => false
-        class_option :'--', :desc => 'Extra pass through arguments'
-        def initialize(_args = [], _options = {}, _config = {})
-          self.environment.parent = self
-          self.filesystem.environment = self
+        class_option :help, type: :boolean, aliases: '-h', desc: 'Show help', default: false
+        class_option :quiet, type: :boolean, aliases: '-q', desc: 'Suppress all output', default: false
+        class_option :verbose, type: :boolean, aliases: '-v', desc: 'Print command execution information', default: false
+        class_option :debug, type: :boolean, aliases: '-d', desc: 'Print debugging information', default: false
+        class_option :dry_run, type: :boolean, aliases: '-n', desc: 'Do not execute commands that modify state', default: false
+        class_option :config, desc: 'Configuration file'
+        class_option :version, desc: 'Print version and exit', type: :boolean
+        class_option :lock, desc: 'Optional job lock name', type: :string
+        class_option :initialize, aliases: '--init', desc: 'Initialize configured data stores', type: :boolean, default: false
+        class_option :'--', desc: 'Extra pass through arguments'
+        def initialize(thor_args = [], thor_options = {}, thor_config = {})
+          environment.parent = self
+          filesystem.environment = self
           self.current_namespace = self.class.namespace unless self.class.namespace == 'masamune'
-          self.current_task_name = _config[:current_command].try(:name)
+          self.current_task_name = thor_config[:current_command].try(:name)
           self.current_command_name = current_namespace ? current_namespace + ':' + current_task_name : current_task_name
           self.class.instance = self
 
           define_current_dir
 
-          if _options.is_a?(Array)
-            _options, self.extra = self.class.parse_extra(_options)
+          if thor_options.is_a?(Array)
+            thor_options, self.extra = self.class.parse_extra(thor_options)
           end
 
-          super _args, _options, _config
+          super thor_args, thor_options, thor_config
 
           if display_help?
             display_help
@@ -133,7 +134,7 @@ module Masamune
             begin
               config.load(config_file)
             rescue
-              raise $! if options[:debug]
+              raise $ERROR_INFO if options[:debug]
               raise ::Thor::MalformattedArgumentError, "Could not load file provided for '--config'"
             end
 
@@ -160,7 +161,7 @@ module Masamune
           end
 
           def top_level?
-            self.current_command_name == ARGV.first
+            current_command_name == ARGV.first
           end
 
           def invoke_command(command, *args)

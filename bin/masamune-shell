@@ -21,6 +21,6 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-$: << File.expand_path('../../lib/', __FILE__)
+$LOAD_PATH << File.expand_path('../../lib/', __FILE__)
 require 'masamune/tasks/shell_thor'
 Masamune::Tasks::ShellThor.start(ARGV)

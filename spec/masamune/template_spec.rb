@@ -40,7 +40,7 @@ describe Masamune::Template do
 
     context 'with simple template' do
       let(:template) { File.expand_path('../../fixtures/simple.sql.erb', __FILE__) }
-      let(:parameters) { {table: 'zombo'} }
+      let(:parameters) { { table: 'zombo' } }
 
       it { is_expected.to eq("SELECT * FROM zombo;\n") }
     end
@@ -59,7 +59,8 @@ describe Masamune::Template do
     context 'with aggregate template' do
       let(:template) { File.expand_path('../../fixtures/aggregate.sql.erb', __FILE__) }
 
-      it do is_expected.to eq <<-EOS.gsub(/^\s*/,'')
+      it do
+        is_expected.to eq <<-EOS.gsub(/^\s*/, '')
         SHOW TABLES;
         SELECT * FROM foo;
         SELECT * FROM bar;

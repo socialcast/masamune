@@ -69,7 +69,7 @@ describe Masamune::Tasks::HiveThor do
   context 'with --variables=YEAR:2015 MONTH:1' do
     let(:options) { ['--variables=YEAR:2015', 'MONTH:1'] }
     it do
-      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1' })).once.and_return(mock_success)
       cli_invocation
     end
   end
@@ -77,7 +77,7 @@ describe Masamune::Tasks::HiveThor do
   context 'with -X YEAR:2015 MONTH:1' do
     let(:options) { ['-X', 'YEAR:2015', 'MONTH:1'] }
     it do
-      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1'})).once.and_return(mock_success)
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1' })).once.and_return(mock_success)
       cli_invocation
     end
   end

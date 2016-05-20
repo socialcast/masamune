@@ -32,14 +32,14 @@ describe Masamune::DataPlan::Elem do
 
   let(:name) { 'primary' }
   let(:type) { :target }
-  let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/%Y-%m-%d/%H'}) }
-  let(:other_rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/log/%Y%m%d.*.log'}) }
+  let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, path: '/report/%Y-%m-%d/%H') }
+  let(:other_rule) { Masamune::DataPlan::Rule.new(engine, name, type, path: '/log/%Y%m%d.*.log') }
 
-  let(:start_time) { DateTime.civil(2013,07,19,11,07) }
-  let(:other_start_time) { DateTime.civil(2013,07,20,0,0) }
+  let(:start_time) { DateTime.civil(2013, 07, 19, 11, 07) }
+  let(:other_start_time) { DateTime.civil(2013, 07, 20, 0, 0) }
 
-  let(:options) { {tz: 'EST'} }
-  let(:other_options) { {tz: 'PST'} }
+  let(:options) { { tz: 'EST' } }
+  let(:other_options) { { tz: 'PST' } }
 
   let(:instance) { described_class.new(rule, start_time, options) }
 
@@ -80,8 +80,8 @@ describe Masamune::DataPlan::Elem do
   end
 
   describe '#last_modified_at' do
-    let(:early) { Time.parse("2014-05-01 00:00:00 +0000") }
-    let(:later) { Time.parse("2014-06-01 00:00:00 +0000") }
+    let(:early) { Time.parse('2014-05-01 00:00:00 +0000') }
+    let(:later) { Time.parse('2014-06-01 00:00:00 +0000') }
 
     subject do
       instance.last_modified_at.utc
@@ -89,8 +89,8 @@ describe Masamune::DataPlan::Elem do
 
     context 'with missing mtime' do
       before do
-        expect(rule.engine.filesystem).to receive(:stat).with(instance.path).
-          and_return(nil)
+        expect(rule.engine.filesystem).to receive(:stat).with(instance.path)
+          .and_return(nil)
       end
 
       it { is_expected.to eq(Masamune::DataPlan::Elem::MISSING_MODIFIED_AT) }
@@ -98,8 +98,8 @@ describe Masamune::DataPlan::Elem do
 
     context 'with single mtime' do
       before do
-        expect(rule.engine.filesystem).to receive(:stat).with(instance.path).
-          and_return(OpenStruct.new(mtime: early))
+        expect(rule.engine.filesystem).to receive(:stat).with(instance.path)
+          .and_return(OpenStruct.new(mtime: early))
       end
 
       it { is_expected.to eq(early) }
@@ -110,7 +110,7 @@ describe Masamune::DataPlan::Elem do
     subject { instance.explode.map(&:path) }
 
     context 'with free path and existing files' do
-      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/%Y-%m-%d/%H'}) }
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, path: '/report/%Y-%m-%d/%H') }
       before do
         engine.filesystem.touch!('/report/2013-07-19/11/part-0000')
       end
@@ -118,12 +118,12 @@ describe Masamune::DataPlan::Elem do
     end
 
     context 'with free path and missing files' do
-      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/%Y-%m-%d/%H'}) }
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, path: '/report/%Y-%m-%d/%H') }
       it { is_expected.to be_empty }
     end
 
     context 'with bound path and existing files' do
-      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/file'}) }
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, path: '/report/file') }
       before do
         engine.filesystem.touch!('/report/file')
       end
@@ -131,12 +131,12 @@ describe Masamune::DataPlan::Elem do
     end
 
     context 'with bound path and missing files' do
-      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {path: '/report/file'}) }
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, path: '/report/file') }
       it { is_expected.to be_empty }
     end
 
     context 'with free table and existing table' do
-      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {table: 'visits_fact', partition: 'y%Y%m'}) }
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, table: 'visits_fact', partition: 'y%Y%m') }
       before do
         expect(instance.rule.engine.postgres_helper).to receive(:table_exists?).and_return(true)
       end
@@ -144,7 +144,7 @@ describe Masamune::DataPlan::Elem do
     end
 
     context 'with free table and missing table' do
-      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {table: 'visits_fact', partition: 'y%Y%m'}) }
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, table: 'visits_fact', partition: 'y%Y%m') }
       before do
         expect(instance.rule.engine.postgres_helper).to receive(:table_exists?).and_return(false)
       end
@@ -152,7 +152,7 @@ describe Masamune::DataPlan::Elem do
     end
 
     context 'with bound table and existing table' do
-      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {table: 'visits_fact'}) }
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, table: 'visits_fact') }
       before do
         expect(instance.rule.engine.postgres_helper).to receive(:table_exists?).and_return(true)
       end
@@ -160,7 +160,7 @@ describe Masamune::DataPlan::Elem do
     end
 
     context 'with bound table and missing table' do
-      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, {table: 'visits_fact'}) }
+      let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, table: 'visits_fact') }
       before do
         expect(instance.rule.engine.postgres_helper).to receive(:table_exists?).and_return(false)
       end

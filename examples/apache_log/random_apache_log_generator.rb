@@ -31,8 +31,8 @@ class RandomApacheLogGenerator
   end
 
   def random_users
-    n = rand(@min_users .. @max_users)
-    Parallel.map(1 .. n) do
+    n = rand(@min_users..@max_users)
+    Parallel.map(1..n) do
       random_user.to_json
     end.join("\n")
   end
@@ -41,7 +41,7 @@ class RandomApacheLogGenerator
     load_users!(users_file)
 
     logs = []
-    rand(@min_visits .. @max_visits).times do
+    rand(@min_visits..@max_visits).times do
       logs << random_log(date.to_time.utc)
     end
     logs.join("\n")
@@ -51,7 +51,7 @@ class RandomApacheLogGenerator
 
   def random_log(date)
     user = users.sample
-    '%s - %d [%s] "GET %s HTTP/1.1" 200 %d "-" "%s"' % [user.ip, user.id, random_date(date), random_path, random_size, user.ua]
+    format('%s - %d [%s] "GET %s HTTP/1.1" 200 %d "-" "%s"', user.ip, user.id, random_date(date), random_path, random_size, user.ua)
   end
 
   def random_date(date)
@@ -77,7 +77,7 @@ class RandomApacheLogGenerator
       user_info = info['results'].first
       user_info['user']['id'] = rand(1 << 15)
       user_info['user']['nationality'] = info['nationality']
-      user_info['user']['ab_test_group'] = ['a', 'b'].sample
+      user_info['user']['ab_test_group'] = %w(a b).sample
       return user_info['user']
     end
   rescue
@@ -100,9 +100,7 @@ class RandomApacheLogGenerator
     end
   end
 
-  def users
-    @users
-  end
+  attr_reader :users
 
   def paths
     @paths ||= %w(/home /streams /profile /groups) + users.map { |user| "/users/#{user.id}" }

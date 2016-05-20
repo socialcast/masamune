@@ -22,7 +22,7 @@
 
 module Masamune::Actions
   module PostgresAdmin
-    def postgres_admin(opts = {}, &block)
+    def postgres_admin(opts = {})
       opts = opts.to_hash.symbolize_keys
 
       command = Masamune::Commands::PostgresAdmin.new(environment, opts)

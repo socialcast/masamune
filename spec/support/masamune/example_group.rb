@@ -25,11 +25,11 @@ require 'masamune/has_environment'
 # Separate environment for test harness itself
 module Masamune::ExampleGroup
   include Masamune::HasEnvironment
-  extend self
+  extend self # rubocop:disable Style/ModuleFunction
 
   def self.included(base)
     base.before(:all) do
-      self.filesystem.environment = self.environment = Masamune::ExampleGroup.environment
+      filesystem.environment = self.environment = Masamune::ExampleGroup.environment
       Thor.send(:include, Masamune::ThorMute)
     end
   end

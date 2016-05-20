@@ -56,7 +56,7 @@ describe Masamune::Actions::AwsEmr do
   end
 
   describe '.after_initialize' do
-    let(:options) { {initialize: true} }
+    let(:options) { { initialize: true } }
 
     subject(:after_initialize_invoke) do
       instance.after_initialize_invoke(options)
@@ -67,13 +67,13 @@ describe Masamune::Actions::AwsEmr do
     end
 
     context 'when cluster_id is missing' do
-      let(:configuration) { {enabled: true} }
+      let(:configuration) { { enabled: true } }
       it { expect { subject }.to raise_error Thor::RequiredArgumentMissingError, /No value provided for required options '--cluster-id'/ }
     end
 
     context 'when cluster_id is present without initialize' do
-      let(:configuration) { {enabled: true} }
-      let(:options) { {cluster_id: 'j-XYZ'} }
+      let(:configuration) { { enabled: true } }
+      let(:options) { { cluster_id: 'j-XYZ' } }
       before do
         expect(instance).to_not receive(:aws_emr)
       end
@@ -84,8 +84,8 @@ describe Masamune::Actions::AwsEmr do
     end
 
     context 'when cluster_id does not exist' do
-      let(:configuration) { {enabled: true} }
-      let(:options) { {initialize: true, cluster_id: 'j-XYZ'} }
+      let(:configuration) { { enabled: true } }
+      let(:options) { { initialize: true, cluster_id: 'j-XYZ' } }
       before do
         mock_command(/\Aaws emr/, mock_failure)
       end
@@ -93,8 +93,8 @@ describe Masamune::Actions::AwsEmr do
     end
 
     context 'when cluster_id exists' do
-      let(:configuration) { {enabled: true} }
-      let(:options) { {initialize: true, cluster_id: 'j-XYZ'} }
+      let(:configuration) { { enabled: true } }
+      let(:options) { { initialize: true, cluster_id: 'j-XYZ' } }
       before do
         mock_command(/\Aaws emr/, mock_success)
       end

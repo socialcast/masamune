@@ -31,7 +31,7 @@ module Masamune::Actions
     include Masamune::Actions::Execute
 
     included do |base|
-      base.class_option :max_tasks, aliases: '-p', :type => :numeric, :desc => 'Maximum number of tasks to execute in parallel', :default => 4
+      base.class_option :max_tasks, aliases: '-p', type: :numeric, desc: 'Maximum number of tasks to execute in parallel', default: 4
     end
 
     def invoke_parallel(*task_group)
@@ -42,7 +42,7 @@ module Masamune::Actions
       Parallel.each(task_group, in_processes: max_tasks) do |task_name|
         begin
           execute(thor_wrapper, task_name, *task_args(opts), interactive: true, detach: false)
-        rescue SystemExit
+        rescue SystemExit # rubocop:disable Lint/HandleExceptions
         end
       end
     end
@@ -60,13 +60,13 @@ module Masamune::Actions
     end
 
     def task_args(opts = {})
-      opts.map do |k,v|
+      opts.map do |k, v|
         case v
         when true
-          "--#{k.to_s.gsub('_', '-')}"
+          "--#{k.to_s.tr('_', '-')}"
         when false
         else
-          ["--#{k.to_s.gsub('_', '-')}", v]
+          ["--#{k.to_s.tr('_', '-')}", v]
         end
       end.flatten.compact
     end

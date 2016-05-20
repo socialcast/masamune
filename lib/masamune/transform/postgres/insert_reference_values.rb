@@ -39,8 +39,6 @@ module Masamune::Transform::Postgres
       TargetPresenter.new(@target)
     end
 
-    private
-
     class TargetPresenter < SimpleDelegator
       include Masamune::LastElement
 
@@ -60,10 +58,9 @@ module Masamune::Transform::Postgres
       method_with_last_element :insert_values
 
       def insert_constraints(source)
-        source.shared_columns(stage_table).reject { |column, _| column.null || column.default || column.adjacent.try(:default) }.map { |column, _| "#{column.name} IS NOT NULL"}
+        source.shared_columns(stage_table).reject { |column, _| column.null || column.default || column.adjacent.try(:default) }.map { |column, _| "#{column.name} IS NOT NULL" }
       end
       method_with_last_element :insert_constraints
     end
   end
 end
-

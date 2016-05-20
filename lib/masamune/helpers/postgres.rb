@@ -66,7 +66,7 @@ module Masamune::Helpers
       return unless @cache.empty?
       postgres(exec: 'SELECT table_name FROM information_schema.tables;', tuple_output: true, retries: 0) do |line|
         table = line.strip
-        next if table =~ /\Apg_/
+        next if table.start_with?('pg_')
         @cache[table] ||= nil
       end
     end
@@ -74,11 +74,14 @@ module Masamune::Helpers
     def update_table_last_modified_at(table, column)
       return if @cache[table].present?
       postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true, retries: 0) do |line|
-        begin
-          @cache[table] = Time.parse(line.strip).at_beginning_of_minute.utc
-        rescue ArgumentError
-        end
+        @cache[table] = parse_date_time(line.strip)
       end
+    end
+
+    def parse_date_time(value)
+      Time.parse(value).at_beginning_of_minute.utc
+    rescue ArgumentError
+      nil
     end
   end
 end

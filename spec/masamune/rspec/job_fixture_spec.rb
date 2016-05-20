@@ -276,7 +276,6 @@ describe Masamune::JobFixture do
       end
     end
 
-
     context 'with reference fixture and section' do
       let(:reference_data) do
         {

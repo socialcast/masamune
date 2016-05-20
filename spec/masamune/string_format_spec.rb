@@ -27,13 +27,13 @@ describe Masamune::StringFormat do
     subject { instance.strip_sql(input) }
 
     context 'with quoted sql' do
-      let(:input) { %q('SELECT * FROM table;') }
-      it { is_expected.to eq(%q(SELECT * FROM table;)) }
+      let(:input) { "'SELECT * FROM table;'" }
+      it { is_expected.to eq('SELECT * FROM table;') }
     end
 
     context 'with ; terminated sql' do
-      let(:input) { %q(SELECT * FROM table;;) }
-      it { is_expected.to eq(%q(SELECT * FROM table;)) }
+      let(:input) { 'SELECT * FROM table;;' }
+      it { is_expected.to eq('SELECT * FROM table;') }
     end
 
     context 'with multi line sql' do
@@ -47,12 +47,12 @@ describe Masamune::StringFormat do
 
         EOS
       end
-      it { is_expected.to eq(%q(SELECT * FROM table;)) }
+      it { is_expected.to eq('SELECT * FROM table;') }
     end
 
     context 'with un-quoted sql' do
-      let(:input) { %q(SELECT * FROM table) }
-      it { is_expected.to eq(%q(SELECT * FROM table;)) }
+      let(:input) { 'SELECT * FROM table' }
+      it { is_expected.to eq('SELECT * FROM table;') }
     end
   end
 end

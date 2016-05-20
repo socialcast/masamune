@@ -239,13 +239,13 @@ describe Masamune::Transform::DefineTable do
         dimension 'cluster', type: :mini do
           column 'id', type: :integer, surrogate_key: true, auto: true
           column 'name', type: :string, unique: true
-          row name: 'default', attributes: {default: true}
+          row name: 'default', attributes: { default: true }
         end
 
         dimension 'user_account_state', type: :mini do
           column 'name', type: :string, unique: true
           column 'description', type: :string
-          row name: 'active', description: 'Active', attributes: {default: true}
+          row name: 'active', description: 'Active', attributes: { default: true }
         end
 
         dimension 'user', type: :four do
@@ -380,7 +380,7 @@ describe Masamune::Transform::DefineTable do
         dimension 'user_account_state', type: :mini do
           column 'name', type: :string, unique: true
           column 'description', type: :string
-          row name: 'active', description: 'Active', attributes: {default: true}
+          row name: 'active', description: 'Active', attributes: { default: true }
         end
 
         dimension 'user', type: :four do

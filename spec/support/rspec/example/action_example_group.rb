@@ -31,5 +31,5 @@ module ActionExampleGroup
 end
 
 RSpec.configure do |config|
-  config.include ActionExampleGroup, :type => :action, :file_path => %r{spec/masamune/actions}
+  config.include ActionExampleGroup, type: :action, file_path: %r{spec/masamune/actions}
 end

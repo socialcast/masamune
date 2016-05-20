@@ -21,7 +21,7 @@
 #  THE SOFTWARE.
 
 describe Masamune::Commands::S3Cmd do
-  let(:configuration) { {:options => options} }
+  let(:configuration) { { options: options } }
   let(:options) { [] }
   let(:attrs) { {} }
 
@@ -33,14 +33,14 @@ describe Masamune::Commands::S3Cmd do
   end
 
   describe '#command_args' do
-    let(:attrs) { {extra: ['ls', 's3://fake']} }
+    let(:attrs) { { extra: ['ls', 's3://fake'] } }
 
     subject { instance.command_args }
 
     it { is_expected.to eq(['s3cmd', 'ls', 's3://fake']) }
 
     context 'with options' do
-      let(:options) { [{'--config' => '/opt/etc/etl/s3cfg'}] }
+      let(:options) { [{ '--config' => '/opt/etc/etl/s3cfg' }] }
 
       it { is_expected.to eq(['s3cmd', '--config', '/opt/etc/etl/s3cfg', 'ls', 's3://fake']) }
     end

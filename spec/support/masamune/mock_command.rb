@@ -50,20 +50,20 @@ module Masamune::MockCommand
 
     def around_execute(&block)
       self.class.patterns.each do |pattern, (value, io)|
-        if @delegate.command_args.join(' ') =~ pattern
-          while line = io.gets
-            line_no ||= 0
-            @delegate.handle_stdout(line.chomp, line_no) if @delegate.respond_to?(:handle_stdout)
-            line_no += 1
-          end
-          return value.respond_to?(:call) ? value.call : value
+        next unless @delegate.command_args.join(' ') =~ pattern
+        until io.eof?
+          line = io.gets
+          line_no ||= 0
+          @delegate.handle_stdout(line.chomp, line_no) if @delegate.respond_to?(:handle_stdout)
+          line_no += 1
         end
+        return value.respond_to?(:call) ? value.call : value
       end
 
       if @delegate.respond_to?(:around_execute)
         @delegate.around_execute(&block)
       else
-        block.call
+        yield
       end
     end
   end
@@ -82,11 +82,11 @@ module Masamune::MockCommand
   end
 
   def mock_success
-    OpenStruct.new(:success? => true)
+    OpenStruct.new(success?: true)
   end
 
   def mock_failure
-    OpenStruct.new(:success? => false)
+    OpenStruct.new(success?: false)
   end
 
   def mock_command(pattern, value = nil, io = StringIO.new, &block)

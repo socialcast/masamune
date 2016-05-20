@@ -80,7 +80,7 @@ describe Masamune::Schema::Dimension do
         ]
     end
 
-    it { expect { dimension }.to raise_error /contains undefined columns/ }
+    it { expect { dimension }.to raise_error(/contains undefined columns/) }
   end
 
   context 'for type :four' do
@@ -93,7 +93,7 @@ describe Masamune::Schema::Dimension do
         rows: [
           Masamune::Schema::Row.new(values: {
             name: 'active',
-            description: 'Active',
+            description: 'Active'
           }, default: true)
         ]
     end

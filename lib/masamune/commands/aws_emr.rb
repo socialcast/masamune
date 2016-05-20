@@ -29,14 +29,14 @@ module Masamune::Commands
     include Masamune::Actions::Execute
 
     DEFAULT_ATTRIBUTES =
-    {
-      :path         => 'aws',
-      :extra        => [],
-      :config_file  => nil,
-      :action       => nil,
-      :cluster_id   => nil,
-      :interactive  => false
-    }
+      {
+        path: 'aws',
+        extra: [],
+        config_file: nil,
+        action: nil,
+        cluster_id: nil,
+        interactive: false
+      }.freeze
 
     def initialize(delegate, attrs = {})
       super delegate
@@ -104,10 +104,10 @@ module Masamune::Commands
     end
 
     def handle_stdout(line, line_no)
-      if line_no == 0 && line =~ /\Assh/
-        @delegate.handle_stderr(line, line_no) if @delegate.respond_to?(:handle_stderr)
-      else
-        @delegate.handle_stdout(line, line_no) if @delegate.respond_to?(:handle_stdout)
+      if line_no == 0 && line.start_with?('ssh') && @delegate.respond_to?(:handle_stderr)
+        @delegate.handle_stderr(line, line_no)
+      elsif @delegate.respond_to?(:handle_stdout)
+        @delegate.handle_stdout(line, line_no)
       end
     end
 

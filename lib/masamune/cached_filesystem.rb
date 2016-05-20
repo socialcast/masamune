@@ -81,15 +81,13 @@ module Masamune
       end if depth == 0
     end
 
-    # FIXME cache eviction policy can be more precise
+    # FIXME: cache eviction policy can be more precise
     [:touch!, :mkdir!, :copy_file_to_file, :copy_file_to_dir, :copy_dir, :remove_file, :remove_dir, :move_file_to_file, :move_file_to_dir, :move_dir, :write].each do |method|
       define_method(method) do |*args|
         clear!
         @filesystem.send(method, *args)
       end
     end
-
-    private
 
     class PathCache
       def initialize(filesystem)
@@ -102,25 +100,23 @@ module Masamune
         return if @filesystem.root_path?(path)
         put(File.join(@filesystem.dirname(path), '.'), OpenStruct.new(name: @filesystem.dirname(path)))
         paths = path_split(path)
-        elems = paths.reverse.inject(entry) { |a, n| { n => a } }
+        elems = paths.reverse.inject(entry) { |a, e| { e => a } }
         @cache.deep_merge!(elems)
       end
 
       def get(path)
         return unless path
         paths = path_split(path)
-        elem = paths.inject(@cache) { |level, path| level.is_a?(Hash) ? level.fetch(path, {}) : level }
+        elem = paths.inject(@cache) { |a, e| a.is_a?(Hash) ? a.fetch(e, {}) : a }
         emit(elem)
       rescue KeyError
         EMPTY_SET
       end
 
       def any?(path)
-        if elem = get(path)
-          elem.any? { |entry| entry.name.start_with?(path) }
-        else
-          false
-        end
+        elem = get(path)
+        return false unless elem
+        elem.any? { |entry| entry.name.start_with?(path) }
       end
 
       private
@@ -142,7 +138,7 @@ module Masamune
       end
 
       def path_split(path)
-        path.split('/').reject { |x| x.blank? }
+        path.split('/').reject(&:blank?)
       end
     end
   end

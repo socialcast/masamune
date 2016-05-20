@@ -25,7 +25,7 @@ describe Masamune::Helpers::Postgres do
   let(:instance) { described_class.new(environment) }
 
   describe '#database_exists' do
-    let(:mock_status) { }
+    let(:mock_status) {}
 
     before do
       expect(instance).to receive(:postgres).with(hash_including(exec: 'SELECT version();', fail_fast: false, retries: 0)).and_return(mock_status)

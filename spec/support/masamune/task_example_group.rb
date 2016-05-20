@@ -56,5 +56,5 @@ module Masamune::TaskExampleGroup
 end
 
 RSpec.configure do |config|
-  config.include Masamune::TaskExampleGroup, :type => :task, :file_path => %r{.*/spec/.*task_spec\.rb}
+  config.include Masamune::TaskExampleGroup, type: :task, file_path: %r{.*/spec/.*task_spec\.rb}
 end

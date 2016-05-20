@@ -123,7 +123,7 @@ describe Masamune::Schema::Column do
     end
 
     context 'with index: ["id", "shared"]' do
-      subject(:column) { described_class.new(id: 'id', index: ['id', 'shared']) }
+      subject(:column) { described_class.new(id: 'id', index: %w(id shared)) }
       context '#index' do
         subject { column.index }
         it { is_expected.to include(:id) }
@@ -189,7 +189,7 @@ describe Masamune::Schema::Column do
       let(:column) { described_class.new(id: 'string', type: :string) }
       context 'with string value' do
         let(:value) { 'value' }
-        it { is_expected.to eq(%q{'value'}) }
+        it { is_expected.to eq("'value'") }
       end
       it_behaves_like 'with :null value'
     end
@@ -213,7 +213,7 @@ describe Masamune::Schema::Column do
       let(:column) { described_class.new(id: 'enum', type: :enum, values: %w(public private)) }
       context 'with enum value' do
         let(:value) { 'public' }
-        it { is_expected.to eq(%q{'public'::ENUM_TYPE}) }
+        it { is_expected.to eq("'public'::ENUM_TYPE") }
       end
 
       it_behaves_like 'with :null value'
@@ -261,7 +261,7 @@ describe Masamune::Schema::Column do
       end
 
       context "when ''1''" do
-        let(:value) { %Q{'1'} }
+        let(:value) { %('1') }
         it { is_expected.to eq(true) }
       end
 
@@ -286,7 +286,7 @@ describe Masamune::Schema::Column do
       end
 
       context "when ''0''" do
-        let(:value) { %Q{'0'} }
+        let(:value) { %('0') }
         it { is_expected.to eq(false) }
       end
 
@@ -325,18 +325,18 @@ describe Masamune::Schema::Column do
       end
 
       context 'when Date' do
-        let(:value) { Date.civil(2015,01,01) }
+        let(:value) { Date.civil(2015, 01, 01) }
         it { is_expected.to eq(value) }
       end
 
       context 'when YYYY-mm-dd' do
         let(:value) { '2015-01-01' }
-        it { is_expected.to eq(Date.civil(2015,01,01)) }
+        it { is_expected.to eq(Date.civil(2015, 01, 01)) }
       end
 
       context 'when ISO8601' do
         let(:value) { Date.parse('2015-01-01').iso8601 }
-        it { is_expected.to eq(Date.civil(2015,01,01)) }
+        it { is_expected.to eq(Date.civil(2015, 01, 01)) }
       end
     end
 
@@ -354,7 +354,7 @@ describe Masamune::Schema::Column do
       end
 
       context 'when String encoded Integer' do
-        let(:value) { "1" }
+        let(:value) { '1' }
         it { is_expected.to eq(1) }
       end
 
@@ -397,12 +397,12 @@ describe Masamune::Schema::Column do
       end
 
       context 'when Date' do
-        let(:value) { Date.civil(2015,01,01) }
+        let(:value) { Date.civil(2015, 01, 01) }
         it { is_expected.to eq(value.to_time) }
       end
 
       context 'when DateTime' do
-        let(:value) { DateTime.civil(2015,01,01) }
+        let(:value) { DateTime.civil(2015, 01, 01) }
         it { is_expected.to eq(value.to_time) }
       end
 
@@ -417,7 +417,7 @@ describe Masamune::Schema::Column do
       end
 
       context 'when String encoded Integer' do
-        let(:value) { "#{Time.now.utc.to_i}" }
+        let(:value) { Time.now.utc.to_i.to_s }
         it { is_expected.to eq(Time.at(value.to_i)) }
       end
 
@@ -428,7 +428,7 @@ describe Masamune::Schema::Column do
 
       context 'when ISO8601' do
         let(:value) { Date.parse('2015-01-01').to_time.iso8601 }
-        it { is_expected.to eq(Date.civil(2015,01,01).to_time) }
+        it { is_expected.to eq(Date.civil(2015, 01, 01).to_time) }
       end
     end
 
@@ -452,7 +452,7 @@ describe Masamune::Schema::Column do
 
       context 'when array' do
         let(:value) { '[1,2]' }
-        it { is_expected.to eq([1,2]) }
+        it { is_expected.to eq([1, 2]) }
       end
     end
 
@@ -476,7 +476,7 @@ describe Masamune::Schema::Column do
 
       context 'when array' do
         let(:value) { '{"k":"v"}' }
-        it { is_expected.to eq({"k" => "v"}) }
+        it { is_expected.to eq('k' => 'v') }
       end
     end
   end
@@ -587,12 +587,12 @@ describe Masamune::Schema::Column do
       end
 
       context 'when array of integer' do
-        let(:value) { [1,2] }
+        let(:value) { [1, 2] }
         it { is_expected.to eq('[1,2]') }
       end
 
       context 'when array of string' do
-        let(:value) { ['1','2'] }
+        let(:value) { %w(1 2) }
         it { is_expected.to eq('[1,2]') }
       end
     end
@@ -616,12 +616,12 @@ describe Masamune::Schema::Column do
       end
 
       context 'when array of string' do
-        let(:value) { ['1','2'] }
+        let(:value) { %w(1 2) }
         it { is_expected.to eq('["1","2"]') }
       end
 
       context 'when array of integer' do
-        let(:value) { [1,2] }
+        let(:value) { [1, 2] }
         it { is_expected.to eq('["1","2"]') }
       end
     end

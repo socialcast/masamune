@@ -72,7 +72,7 @@ module Masamune::Schema
 
       def quote(buffer)
         return buffer if buffer =~ /\A".*"\z/
-        %Q{"#{buffer.gsub('"', '""')}"}
+        %("#{buffer.gsub('"', '""')}")
       end
 
       def separator
@@ -101,10 +101,10 @@ module Masamune::Schema
         @csv = nil
       end
 
-      def each(&block)
+      def each
         raise 'must call Buffer#bind first' unless @io
         CSV.parse(JSONEncoder.new(@io, @store), options.merge(headers: @store.headers || @table.columns.keys)) do |data|
-          next if data.to_s =~ /\A#/
+          next if data.to_s.start_with?('#')
           row = safe_row(data)
           yield row.to_hash if row
           @line += 1
@@ -142,14 +142,12 @@ module Masamune::Schema
         end
       end
 
-      def line
-        @line
-      end
+      attr_reader :line
 
       private
 
       def options
-        {skip_blanks: true}.tap do | opts|
+        { skip_blanks: true }.tap do |opts|
           opts[:col_sep] = "\t" if @store.format == :tsv
         end
       end
@@ -178,7 +176,7 @@ module Masamune::Schema
       distinct:  false,
       fail_fast: false,
       debug:     false
-    }
+    }.freeze
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
       attr_accessor attr
@@ -194,9 +192,7 @@ module Masamune::Schema
       @skipped = 0
     end
 
-    def source=(source)
-      @source = source
-    end
+    attr_writer :source
 
     # FIXME: avoid implict conversions
     def target=(target)
@@ -229,7 +225,7 @@ module Masamune::Schema
       intermediate
     end
 
-    def open_stream(file, mode, &block)
+    def open_stream(file, mode)
       case file
       when IO, StringIO
         file.flush
@@ -295,7 +291,7 @@ module Masamune::Schema
       output_buffer.flush
     end
 
-    def safe_apply_function(input_buffer, input, &block)
+    def safe_apply_function(input_buffer, input)
       return unless input
       Array.wrap(function.call(input, input_buffer.line)).each do |output|
         yield output

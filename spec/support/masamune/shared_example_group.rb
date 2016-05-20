@@ -29,20 +29,22 @@ module Masamune::SharedExampleGroup
       io.sync = true
       io.write stdin
       io.close_write
-      while !io.eof?
-        stdout << io.read
-      end
+      stdout << io.read until io.eof?
     end
     stdout.string
   end
 
   def capture_output
-    @stdout, @stderr = StringIO.new, StringIO.new
-    tmp_stdout, $stdout = $stdout, @stdout
-    tmp_stderr, $stderr = $stderr, @stderr
+    @stdout = StringIO.new
+    @stderr = StringIO.new
+    tmp_stdout = $stdout
+    $stdout = @stdout
+    tmp_stderr = $stderr
+    $stderr = @stderr
     yield
   ensure
-    $stdout, $stderr = tmp_stdout, tmp_stderr
+    $stdout = tmp_stdout
+    $stderr = tmp_stderr
   end
 
   def capture(enable = true)
@@ -85,25 +87,21 @@ module Masamune::SharedExampleGroup
     end
   end
 
-  # TODO encapsulate commands as runners
+  # TODO: encapsulate commands as runners
   def setup_example_input!(fixture)
     fixture.inputs.each do |input|
       if input['file']
         filesystem.write(with_delim(input['data'], input['delim']), input['file'])
       end
 
-      if input['hive']
-        hive(exec: input['hive'])
-      end
+      hive(exec: input['hive']) if input['hive']
 
-      if input['psql']
-        postgres(exec: input['psql'])
-      end
+      postgres(exec: input['psql']) if input['psql']
     end
   end
 
   def gather_example_output(fixture)
-    fail "No outputs defined for #{fixture.file_name}" if fixture.outputs.none?
+    raise "No outputs defined for #{fixture.file_name}" if fixture.outputs.none?
     fixture.outputs.each do |output|
       output_file = output['file'] || Tempfile.new('masamune').path
 
@@ -123,7 +121,7 @@ module Masamune::SharedExampleGroup
     if output['hive'] && output['hive'].is_a?(String)
       hive(exec: output['hive'], output: output_file)
     elsif output['table']
-      table = eval "catalog.#{output['table']}"
+      table = eval "catalog.#{output['table']}" # rubocop:disable Lint/Eval
       query = denormalize_table(table, output.slice('columns', 'order', 'except', 'include')).to_s
       # FIXME: define format based on table.store.format
       case table.store.type

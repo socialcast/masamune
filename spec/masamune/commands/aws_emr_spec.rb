@@ -37,43 +37,43 @@ describe Masamune::Commands::AwsEmr do
     it { is_expected.to be_empty }
 
     context 'with config file' do
-      let(:configuration) { {config_file: '/etc/aws/config'} }
-      it { is_expected.to eq({'AWS_CONFIG_FILE' => '/etc/aws/config'}) }
+      let(:configuration) { { config_file: '/etc/aws/config' } }
+      it { is_expected.to eq('AWS_CONFIG_FILE' => '/etc/aws/config') }
     end
   end
 
   describe '#command_args' do
     subject { instance.command_args }
 
-    it { is_expected.to eq(['aws', 'emr', 'ssh']) }
+    it { is_expected.to eq(%w(aws emr ssh)) }
 
     context 'with --cluster-id j-XYZ' do
       let(:delegate) { double(command_args: ['hive', '-e', "'show tables;'"]) }
       let(:attrs) { { config_file: '/etc/aws_config', cluster_id: 'j-XYZ' } }
 
       before do
-        expect(instance).to receive(:execute).with('aws', 'emr', 'ssh', '--cluster-id', 'j-XYZ', '--command', 'exit', {env: {"AWS_CONFIG_FILE"=>"/etc/aws_config"}, fail_fast: true, safe: true}).
-          and_yield('ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=10 -i /etc/ssh/aws.key hadoop@ec2-10.0.0.1.compute-1.amazonaws.com exit').
-          and_yield("Warning: Permanently added 'ec2-10.0.0.1.compute-1.amazonaws.com,10.0.0.1' (ECDSA) to the list of known hosts.")
+        expect(instance).to receive(:execute).with('aws', 'emr', 'ssh', '--cluster-id', 'j-XYZ', '--command', 'exit', env: { 'AWS_CONFIG_FILE' => '/etc/aws_config' }, fail_fast: true, safe: true)
+          .and_yield('ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=10 -i /etc/ssh/aws.key hadoop@ec2-10.0.0.1.compute-1.amazonaws.com exit')
+          .and_yield("Warning: Permanently added 'ec2-10.0.0.1.compute-1.amazonaws.com,10.0.0.1' (ECDSA) to the list of known hosts.")
       end
 
-      it { is_expected.to eq(['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'ServerAliveInterval=10', '-i', '/etc/ssh/aws.key', 'hadoop@ec2-10.0.0.1.compute-1.amazonaws.com', 'hive' , '-e', "'show tables;'"]) }
+      it { is_expected.to eq(['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'ServerAliveInterval=10', '-i', '/etc/ssh/aws.key', 'hadoop@ec2-10.0.0.1.compute-1.amazonaws.com', 'hive', '-e', "'show tables;'"]) }
     end
 
     context 'with action' do
-      let(:configuration) { { create_cluster: { options: {'--ami-version' =>  '3.5.0'} } } }
+      let(:configuration) { { create_cluster: { options: { '--ami-version' => '3.5.0' } } } }
       let(:attrs) { { action: 'create-cluster', extra: ['--instance-type', 'm1.large'] } }
       it { is_expected.to eq(['aws', 'emr', 'create-cluster', '--ami-version', '3.5.0', '--instance-type', 'm1.large']) }
     end
 
     context 'with action and option override (symbolized)' do
-      let(:configuration) { { create_cluster: { options: {:'--ami-version' => '3.5.0'} } } }
+      let(:configuration) { { create_cluster: { options: { :'--ami-version' => '3.5.0' } } } }
       let(:attrs) { { action: 'create-cluster', extra: ['--ami-version', '4.0.0', '--instance-type', 'm1.large'] } }
       it { is_expected.to eq(['aws', 'emr', 'create-cluster', '--ami-version', '4.0.0', '--instance-type', 'm1.large']) }
     end
 
     context 'with action and option override (stringified)' do
-      let(:configuration) { { 'create_cluster' => { 'options' => {'--ami-version' =>  '3.5.0'} } } }
+      let(:configuration) { { 'create_cluster' => { 'options' => { '--ami-version' => '3.5.0' } } } }
       let(:attrs) { { action: 'create-cluster', extra: ['--ami-version', '4.0.0', '--instance-type', 'm1.large'] } }
       it { is_expected.to eq(['aws', 'emr', 'create-cluster', '--ami-version', '4.0.0', '--instance-type', 'm1.large']) }
     end

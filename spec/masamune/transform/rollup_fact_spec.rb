@@ -29,7 +29,7 @@ describe Masamune::Transform::RollupFact do
         column 'id', type: :sequence, surrogate_key: true, auto: true
         column 'name', type: :string
 
-        row name: 'current_database()', attributes: {default: true}
+        row name: 'current_database()', attributes: { default: true }
       end
 
       dimension 'date', type: :date do
@@ -82,7 +82,7 @@ describe Masamune::Transform::RollupFact do
   end
 
   context 'with postgres transaction fact' do
-    let(:date) { DateTime.civil(2014,8) }
+    let(:date) { DateTime.civil(2014, 8) }
     let(:source) { catalog.postgres.visits_transaction_fact }
     let(:target) { catalog.postgres.visits_hourly_fact }
 
@@ -180,7 +180,7 @@ describe Masamune::Transform::RollupFact do
   end
 
   context 'with postgres hourly fact' do
-    let(:date) { DateTime.civil(2014,8) }
+    let(:date) { DateTime.civil(2014, 8) }
     let(:source) { catalog.postgres.visits_hourly_fact }
     let(:target) { catalog.postgres.visits_daily_fact }
 
@@ -278,7 +278,7 @@ describe Masamune::Transform::RollupFact do
   end
 
   context 'with postgres daily fact' do
-    let(:date) { DateTime.civil(2014,8) }
+    let(:date) { DateTime.civil(2014, 8) }
     let(:source) { catalog.postgres.visits_daily_fact }
     let(:target) { catalog.postgres.visits_monthly_fact }
 

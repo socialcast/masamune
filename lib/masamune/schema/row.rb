@@ -30,7 +30,7 @@ module Masamune::Schema
       strict:   true,
       parent:   nil,
       debug:    false
-    }
+    }.freeze
 
     DEFAULT_ATTRIBUTES.keys.each do |attr|
       attr_accessor attr
@@ -128,7 +128,8 @@ module Masamune::Schema
       @columns = {}
       values.each do |key, value|
         next unless key
-        if column = parent.dereference_column_name(key)
+        column = parent.dereference_column_name(key)
+        if column
           @columns[column.compact_name] = column
           result[column.compact_name] = column.ruby_value(value)
         elsif strict

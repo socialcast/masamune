@@ -36,13 +36,13 @@ class Masamune::DataPlan::Elem
   def input
     @input ||= start_time.strftime(strftime_format)
   end
-  alias :path :input
-  alias :table :input
+  alias path input
+  alias table input
 
   def partition
     input.split('_').last
   end
-  alias :suffix :partition
+  alias suffix partition
 
   def exists?
     if rule.for_path?
@@ -140,11 +140,11 @@ class Masamune::DataPlan::Elem
   end
 
   def next(i = 1)
-    self.class.new(@rule, start_time.advance(@rule.time_step => +1*i), @options)
+    self.class.new(@rule, start_time.advance(@rule.time_step => +1 * i), @options)
   end
 
   def prev(i = 1)
-    self.class.new(@rule, start_time.advance(@rule.time_step => -1*i), @options)
+    self.class.new(@rule, start_time.advance(@rule.time_step => -1 * i), @options)
   end
 
   def round(grain)
@@ -163,7 +163,7 @@ class Masamune::DataPlan::Elem
     uniq_constraint.hash
   end
 
-  # FIXME should consider stop_time for correctness
+  # FIXME: should consider stop_time for correctness
   def <=>(other)
     if start_time < other.start_time
       1
@@ -175,7 +175,7 @@ class Masamune::DataPlan::Elem
   end
 
   def inspect
-    {rule: rule, input: input, start_date: start_time.to_s, stop_date: stop_time.to_s, :options => options}.to_s
+    { rule: rule, input: input, start_date: start_time.to_s, stop_date: stop_time.to_s, options: options }.to_s
   end
 
   protected

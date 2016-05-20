@@ -30,27 +30,27 @@ module Masamune::Commands
   class Hive < SimpleDelegator
     include Masamune::StringFormat
 
-    PROMPT = 'hive>'
+    PROMPT = 'hive>'.freeze
 
     DEFAULT_ATTRIBUTES =
-    {
-      :path           => 'hive',
-      :options        => [],
-      :database       => 'default',
-      :setup_files    => [],
-      :schema_files   => [],
-      :file           => nil,
-      :exec           => nil,
-      :output         => nil,
-      :print          => false,
-      :block          => nil,
-      :variables      => {},
-      :buffer         => nil,
-      :service        => false,
-      :delimiter      => "\001",
-      :csv            => false,
-      :debug          => false
-    }
+      {
+        path: 'hive',
+        options: [],
+        database: 'default',
+        setup_files: [],
+        schema_files: [],
+        file: nil,
+        exec: nil,
+        output: nil,
+        print: false,
+        block: nil,
+        variables: {},
+        buffer: nil,
+        service: false,
+        delimiter: "\001",
+        csv: false,
+        debug: false
+      }.freeze
 
     def initialize(delegate, attrs = {})
       super delegate
@@ -83,11 +83,9 @@ module Masamune::Commands
     end
 
     def before_execute
-      if @file
-        console("hive with file #{@file}")
-      end
+      console("hive with file #{@file}") if @file
 
-      if @debug and output = rendered_template || @file
+      if @debug && (output = rendered_template || @file)
         logger.debug("#{output}:\n" + File.read(output))
       end
 
@@ -96,12 +94,10 @@ module Masamune::Commands
         @file = exec_file
       end
 
-      if @output
-        @buffer = Tempfile.create('masamune_hive_output')
-      end
+      @buffer = Tempfile.create('masamune_hive_output') if @output
     end
 
-    def around_execute(&block)
+    def around_execute
       Dir.chdir(filesystem.path(:run_dir)) do
         yield
       end
@@ -115,21 +111,21 @@ module Masamune::Commands
 
       filesystem.move_file_to_file(@buffer.path, @output)
     ensure
-      File.delete(@buffer.path) if @buffer && @buffer.path && File.exists?(@buffer.path)
+      File.delete(@buffer.path) if @buffer && @buffer.path && File.exist?(@buffer.path)
     end
 
-    def handle_stdout(line, line_no)
+    def handle_stdout(line, _line_no)
       if line =~ /\A#{PROMPT}/
         logger.debug(line)
-      elsif line =~ /\AQuery returned non-zero code:/
+      elsif line.start_with?('Query returned non-zero code:')
         raise SystemExit, line
       else
         @block.call(line) if @block
 
         if @buffer
           @buffer.puts(@csv ? line.split(@delimiter).map { |row| encode_row(row) }.to_csv : line)
-        else
-          console(line) if print?
+        elsif print?
+          console(line)
         end
       end
     end
@@ -142,7 +138,7 @@ module Masamune::Commands
       files = @setup_files.map do |path|
         filesystem.glob_sort(path, order: :basename)
       end
-      files.flatten.compact.map { |file| {'-i' => file} }
+      files.flatten.compact.map { |file| { '-i' => file } }
     end
 
     def command_args_for_file
@@ -153,7 +149,7 @@ module Masamune::Commands
       filesystem.copy_file_to_file(@file, remote_file)
       ['-f', remote_file].tap do |args|
         @variables.each do |key, val|
-          args << ['-d', "#{key.to_s}=#{val.to_s}"]
+          args << ['-d', "#{key}=#{val}"]
         end
       end
     end
@@ -170,7 +166,7 @@ module Masamune::Commands
     end
 
     def remote_file
-      @remote_file ||= File.join(filesystem.mktempdir!(:tmp_dir), filesystem.basename(@file)).gsub(/.erb\z/,'')
+      @remote_file ||= File.join(filesystem.mktempdir!(:tmp_dir), filesystem.basename(@file)).gsub(/.erb\z/, '')
     end
 
     def exec_file

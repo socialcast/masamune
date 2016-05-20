@@ -25,12 +25,12 @@ require 'delegate'
 module Masamune::Commands
   class S3Cmd < SimpleDelegator
     DEFAULT_ATTRIBUTES =
-    {
-      :path     => 's3cmd',
-      :options  => [],
-      :extra    => [],
-      :block    => nil
-    }
+      {
+        path: 's3cmd',
+        options: [],
+        extra: [],
+        block: nil
+      }.freeze
 
     def initialize(delegate, attrs = {})
       super delegate
@@ -47,7 +47,7 @@ module Masamune::Commands
       args.flatten
     end
 
-    def handle_stdout(line, line_no)
+    def handle_stdout(line, _line_no)
       @block.call(line) if @block
     end
 

@@ -29,8 +29,8 @@ module Masamune::Actions
     def s3cmd(*args, &block)
       opts = args.last.is_a?(Hash) ? args.pop : {}
       opts = opts.to_hash.symbolize_keys
-      opts.merge!(extra: Array.wrap(args))
-      opts.merge!(block: block.to_proc) if block_given?
+      opts[:extra] = Array.wrap(args)
+      opts[:block] = block.to_proc if block_given?
 
       command = Masamune::Commands::S3Cmd.new(environment, opts)
       command = Masamune::Commands::RetryWithBackoff.new(command, configuration.s3cmd.slice(:retries, :backoff).merge(opts))
@@ -40,7 +40,7 @@ module Masamune::Actions
     end
 
     def s3_sync(src, dst)
-      s3cmd('sync', s3b(src), s3b(dst, :dir => true))
+      s3cmd('sync', s3b(src), s3b(dst, dir: true))
     end
   end
 end

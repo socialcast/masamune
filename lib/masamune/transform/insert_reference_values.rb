@@ -29,7 +29,7 @@ module Masamune::Transform
       target.insert_references.each do |_, reference|
         operators << Operator.new(__method__, source: source, target: reference)
       end
-      Operator.new *operators
+      Operator.new(*operators)
     end
   end
 end

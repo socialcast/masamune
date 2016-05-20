@@ -32,7 +32,7 @@ module Masamune::StepExampleGroup
       end
 
       context "with #{fixture_file} fixture" do
-        let(:fixture) { Masamune::StepFixture.load({file: fixture_file}, binding) }
+        let(:fixture) { Masamune::StepFixture.load({ file: fixture_file }, binding) }
 
         let(:input) { fixture.input }
         let(:output) { fixture.output }
@@ -62,7 +62,7 @@ module Masamune::StepExampleGroup
 end
 
 RSpec.configure do |config|
-  config.include Masamune::StepExampleGroup, :type => :step, :file_path => %r{.*/spec/.*step_spec\.rb}
-  config.include Masamune::StepExampleGroup, :type => :step, :file_path => %r{.*/spec/.*mapper_spec\.rb}
-  config.include Masamune::StepExampleGroup, :type => :step, :file_path => %r{.*/spec/.*reducer_spec\.rb}
+  config.include Masamune::StepExampleGroup, type: :step, file_path: %r{.*/spec/.*step_spec\.rb}
+  config.include Masamune::StepExampleGroup, type: :step, file_path: %r{.*/spec/.*mapper_spec\.rb}
+  config.include Masamune::StepExampleGroup, type: :step, file_path: %r{.*/spec/.*reducer_spec\.rb}
 end
