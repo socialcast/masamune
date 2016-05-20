@@ -182,10 +182,6 @@ module Masamune::Schema
       @context.pop
     end
 
-    def attribute(id, options = {})
-      @context.options[:attributes] << Masamune::Schema::Event::Attribute.new(options.merge(id: id))
-    end
-
     def map(options = {}, &block)
       raise ArgumentError, 'invalid map, from: is missing' unless options.is_a?(Hash)
       from = options.delete(:from)
