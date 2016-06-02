@@ -74,7 +74,7 @@ describe Masamune::Helpers::Postgres do
     context 'with last_modified_at option' do
       before do
         expect(instance).to receive(:table_exists?).and_return(true)
-        expect(instance).to receive(:postgres).with(hash_including(exec: 'SELECT MAX(last_modified_at) FROM foo;', tuple_output: true, retries: 0)).and_yield(output)
+        expect(instance).to receive(:postgres).with(hash_including(exec: 'SELECT MAX(last_modified_at) FROM foo;', tuple_output: true, retries: 0)).and_yield(output).and_yield('')
       end
 
       let(:options) { { last_modified_at: 'last_modified_at' } }

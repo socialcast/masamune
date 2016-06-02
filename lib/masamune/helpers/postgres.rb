@@ -74,7 +74,8 @@ module Masamune::Helpers
     def update_table_last_modified_at(table, column)
       return if @cache[table].present?
       postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true, retries: 0) do |line|
-        @cache[table] = parse_date_time(line.strip)
+        last_modified_at = line.strip
+        @cache[table] = parse_date_time(last_modified_at) unless last_modified_at.blank?
       end
     end
 
