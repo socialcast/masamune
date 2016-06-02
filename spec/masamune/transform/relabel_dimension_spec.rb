@@ -50,8 +50,6 @@ describe Masamune::Transform::RelabelDimension do
 
         BEGIN;
 
-        UPDATE user_dimension SET version = NULL;
-
         UPDATE
           user_dimension
         SET
@@ -66,14 +64,10 @@ describe Masamune::Transform::RelabelDimension do
               rank() OVER (PARTITION BY tenant_id, user_id ORDER BY start_at) AS version
             FROM
               user_dimension
-            GROUP BY
-              id, tenant_id, user_id, start_at
            ) AS tmp
         WHERE
           user_dimension.id = tmp.id
         ;
-
-        UPDATE user_dimension SET end_at = NULL;
 
         UPDATE
           user_dimension
@@ -89,8 +83,6 @@ describe Masamune::Transform::RelabelDimension do
               LEAD(start_at, 1) OVER (PARTITION BY tenant_id, user_id ORDER BY start_at) AS end_at
             FROM
               user_dimension
-            GROUP BY
-              id, tenant_id, user_id, start_at
            ) AS tmp
         WHERE
           user_dimension.id = tmp.id

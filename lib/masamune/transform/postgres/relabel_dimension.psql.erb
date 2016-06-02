@@ -24,9 +24,6 @@ SELECT pg_advisory_lock(<%= target.lock_id %>);
 
 BEGIN;
 
-<%-# Relabel version column -%>
-UPDATE <%= target.name %> SET version = NULL;
-
 UPDATE
   <%= target.name %>
 SET
@@ -42,15 +39,10 @@ FROM
       rank() OVER (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at) AS version
     FROM
       <%= target.name %>
-    GROUP BY
-      <%= target.window(:id, :start_at).join(', ') %>
    ) AS tmp
 WHERE
   <%= target.name %>.id = tmp.id
 ;
-
-<%-# Relabel end_at column -%>
-UPDATE <%= target.name %> SET end_at = NULL;
 
 UPDATE
   <%= target.name %>
@@ -67,8 +59,6 @@ FROM
       LEAD(start_at, 1) OVER (PARTITION BY <%= target.window.join(', ') %> ORDER BY start_at) AS end_at
     FROM
       <%= target.name %>
-    GROUP BY
-      <%= target.window(:id, :start_at).join(', ') %>
    ) AS tmp
 WHERE
   <%= target.name %>.id = tmp.id
