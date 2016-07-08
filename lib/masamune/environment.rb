@@ -21,7 +21,6 @@
 #  THE SOFTWARE.
 
 require 'thread'
-require 'tmpdir'
 require 'logger'
 
 require 'masamune/version'
