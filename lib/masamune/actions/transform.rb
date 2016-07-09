@@ -44,7 +44,7 @@ module Masamune::Actions
       extend Masamune::Transform::RollupFact
     end
 
-    FILE_MODE = 0777 - File.umask
+    FILE_MODE = 0o777 - File.umask
 
     def load_dimension(source_files, source, target, options = {})
       optional_apply_map(source_files, source, target) do |intermediate_files, intermediate|

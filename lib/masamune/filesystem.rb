@@ -30,7 +30,7 @@ module Masamune
     include Masamune::Actions::S3Cmd
     include Masamune::Actions::HadoopFilesystem
 
-    FILE_MODE = 0777 - File.umask
+    FILE_MODE = 0o777 - File.umask
 
     def initialize
       @paths = {}

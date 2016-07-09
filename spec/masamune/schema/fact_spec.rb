@@ -142,8 +142,8 @@ describe Masamune::Schema::Fact do
   end
 
   describe '#partition_tables' do
-    let(:start_date) { Date.civil(2015, 01, 01) }
-    let(:stop_date) { Date.civil(2015, 03, 15) }
+    let(:start_date) { Date.civil(2015, 0o1, 0o1) }
+    let(:stop_date) { Date.civil(2015, 0o3, 15) }
 
     subject(:partition_tables) { fact.partition_tables(start_date, stop_date) }
 
@@ -158,9 +158,9 @@ describe Masamune::Schema::Fact do
 
       it 'yields partition tables' do
         expect { |b| fact.partition_tables(start_date, stop_date, &b) }.to yield_successive_args \
-          fact.partition_table(Date.civil(2015, 01, 01)),
-          fact.partition_table(Date.civil(2015, 02, 01)),
-          fact.partition_table(Date.civil(2015, 03, 01))
+          fact.partition_table(Date.civil(2015, 0o1, 0o1)),
+          fact.partition_table(Date.civil(2015, 0o2, 0o1)),
+          fact.partition_table(Date.civil(2015, 0o3, 0o1))
       end
     end
   end

@@ -61,8 +61,8 @@ describe Masamune::DataPlan::Engine do
   end
 
   describe '#targets_for_date_range' do
-    let(:start) { Date.civil(2013, 01, 01) }
-    let(:stop) { Date.civil(2013, 01, 03) }
+    let(:start) { Date.civil(2013, 0o1, 0o1) }
+    let(:stop) { Date.civil(2013, 0o1, 0o3) }
 
     subject { engine.targets_for_date_range(rule, start, stop).map(&:path) }
 
@@ -104,8 +104,8 @@ describe Masamune::DataPlan::Engine do
       let(:rule) { 'primary' }
       let(:source) { '/log/20130101.random.log' }
 
-      it { expect(targets.first.start_time).to eq(Date.civil(2013, 01, 01)) }
-      it { expect(targets.first.stop_time).to eq(Date.civil(2013, 01, 02)) }
+      it { expect(targets.first.start_time).to eq(Date.civil(2013, 0o1, 0o1)) }
+      it { expect(targets.first.stop_time).to eq(Date.civil(2013, 0o1, 0o2)) }
       it { expect(targets.first.path).to eq('/table/y=2013/m=01/d=01') }
     end
 
@@ -113,8 +113,8 @@ describe Masamune::DataPlan::Engine do
       let(:rule) { 'derived_daily' }
       let(:source) { '/table/y=2013/m=01/d=01' }
 
-      it { expect(targets.first.start_time).to eq(Date.civil(2013, 01, 01)) }
-      it { expect(targets.first.stop_time).to eq(Date.civil(2013, 01, 02)) }
+      it { expect(targets.first.start_time).to eq(Date.civil(2013, 0o1, 0o1)) }
+      it { expect(targets.first.stop_time).to eq(Date.civil(2013, 0o1, 0o2)) }
       it { expect(targets.first.path).to eq('/daily/2013-01-01') }
     end
 
@@ -122,8 +122,8 @@ describe Masamune::DataPlan::Engine do
       let(:rule) { 'derived_monthly' }
       let(:source) { '/table/y=2013/m=01/d=01' }
 
-      it { expect(targets.first.start_time).to eq(Date.civil(2013, 01, 01)) }
-      it { expect(targets.first.stop_time).to eq(Date.civil(2013, 02, 01)) }
+      it { expect(targets.first.start_time).to eq(Date.civil(2013, 0o1, 0o1)) }
+      it { expect(targets.first.stop_time).to eq(Date.civil(2013, 0o2, 0o1)) }
       it { expect(targets.first.path).to eq('/monthly/2013-01') }
     end
   end
