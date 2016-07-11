@@ -471,12 +471,22 @@ describe Masamune::Schema::Column do
 
       context 'when scalar' do
         let(:value) { '1' }
-        it { is_expected.to eq(1) }
+        it { expect { result }.to raise_error ArgumentError, "Could not coerce '1' into :json for column 'json'" }
       end
 
       context 'when array' do
+        let(:value) { '["1","2","3"]' }
+        it { is_expected.to eq(%w(1 2 3)) }
+      end
+
+      context 'when hash' do
         let(:value) { '{"k":"v"}' }
         it { is_expected.to eq('k' => 'v') }
+      end
+
+      context 'when hash with UTF-8' do
+        let(:value) { '{"k":"£340.3m"}' }
+        it { is_expected.to eq('k' => '£340.3m') }
       end
     end
   end

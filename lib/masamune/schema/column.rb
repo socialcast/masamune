@@ -287,7 +287,7 @@ module Masamune::Schema
         when Hash
           value
         when String
-          JSON.load(value)
+          JSON.parse(value)
         when nil
           {}
         end
