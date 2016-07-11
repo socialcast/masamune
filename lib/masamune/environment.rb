@@ -144,7 +144,7 @@ module Masamune
 
     def lock_file(name)
       path = filesystem.get_path(:run_dir, "#{name}.lock")
-      File.open(path, File::CREAT, 0o644)
+      File.open(path, File::CREAT, 0644)
     end
 
     def log_file_io

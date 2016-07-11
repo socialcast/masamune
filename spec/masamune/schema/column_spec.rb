@@ -325,18 +325,18 @@ describe Masamune::Schema::Column do
       end
 
       context 'when Date' do
-        let(:value) { Date.civil(2015, 0o1, 0o1) }
+        let(:value) { Date.civil(2015, 01, 01) }
         it { is_expected.to eq(value) }
       end
 
       context 'when YYYY-mm-dd' do
         let(:value) { '2015-01-01' }
-        it { is_expected.to eq(Date.civil(2015, 0o1, 0o1)) }
+        it { is_expected.to eq(Date.civil(2015, 01, 01)) }
       end
 
       context 'when ISO8601' do
         let(:value) { Date.parse('2015-01-01').iso8601 }
-        it { is_expected.to eq(Date.civil(2015, 0o1, 0o1)) }
+        it { is_expected.to eq(Date.civil(2015, 01, 01)) }
       end
     end
 
@@ -397,12 +397,12 @@ describe Masamune::Schema::Column do
       end
 
       context 'when Date' do
-        let(:value) { Date.civil(2015, 0o1, 0o1) }
+        let(:value) { Date.civil(2015, 01, 01) }
         it { is_expected.to eq(value.to_time) }
       end
 
       context 'when DateTime' do
-        let(:value) { DateTime.civil(2015, 0o1, 0o1) }
+        let(:value) { DateTime.civil(2015, 01, 01) }
         it { is_expected.to eq(value.to_time) }
       end
 
@@ -428,7 +428,7 @@ describe Masamune::Schema::Column do
 
       context 'when ISO8601' do
         let(:value) { Date.parse('2015-01-01').to_time.iso8601 }
-        it { is_expected.to eq(Date.civil(2015, 0o1, 0o1).to_time) }
+        it { is_expected.to eq(Date.civil(2015, 01, 01).to_time) }
       end
     end
 

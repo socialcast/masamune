@@ -59,7 +59,7 @@ describe Masamune::DataPlan::Rule do
     end
 
     context 'with DateTime input' do
-      let(:input) { DateTime.civil(2013, 0o4, 0o5, 23, 13) }
+      let(:input) { DateTime.civil(2013, 04, 05, 23, 13) }
 
       describe '#path' do
         subject { elem.path }
@@ -69,7 +69,7 @@ describe Masamune::DataPlan::Rule do
 
     context 'with DateTime input and unix timestamp pattern' do
       let(:pattern) { 'logs/%H-s.log' }
-      let(:input) { DateTime.civil(2013, 0o4, 0o5, 23, 13) }
+      let(:input) { DateTime.civil(2013, 04, 05, 23, 13) }
 
       describe '#path' do
         subject { elem.path }
@@ -78,7 +78,7 @@ describe Masamune::DataPlan::Rule do
     end
 
     context 'with Date input' do
-      let(:input) { Date.civil(2013, 0o4, 0o5) }
+      let(:input) { Date.civil(2013, 04, 05) }
 
       describe '#path' do
         subject { elem.path }
@@ -92,7 +92,7 @@ describe Masamune::DataPlan::Rule do
 
     context 'with default' do
       let(:input) { 'report/2013-04-05/23' }
-      let(:output_date) { DateTime.civil(2013, 0o4, 0o5, 23) }
+      let(:output_date) { DateTime.civil(2013, 04, 05, 23) }
 
       describe '#path' do
         subject { elem.path }
@@ -113,7 +113,7 @@ describe Masamune::DataPlan::Rule do
     context 'with unix timestamp pattern' do
       let(:pattern) { 'logs/%H-s.log' }
       let(:input) { 'logs/1365202800.log' }
-      let(:output_date) { DateTime.civil(2013, 0o4, 0o5, 23) }
+      let(:output_date) { DateTime.civil(2013, 04, 05, 23) }
 
       describe '#path' do
         subject { elem.path }
@@ -140,7 +140,7 @@ describe Masamune::DataPlan::Rule do
     context 'with wildcard pattern' do
       let(:pattern) { 'requests/y=%Y/m=%-m/d=%-d/h=%-k/*' }
       let(:input) { 'requests/y=2013/m=4/d=30/h=20/part-00000' }
-      let(:output_date) { DateTime.civil(2013, 0o4, 30, 20) }
+      let(:output_date) { DateTime.civil(2013, 04, 30, 20) }
 
       describe '#path' do
         subject { elem.path }
@@ -240,14 +240,14 @@ describe Masamune::DataPlan::Rule do
 
   describe '#generate' do
     context 'with a block' do
-      let(:start_date) { DateTime.civil(2013, 0o4, 0o5, 20) }
-      let(:stop_date) { DateTime.civil(2013, 0o4, 0o5, 20) }
+      let(:start_date) { DateTime.civil(2013, 04, 05, 20) }
+      let(:stop_date) { DateTime.civil(2013, 04, 05, 20) }
       specify { expect { |b| instance.generate(start_date, stop_date, &b) }.to yield_control }
     end
 
     context 'without a block' do
-      let(:start_date) { DateTime.civil(2013, 0o4, 0o5, 20) }
-      let(:stop_date) { DateTime.civil(2013, 0o4, 0o5, 22) }
+      let(:start_date) { DateTime.civil(2013, 04, 05, 20) }
+      let(:stop_date) { DateTime.civil(2013, 04, 05, 22) }
 
       subject(:elems) do
         instance.generate(start_date, stop_date)

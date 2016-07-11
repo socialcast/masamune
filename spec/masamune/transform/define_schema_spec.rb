@@ -67,7 +67,7 @@ describe Masamune::Transform::DefineSchema do
     end
 
     context 'with start_date and stop_date' do
-      subject(:result) { transform.define_schema(catalog, :postgres, start_date: Date.civil(2015, 0o1, 0o1), stop_date: Date.civil(2015, 0o3, 15)).to_s }
+      subject(:result) { transform.define_schema(catalog, :postgres, start_date: Date.civil(2015, 01, 01), stop_date: Date.civil(2015, 03, 15)).to_s }
 
       it 'should render combined template' do
         is_expected.to eq Masamune::Template.combine \
@@ -75,9 +75,9 @@ describe Masamune::Transform::DefineSchema do
           transform.define_table(catalog.postgres.dimensions['user_account_state']),
           transform.define_table(catalog.postgres.dimensions['user']),
           transform.define_table(catalog.postgres.facts['visits']),
-          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 0o1, 0o1))),
-          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 0o2, 0o1))),
-          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 0o3, 0o1)))
+          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 01, 01))),
+          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 02, 01))),
+          transform.define_table(catalog.postgres.facts['visits'].partition_table(Date.civil(2015, 03, 01)))
       end
     end
 

@@ -35,8 +35,8 @@ describe Masamune::DataPlan::Elem do
   let(:rule) { Masamune::DataPlan::Rule.new(engine, name, type, path: '/report/%Y-%m-%d/%H') }
   let(:other_rule) { Masamune::DataPlan::Rule.new(engine, name, type, path: '/log/%Y%m%d.*.log') }
 
-  let(:start_time) { DateTime.civil(2013, 0o7, 19, 11, 0o7) }
-  let(:other_start_time) { DateTime.civil(2013, 0o7, 20, 0, 0) }
+  let(:start_time) { DateTime.civil(2013, 07, 19, 11, 07) }
+  let(:other_start_time) { DateTime.civil(2013, 07, 20, 0, 0) }
 
   let(:options) { { tz: 'EST' } }
   let(:other_options) { { tz: 'PST' } }
