@@ -39,3 +39,6 @@ Style/MultilineOperationIndentation:
 
 Style/ClassAndModuleChildren:
   Enabled: false
+
+Style/NumericLiteralPrefix:
+  Enabled: false
