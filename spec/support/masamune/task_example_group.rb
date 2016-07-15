@@ -21,42 +21,39 @@
 #  THE SOFTWARE.
 
 module Masamune::TaskExampleGroup
-  module TaskFixtureContent
-    def self.included(base)
-      base.let!(:default_options) { configuration.as_options }
+  extend ActiveSupport::Concern
 
-      base.let(:thor_class) { described_class }
-      base.let(:command) { nil }
-      base.let(:options) { {} }
-      base.let!(:stdout) { StringIO.new }
-      base.let!(:stderr) { StringIO.new }
+  include Masamune::ExampleGroup
+  include Masamune::Actions::Filesystem
+  include Masamune::Actions::Hive
+  include Masamune::Transform::DenormalizeTable
 
-      base.let(:execute_command_times) { 1 }
+  included do |base|
+    base.let!(:default_options) { configuration.as_options }
 
-      base.subject(:execute_command) do
-        capture(stdout, stderr, enable: !default_options.include?('--debug')) do
-          execute_command_times.times do
-            Array.wrap(command).each do |cmd|
-              described_class.start([cmd, *(default_options + options)].compact)
-            end
+    base.let(:thor_class) { described_class }
+    base.let(:command) { nil }
+    base.let(:options) { {} }
+    base.let!(:stdout) { StringIO.new }
+    base.let!(:stderr) { StringIO.new }
+
+    base.let(:execute_command_times) { 1 }
+
+    base.subject(:execute_command) do
+      capture(stdout, stderr, enable: !default_options.include?('--debug')) do
+        execute_command_times.times do
+          Array.wrap(command).each do |cmd|
+            described_class.start([cmd, *(default_options + options)].compact)
           end
         end
       end
     end
-
-    shared_context 'task_fixture' do |context_options = {}|
-      include_context 'job_fixture', context_options
-
-      let(:execute_command_times) { !ENV['MASAMUNE_FASTER_SPEC'] && context_options.fetch(:idempotent, false) ? 2 : 1 }
-    end
   end
 
-  def self.included(base)
-    base.send(:include, Masamune::ExampleGroup)
-    base.send(:include, Masamune::Actions::Filesystem)
-    base.send(:include, Masamune::Actions::Hive)
-    base.send(:include, Masamune::Transform::DenormalizeTable)
-    base.send(:include, TaskFixtureContent)
+  shared_context 'task_fixture' do |context_options = {}|
+    include_context 'job_fixture', context_options
+
+    let(:execute_command_times) { !ENV['MASAMUNE_FASTER_SPEC'] && context_options.fetch(:idempotent, false) ? 2 : 1 }
   end
 end
 

@@ -21,7 +21,9 @@
 #  THE SOFTWARE.
 
 module TransformExampleGroup
-  def self.included(base)
+  extend ActiveSupport::Concern
+
+  included do |base|
     base.let(:transform) { Object.new.extend(described_class) }
     base.let(:environment) { double }
     base.let(:catalog) { Masamune::Schema::Catalog.new(environment) }

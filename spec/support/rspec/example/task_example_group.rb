@@ -21,6 +21,8 @@
 #  THE SOFTWARE.
 
 module TaskExampleGroup
+  extend ActiveSupport::Concern
+
   def capture(stdout, stderr)
     tmp_stdout = $stdout
     $stdout = stdout
@@ -72,7 +74,7 @@ module TaskExampleGroup
     it { expect { cli_invocation }.to raise_error Thor::RequiredArgumentMissingError, message }
   end
 
-  def self.included(base)
+  included do |base|
     base.before :all do
       ENV['THOR_DEBUG'] = '1'
       Masamune::Actions::DataFlow.reset_module!

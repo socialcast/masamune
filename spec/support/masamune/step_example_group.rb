@@ -21,43 +21,40 @@
 #  THE SOFTWARE.
 
 module Masamune::StepExampleGroup
-  module StepFixtureContext
-    shared_context 'step_fixture' do |context_options = {}|
-      fixture_file = example_fixture_file(context_options.slice(:fixture, :file, :path))
-      step_file = example_step
+  extend ActiveSupport::Concern
 
-      args = context_options[:args]
-      subject do
-        capture_popen([step_file, args].compact.join(' '), input)
+  include Masamune::SharedExampleGroup
+
+  shared_context 'step_fixture' do |context_options = {}|
+    fixture_file = example_fixture_file(context_options.slice(:fixture, :file, :path))
+    step_file = example_step
+
+    args = context_options[:args]
+    subject do
+      capture_popen([step_file, args].compact.join(' '), input)
+    end
+
+    context "with #{fixture_file} fixture" do
+      let(:fixture) { Masamune::StepFixture.load({ file: fixture_file }, binding) }
+
+      let(:input) { fixture.input }
+      let(:output) { fixture.output }
+
+      it 'should match output' do
+        is_expected.to eq(output)
       end
 
-      context "with #{fixture_file} fixture" do
-        let(:fixture) { Masamune::StepFixture.load({ file: fixture_file }, binding) }
-
-        let(:input) { fixture.input }
-        let(:output) { fixture.output }
-
-        it 'should match output' do
-          is_expected.to eq(output)
-        end
-
-        after(:each) do |example|
-          if example.exception && ENV['MASAMUNE_RECORD']
-            shell = Thor::Shell::Basic.new
-            shell.say(example.exception)
-            if shell.yes?('Save recording?')
-              fixture.output = subject
-              fixture.save
-            end
+      after(:each) do |example|
+        if example.exception && ENV['MASAMUNE_RECORD']
+          shell = Thor::Shell::Basic.new
+          shell.say(example.exception)
+          if shell.yes?('Save recording?')
+            fixture.output = subject
+            fixture.save
           end
         end
       end
     end
-  end
-
-  def self.included(base)
-    base.send(:include, Masamune::SharedExampleGroup)
-    base.send(:include, StepFixtureContext)
   end
 end
 

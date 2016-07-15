@@ -20,39 +20,38 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+require_relative 'shared_example_group'
+
 module Masamune::JobExampleGroup
-  module JobFixtureContext
-    shared_context 'job_fixture' do |context_options = {}|
-      fixture_file = example_fixture_file(context_options.slice(:fixture, :file, :path))
-      let(:fixture) { example_fixture(file: fixture_file) }
+  extend ActiveSupport::Concern
 
-      before :all do
-        load_example_config!
-        clean_example_run!
-      end
+  include Masamune::ExampleGroup
+  include Masamune::SharedExampleGroup
+  include Masamune::Actions::Filesystem
+  include Masamune::Actions::Hive
+  include Masamune::Actions::Postgres
 
-      before do
-        setup_example_input!(fixture)
-      end
+  shared_context 'job_fixture' do |context_options = {}|
+    fixture_file = example_fixture_file(context_options.slice(:fixture, :file, :path))
+    let(:fixture) { example_fixture(file: fixture_file) }
 
-      it "should match #{fixture_file}" do
-        aggregate_failures 'generates expected output' do
-          gather_example_output(fixture) do |actual_data, expect_file, expect_data|
-            expect(File.exist?(expect_file)).to eq(true)
-            expect(actual_data).to eq(expect_data)
-          end
+    before :all do
+      load_example_config!
+      clean_example_run!
+    end
+
+    before do
+      setup_example_input!(fixture)
+    end
+
+    it "should match #{fixture_file}" do
+      aggregate_failures 'generates expected output' do
+        gather_example_output(fixture) do |actual_data, expect_file, expect_data|
+          expect(File.exist?(expect_file)).to eq(true)
+          expect(actual_data).to eq(expect_data)
         end
       end
     end
-  end
-
-  def self.included(base)
-    base.send(:include, Masamune::ExampleGroup)
-    base.send(:include, Masamune::SharedExampleGroup)
-    base.send(:include, Masamune::Actions::Filesystem)
-    base.send(:include, Masamune::Actions::Hive)
-    base.send(:include, Masamune::Actions::Postgres)
-    base.send(:include, JobFixtureContext)
   end
 end
 

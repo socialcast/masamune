@@ -21,7 +21,9 @@
 #  THE SOFTWARE.
 
 module ActionExampleGroup
-  def self.included(base)
+  extend ActiveSupport::Concern
+
+  included do |base|
     base.let(:run_dir) { Dir.mktmpdir('masamune') }
     base.before do
       instance.environment = Masamune::ExampleGroup
