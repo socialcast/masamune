@@ -23,11 +23,11 @@
 module TransformExampleGroup
   extend ActiveSupport::Concern
 
-  included do |base|
-    base.let(:transform) { Object.new.extend(described_class) }
-    base.let(:environment) { double }
-    base.let(:catalog) { Masamune::Schema::Catalog.new(environment) }
-    base.after do
+  included do
+    let(:transform) { Object.new.extend(described_class) }
+    let(:environment) { double }
+    let(:catalog) { Masamune::Schema::Catalog.new(environment) }
+    after do
       catalog.clear!
     end
   end

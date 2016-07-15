@@ -20,40 +20,85 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+require_relative 'shared_example_group'
+
 module Masamune::TaskExampleGroup
   extend ActiveSupport::Concern
 
   include Masamune::ExampleGroup
+  include Masamune::SharedExampleGroup
   include Masamune::Actions::Filesystem
   include Masamune::Actions::Hive
   include Masamune::Transform::DenormalizeTable
 
-  included do |base|
-    base.let!(:default_options) { configuration.as_options }
-
-    base.let(:thor_class) { described_class }
-    base.let(:command) { nil }
-    base.let(:options) { {} }
-    base.let!(:stdout) { StringIO.new }
-    base.let!(:stderr) { StringIO.new }
-
-    base.let(:execute_command_times) { 1 }
-
-    base.subject(:execute_command) do
-      capture(stdout, stderr, enable: !default_options.include?('--debug')) do
-        execute_command_times.times do
-          Array.wrap(command).each do |cmd|
-            described_class.start([cmd, *(default_options + options)].compact)
-          end
-        end
-      end
+  shared_examples 'general usage' do
+    it 'exits with status code 0 and prints general usage' do
+      expect { execute_command }.to raise_error { |e|
+        expect(e).to be_a(SystemExit)
+        expect(e.status).to eq(0)
+      }
+      expect(stdout.string).to match(/^Commands:/)
+      expect(stderr.string).to be_blank
     end
+  end
+
+  shared_examples 'command usage' do
+    it 'exits with status code 0 and prints command usage' do
+      expect { execute_command }.to raise_error { |e|
+        expect(e).to be_a(SystemExit)
+        expect(e.status).to eq(0)
+      }
+      expect(stdout.string).to match(/^Usage:/)
+      expect(stdout.string).to match(/^Options:/)
+      expect(stderr.string).to be_blank
+    end
+  end
+
+  shared_examples 'executes with success' do
+    it 'exits with status code 0' do
+      expect { execute_command }.to raise_error { |e|
+        expect(e).to be_a(SystemExit)
+        expect(e.status).to eq(0)
+      }
+    end
+  end
+
+  shared_examples 'raises Thor::MalformattedArgumentError' do |message|
+    it { expect { execute_command }.to raise_error Thor::MalformattedArgumentError, message }
+  end
+
+  shared_examples 'raises Thor::RequiredArgumentMissingError' do |message|
+    it { expect { execute_command }.to raise_error Thor::RequiredArgumentMissingError, message }
   end
 
   shared_context 'task_fixture' do |context_options = {}|
     include_context 'job_fixture', context_options
 
     let(:execute_command_times) { !ENV['MASAMUNE_FASTER_SPEC'] && context_options.fetch(:idempotent, false) ? 2 : 1 }
+  end
+
+  included do
+    let!(:default_options) { configuration.as_options }
+
+    let(:thor_class) { described_class }
+    let(:command) { nil }
+    let(:options) { [] }
+    let!(:stdout) { StringIO.new }
+    let!(:stderr) { StringIO.new }
+
+    let(:execute_command_times) { 1 }
+
+    before do
+      thor_class.send(:include, Masamune::ThorMute)
+    end
+
+    subject(:execute_command) do
+      capture(stdout, stderr, enable: !default_options.include?('--debug')) do
+        execute_command_times.times do
+          thor_class.start([command, *(default_options + options)].compact)
+        end
+      end
+    end
   end
 end
 

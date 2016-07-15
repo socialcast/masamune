@@ -24,8 +24,8 @@
 module Masamune::ThorMute
   extend ActiveSupport::Concern
 
-  included do |base|
-    base.instance_eval do
+  included do
+    instance_eval do
       def create_command(*a)
         tmp_stdout = $stdout
         $stdout = StringIO.new

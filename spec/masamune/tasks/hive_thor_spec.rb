@@ -36,7 +36,7 @@ describe Masamune::Tasks::HiveThor do
 
     it do
       expect_any_instance_of(described_class).to receive(:hive).with(hash_including(retries: 0)).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 
@@ -46,7 +46,7 @@ describe Masamune::Tasks::HiveThor do
       expect_any_instance_of(described_class).to receive(:hive).with(exec: 'CREATE DATABASE IF NOT EXISTS masamune;', database: nil).and_return(mock_success)
       expect_any_instance_of(described_class).to receive(:hive).with(file: instance_of(String)).and_return(mock_success)
       expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: File.expand_path('zombo.hql'))).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 
@@ -54,7 +54,7 @@ describe Masamune::Tasks::HiveThor do
     let(:options) { ['--file=zombo.hql'] }
     it do
       expect_any_instance_of(described_class).to receive(:hive).with(hash_including(file: File.expand_path('zombo.hql'))).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 
@@ -62,7 +62,7 @@ describe Masamune::Tasks::HiveThor do
     let(:options) { ['--output=report.txt'] }
     it do
       expect_any_instance_of(described_class).to receive(:hive).with(hash_including(output: File.expand_path('report.txt'))).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 
@@ -70,7 +70,7 @@ describe Masamune::Tasks::HiveThor do
     let(:options) { ['--variables=YEAR:2015', 'MONTH:1'] }
     it do
       expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1' })).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 
@@ -78,7 +78,7 @@ describe Masamune::Tasks::HiveThor do
     let(:options) { ['-X', 'YEAR:2015', 'MONTH:1'] }
     it do
       expect_any_instance_of(described_class).to receive(:hive).with(hash_including(variables: { 'YEAR' => '2015', 'MONTH' => '1' })).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 
@@ -86,7 +86,7 @@ describe Masamune::Tasks::HiveThor do
     let(:options) { ['--retry'] }
     it do
       expect_any_instance_of(described_class).to receive(:hive).with(hash_excluding(retries: 0)).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 end

@@ -29,10 +29,9 @@ module Masamune::ExampleGroup
   include Masamune::HasEnvironment
   extend self # rubocop:disable Style/ModuleFunction
 
-  included do |base|
-    base.before(:all) do
+  included do
+    before(:all) do
       filesystem.environment = self.environment = Masamune::ExampleGroup.environment
-      Thor.send(:include, Masamune::ThorMute)
     end
   end
 end

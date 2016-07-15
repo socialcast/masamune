@@ -68,15 +68,15 @@ module Masamune::MockCommand
     end
   end
 
-  included do |base|
-    base.before do
+  included do
+    before do
       new_method = Masamune::Commands::Shell.method(:new)
       allow(Masamune::Commands::Shell).to receive(:new) do |command, options|
         new_method.call(CommandMatcher.new(command), options || {})
       end
     end
 
-    base.after do
+    after do
       CommandMatcher.reset!
     end
   end

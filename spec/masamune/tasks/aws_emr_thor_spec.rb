@@ -45,7 +45,7 @@ describe Masamune::Tasks::AwsEmrThor do
         let(:options) { ['--cluster-id=j-XYZ'] }
         it do
           expect_any_instance_of(described_class).to receive(:aws_emr).with(hash_including(action: action, cluster_id: 'j-XYZ')).once.and_return(mock_success)
-          cli_invocation
+          execute_command
         end
       end
     end
@@ -57,7 +57,7 @@ describe Masamune::Tasks::AwsEmrThor do
 
       it do
         expect_any_instance_of(described_class).to receive(:aws_emr).with(hash_including(action: action)).once.and_return(mock_success)
-        cli_invocation
+        execute_command
       end
 
       context 'with --help' do

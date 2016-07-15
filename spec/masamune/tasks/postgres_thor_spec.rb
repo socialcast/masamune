@@ -33,7 +33,7 @@ describe Masamune::Tasks::PostgresThor do
 
     it do
       expect_any_instance_of(described_class).to receive(:postgres).with(hash_including(retries: 0)).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 
@@ -42,7 +42,7 @@ describe Masamune::Tasks::PostgresThor do
     it do
       expect_any_instance_of(described_class).to receive(:postgres).with(file: instance_of(String), retries: 0).once.and_return(mock_success)
       expect_any_instance_of(described_class).to receive(:postgres).with(hash_including(file: 'zombo.hql')).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 
@@ -50,7 +50,7 @@ describe Masamune::Tasks::PostgresThor do
     let(:options) { ['--file=zombo.hql'] }
     it do
       expect_any_instance_of(described_class).to receive(:postgres).with(hash_including(file: 'zombo.hql')).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 
@@ -58,7 +58,7 @@ describe Masamune::Tasks::PostgresThor do
     let(:options) { ['--retry'] }
     it do
       expect_any_instance_of(described_class).to receive(:postgres).with(hash_excluding(retries: 0)).once.and_return(mock_success)
-      cli_invocation
+      execute_command
     end
   end
 end
