@@ -34,22 +34,20 @@ module Masamune::SharedExampleGroup
     stdout.string
   end
 
-  def capture_output
-    @stdout = StringIO.new
-    @stderr = StringIO.new
+  def capture_output(stdout, stderr)
     tmp_stdout = $stdout
-    $stdout = @stdout
+    $stdout = stdout
     tmp_stderr = $stderr
-    $stderr = @stderr
+    $stderr = stderr
     yield
   ensure
     $stdout = tmp_stdout
     $stderr = tmp_stderr
   end
 
-  def capture(enable = true)
+  def capture(stdout, stderr, enable: true)
     if enable
-      capture_output do
+      capture_output(stdout, stderr) do
         yield
       end
     else

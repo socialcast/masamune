@@ -22,27 +22,32 @@
 
 module Masamune::TaskExampleGroup
   module TaskFixtureContent
-    shared_context 'task_fixture' do |context_options = {}|
-      include_context 'job_fixture', context_options
-      let!(:default_options) { configuration.as_options }
+    def self.included(base)
+      base.let!(:default_options) { configuration.as_options }
 
-      let(:stdout) { @stdout }
-      let(:stderr) { @stderr }
+      base.let(:thor_class) { described_class }
+      base.let(:command) { nil }
+      base.let(:options) { {} }
+      base.let!(:stdout) { StringIO.new }
+      base.let!(:stderr) { StringIO.new }
 
-      let(:command) { nil }
-      let(:options) { [] }
+      base.let(:execute_command_times) { 1 }
 
-      subject(:execute_command) do
-        n = context_options.fetch(:idempotent, false) ? 2 : 1
-        n = 1 if ENV['MASAMUNE_FASTER_SPEC']
-        capture(!default_options.include?('--debug')) do
-          n.times do
+      base.subject(:execute_command) do
+        capture(stdout, stderr, enable: !default_options.include?('--debug')) do
+          execute_command_times.times do
             Array.wrap(command).each do |cmd|
               described_class.start([cmd, *(default_options + options)].compact)
             end
           end
         end
       end
+    end
+
+    shared_context 'task_fixture' do |context_options = {}|
+      include_context 'job_fixture', context_options
+
+      let(:execute_command_times) { !ENV['MASAMUNE_FASTER_SPEC'] && context_options.fetch(:idempotent, false) ? 2 : 1 }
     end
   end
 
