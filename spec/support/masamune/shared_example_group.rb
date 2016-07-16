@@ -45,7 +45,7 @@ module Masamune::SharedExampleGroup
     $stderr = tmp_stderr
   end
 
-  def capture(stdout, stderr, enable: true)
+  def capture(stdout: StringIO.new, stderr: StringIO.new, enable: true)
     if enable
       capture_output(stdout, stderr) do
         yield

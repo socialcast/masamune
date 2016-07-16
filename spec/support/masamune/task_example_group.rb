@@ -93,7 +93,7 @@ module Masamune::TaskExampleGroup
     end
 
     subject(:execute_command) do
-      capture(stdout, stderr, enable: !default_options.include?('--debug')) do
+      capture(stdout: stdout, stderr: stderr, enable: !default_options.include?('--debug')) do
         execute_command_times.times do
           thor_class.start([command, *(default_options + options)].compact)
         end
