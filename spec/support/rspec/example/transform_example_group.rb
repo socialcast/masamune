@@ -21,11 +21,13 @@
 #  THE SOFTWARE.
 
 module TransformExampleGroup
-  def self.included(base)
-    base.let(:transform) { Object.new.extend(described_class) }
-    base.let(:environment) { double }
-    base.let(:catalog) { Masamune::Schema::Catalog.new(environment) }
-    base.after do
+  extend ActiveSupport::Concern
+
+  included do
+    let(:transform) { Object.new.extend(described_class) }
+    let(:environment) { double }
+    let(:catalog) { Masamune::Schema::Catalog.new(environment) }
+    after do
       catalog.clear!
     end
   end

@@ -22,8 +22,10 @@
 
 # Silence noisy and uninformative create_command method
 module Masamune::ThorMute
-  def self.included(base)
-    base.instance_eval do
+  extend ActiveSupport::Concern
+
+  included do
+    instance_eval do
       def create_command(*a)
         tmp_stdout = $stdout
         $stdout = StringIO.new

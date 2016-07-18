@@ -41,12 +41,6 @@ describe Masamune::Thor do
         # NOP
       end
 
-      desc 'current_dir', 'current_dir'
-      skip
-      def current_dir_task
-        console(fs.path(:current_dir))
-      end
-
       desc 'unknown', 'unknown'
       target path: fs.path(:unknown_dir, 'target/%Y-%m-%d')
       source path: fs.path(:unknown_dir, 'source/%Y%m%d*.log')
@@ -70,7 +64,7 @@ describe Masamune::Thor do
       end
 
       it 'continues execution' do
-        expect { cli_invocation }.to_not raise_error
+        expect { execute_command }.to_not raise_error
       end
     end
 
@@ -99,7 +93,7 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--version'] }
       it 'exits with status code 0 and prints version' do
-        expect { cli_invocation }.to raise_error { |e|
+        expect { execute_command }.to raise_error { |e|
           expect(e).to be_a(SystemExit)
           expect(e.message).to eq('exit')
           expect(e.status).to eq(0)
@@ -188,7 +182,7 @@ describe Masamune::Thor do
         expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
         allow(thor_class).to receive(:dispatch).and_raise('random exception')
       end
-      it { expect { cli_invocation }.to raise_error(/random exception/) }
+      it { expect { execute_command }.to raise_error(/random exception/) }
     end
 
     context 'with command that raises exception after initialization' do
@@ -198,14 +192,14 @@ describe Masamune::Thor do
         expect_any_instance_of(Logger).to receive(:error).with(/random exception/)
         allow(thor_class).to receive(:after_initialize_invoke).and_raise('random exception')
       end
-      it { expect { cli_invocation }.to raise_error(/random exception/) }
+      it { expect { execute_command }.to raise_error(/random exception/) }
     end
 
     context 'with command that raises exception during execution' do
       let(:command) { 'unknown' }
       let(:options) { ['--start', '2013-01-01'] }
       it 'exits with status code 1 and prints error to stderr' do
-        expect { cli_invocation }.to raise_error { |e|
+        expect { execute_command }.to raise_error { |e|
           expect(e).to be_a(SystemExit)
           expect(e.message).to eq('Path :unknown_dir not defined')
           expect(e.status).to eq(1)
@@ -222,15 +216,16 @@ describe Masamune::Thor do
         include Masamune::Thor
 
         desc 'current_dir', 'current_dir'
-        def current_dir
+        def current_dir_task
           console(fs.path(:current_dir))
         end
       end
     end
 
     let(:command) { 'current_dir' }
+    let(:options) { ['--no-quiet'] }
     it 'prints :current_dir' do
-      cli_invocation
+      execute_command
       expect(stdout.string).to eq(File.dirname(__FILE__) + "\n")
       expect(stderr.string).to be_blank
     end

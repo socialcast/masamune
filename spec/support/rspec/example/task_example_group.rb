@@ -21,77 +21,14 @@
 #  THE SOFTWARE.
 
 module TaskExampleGroup
-  def capture(stdout, stderr)
-    tmp_stdout = $stdout
-    $stdout = stdout
-    tmp_stderr = $stderr
-    $stderr = stderr
-    yield
-  ensure
-    $stdout = tmp_stdout
-    $stderr = tmp_stderr
-  end
+  extend ActiveSupport::Concern
 
-  shared_examples 'general usage' do
-    it 'exits with status code 0 and prints general usage' do
-      expect { cli_invocation }.to raise_error { |e|
-        expect(e).to be_a(SystemExit)
-        expect(e.status).to eq(0)
-      }
-      expect(stdout.string).to match(/^Commands:/)
-      expect(stderr.string).to be_blank
-    end
-  end
+  include Masamune::TaskExampleGroup
 
-  shared_examples 'command usage' do
-    it 'exits with status code 0 and prints command usage' do
-      expect { cli_invocation }.to raise_error { |e|
-        expect(e).to be_a(SystemExit)
-        expect(e.status).to eq(0)
-      }
-      expect(stdout.string).to match(/^Usage:/)
-      expect(stdout.string).to match(/^Options:/)
-      expect(stderr.string).to be_blank
-    end
-  end
-
-  shared_examples 'executes with success' do
-    it 'exits with status code 0' do
-      expect { cli_invocation }.to raise_error { |e|
-        expect(e).to be_a(SystemExit)
-        expect(e.status).to eq(0)
-      }
-    end
-  end
-
-  shared_examples 'raises Thor::MalformattedArgumentError' do |message|
-    it { expect { cli_invocation }.to raise_error Thor::MalformattedArgumentError, message }
-  end
-
-  shared_examples 'raises Thor::RequiredArgumentMissingError' do |message|
-    it { expect { cli_invocation }.to raise_error Thor::RequiredArgumentMissingError, message }
-  end
-
-  def self.included(base)
-    base.before :all do
+  included do
+    before :all do
       ENV['THOR_DEBUG'] = '1'
       Masamune::Actions::DataFlow.reset_module!
-    end
-
-    base.let(:thor_class) { described_class }
-    base.let(:command) { nil }
-    base.let(:options) { {} }
-    base.let!(:stdout) { StringIO.new }
-    base.let!(:stderr) { StringIO.new }
-
-    base.before do
-      thor_class.send(:include, Masamune::ThorMute)
-    end
-
-    base.subject(:cli_invocation) do
-      capture(stdout, stderr) do
-        thor_class.start([command, *options].compact)
-      end
     end
   end
 end

@@ -21,9 +21,11 @@
 #  THE SOFTWARE.
 
 module ActionExampleGroup
-  def self.included(base)
-    base.let(:run_dir) { Dir.mktmpdir('masamune') }
-    base.before do
+  extend ActiveSupport::Concern
+
+  included do
+    let(:run_dir) { Dir.mktmpdir('masamune') }
+    before do
       instance.environment = Masamune::ExampleGroup
       Masamune::ExampleGroup.filesystem.add_path(:run_dir, run_dir)
     end

@@ -31,7 +31,7 @@ describe Masamune::Tasks::ShellThor do
   context 'with no arguments' do
     it do
       expect(Pry).to receive(:start)
-      cli_invocation
+      execute_command
     end
   end
 
