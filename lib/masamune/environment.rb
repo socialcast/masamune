@@ -45,7 +45,7 @@ module Masamune
     end
 
     def configuration
-      @configuration ||= Masamune::Configuration.new(self)
+      @configuration ||= Masamune::Configuration.new(environment: self)
     end
 
     def mutex

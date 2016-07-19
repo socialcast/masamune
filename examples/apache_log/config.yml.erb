@@ -33,14 +33,15 @@
   add_path :current_dir, File.dirname(__FILE__)
  %>
 ---
-  hive:
-    database: apache_log_<%= MASAMUNE_ENV %>
-    location: <%= get_path(:warehouse_dir) %>
-    schema_files:
-      - <%= get_path(:current_dir, 'schema.rb') %>
-  postgres:
-    database: apache_log_<%= MASAMUNE_ENV %>
-    username: <%= %x{whoami} %>
-    clean: true
-    schema_files:
-      - <%= get_path(:current_dir, 'schema.rb') %>
+  commands:
+    hive:
+      database: apache_log_<%= MASAMUNE_ENV %>
+      location: <%= get_path(:warehouse_dir) %>
+      schema_files:
+        - <%= get_path(:current_dir, 'schema.rb') %>
+    postgres:
+      database: apache_log_<%= MASAMUNE_ENV %>
+      username: <%= %x{whoami} %>
+      clean: true
+      schema_files:
+        - <%= get_path(:current_dir, 'schema.rb') %>

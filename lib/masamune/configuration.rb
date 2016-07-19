@@ -26,43 +26,53 @@ require 'tilt/erb'
 require 'pp'
 
 require 'active_support/core_ext/hash'
+require 'hashie'
 
 require 'masamune/has_environment'
 
-class Masamune::Configuration
+class Masamune::Configuration < Hashie::Dash
   extend Forwardable
-  include Masamune::HasEnvironment
 
-  attr_accessor :quiet
-  attr_accessor :verbose
-  attr_accessor :debug
-  attr_accessor :dry_run
-  attr_accessor :lock
-  attr_accessor :retries
-  attr_accessor :backoff
-  attr_accessor :params
+  include Hashie::Extensions::MergeInitializer
+  include Hashie::Extensions::IndifferentAccess
 
-  COMMANDS = %w(aws_emr hive hadoop_streaming hadoop_filesystem s3cmd postgres postgres_admin).freeze
-  COMMANDS.each do |command|
-    attr_accessor command
-    define_method(command) do
-      instance_variable_get("@#{command}").symbolize_keys!
+  class << self
+    attr_writer :default_config_file
+
+    def default_config_file
+      @default_config_file ||= File.join(File.expand_path('../../../', __FILE__), 'config', 'masamune.yml.erb')
+    end
+
+    attr_writer :default_commands
+
+    def default_commands
+      @default_commands ||= %i(aws_emr hive hadoop_streaming hadoop_filesystem s3cmd postgres postgres_admin)
     end
   end
 
-  def initialize(environment)
-    self.environment = environment
-    self.quiet    = false
-    self.verbose  = false
-    self.debug    = false
-    self.dry_run  = false
-    self.lock     = nil
-    self.retries  = 3
-    self.backoff  = 5
-    self.params   = HashWithIndifferentAccess.new
+  # FIXME: use named param for environment everywhere
+  property :environment
+  property :quiet, default: false
+  property :verbose, default: false
+  property :debug, default: false
+  property :dry_run, default: false
+  property :lock
+  property :retries, default: 3
+  property :backoff, default: 5
+  property :params, default: Hashie::Mash.new
+  property :paths, default: {}
+  property :commands, default: Hashie::Mash.new { |h, k| h[k] = Hashie::Mash.new }
 
-    COMMANDS.each do |command|
-      instance_variable_set("@#{command}", {})
+  # FIXME: remove
+  def_delegators :commands, *default_commands
+
+  # FIXME: try to move to top
+  include Masamune::HasEnvironment
+
+  def initialize(*a)
+    super
+    self.class.default_commands.each do |command|
+      commands[command] = Hashie::Mash.new
     end
   end
 
@@ -70,8 +80,8 @@ class Masamune::Configuration
     @load_once ||= begin
       config_file = filesystem.eval_path(path)
       load_yaml_erb_file(config_file).each_pair do |command, value|
-        if COMMANDS.include?(command)
-          send("#{command}=", value)
+        if command == 'commands'
+          commands.merge!(value)
         elsif command == 'paths'
           load_paths(value)
         elsif command == 'params'
@@ -81,7 +91,8 @@ class Masamune::Configuration
       end
       logger.debug("Loaded configuration #{config_file}")
       load_catalog(configuration.postgres.fetch(:schema_files, []) + configuration.hive.fetch(:schema_files, []))
-      true
+      # FIXME: should this be a class method
+      self
     end
   end
 
@@ -97,16 +108,18 @@ class Masamune::Configuration
 
   def to_s
     io = StringIO.new
-    rep = { 'path' => filesystem.paths }
-    COMMANDS.each do |command|
-      rep[command] = send(command)
-    end
-    PP.pp(rep, io)
+    PP.pp({ path: filesystem.paths }, io)
+    PP.pp(except(:environment), io)
+    #     rep = { 'path' => filesystem.paths }
+    #     commands.each do |command|
+    #       rep[command] = send(command)
+    #     end
+    #     PP.pp(rep, io)
     io.string
   end
 
   def debug=(debug)
-    @debug = debug
+    self[:debug] = debug
     environment.reload_logger!
   end
 
@@ -135,23 +148,16 @@ class Masamune::Configuration
     YAML.load(t.result(binding))
   end
 
-  class << self
-    attr_writer :default_config_file
-
-    def default_config_file
-      @default_config_file ||= File.join(File.expand_path('../../../', __FILE__), 'config', 'masamune.yml.erb')
-    end
-  end
-
   def default_config_file
     self.class.default_config_file
   end
 
   private
 
-  def load_paths(paths)
-    paths.each do |value|
+  def load_paths(_paths)
+    _paths.each do |value|
       symbol, path, options = *value.to_a.flatten
+      paths[symbol] = [path, options || {}]
       add_path(symbol, path, options)
     end
   end
