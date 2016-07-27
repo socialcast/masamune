@@ -75,9 +75,9 @@ module Masamune::SharedExampleGroup
 
   # TODO: iterate over databases
   def clean_example_run!
-    if configuration.postgres[:clean]
-      postgres_admin(action: :drop, database: configuration.postgres[:database])
-      postgres_admin(action: :create, database: configuration.postgres[:database])
+    if configuration.commands.postgres[:clean]
+      postgres_admin(action: :drop, database: configuration.commands.postgres[:database])
+      postgres_admin(action: :create, database: configuration.commands.postgres[:database])
       postgres(file: define_schema(catalog, :postgres).to_file, retries: 0)
     end
     filesystem.paths.each do |_, (path, options)|

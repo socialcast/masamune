@@ -43,8 +43,6 @@ class Masamune::Configuration < Hashie::Dash
       @default_config_file ||= File.join(File.expand_path('../../../', __FILE__), 'config', 'masamune.yml.erb')
     end
 
-    attr_writer :default_commands
-
     def default_commands
       @default_commands ||= %i(aws_emr hive hadoop_streaming hadoop_filesystem s3cmd postgres postgres_admin)
     end
@@ -60,11 +58,7 @@ class Masamune::Configuration < Hashie::Dash
   property :retries, default: 3
   property :backoff, default: 5
   property :params, default: Hashie::Mash.new
-  property :paths, default: {}
   property :commands, default: Hashie::Mash.new { |h, k| h[k] = Hashie::Mash.new }
-
-  # FIXME: remove
-  def_delegators :commands, *default_commands
 
   # FIXME: try to move to top
   include Masamune::HasEnvironment
@@ -90,7 +84,7 @@ class Masamune::Configuration < Hashie::Dash
         end
       end
       logger.debug("Loaded configuration #{config_file}")
-      load_catalog(configuration.postgres.fetch(:schema_files, []) + configuration.hive.fetch(:schema_files, []))
+      load_catalog(configuration.commands.postgres.fetch(:schema_files, []) + configuration.commands.hive.fetch(:schema_files, []))
       # FIXME: should this be a class method
       self
     end
@@ -154,10 +148,9 @@ class Masamune::Configuration < Hashie::Dash
 
   private
 
-  def load_paths(_paths)
-    _paths.each do |value|
+  def load_paths(paths)
+    paths.each do |value|
       symbol, path, options = *value.to_a.flatten
-      paths[symbol] = [path, options || {}]
       add_path(symbol, path, options)
     end
   end

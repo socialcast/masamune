@@ -41,7 +41,7 @@ module Masamune::Commands
     def initialize(delegate, attrs = {})
       super delegate
       @delegate = delegate
-      DEFAULT_ATTRIBUTES.merge(configuration.aws_emr).merge(attrs).each do |name, value|
+      DEFAULT_ATTRIBUTES.merge(configuration.commands.aws_emr).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
     end
@@ -118,7 +118,7 @@ module Masamune::Commands
     end
 
     def action_options
-      configuration.aws_emr.fetch(action.underscore.to_sym, {}).with_indifferent_access.fetch(:options, {}).reject { |key, _| @extra.include?(key.to_s) }
+      configuration.commands.aws_emr.fetch(action.underscore.to_sym, {}).with_indifferent_access.fetch(:options, {}).reject { |key, _| @extra.include?(key.to_s) }
     end
 
     def ssh_command?

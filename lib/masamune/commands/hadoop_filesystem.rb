@@ -35,7 +35,7 @@ module Masamune::Commands
 
     def initialize(delegate, attrs = {})
       super delegate
-      DEFAULT_ATTRIBUTES.merge(configuration.hadoop_filesystem).merge(attrs).each do |name, value|
+      DEFAULT_ATTRIBUTES.merge(configuration.commands.hadoop_filesystem).merge(attrs).each do |name, value|
         instance_variable_set("@#{name}", value)
       end
     end

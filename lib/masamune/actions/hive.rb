@@ -33,8 +33,8 @@ module Masamune::Actions
       opts[:block] = block.to_proc if block_given?
 
       command = Masamune::Commands::Hive.new(environment, opts)
-      command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.aws_emr[:cluster_id]
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.hive.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.commands.aws_emr[:cluster_id]
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.hive.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.interactive? ? command.replace : command.execute
@@ -42,10 +42,10 @@ module Masamune::Actions
 
     # TODO: warn or error if database is not defined
     def create_hive_database_if_not_exists
-      return if configuration.hive[:database] == 'default'
+      return if configuration.commands.hive[:database] == 'default'
       sql = []
-      sql << %(CREATE DATABASE IF NOT EXISTS #{configuration.hive[:database]})
-      sql << %(LOCATION "#{configuration.hive[:location]}") if configuration.hive[:location]
+      sql << %(CREATE DATABASE IF NOT EXISTS #{configuration.commands.hive[:database]})
+      sql << %(LOCATION "#{configuration.commands.hive[:location]}") if configuration.commands.hive[:location]
       hive(exec: sql.join(' ') + ';', database: nil)
     end
 

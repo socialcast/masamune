@@ -65,7 +65,7 @@ describe Masamune::Configuration do
 
   describe '#load' do
     let(:yaml_file) do
-      yaml_file = Tempfile.create('masamune').tap do |tmp|
+      Tempfile.create('masamune').tap do |tmp|
         tmp.write(yaml)
         tmp.close
       end.path
@@ -104,20 +104,19 @@ describe Masamune::Configuration do
       end
     end
 
-    # FIXME: remove xxx_ prefix to test environment
     context 'with Hash paths' do
       let(:yaml) do
         <<-YAML.strip_heredoc
         ---
           paths:
-            - xxx_tmp_dir: '/tmp'
-            - xxx_log_dir: '/var/log'
+            - foo_dir: ['/tmp/foo', {mkdir: true}]
+            - bar_dir: '/tmp/bar'
         YAML
       end
 
       it do
-        expect(result.filesystem.paths[:xxx_tmp_dir]).to eq(['/tmp', {}])
-        expect(result.paths[:xxx_tmp_dir]).to eq(['/tmp', {}])
+        expect(result.filesystem.paths[:foo_dir]).to eq(['/tmp/foo', { mkdir: true }])
+        expect(result.filesystem.paths[:bar_dir]).to eq(['/tmp/bar', {}])
       end
     end
 

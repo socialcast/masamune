@@ -33,8 +33,8 @@ describe Masamune::Actions::HadoopStreaming do
 
   describe '.hadoop_streaming' do
     before do
-      allow(instance).to receive_message_chain(:configuration, :hadoop_streaming).and_return({})
-      allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return({})
+      allow(instance).to receive_message_chain(:configuration, :commands, :hadoop_streaming).and_return({})
+      allow(instance).to receive_message_chain(:configuration, :commands, :aws_emr).and_return({})
       mock_command(/\Ahadoop/, mock_success)
     end
 
@@ -44,7 +44,7 @@ describe Masamune::Actions::HadoopStreaming do
 
     context 'with cluster_id' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return(cluster_id: 'j-XYZ')
+        allow(instance).to receive_message_chain(:configuration, :commands, :aws_emr).and_return(cluster_id: 'j-XYZ')
         mock_command(/\Ahadoop/, mock_failure)
         mock_command(/\Aaws emr/, mock_success, StringIO.new('ssh fakehost exit'))
         mock_command(/\Assh fakehost hadoop/, mock_success)
@@ -57,7 +57,7 @@ describe Masamune::Actions::HadoopStreaming do
       let(:extra) { ['-D', 'EXTRA'] }
 
       before do
-        allow(instance).to receive_message_chain(:configuration, :aws_emr).and_return(cluster_id: 'j-XYZ')
+        allow(instance).to receive_message_chain(:configuration, :commands, :aws_emr).and_return(cluster_id: 'j-XYZ')
         mock_command(/\Ahadoop/, mock_failure)
         mock_command(/\Aaws emr/, mock_success, StringIO.new('ssh fakehost exit'))
         mock_command(/\Assh fakehost -D EXTRA hadoop/, mock_failure)
@@ -69,7 +69,7 @@ describe Masamune::Actions::HadoopStreaming do
 
     context 'with retries and backoff' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :hadoop_streaming).and_return(retries: 1, backoff: 10)
+        allow(instance).to receive_message_chain(:configuration, :commands, :hadoop_streaming).and_return(retries: 1, backoff: 10)
         expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
       end
 

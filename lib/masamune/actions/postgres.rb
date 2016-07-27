@@ -35,24 +35,24 @@ module Masamune::Actions
       opts[:block] = block.to_proc if block_given?
 
       command = Masamune::Commands::Postgres.new(environment, opts)
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.postgres.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.postgres.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.interactive? ? command.replace : command.execute
     end
 
     def create_postgres_database_if_not_exists
-      if configuration.postgres.key?(:database)
-        postgres_admin(action: :create, database: configuration.postgres[:database], safe: true) unless postgres_helper.database_exists?
+      if configuration.commands.postgres.key?(:database)
+        postgres_admin(action: :create, database: configuration.commands.postgres[:database], safe: true) unless postgres_helper.database_exists?
       end
     end
 
     def load_postgres_setup_files
-      configuration.postgres[:setup_files].each do |file|
+      configuration.commands.postgres[:setup_files].each do |file|
         configuration.with_quiet do
           postgres(file: file, retries: 0)
         end
-      end if configuration.postgres.key?(:setup_files)
+      end if configuration.commands.postgres.key?(:setup_files)
     end
 
     def load_postgres_schema

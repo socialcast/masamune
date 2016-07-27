@@ -28,14 +28,14 @@ module Masamune::Actions
       opts = opts.to_hash.symbolize_keys
 
       command = Masamune::Commands::AwsEmr.new(environment, opts)
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.aws_emr.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.aws_emr.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.interactive? ? command.replace : command.execute
     end
 
     def validate_cluster_id!
-      cluster_id = configuration.aws_emr[:cluster_id]
+      cluster_id = configuration.commands.aws_emr[:cluster_id]
       raise ::Thor::RequiredArgumentMissingError, "No value provided for required options '--cluster-id'" unless cluster_id
       raise ::Thor::RequiredArgumentMissingError, %(AWS EMR cluster '#{cluster_id}' does not exist) unless aws_emr(action: 'describe-cluster', cluster_id: cluster_id, fail_fast: false).success?
     end
@@ -43,9 +43,9 @@ module Masamune::Actions
     included do |base|
       base.class_option :cluster_id, desc: 'AWS EMR cluster_id ID (Hint: `masamune-emr-aws list-clusters`)' if defined?(base.class_option)
       base.after_initialize(:early) do |thor, options|
-        next unless thor.configuration.aws_emr.any?
-        next unless thor.configuration.aws_emr.fetch(:enabled, true)
-        thor.configuration.aws_emr[:cluster_id] = options[:cluster_id] if options[:cluster_id]
+        next unless thor.configuration.commands.aws_emr.any?
+        next unless thor.configuration.commands.aws_emr.fetch(:enabled, true)
+        thor.configuration.commands.aws_emr[:cluster_id] = options[:cluster_id] if options[:cluster_id]
         next unless options[:initialize]
         thor.validate_cluster_id!
       end if defined?(base.after_initialize)
