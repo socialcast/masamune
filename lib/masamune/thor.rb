@@ -146,8 +146,6 @@ module Masamune
 
             if options[:version]
               puts environment.version
-              puts options if options[:verbose]
-              puts config.to_s if options[:verbose]
               exit
             end
           end

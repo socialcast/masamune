@@ -48,8 +48,9 @@ class Masamune::Configuration < Hashie::Dash
     end
   end
 
-  # FIXME: use named param for environment everywhere
   property :environment
+  include Masamune::HasEnvironment
+
   property :quiet, default: false
   property :verbose, default: false
   property :debug, default: false
@@ -59,9 +60,6 @@ class Masamune::Configuration < Hashie::Dash
   property :backoff, default: 5
   property :params, default: Hashie::Mash.new
   property :commands, default: Hashie::Mash.new { |h, k| h[k] = Hashie::Mash.new }
-
-  # FIXME: try to move to top
-  include Masamune::HasEnvironment
 
   def initialize(*a)
     super
@@ -85,7 +83,6 @@ class Masamune::Configuration < Hashie::Dash
       end
       logger.debug("Loaded configuration #{config_file}")
       load_catalog(configuration.commands.postgres.fetch(:schema_files, []) + configuration.commands.hive.fetch(:schema_files, []))
-      # FIXME: should this be a class method
       self
     end
   end
@@ -98,18 +95,6 @@ class Masamune::Configuration < Hashie::Dash
         end
       end
     end
-  end
-
-  def to_s
-    io = StringIO.new
-    PP.pp({ path: filesystem.paths }, io)
-    PP.pp(except(:environment), io)
-    #     rep = { 'path' => filesystem.paths }
-    #     commands.each do |command|
-    #       rep[command] = send(command)
-    #     end
-    #     PP.pp(rep, io)
-    io.string
   end
 
   def debug=(debug)
