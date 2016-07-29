@@ -31,24 +31,24 @@ module Masamune::Commands
     include Masamune::Commands::PostgresCommon
 
     DEFAULT_ATTRIBUTES =
-      {
-        path: 'psql',
-        options: [],
-        hostname: 'localhost',
-        database: 'postgres',
-        username: 'postgres',
-        pgpass_file: nil,
-        file: nil,
-        exec: nil,
-        input: nil,
-        output: nil,
-        print: false,
-        block: nil,
-        csv: false,
-        variables: {},
-        tuple_output: false,
-        debug: false
-      }.freeze
+    {
+      path: 'psql',
+      options: [],
+      hostname: 'localhost',
+      database: 'postgres',
+      username: 'postgres',
+      pgpass_file: nil,
+      file: nil,
+      exec: nil,
+      input: nil,
+      output: nil,
+      print: false,
+      block: nil,
+      csv: false,
+      variables: {},
+      tuple_output: false,
+      debug: false
+    }.with_indifferent_access.freeze
 
     def initialize(delegate, attrs = {})
       super delegate

@@ -49,7 +49,7 @@ module Masamune::Commands
       extra: [],
       upload: true,
       quote: false
-    }.freeze
+    }.with_indifferent_access.freeze
 
     attr_reader :input
 
