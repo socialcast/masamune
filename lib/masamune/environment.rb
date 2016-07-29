@@ -92,6 +92,7 @@ module Masamune
     end
 
     def log_file_name
+      return unless filesystem.path?(:log_dir)
       @log_file_name ||= filesystem.get_path(:log_dir, log_file_template)
     end
 
