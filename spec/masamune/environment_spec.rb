@@ -67,11 +67,21 @@ describe Masamune::Environment do
       it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to yield_control }
     end
 
-    context 'when lock cannot be acquired' do
+    context 'when lock cannot be acquired and returns 1' do
       before do
         instance.filesystem.add_path(:run_dir, run_dir)
         expect(instance.logger).to receive(:error).with(/acquire lock attempt failed for 'some_lock'/)
         expect_any_instance_of(File).to receive(:flock).once.and_return(1)
+      end
+
+      it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to_not raise_error }
+    end
+
+    context 'when lock cannot be acquired and returns false' do
+      before do
+        instance.filesystem.add_path(:run_dir, run_dir)
+        expect(instance.logger).to receive(:error).with(/acquire lock attempt failed for 'some_lock'/)
+        expect_any_instance_of(File).to receive(:flock).once.and_return(false)
       end
 
       it { expect { |b| instance.with_exclusive_lock('some_lock', &b) }.to_not raise_error }
