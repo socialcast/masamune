@@ -72,13 +72,25 @@ module Masamune::Schema
       @extra      = []
     end
 
-    def method_missing(method, *_args)
+    def method_missing(method_name, *_args)
+      *attribute_name, attribute_type = method_name.to_s.split('_')
       if type == :files
-        files[method]
-      else
-        *attribute_name, attribute_type = method.to_s.split('_')
-        raise ArgumentError, "unknown attribute type '#{attribute_type}'" unless SUPPORTED_ATTRIBUTES.include?(attribute_type)
+        files[method_name]
+      elsif SUPPORTED_ATTRIBUTES.include?(attribute_type)
         send(attribute_type.pluralize)[attribute_name.join('_')]
+      else
+        super
+      end
+    end
+
+    def respond_to_missing?(method_name, _include_private = false)
+      *attribute_name, attribute_type = method_name.to_s.split('_')
+      if type == :files
+        files.key?(method_name)
+      elsif SUPPORTED_ATTRIBUTES.include?(attribute_type)
+        send(attribute_type.pluralize).key?(attribute_name.join('_'))
+      else
+        super
       end
     end
 
