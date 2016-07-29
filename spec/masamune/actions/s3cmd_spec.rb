@@ -41,7 +41,7 @@ describe Masamune::Actions::S3Cmd do
 
     context 'with retries and backoff' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :s3cmd).and_return(retries: 1, backoff: 10)
+        allow(instance).to receive_message_chain(:configuration, :commands, :s3cmd).and_return(retries: 1, backoff: 10)
         expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
       end
 

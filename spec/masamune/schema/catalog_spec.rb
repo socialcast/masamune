@@ -36,7 +36,7 @@ describe Masamune::Schema::Catalog do
 
     it { expect(postgres.foo_dimension.id).to eq(:foo) }
     it { expect(postgres.bar_dimension).to be_nil }
-    it { expect { postgres.foo_baz }.to raise_error ArgumentError, "unknown attribute type 'baz'" }
+    it { expect { postgres.foo_baz }.to raise_error NoMethodError }
   end
 
   describe '#[]' do

@@ -32,20 +32,21 @@
   add_path :warehouse_dir, get_path(:data_dir, 'warehouse'), mkdir: true
 %>
 ---
-  hive:
-    database: masamune
-    options:
-      - --hiveconf: 'hive.metastore.warehouse.dir=<%= get_path(:warehouse_dir) %>'
-  postgres:
-    database: masamune
-    username: <%= %x{whoami} %>
-  s3cmd:
-    options:
-      - --config: <%= ENV['HOME'] %>/.s3cfg
-  aws_emr:
-    path: aws
-    enabled: <%= ARGV.include?('--cluster-id') %>
-    config_file: <%= ENV['HOME'] %>/.aws/config
-    ssh:
+  commands:
+    hive:
+      database: masamune
       options:
-        - --key-pair-file: <%= ENV['HOME'] %>/.ssh/id_rsa_aws_emr
+        - --hiveconf: 'hive.metastore.warehouse.dir=<%= get_path(:warehouse_dir) %>'
+    postgres:
+      database: masamune
+      username: <%= %x{whoami} %>
+    s3cmd:
+      options:
+        - --config: <%= ENV['HOME'] %>/.s3cfg
+    aws_emr:
+      path: aws
+      enabled: <%= ARGV.include?('--cluster-id') %>
+      config_file: <%= ENV['HOME'] %>/.aws/config
+      ssh:
+        options:
+          - --key-pair-file: <%= ENV['HOME'] %>/.ssh/id_rsa_aws_emr

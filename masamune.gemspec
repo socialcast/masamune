@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.add_dependency('pry')
   # Needed to work around: https://github.com/pry/pry/issues/1217
   s.add_dependency('rb-readline')
+  s.add_dependency('hashie')
 
   # Development
   s.add_development_dependency('rake', '>= 0.9')

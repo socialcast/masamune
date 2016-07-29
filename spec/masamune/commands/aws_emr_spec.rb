@@ -29,7 +29,7 @@ describe Masamune::Commands::AwsEmr do
 
   before do
     allow(delegate).to receive(:logger).and_return(double)
-    allow(delegate).to receive_message_chain(:configuration, :aws_emr).and_return(configuration)
+    allow(delegate).to receive_message_chain(:configuration, :commands, :aws_emr).and_return(configuration)
   end
 
   describe '#command_env' do

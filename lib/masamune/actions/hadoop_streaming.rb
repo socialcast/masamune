@@ -26,8 +26,8 @@ module Masamune::Actions
       opts = opts.to_hash.symbolize_keys
 
       command = Masamune::Commands::HadoopStreaming.new(environment, aws_emr_options(opts))
-      command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.aws_emr[:cluster_id]
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.hadoop_streaming.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.commands.aws_emr[:cluster_id]
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.hadoop_streaming.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.execute
@@ -36,7 +36,7 @@ module Masamune::Actions
     private
 
     def aws_emr_options(opts = {})
-      return opts unless configuration.aws_emr[:cluster_id]
+      return opts unless configuration.commands.aws_emr[:cluster_id]
       opts.merge(quote: true, upload: false)
     end
   end

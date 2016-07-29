@@ -45,7 +45,7 @@ module Masamune
     end
 
     def configuration
-      @configuration ||= Masamune::Configuration.new(self)
+      @configuration ||= Masamune::Configuration.new(environment: self)
     end
 
     def mutex
@@ -60,13 +60,13 @@ module Masamune
       lock_mode = File::LOCK_EX
       lock_mode |= File::LOCK_NB
       lock_status = lock_file.flock(lock_mode)
-      if lock_status == 0
+      if lock_status && lock_status.zero?
         yield if block_given?
       else
         logger.error "acquire lock attempt failed for '#{lock_name}'"
       end
     ensure
-      if lock_file && lock_status == 0
+      if lock_file && lock_status && lock_status.zero?
         logger.debug("releasing lock '#{lock_name}'")
         lock_file.flock(File::LOCK_UN)
       end
@@ -92,6 +92,7 @@ module Masamune
     end
 
     def log_file_name
+      return unless filesystem.path?(:log_dir)
       @log_file_name ||= filesystem.get_path(:log_dir, log_file_template)
     end
 

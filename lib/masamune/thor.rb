@@ -78,7 +78,7 @@ module Masamune
       rescue => e
         instance.logger.error("#{e.message} (#{e.class}) backtrace:")
         e.backtrace.each { |x| instance.logger.error(x) }
-        $stderr.puts "For complete debug log see: #{instance.log_file_name}"
+        $stderr.puts "For complete debug log see: #{instance.log_file_name}" if instance.log_file_name
         abort e.message
       end
     end
@@ -146,8 +146,6 @@ module Masamune
 
             if options[:version]
               puts environment.version
-              puts options if options[:verbose]
-              puts config.to_s if options[:verbose]
               exit
             end
           end

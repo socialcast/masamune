@@ -30,7 +30,7 @@ module Masamune::Actions
       opts[:block] = block.to_proc if block_given?
 
       command = Masamune::Commands::HadoopFilesystem.new(environment, opts)
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.hadoop_filesystem.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.hadoop_filesystem.slice(:retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.execute

@@ -78,7 +78,7 @@ module Masamune
         next if entry.name == dirname
         next unless entry.name =~ file_regexp
         yield entry
-      end if depth == 0
+      end if depth.zero?
     end
 
     # FIXME: cache eviction policy can be more precise

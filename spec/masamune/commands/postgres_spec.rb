@@ -31,7 +31,7 @@ describe Masamune::Commands::Postgres do
   before do
     allow(delegate).to receive(:logger).and_return(double)
     allow(delegate).to receive(:console).and_return(double)
-    allow(delegate).to receive_message_chain(:configuration, :postgres).and_return(configuration)
+    allow(delegate).to receive_message_chain(:configuration, :commands, :postgres).and_return(configuration)
   end
 
   describe '#stdin' do

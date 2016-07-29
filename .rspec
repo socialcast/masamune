@@ -2,3 +2,4 @@
 --colour
 --backtrace
 --format documentation
+--order rand
