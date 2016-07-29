@@ -104,7 +104,7 @@ module Masamune::Commands
     end
 
     def handle_stdout(line, line_no)
-      if line_no == 0 && line.start_with?('ssh') && @delegate.respond_to?(:handle_stderr)
+      if line_no.zero? && line.start_with?('ssh') && @delegate.respond_to?(:handle_stderr)
         @delegate.handle_stderr(line, line_no)
       elsif @delegate.respond_to?(:handle_stdout)
         @delegate.handle_stdout(line, line_no)
