@@ -29,14 +29,14 @@ module Masamune::Commands
     include Masamune::Actions::Execute
 
     DEFAULT_ATTRIBUTES =
-      {
-        path: 'aws',
-        extra: [],
-        config_file: nil,
-        action: nil,
-        cluster_id: nil,
-        interactive: false
-      }.freeze
+    {
+      path: 'aws',
+      extra: [],
+      config_file: nil,
+      action: nil,
+      cluster_id: nil,
+      interactive: false
+    }.with_indifferent_access.freeze
 
     def initialize(delegate, attrs = {})
       super delegate

@@ -22,13 +22,14 @@
 
 describe Masamune::Commands::PostgresAdmin do
   let(:configuration) { { create_db_path: 'createdb', drop_db_path: 'dropdb', hostname: 'localhost', username: 'postgres' } }
+  let(:postgres_configuration) { {} }
   let(:attrs) { {} }
 
   let(:delegate) { double }
   let(:instance) { described_class.new(delegate, attrs) }
 
   before do
-    allow(delegate).to receive_message_chain(:configuration, :commands, :postgres).and_return({})
+    allow(delegate).to receive_message_chain(:configuration, :commands, :postgres).and_return(postgres_configuration)
     allow(delegate).to receive_message_chain(:configuration, :commands, :postgres_admin).and_return(configuration)
   end
 
@@ -38,6 +39,18 @@ describe Masamune::Commands::PostgresAdmin do
     end
 
     context 'action :create with database' do
+      let(:attrs) { { action: :create, database: 'zombo' } }
+      it { is_expected.to eq(['createdb', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
+    end
+
+    context 'action :create with database with postgres database configuration (string)' do
+      let(:postgres_configuration) { { 'database' => 'test' } }
+      let(:attrs) { { action: :create, database: 'zombo' } }
+      it { is_expected.to eq(['createdb', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
+    end
+
+    context 'action :create with database with postgres database configuration (symbol)' do
+      let(:postgres_configuration) { { database: 'test' } }
       let(:attrs) { { action: :create, database: 'zombo' } }
       it { is_expected.to eq(['createdb', '--host=localhost', '--username=postgres', '--no-password', 'zombo']) }
     end
