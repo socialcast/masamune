@@ -26,9 +26,16 @@ module Masamune::Actions
       opts = opts.to_hash.symbolize_keys
 
       command = Masamune::Commands::PostgresAdmin.new(environment, opts)
+      command = Masamune::Commands::RetryWithBackoff.new(command, postgres_admin_retry_with_backoff_options.merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.execute
+    end
+
+    private
+
+    def postgres_admin_retry_with_backoff_options
+      configuration.commands.postgres.merge(configuration.commands.postgres_admin).slice(:retries, :backoff)
     end
   end
 end
