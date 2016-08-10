@@ -50,6 +50,13 @@ module Masamune::Actions
       sources.first
     end
 
+    def reset_module!
+      ClassMethods.reset_module!
+    end
+    module_function :reset_module!
+
+    private
+
     # TODO: sources from file or input array
     def parse_file_type(key)
       return Set.new unless key
@@ -73,11 +80,6 @@ module Masamune::Actions
       engine.execute(current_command_name, options)
     end
 
-    def reset_module!
-      ClassMethods.reset_module!
-    end
-    module_function :reset_module!
-
     included do |base|
       base.extend ClassMethods
       base.class_eval do
@@ -90,7 +92,7 @@ module Masamune::Actions
         thor.engine.environment = thor.environment
         thor.engine.filesystem.environment = thor.environment
         thor.environment.with_process_lock(:data_flow_after_initialize) do
-          thor.prepare_and_execute(options)
+          thor.send(:prepare_and_execute, options)
         end
         exit 0 if thor.top_level?
       end if defined?(base.after_initialize)
