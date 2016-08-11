@@ -37,7 +37,20 @@ describe Masamune::Actions::InvokeParallel do
       end
 
       subject do
-        instance.invoke_parallel('list', max_tasks: 1)
+        instance.invoke_parallel('list', max_tasks: 0)
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end
+
+    context 'with a simple thor command and multiple arguments' do
+      before do
+        mock_command(/\Athor list --a/, mock_success)
+        mock_command(/\Athor list --b/, mock_success)
+      end
+
+      subject do
+        instance.invoke_parallel('list', { max_tasks: 0 }, [{ a: true, b: false }, { a: false, b: true }])
       end
 
       it { expect { subject }.to_not raise_error }

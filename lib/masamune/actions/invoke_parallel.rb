@@ -35,13 +35,15 @@ module Masamune::Actions
     end
 
     def invoke_parallel(*task_group)
-      opts = task_group.last.is_a?(Hash) ? task_group.pop.dup : {}
-      max_tasks = [opts.delete(:max_tasks), task_group.count].min
+      per_task_opts = task_group.last.is_a?(Array) ? task_group.pop.dup : [{}]
+      all_task_opts = task_group.last.is_a?(Hash) ? task_group.pop.dup : {}
+      max_tasks = [all_task_opts.delete(:max_tasks), task_group.count].min
       console("Setting max_tasks to #{max_tasks}")
-      bail_fast task_group, opts if opts[:version]
-      Parallel.each(task_group, in_processes: max_tasks) do |task_name|
+      bail_fast task_group, all_task_opts if all_task_opts[:version]
+      task_group_by_task_opts = task_group.product(per_task_opts)
+      Parallel.each(task_group_by_task_opts, in_processes: max_tasks) do |task_name, task_opts|
         begin
-          execute(thor_wrapper, task_name, *task_args(opts), interactive: true, detach: false)
+          execute(thor_wrapper, task_name, *task_args(all_task_opts.merge(task_opts)), interactive: true, detach: false)
         rescue SystemExit # rubocop:disable Lint/HandleExceptions
         end
       end
@@ -55,7 +57,8 @@ module Masamune::Actions
 
     def bail_fast(task_group, opts = {})
       task_name = task_group.first
-      execute($PROGRAM_NAME, task_name, *task_args(opts))
+      task_env = opts.delete(:env) || {}
+      execute($PROGRAM_NAME, task_name, *task_args(opts), env: task_env)
       exit
     end
 

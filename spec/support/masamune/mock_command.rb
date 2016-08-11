@@ -46,11 +46,16 @@ module Masamune::MockCommand
       def reset!
         @patterns = {}
       end
+
+      def match(pattern)
+        # nop
+      end
     end
 
     def around_execute(&block)
       self.class.patterns.each do |pattern, (value, io)|
         next unless @delegate.command_args.join(' ') =~ pattern
+        CommandMatcher.match(pattern)
         until io.eof?
           line = io.gets
           line_no ||= 0
@@ -90,6 +95,7 @@ module Masamune::MockCommand
   end
 
   def mock_command(pattern, value = nil, io = StringIO.new, &block)
+    expect(CommandMatcher).to receive(:match).with(pattern)
     CommandMatcher.add_pattern(pattern, block_given? ? block.to_proc : value, io, &block)
   end
 end
