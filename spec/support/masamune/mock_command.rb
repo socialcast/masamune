@@ -59,6 +59,7 @@ module Masamune::MockCommand
 
     def around_execute(&block)
       self.class.patterns.each do |pattern, (value, io)|
+        logger.debug(command_env_and_args)
         next unless command_env_and_args =~ pattern
         CommandMatcher.match(pattern)
         until io.eof?

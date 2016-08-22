@@ -42,7 +42,7 @@ module Masamune::Actions
       bail_fast task_group, all_task_opts if all_task_opts[:version]
       task_group_by_task_opts = task_group.product(per_task_opts)
       Parallel.each(task_group_by_task_opts, in_processes: max_tasks) do |task_name, task_opts|
-        task_env = task_opts.delete(:env) || {}
+        task_env = task_opts[:env] || {}
         begin
           execute(thor_wrapper, task_name, *task_args(all_task_opts.merge(task_opts)), interactive: true, detach: false, env: task_env)
         rescue SystemExit # rubocop:disable Lint/HandleExceptions
@@ -58,13 +58,13 @@ module Masamune::Actions
 
     def bail_fast(task_group, opts = {})
       task_name = task_group.first
-      task_env = opts.delete(:env) || {}
+      task_env = task_opts[:env] || {}
       execute($PROGRAM_NAME, task_name, *task_args(opts), env: task_env)
       exit
     end
 
     def task_args(opts = {})
-      opts.map do |k, v|
+      opts.except(:env).map do |k, v|
         case v
         when true
           "--#{k.to_s.tr('_', '-')}"
