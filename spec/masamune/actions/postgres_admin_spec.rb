@@ -37,7 +37,7 @@ describe Masamune::Actions::PostgresAdmin do
       let(:action) { :create }
 
       before do
-        mock_command(/\Acreatedb/, mock_success)
+        mock_command(/\APGOPTIONS=.* createdb/, mock_success)
       end
 
       it { is_expected.to be_success }
@@ -47,7 +47,7 @@ describe Masamune::Actions::PostgresAdmin do
       let(:action) { :drop }
 
       before do
-        mock_command(/\Adropdb/, mock_success)
+        mock_command(/\APGOPTIONS=.* dropdb/, mock_success)
       end
 
       it { is_expected.to be_success }

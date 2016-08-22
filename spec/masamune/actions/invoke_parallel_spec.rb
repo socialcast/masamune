@@ -55,5 +55,18 @@ describe Masamune::Actions::InvokeParallel do
 
       it { expect { subject }.to_not raise_error }
     end
+
+    context 'with a simple thor command and multiple environments' do
+      before do
+        mock_command(/\AMASAMUNE_ENV=test_1 thor list/, mock_success)
+        mock_command(/\AMASAMUNE_ENV=test_2 thor list/, mock_success)
+      end
+
+      subject do
+        instance.invoke_parallel('list', { max_tasks: 0 }, [{ env: { 'MASAMUNE_ENV' => 'test_1' } }, { env: { 'MASAMUNE_ENV' => 'test_2' } }])
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end
   end
 end

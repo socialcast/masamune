@@ -52,9 +52,14 @@ module Masamune::MockCommand
       end
     end
 
+    def command_env_and_args
+      command_env = @delegate.respond_to?(:command_env) ? @delegate.command_env.map { |key, val| "#{key}=#{val}" } : []
+      (command_env + @delegate.command_args).join(' ')
+    end
+
     def around_execute(&block)
       self.class.patterns.each do |pattern, (value, io)|
-        next unless @delegate.command_args.join(' ') =~ pattern
+        next unless command_env_and_args =~ pattern
         CommandMatcher.match(pattern)
         until io.eof?
           line = io.gets
