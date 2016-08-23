@@ -35,8 +35,8 @@ module Masamune::Actions
     end
 
     def invoke_parallel(*task_group)
-      per_task_opts = task_group.last.is_a?(Array) ? task_group.pop.dup : [{}]
-      all_task_opts = task_group.last.is_a?(Hash) ? task_group.pop.dup : {}
+      per_task_opts = task_group.last.is_a?(Array) ? task_group.pop : [{}]
+      all_task_opts = task_group.last.is_a?(Hash) ? task_group.pop : {}
       max_tasks = [all_task_opts.delete(:max_tasks), task_group.count].min
       console("Setting max_tasks to #{max_tasks}")
       bail_fast task_group, all_task_opts if all_task_opts[:version]
