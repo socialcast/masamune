@@ -29,6 +29,7 @@ describe Masamune::Actions::InvokeParallel do
   end
 
   let(:instance) { klass.new }
+  let(:task_opts) { { max_tasks: 0 }.freeze }
 
   describe '.invoke_parallel' do
     context 'with a single thor command' do
@@ -37,7 +38,7 @@ describe Masamune::Actions::InvokeParallel do
       end
 
       subject do
-        instance.invoke_parallel('list', max_tasks: 0)
+        instance.invoke_parallel('list', task_opts)
       end
 
       it { expect { subject }.to_not raise_error }
@@ -50,7 +51,7 @@ describe Masamune::Actions::InvokeParallel do
       end
 
       subject do
-        instance.invoke_parallel('list', { max_tasks: 0 }, [{ a: true, b: false }, { a: false, b: true }])
+        instance.invoke_parallel('list', task_opts, [{ a: true, b: false }, { a: false, b: true }])
       end
 
       it { expect { subject }.to_not raise_error }
@@ -63,7 +64,7 @@ describe Masamune::Actions::InvokeParallel do
       end
 
       subject do
-        instance.invoke_parallel('list', { max_tasks: 0 }, [{ env: { 'MASAMUNE_ENV' => 'test_1' } }, { env: { 'MASAMUNE_ENV' => 'test_2' } }])
+        instance.invoke_parallel('list', task_opts, [{ env: { 'MASAMUNE_ENV' => 'test_1' } }, { env: { 'MASAMUNE_ENV' => 'test_2' } }])
       end
 
       it { expect { subject }.to_not raise_error }
@@ -78,7 +79,7 @@ describe Masamune::Actions::InvokeParallel do
       end
 
       subject do
-        instance.invoke_parallel('list', 'help', { max_tasks: 0 }, [{ env: { 'MASAMUNE_ENV' => 'test_1' } }, { env: { 'MASAMUNE_ENV' => 'test_2' } }])
+        instance.invoke_parallel('list', 'help', task_opts, [{ env: { 'MASAMUNE_ENV' => 'test_1' } }, { env: { 'MASAMUNE_ENV' => 'test_2' } }])
       end
 
       it { expect { subject }.to_not raise_error }
