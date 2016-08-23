@@ -43,18 +43,27 @@ describe Masamune::Actions::Hive do
   end
 
   describe '.hive' do
-    before do
-      mock_command(/\Ahive/, mock_success)
+    subject(:action) { instance.hive }
+
+    context 'when success' do
+      before do
+        mock_command(/\Ahive/, mock_success)
+      end
+
+      it { is_expected.to be_success }
     end
 
-    subject { instance.hive }
+    context 'when failure' do
+      before do
+        mock_command(/\Ahive/, mock_failure)
+      end
 
-    it { is_expected.to be_success }
+      it { is_expected.not_to be_success }
+    end
 
     context 'with cluster_id' do
       before do
         allow(instance).to receive_message_chain(:configuration, :commands, :aws_emr).and_return(cluster_id: 'j-XYZ')
-        mock_command(/\Ahive/, mock_failure)
         mock_command(/\Aaws emr/, mock_success, StringIO.new('ssh fakehost exit'))
         mock_command(/\Assh fakehost hive/, mock_success)
       end
@@ -68,6 +77,7 @@ describe Masamune::Actions::Hive do
       before do
         allow(instance).to receive_message_chain(:configuration, :commands, :hive).and_return(retries: 1, backoff: 10)
         expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
+        mock_command(/\Ahive/, mock_success)
       end
 
       it { is_expected.to be_success }

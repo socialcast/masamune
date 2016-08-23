@@ -31,13 +31,54 @@ describe Masamune::Actions::InvokeParallel do
   let(:instance) { klass.new }
 
   describe '.invoke_parallel' do
-    context 'with a simple thor command' do
+    context 'with a single thor command' do
       before do
         mock_command(/\Athor list/, mock_success)
       end
 
       subject do
-        instance.invoke_parallel('list', max_tasks: 1)
+        instance.invoke_parallel('list', max_tasks: 0)
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end
+
+    context 'with a single thor command and multiple arguments' do
+      before do
+        mock_command(/\Athor list --a/, mock_success)
+        mock_command(/\Athor list --b/, mock_success)
+      end
+
+      subject do
+        instance.invoke_parallel('list', { max_tasks: 0 }, [{ a: true, b: false }, { a: false, b: true }])
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end
+
+    context 'with a single thor command and multiple environments' do
+      before do
+        mock_command(/\AMASAMUNE_ENV=test_1 thor list/, mock_success)
+        mock_command(/\AMASAMUNE_ENV=test_2 thor list/, mock_success)
+      end
+
+      subject do
+        instance.invoke_parallel('list', { max_tasks: 0 }, [{ env: { 'MASAMUNE_ENV' => 'test_1' } }, { env: { 'MASAMUNE_ENV' => 'test_2' } }])
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end
+
+    context 'with a multiple thor command and multiple environments' do
+      before do
+        mock_command(/\AMASAMUNE_ENV=test_1 thor list/, mock_success)
+        mock_command(/\AMASAMUNE_ENV=test_2 thor list/, mock_success)
+        mock_command(/\AMASAMUNE_ENV=test_1 thor help/, mock_success)
+        mock_command(/\AMASAMUNE_ENV=test_2 thor help/, mock_success)
+      end
+
+      subject do
+        instance.invoke_parallel('list', 'help', { max_tasks: 0 }, [{ env: { 'MASAMUNE_ENV' => 'test_1' } }, { env: { 'MASAMUNE_ENV' => 'test_2' } }])
       end
 
       it { expect { subject }.to_not raise_error }

@@ -83,7 +83,7 @@ describe Masamune::Actions::Transform do
     context 'without :map' do
       before do
         expect_any_instance_of(Masamune::Schema::Map).to_not receive(:apply)
-        mock_command(/\Apsql/, mock_success)
+        mock_command(/\APGOPTIONS=.* psql/, mock_success)
       end
 
       it { is_expected.to be_success }
@@ -104,7 +104,7 @@ describe Masamune::Actions::Transform do
         end
 
         expect_any_instance_of(Masamune::Schema::Map).to receive(:apply).and_call_original
-        mock_command(/\Apsql/, mock_success)
+        mock_command(/\APGOPTIONS=.* psql/, mock_success)
       end
 
       it { is_expected.to be_success }
@@ -113,7 +113,7 @@ describe Masamune::Actions::Transform do
 
   describe '.relabel_dimension' do
     before do
-      mock_command(/\Apsql/, mock_success)
+      mock_command(/\APGOPTIONS=.* psql/, mock_success)
     end
 
     subject { instance.relabel_dimension(postgres.user_dimension, options) }
@@ -123,7 +123,7 @@ describe Masamune::Actions::Transform do
 
   describe '.consolidate_dimension' do
     before do
-      mock_command(/\Apsql/, mock_success)
+      mock_command(/\APGOPTIONS=.* psql/, mock_success)
     end
 
     subject { instance.consolidate_dimension(postgres.user_dimension, options) }
@@ -137,7 +137,7 @@ describe Masamune::Actions::Transform do
     context 'without :map' do
       before do
         expect_any_instance_of(Masamune::Schema::Map).to_not receive(:apply)
-        mock_command(/\Apsql/, mock_success)
+        mock_command(/\APGOPTIONS=.* psql/, mock_success)
       end
 
       subject { instance.load_fact(source_file, postgres.visits_hourly_file, postgres.visits_hourly_fact, date, options) }
@@ -152,7 +152,7 @@ describe Masamune::Actions::Transform do
         end
 
         expect_any_instance_of(Masamune::Schema::Map).to receive(:apply).and_call_original
-        mock_command(/\Apsql/, mock_success)
+        mock_command(/\APGOPTIONS=.* psql/, mock_success)
       end
 
       subject { instance.load_fact(source_file, postgres.visits_hourly_file, postgres.visits_hourly_fact, date, options) }
@@ -165,7 +165,7 @@ describe Masamune::Actions::Transform do
     let(:date) { DateTime.civil(2014, 8) }
 
     before do
-      mock_command(/\Apsql/, mock_success)
+      mock_command(/\APGOPTIONS=.* psql/, mock_success)
     end
 
     subject { instance.rollup_fact(postgres.visits_hourly_fact, postgres.visits_daily_fact, date, options) }

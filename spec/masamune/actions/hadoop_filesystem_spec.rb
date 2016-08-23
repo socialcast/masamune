@@ -31,18 +31,29 @@ describe Masamune::Actions::HadoopFilesystem do
   let(:instance) { klass.new }
 
   describe '.hadoop_filesystem' do
-    before do
-      mock_command(/\Ahadoop/, mock_success)
+    subject(:action) { instance.hadoop_filesystem }
+
+    context 'when success' do
+      before do
+        mock_command(/\Ahadoop/, mock_success)
+      end
+
+      it { is_expected.to be_success }
     end
 
-    subject { instance.hadoop_filesystem }
+    context 'when failure' do
+      before do
+        mock_command(/\Ahadoop/, mock_failure)
+      end
 
-    it { is_expected.to be_success }
+      it { is_expected.not_to be_success }
+    end
 
     context 'with retries and backoff' do
       before do
         allow(instance).to receive_message_chain(:configuration, :commands, :hadoop_filesystem).and_return(retries: 1, backoff: 10)
         expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
+        mock_command(/\Ahadoop/, mock_success)
       end
 
       it { is_expected.to be_success }
