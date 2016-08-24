@@ -31,16 +31,16 @@ module Masamune::Actions
     include Masamune::Actions::Execute
 
     included do |base|
-      base.class_option :max_tasks, aliases: '-p', type: :numeric, desc: 'Maximum number of tasks to execute in parallel', default: 4
+      base.class_option :max_tasks, aliases: '-p', type: :numeric, desc: 'Maximum number of tasks to execute in parallel', default: Parallel.processor_count
     end
 
     def invoke_parallel(*task_group)
       per_task_opts = task_group.last.is_a?(Array) ? task_group.pop.dup : [{}]
       all_task_opts = task_group.last.is_a?(Hash) ? task_group.pop.dup : {}
-      max_tasks = [all_task_opts.delete(:max_tasks), task_group.count].min
+      task_group_by_task_opts = task_group.product(per_task_opts)
+      max_tasks = [all_task_opts.delete(:max_tasks), task_group_by_task_opts.count].min
       console("Setting max_tasks to #{max_tasks}")
       bail_fast task_group, all_task_opts if all_task_opts[:version]
-      task_group_by_task_opts = task_group.product(per_task_opts)
       Parallel.each(task_group_by_task_opts, in_processes: max_tasks) do |task_name, task_opts|
         task_env = task_opts[:env] || {}
         begin
