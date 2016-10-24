@@ -747,7 +747,7 @@ shared_examples_for 'Filesystem' do
     end
 
     it { is_expected.to eq(%w(/tmp/c/00.txt /tmp/b/01.txt /tmp/a/02.txt)) }
-    it { expect { |b| instance.glob_sort('/tmp/*', order: :basename, &b) }.to yield_successive_args(*%w(/tmp/c/00.txt /tmp/b/01.txt /tmp/a/02.txt)) }
+    it { expect { |b| instance.glob_sort('/tmp/*', order: :basename, &b) }.to yield_successive_args('/tmp/c/00.txt', '/tmp/b/01.txt', '/tmp/a/02.txt') }
   end
 
   describe '#copy_file_to_file' do

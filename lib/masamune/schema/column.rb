@@ -476,7 +476,7 @@ module Masamune::Schema
       when Array
         value.map { |elem| ruby_value(elem, false) }
       when String
-        Array.wrap(JSON.load(value)).map { |elem| ruby_value(elem, false) }
+        Array.wrap(JSON.load(value)).map { |elem| ruby_value(elem, false) } # rubocop:disable Security/JSONLoad
       when nil
         []
       end

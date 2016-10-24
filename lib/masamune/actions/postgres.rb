@@ -42,9 +42,9 @@ module Masamune::Actions
     end
 
     def create_postgres_database_if_not_exists
-      if configuration.commands.postgres.key?(:database)
-        postgres_admin(action: :create, database: configuration.commands.postgres[:database], safe: true) unless postgres_helper.database_exists?
-      end
+      return unless configuration.commands.postgres.key?(:database)
+      return unless postgres_helper.database_exists?
+      postgres_admin(action: :create, database: configuration.commands.postgres[:database], safe: true)
     end
 
     def load_postgres_setup_files
