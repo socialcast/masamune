@@ -21,13 +21,17 @@
 #  THE SOFTWARE.
 
 class IO
-  def wait_readable(timeout = 0)
-    rs, _ws = IO.select([self], [], [], timeout)
-    rs && rs[0]
-  end unless IO.method_defined?(:wait_readable)
+  unless IO.method_defined?(:wait_readable)
+    def wait_readable(timeout = 0)
+      rs, _ws = IO.select([self], [], [], timeout)
+      rs && rs[0]
+    end
+  end
 
-  def wait_writable(timeout = 0)
-    _rs, ws = IO.select([], [self], [], timeout)
-    ws && ws[0]
-  end unless IO.method_defined?(:wait_writable)
+  unless IO.method_defined?(:wait_writable)
+    def wait_writable(timeout = 0)
+      _rs, ws = IO.select([], [self], [], timeout)
+      ws && ws[0]
+    end
+  end
 end

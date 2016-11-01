@@ -30,8 +30,7 @@ Gem::Specification.new do |s|
 
   # Development
   s.add_development_dependency('rake', '>= 0.9')
-  # Needed to work around: https://github.com/bbatsov/rubocop/issues/3649
-  s.add_development_dependency('rubocop', '= 0.43.0')
+  s.add_development_dependency('rubocop')
   s.add_development_dependency('user_agent_parser')
 
   # Testing

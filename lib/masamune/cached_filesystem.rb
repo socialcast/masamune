@@ -74,11 +74,12 @@ module Masamune
       end
 
       file_regexp = glob_to_regexp(file_or_glob, options)
+      return unless depth.zero?
       @cache.get(dirname).each do |entry|
         next if entry.name == dirname
         next unless entry.name =~ file_regexp
         yield entry
-      end if depth.zero?
+      end
     end
 
     # FIXME: cache eviction policy can be more precise
@@ -100,15 +101,15 @@ module Masamune
         return if @filesystem.root_path?(path)
         put(File.join(@filesystem.dirname(path), '.'), OpenStruct.new(name: @filesystem.dirname(path)))
         paths = path_split(path)
-        elems = paths.reverse.inject(entry) { |a, e| { e => a } }
+        elems = paths.reverse.inject(entry) { |acc, elem| { elem => acc } }
         @cache.deep_merge!(elems)
       end
 
       def get(path)
         return unless path
         paths = path_split(path)
-        elem = paths.inject(@cache) { |a, e| a.is_a?(Hash) ? a.fetch(e, {}) : a }
-        emit(elem)
+        value = paths.inject(@cache) { |acc, elem| acc.is_a?(Hash) ? acc.fetch(elem, {}) : acc }
+        emit(value)
       rescue KeyError
         EMPTY_SET
       end

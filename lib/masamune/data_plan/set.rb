@@ -145,6 +145,7 @@ class Masamune::DataPlan::Set < Set
   def convert_elem(elem)
     case elem
     when nil
+      nil
     when Masamune::DataPlan::Elem
       elem
     when String
@@ -157,6 +158,7 @@ class Masamune::DataPlan::Set < Set
   def convert_enum(enum)
     case enum
     when nil
+      nil
     when Array
       enum.flatten.uniq
     when Set, self.class, Enumerator

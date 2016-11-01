@@ -352,14 +352,16 @@ module Masamune::Schema
     def unique_constraints_map
       @unique_constraints_map ||= begin
         map = Hash.new { |h, k| h[k] = [] }
-        columns.each do |_, column|
-          next if column.auto_reference
-          column.unique.each do |unique|
-            map[unique] += auto_surrogate_keys.map(&:name)
-            map[unique] << column.name
-            map[unique].uniq!
+        unless temporary?
+          columns.each do |_, column|
+            next if column.auto_reference
+            column.unique.each do |unique|
+              map[unique] += auto_surrogate_keys.map(&:name)
+              map[unique] << column.name
+              map[unique].uniq!
+            end
           end
-        end unless temporary?
+        end
         Hash[map.sort_by { |k, v| [v.length, k.to_s] }]
       end
     end

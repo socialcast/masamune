@@ -69,6 +69,7 @@ module Masamune::Actions
         when true
           "--#{k.to_s.tr('_', '-')}"
         when false
+          nil
         else
           ["--#{k.to_s.tr('_', '-')}", v]
         end

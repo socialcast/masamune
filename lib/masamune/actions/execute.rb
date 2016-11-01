@@ -44,17 +44,21 @@ module Masamune::Actions
         end
       end
 
-      klass.class_eval do
-        define_method(:stdin) do
-          @stdin ||= StringIO.new(opts[:input])
+      if opts[:input]
+        klass.class_eval do
+          define_method(:stdin) do
+            @stdin ||= StringIO.new(opts[:input])
+          end
         end
-      end if opts[:input]
+      end
 
-      klass.class_eval do
-        define_method(:handle_stdout) do |line, line_no|
-          yield(line, line_no)
+      if block_given?
+        klass.class_eval do
+          define_method(:handle_stdout) do |line, line_no|
+            yield(line, line_no)
+          end
         end
-      end if block_given?
+      end
 
       command = klass.new(self)
       command = Masamune::Commands::RetryWithBackoff.new(command, opts)

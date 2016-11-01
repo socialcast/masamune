@@ -88,14 +88,16 @@ module Masamune::Actions
         class_option :resolve, type: :boolean, desc: 'Recursively resolve data dependencies', default: true
       end
 
-      base.after_initialize(:final) do |thor, options|
-        thor.engine.environment = thor.environment
-        thor.engine.filesystem.environment = thor.environment
-        thor.environment.with_process_lock(:data_flow_after_initialize) do
-          thor.send(:prepare_and_execute, options)
+      if defined?(base.after_initialize)
+        base.after_initialize(:final) do |thor, options|
+          thor.engine.environment = thor.environment
+          thor.engine.filesystem.environment = thor.environment
+          thor.environment.with_process_lock(:data_flow_after_initialize) do
+            thor.send(:prepare_and_execute, options)
+          end
+          exit 0 if thor.top_level?
         end
-        exit 0 if thor.top_level?
-      end if defined?(base.after_initialize)
+      end
     end
 
     # rubocop:disable Style/ClassVars
