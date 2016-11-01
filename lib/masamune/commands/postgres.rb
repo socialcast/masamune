@@ -93,10 +93,9 @@ module Masamune::Commands
         logger.debug("#{output}:\n" + File.read(output))
       end
 
-      if @exec
-        console("postgres exec '#{strip_sql(@exec)}' #{'into ' + @output if @output}")
-        @file = exec_file
-      end
+      return unless @exec
+      console("postgres exec '#{strip_sql(@exec)}' #{'into ' + @output if @output}")
+      @file = exec_file
     end
 
     def handle_stdout(line, _line_no)
