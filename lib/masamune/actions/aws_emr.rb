@@ -42,13 +42,15 @@ module Masamune::Actions
 
     included do |base|
       base.class_option :cluster_id, desc: 'AWS EMR cluster_id ID (Hint: `masamune-emr-aws list-clusters`)' if defined?(base.class_option)
-      base.after_initialize(:early) do |thor, options|
-        next unless thor.configuration.commands.aws_emr.any?
-        next unless thor.configuration.commands.aws_emr.fetch(:enabled, true)
-        thor.configuration.commands.aws_emr[:cluster_id] = options[:cluster_id] if options[:cluster_id]
-        next unless options[:initialize]
-        thor.validate_cluster_id!
-      end if defined?(base.after_initialize)
+      if defined?(base.after_initialize)
+        base.after_initialize(:early) do |thor, options|
+          next unless thor.configuration.commands.aws_emr.any?
+          next unless thor.configuration.commands.aws_emr.fetch(:enabled, true)
+          thor.configuration.commands.aws_emr[:cluster_id] = options[:cluster_id] if options[:cluster_id]
+          next unless options[:initialize]
+          thor.validate_cluster_id!
+        end
+      end
     end
   end
 end

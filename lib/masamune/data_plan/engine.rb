@@ -121,22 +121,26 @@ class Masamune::DataPlan::Engine
     @target_rules[rule].try(:prepare)
     @source_rules[rule].try(:prepare)
 
-    constrain_max_depth(rule) do
-      sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
-        prepare(derived_rule, targets: sources.map(&:input)) if derived_rule != Masamune::DataPlan::Rule::TERMINAL
+    if options.fetch(:resolve, true)
+      constrain_max_depth(rule) do
+        sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, sources|
+          prepare(derived_rule, targets: sources.map(&:input)) if derived_rule != Masamune::DataPlan::Rule::TERMINAL
+        end
       end
-    end if options.fetch(:resolve, true)
+    end
     clear!
   end
 
   def execute(rule, options = {})
     return if targets(rule).actionable.empty?
 
-    constrain_max_depth(rule) do
-      sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, _sources|
-        execute(derived_rule, options) if derived_rule != Masamune::DataPlan::Rule::TERMINAL
+    if options.fetch(:resolve, true)
+      constrain_max_depth(rule) do
+        sources(rule).group_by { |source| rule_for_target(source.input) }.each do |derived_rule, _sources|
+          execute(derived_rule, options) if derived_rule != Masamune::DataPlan::Rule::TERMINAL
+        end
       end
-    end if options.fetch(:resolve, true)
+    end
 
     @command_rules[rule].call(self, rule, options)
     clear!

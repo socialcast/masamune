@@ -20,6 +20,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+require_relative 'example_group'
 require_relative 'shared_example_group'
 
 module Masamune::TaskExampleGroup

@@ -88,10 +88,12 @@ module Masamune::Transform::Postgres
               coalesce_values << cross_references.map { |cross_reference, cross_column| cross_column.qualified_name(cross_reference.label) }
             end
 
-            column.reference.auto_surrogate_keys.each do |auto_surrogate_key|
-              next unless auto_surrogate_key.default
-              conditions[reference_name].conditions << "#{auto_surrogate_key.qualified_name(reference.label)} = #{auto_surrogate_key.default}"
-            end if column.reference
+            if column.reference
+              column.reference.auto_surrogate_keys.each do |auto_surrogate_key|
+                next unless auto_surrogate_key.default
+                conditions[reference_name].conditions << "#{auto_surrogate_key.qualified_name(reference.label)} = #{auto_surrogate_key.default}"
+              end
+            end
 
             if column.reference && !column.reference.default.nil? && column.adjacent.natural_key
               coalesce_values << column.reference.default(column.adjacent)

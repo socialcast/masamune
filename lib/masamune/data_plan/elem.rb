@@ -53,9 +53,8 @@ class Masamune::DataPlan::Elem
   end
 
   def complete?
-    if rule.for_targets?
-      sources.existing.map(&:start_date).uniq.length == sources.map(&:start_date).uniq.length
-    end
+    return false unless rule.for_targets?
+    sources.existing.map(&:start_date).uniq.length == sources.map(&:start_date).uniq.length
   end
 
   def last_modified_at

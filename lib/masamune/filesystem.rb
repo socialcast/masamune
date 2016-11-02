@@ -410,7 +410,7 @@ module Masamune
         when :hdfs
           hadoop_fs('-chown', '-R', [user, group].compact.join(':'), *file_set)
         when :s3
-          # NOTE intentionally skip
+          nil # NOTE intentionally skip
         when :local
           FileUtils.chown_R(user, group, file_set, file_util_args)
         end
