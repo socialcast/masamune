@@ -143,6 +143,7 @@ module Masamune::Commands
 
         [t_stderr, t_stdout, t_stdin].compact.each(&:join)
         logger.debug("status: #{t_stdin.value}")
+        `stty sane -F /dev/tty` if RUBY_PLATFORM =~ /linux/
         t_stdin.value
       end
     end
