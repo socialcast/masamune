@@ -253,6 +253,16 @@ class Masamune::DataPlan::Rule
   end
 
   def cache_depth
+    [max_cache_depth, step_cache_depth].min
+  end
+
+  private
+
+  def max_cache_depth
+    pattern.split('/').select { |x| x.include?('%') || x.include?('*') }.count
+  end
+
+  def step_cache_depth
     case time_step
     when :hour, :hours
       2
@@ -262,8 +272,6 @@ class Masamune::DataPlan::Rule
       0
     end
   end
-
-  private
 
   def time_step_to_format(step)
     case step
