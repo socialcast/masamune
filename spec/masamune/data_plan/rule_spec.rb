@@ -464,4 +464,48 @@ describe Masamune::DataPlan::Rule do
       it { is_expected.to be(true) }
     end
   end
+
+  describe '#cache_depth' do
+    subject { instance.cache_depth }
+
+    context 'with flat glob' do
+      let(:pattern) { 'logs/*.log' }
+      it { is_expected.to be(1) }
+    end
+
+    context 'with nested glob' do
+      let(:pattern) { 'logs/%Y-%m-%d/*.log' }
+      it { is_expected.to be(1) }
+    end
+
+    context 'with flat :hourly' do
+      let(:pattern) { 'logs/*%H-s.log' }
+      it { is_expected.to be(1) }
+    end
+
+    context 'with nested :hourly' do
+      let(:pattern) { 'report/%Y-%m-%d/%H' }
+      it { is_expected.to be(2) }
+    end
+
+    context 'with flat :daily' do
+      let(:pattern) { 'report/%Y-%m-%d' }
+      it { is_expected.to be(1) }
+    end
+
+    context 'with nested :daily' do
+      let(:pattern) { 'report/%Y-%m/%d' }
+      it { is_expected.to be(1) }
+    end
+
+    context 'with flat :monthly' do
+      let(:pattern) { 'report/%Y-%m' }
+      it { is_expected.to be(0) }
+    end
+
+    context 'with nested :monthly' do
+      let(:pattern) { 'report/%Y/%m' }
+      it { is_expected.to be(0) }
+    end
+  end
 end
