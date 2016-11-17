@@ -47,6 +47,7 @@ module Masamune::Commands
       around_execute do
         pid = Process.fork
         if pid
+          Signal.trap('INT') {} # Ensure SIGINT is handled by child process exec
           detach if opts.fetch(:detach, true)
           Process.waitpid(pid)
           exit
