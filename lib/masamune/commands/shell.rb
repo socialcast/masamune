@@ -48,8 +48,13 @@ module Masamune::Commands
         pid = Process.fork
         if pid
           Signal.trap('INT') {} # Ensure SIGINT is handled by child process exec
-          detach if opts.fetch(:detach, true)
-          Process.waitpid(pid)
+          if opts.fetch(:detach, true)
+            detach do
+              Process.waitpid(pid)
+            end
+          else
+            Process.waitpid(pid)
+          end
           exit
         else
           exec(command_env, *command_args)
@@ -191,9 +196,33 @@ module Masamune::Commands
     end
 
     def detach
-      STDIN.close
-      STDOUT.close
-      STDERR.close
+      old_stdin = $stdin.dup
+      new_stdin = File.open('/dev/null', 'r')
+      $stdin.reopen(new_stdin)
+      new_stdin.close
+
+      old_stdout = $stdout.dup
+      new_stdout = File.open('/dev/null', 'w+')
+      $stdout.reopen(new_stdout)
+      new_stdout.close
+
+      old_stderr = $stderr.dup
+      new_stderr = File.open('/dev/null', 'w+')
+      $stderr.reopen(new_stderr)
+      new_stderr.close
+
+      yield
+    ensure
+      $stdin.reopen(old_stdin)
+      old_stdin.close
+
+      $stdout.reopen(old_stdout)
+      old_stdout.close
+
+      $stderr.reopen(old_stderr)
+      old_stderr.close
+
+      `stty sane -F /dev/tty` if RUBY_PLATFORM =~ /linux/
     end
 
     def command_info
