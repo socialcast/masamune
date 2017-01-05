@@ -122,8 +122,7 @@ module Masamune::Schema
 
     private
 
-    def initialize_surrogate_key_column!
-    end
+    def initialize_surrogate_key_column!; end
 
     def initialize_fact_columns!
       case type
