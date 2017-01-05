@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.require_path = 'lib'
   s.executables = ['masamune-shell', 'masamune-hive', 'masamune-aws-emr', 'masamune-psql', 'masamune-dump']
 
-  s.add_dependency('thor')
+  s.add_dependency('thor', '= 0.19.1')
   s.add_dependency('activesupport')
   s.add_dependency('tzinfo')
   s.add_dependency('chronic')
