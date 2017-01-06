@@ -82,8 +82,7 @@ class Masamune::MockFilesystem < Delegator
     @files[file].data
   end
 
-  def clear!
-  end
+  def clear!; end
 
   def check_immutable_path!(_file)
     true
