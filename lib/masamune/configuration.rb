@@ -124,7 +124,7 @@ class Masamune::Configuration < Hashie::Dash
   def load_yaml_erb_file(file)
     t = ERB.new(File.read(file))
     t.filename = file
-    YAML.load(t.result(binding))
+    YAML.safe_load(t.result(binding))
   end
 
   def default_config_file
