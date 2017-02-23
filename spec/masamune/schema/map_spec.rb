@@ -446,6 +446,87 @@ describe Masamune::Schema::Map do
       it_behaves_like 'apply input/output'
     end
 
+    context 'from csv file to tsv file with unknown yaml sub_type' do
+      before do
+        expect(environment.logger).to receive(:warn).with(/Could not coerce/).ordered
+        expect(environment.logger).to receive(:debug).with(
+          message: "Could not coerce '--- !map:ActiveSupport::HashWithIndifferentAccess\nenabled: true\n' into :yaml for column 'preferences'",
+          source: 'input_stage',
+          target: 'output_stage',
+          file: input.path,
+          line: 1,
+          row: {
+            'id'          => '2',
+            'tenant_id'   => '40',
+            'deleted_at'  => '2014-02-26T18:15:51.000Z',
+            'admin'       => 'FALSE',
+            'preferences' => "--- !map:ActiveSupport::HashWithIndifferentAccess\nenabled: true\n"
+          }
+        ).ordered
+      end
+
+      before do
+        catalog.schema :files do
+          file 'input', format: :csv, headers: true, json_encoding: :quoted do
+            column 'id', type: :integer
+            column 'tenant_id', type: :integer
+            column 'admin', type: :boolean
+            column 'preferences', type: :yaml
+            column 'deleted_at', type: :timestamp, null: true
+          end
+
+          file 'output', format: :tsv, headers: false do
+            column 'id', type: :integer
+            column 'tenant_id', type: :integer
+            column 'admin', type: :boolean
+            column 'preferences', type: :json
+            column 'deleted_at', type: :timestamp, null: true
+          end
+
+          map from: files.input, to: files.output do |row|
+            {
+              'id'          => row[:id],
+              'tenant_id'   => row[:tenant_id],
+              'deleted_at'  => row[:deleted_at],
+              'admin'       => row[:admin],
+              'preferences' => row[:preferences]
+            }
+          end
+        end
+      end
+
+      let(:source) do
+        catalog.files.input
+      end
+
+      let(:target) do
+        catalog.files.output
+      end
+
+      let(:source_data) do
+        <<-EOS.strip_heredoc
+          id,tenant_id,deleted_at,admin,preferences
+          1,30,,FALSE,"--- {}
+          "
+          2,40,2014-02-26T18:15:51.000Z,FALSE,"--- !map:ActiveSupport::HashWithIndifferentAccess
+          enabled: true
+          "
+        EOS
+      end
+
+      let(:target_data) do
+        <<-EOS.strip_heredoc
+          1	30		FALSE	{}
+        EOS
+      end
+
+      it 'should match target data' do
+        is_expected.to eq(target_data)
+      end
+
+      it_behaves_like 'apply input/output'
+    end
+
     context 'with multiple outputs' do
       before do
         catalog.schema :files do
