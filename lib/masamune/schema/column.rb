@@ -278,7 +278,7 @@ module Masamune::Schema
         when Hash
           value
         when String
-          YAML.load(value)
+          YAML.safe_load(value, [Symbol])
         when nil
           {}
         end
