@@ -278,7 +278,7 @@ module Masamune::Schema
         when Hash
           value
         when String
-          YAML.safe_load(value, [Symbol])
+          YAML.safe_load(value, allowed_yaml_sub_type)
         when nil
           {}
         end
@@ -491,6 +491,10 @@ module Masamune::Schema
       else
         [ruby_value(value, false)].to_json
       end
+    end
+
+    def allowed_yaml_sub_type
+      @allowed_yaml_sub_type ||= [Symbol] + Array.wrap(sub_type)
     end
   end
 end
