@@ -21,5 +21,5 @@
 #  THE SOFTWARE.
 
 module Masamune
-  VERSION = '0.18.9'.freeze
+  VERSION = '0.18.10'.freeze
 end
