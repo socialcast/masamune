@@ -42,7 +42,7 @@ module Masamune::Tasks
     def psql_exec
       postgres_options = options.dup.with_indifferent_access
       postgres_options[:print] = true
-      postgres_options[:retries] = 0 unless options[:retry]
+      postgres_options[:max_retries] = 0 unless options[:retry]
       postgres(postgres_options)
     end
     default_task :psql_exec

@@ -35,7 +35,7 @@ describe Masamune::Tasks::HiveThor do
     let(:options) { [] }
 
     it do
-      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(retries: 0)).once.and_return(mock_success)
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_including(max_retries: 0)).once.and_return(mock_success)
       execute_command
     end
   end
@@ -85,7 +85,7 @@ describe Masamune::Tasks::HiveThor do
   context 'with --retry' do
     let(:options) { ['--retry'] }
     it do
-      expect_any_instance_of(described_class).to receive(:hive).with(hash_excluding(retries: 0)).once.and_return(mock_success)
+      expect_any_instance_of(described_class).to receive(:hive).with(hash_excluding(max_retries: 0)).once.and_return(mock_success)
       execute_command
     end
   end

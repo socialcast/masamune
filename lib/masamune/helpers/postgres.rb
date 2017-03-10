@@ -39,7 +39,7 @@ module Masamune::Helpers
     end
 
     def database_exists?
-      @database_exists ||= postgres(exec: 'SELECT version();', fail_fast: false, retries: 0).success?
+      @database_exists ||= postgres(exec: 'SELECT version();', fail_fast: false, max_retries: 0).success?
     end
 
     def table_exists?(table)
@@ -64,7 +64,7 @@ module Masamune::Helpers
 
     def update_tables
       return unless @cache.empty?
-      postgres(exec: 'SELECT table_name FROM information_schema.tables;', tuple_output: true, retries: 0) do |line|
+      postgres(exec: 'SELECT table_name FROM information_schema.tables;', tuple_output: true, max_retries: 0) do |line|
         table = line.strip
         next if table.start_with?('pg_')
         @cache[table] ||= nil
@@ -73,7 +73,7 @@ module Masamune::Helpers
 
     def update_table_last_modified_at(table, column)
       return if @cache[table].present?
-      postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true, retries: 0) do |line|
+      postgres(exec: "SELECT MAX(#{column}) FROM #{table};", tuple_output: true, max_retries: 0) do |line|
         last_modified_at = line.strip
         @cache[table] = parse_date_time(last_modified_at) unless last_modified_at.blank?
       end

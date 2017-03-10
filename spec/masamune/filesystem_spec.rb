@@ -36,7 +36,7 @@ shared_examples_for 'Filesystem' do
   let(:old_file) { File.join(old_dir, SecureRandom.hex + '.txt') }
 
   before do
-    filesystem.configuration.retries = 0
+    filesystem.configuration.max_retries = 0
     FileUtils.mkdir_p(old_dir)
     FileUtils.touch(old_file)
   end

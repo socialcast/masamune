@@ -28,7 +28,7 @@ module Masamune::Actions
       opts = opts.to_hash.symbolize_keys
 
       command = Masamune::Commands::AwsEmr.new(environment, opts)
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.aws_emr.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.aws_emr.slice(:max_retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.interactive? ? command.replace : command.execute

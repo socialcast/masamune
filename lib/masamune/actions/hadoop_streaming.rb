@@ -27,7 +27,7 @@ module Masamune::Actions
 
       command = Masamune::Commands::HadoopStreaming.new(environment, aws_emr_options(opts))
       command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.commands.aws_emr[:cluster_id]
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.hadoop_streaming.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.hadoop_streaming.slice(:max_retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.execute

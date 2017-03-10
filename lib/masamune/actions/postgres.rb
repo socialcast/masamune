@@ -35,7 +35,7 @@ module Masamune::Actions
       opts[:block] = block.to_proc if block_given?
 
       command = Masamune::Commands::Postgres.new(environment, opts)
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.postgres.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.postgres.slice(:max_retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.interactive? ? command.replace : command.execute
@@ -51,14 +51,14 @@ module Masamune::Actions
       return unless configuration.commands.postgres.key?(:setup_files)
       configuration.commands.postgres[:setup_files].each do |file|
         configuration.with_quiet do
-          postgres(file: file, retries: 0)
+          postgres(file: file, max_retries: 0)
         end
       end
     end
 
     def load_postgres_schema
       transform = define_schema(catalog, :postgres)
-      postgres(file: transform.to_file, retries: 0)
+      postgres(file: transform.to_file, max_retries: 0)
     rescue => e
       logger.error(e)
       logger.error('Could not load schema')

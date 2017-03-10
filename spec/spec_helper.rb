@@ -32,7 +32,7 @@ ENV['MASAMUNE_ENV'] = 'test'
 Masamune::ExampleGroup.configure do |config|
   config.quiet    = ENV['MASAMUNE_DEBUG'] ? false : true
   config.debug    = ENV['MASAMUNE_DEBUG'] ? true : false
-  config.retries  = 0
+  config.max_retries = 0
 end
 
 RSpec.configure do |config|

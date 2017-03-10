@@ -46,7 +46,7 @@ module Masamune::Tasks
     def hive_exec
       hive_options = options.dup.with_indifferent_access
       hive_options[:print] = true
-      hive_options[:retries] = 0 unless options[:retry]
+      hive_options[:max_retries] = 0 unless options[:retry]
       hive_options[:file] = File.expand_path(options[:file]) if options[:file]
       hive_options[:output] = File.expand_path(options[:output]) if options[:output]
       hive(hive_options)

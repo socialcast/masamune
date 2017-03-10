@@ -30,22 +30,22 @@ describe Masamune::Actions::PostgresAdmin do
 
   let(:instance) { klass.new }
 
-  shared_context 'retries and backoff' do
-    context 'with retries and backoff configured via postgres_admin command' do
+  shared_context 'max_retries and backoff' do
+    context 'with max_retries and backoff configured via postgres_admin command' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :commands, :postgres).and_return(retries: 1, backoff: 10)
-        allow(instance).to receive_message_chain(:configuration, :commands, :postgres_admin).and_return(retries: 3, backoff: 1)
-        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 3, backoff: 1)).once.and_call_original
+        allow(instance).to receive_message_chain(:configuration, :commands, :postgres).and_return(max_retries: 1, backoff: 10)
+        allow(instance).to receive_message_chain(:configuration, :commands, :postgres_admin).and_return(max_retries: 3, backoff: 1)
+        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(max_retries: 3, backoff: 1)).once.and_call_original
       end
 
       it { is_expected.to be_success }
     end
 
-    context 'with retries and backoff configured via postgres command' do
+    context 'with max_retries and backoff configured via postgres command' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :commands, :postgres).and_return(retries: 1, backoff: 10)
+        allow(instance).to receive_message_chain(:configuration, :commands, :postgres).and_return(max_retries: 1, backoff: 10)
         allow(instance).to receive_message_chain(:configuration, :commands, :postgres_admin).and_return({})
-        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
+        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(max_retries: 1, backoff: 10)).once.and_call_original
       end
 
       it { is_expected.to be_success }
@@ -64,7 +64,7 @@ describe Masamune::Actions::PostgresAdmin do
 
       it { is_expected.to be_success }
 
-      include_context 'retries and backoff'
+      include_context 'max_retries and backoff'
     end
 
     context 'with :action :drop' do
@@ -76,7 +76,7 @@ describe Masamune::Actions::PostgresAdmin do
 
       it { is_expected.to be_success }
 
-      include_context 'retries and backoff'
+      include_context 'max_retries and backoff'
     end
   end
 end

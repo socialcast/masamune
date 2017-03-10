@@ -56,7 +56,7 @@ class Masamune::Configuration < Hashie::Dash
   property :debug, default: false
   property :dry_run, default: false
   property :lock
-  property :retries, default: 3
+  property :max_retries, default: 3
   property :backoff, default: 5
   property :params, default: Hashie::Mash.new
   property :commands, default: Hashie::Mash.new { |h, k| h[k] = Hashie::Mash.new }
