@@ -73,10 +73,10 @@ describe Masamune::Actions::Hive do
       it { is_expected.to be_success }
     end
 
-    context 'with retries and backoff' do
+    context 'with max_retries and backoff' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :commands, :hive).and_return(retries: 1, backoff: 10)
-        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
+        allow(instance).to receive_message_chain(:configuration, :commands, :hive).and_return(max_retries: 1, backoff: 10)
+        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(max_retries: 1, backoff: 10)).once.and_call_original
         mock_command(/\Ahive/, mock_success)
       end
 

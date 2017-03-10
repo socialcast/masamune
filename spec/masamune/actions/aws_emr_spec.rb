@@ -55,10 +55,10 @@ describe Masamune::Actions::AwsEmr do
       it { expect { action }.to raise_error RuntimeError, 'fail_fast: aws emr ssh' }
     end
 
-    context 'with retries and backoff' do
+    context 'with max_retries and backoff' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :commands, :aws_emr).and_return(retries: 1, backoff: 10)
-        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
+        allow(instance).to receive_message_chain(:configuration, :commands, :aws_emr).and_return(max_retries: 1, backoff: 10)
+        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(max_retries: 1, backoff: 10)).once.and_call_original
         mock_command(/\Aaws emr/, mock_success)
       end
 

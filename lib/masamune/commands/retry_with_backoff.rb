@@ -29,7 +29,7 @@ module Masamune::Commands
     def initialize(delegate, attrs = {})
       super delegate
       @delegate     = delegate
-      @retries      = attrs.fetch(:retries, configuration.retries)
+      @max_retries      = attrs.fetch(:max_retries, configuration.max_retries)
       @backoff      = attrs.fetch(:backoff, configuration.backoff)
       @retry_count  = 0
     end
@@ -48,11 +48,11 @@ module Masamune::Commands
       logger.error(e.to_s)
       sleep @backoff
       @retry_count += 1
-      if @retry_count > @retries
-        logger.debug("max retries (#{@retries}) attempted, bailing")
+      if @retry_count > @max_retries
+        logger.debug("max retries (#{@max_retries}) attempted, bailing")
         OpenStruct.new(success?: false, exitstatus: MAX_RETRY_EXIT_STATUS)
       else
-        logger.debug("retrying (#{@retry_count}/#{@retries})")
+        logger.debug("retrying (#{@retry_count}/#{@max_retries})")
         retry
       end
     end

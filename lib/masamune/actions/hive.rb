@@ -34,7 +34,7 @@ module Masamune::Actions
 
       command = Masamune::Commands::Hive.new(environment, opts)
       command = Masamune::Commands::AwsEmr.new(command, opts.except(:extra)) if configuration.commands.aws_emr[:cluster_id]
-      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.hive.slice(:retries, :backoff).merge(opts))
+      command = Masamune::Commands::RetryWithBackoff.new(command, configuration.commands.hive.slice(:max_retries, :backoff).merge(opts))
       command = Masamune::Commands::Shell.new(command, opts)
 
       command.interactive? ? command.replace : command.execute

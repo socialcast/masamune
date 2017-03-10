@@ -28,7 +28,7 @@ describe Masamune::Helpers::Postgres do
     let(:mock_status) {}
 
     before do
-      expect(instance).to receive(:postgres).with(hash_including(exec: 'SELECT version();', fail_fast: false, retries: 0)).and_return(mock_status)
+      expect(instance).to receive(:postgres).with(hash_including(exec: 'SELECT version();', fail_fast: false, max_retries: 0)).and_return(mock_status)
     end
 
     subject { instance.database_exists? }
@@ -47,7 +47,7 @@ describe Masamune::Helpers::Postgres do
   describe '#table_exists' do
     before do
       expect(instance).to receive(:database_exists?).and_return(true)
-      expect(instance).to receive(:postgres).with(hash_including(exec: 'SELECT table_name FROM information_schema.tables;', tuple_output: true, retries: 0)).and_yield('  foo').and_yield('  bar').and_yield('  baz')
+      expect(instance).to receive(:postgres).with(hash_including(exec: 'SELECT table_name FROM information_schema.tables;', tuple_output: true, max_retries: 0)).and_yield('  foo').and_yield('  bar').and_yield('  baz')
     end
 
     subject { instance.table_exists?(table) }
@@ -74,7 +74,7 @@ describe Masamune::Helpers::Postgres do
     context 'with last_modified_at option' do
       before do
         expect(instance).to receive(:table_exists?).and_return(true)
-        expect(instance).to receive(:postgres).with(hash_including(exec: 'SELECT MAX(last_modified_at) FROM foo;', tuple_output: true, retries: 0)).and_yield(output).and_yield('')
+        expect(instance).to receive(:postgres).with(hash_including(exec: 'SELECT MAX(last_modified_at) FROM foo;', tuple_output: true, max_retries: 0)).and_yield(output).and_yield('')
       end
 
       let(:options) { { last_modified_at: 'last_modified_at' } }

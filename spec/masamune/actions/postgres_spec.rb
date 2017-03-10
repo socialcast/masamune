@@ -64,10 +64,10 @@ describe Masamune::Actions::Postgres do
       it { is_expected.not_to be_success }
     end
 
-    context 'with retries and backoff' do
+    context 'with max_retries and backoff' do
       before do
-        allow(instance).to receive_message_chain(:configuration, :commands, :postgres).and_return(retries: 1, backoff: 10)
-        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(retries: 1, backoff: 10)).once.and_call_original
+        allow(instance).to receive_message_chain(:configuration, :commands, :postgres).and_return(max_retries: 1, backoff: 10)
+        expect(Masamune::Commands::RetryWithBackoff).to receive(:new).with(anything, hash_including(max_retries: 1, backoff: 10)).once.and_call_original
         mock_command(/\APGOPTIONS=.* psql/, mock_success)
       end
 
@@ -100,7 +100,7 @@ describe Masamune::Actions::Postgres do
       before do
         expect(postgres_helper).to receive(:database_exists?).and_return(false)
         expect(instance).to receive(:postgres_admin).with(action: :create, database: 'test', safe: true).once
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', max_retries: 0).once
         after_initialize_invoke
       end
       it 'should call posgres_admin once' do
@@ -111,7 +111,7 @@ describe Masamune::Actions::Postgres do
       before do
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
         expect(instance).to receive(:postgres_admin).never
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', max_retries: 0).once
         after_initialize_invoke
       end
       it 'should not call postgres_admin' do
@@ -122,8 +122,8 @@ describe Masamune::Actions::Postgres do
       let(:setup_files) { ['setup.psql'] }
       before do
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
-        expect(instance).to receive(:postgres).with(file: setup_files.first, retries: 0).once
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
+        expect(instance).to receive(:postgres).with(file: setup_files.first, max_retries: 0).once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', max_retries: 0).once
         after_initialize_invoke
       end
       it 'should call postgres with setup_files' do
@@ -147,7 +147,7 @@ describe Masamune::Actions::Postgres do
       before do
         filesystem.touch!('schema_1.psql', 'schema_2.psql')
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', max_retries: 0).once
         after_initialize_invoke
       end
       it 'should call postgres with schema_files' do
@@ -159,7 +159,7 @@ describe Masamune::Actions::Postgres do
       before do
         filesystem.touch!('schema.rb')
         expect(postgres_helper).to receive(:database_exists?).and_return(true)
-        expect(instance).to receive(:postgres).with(file: 'catalog.psql', retries: 0).once
+        expect(instance).to receive(:postgres).with(file: 'catalog.psql', max_retries: 0).once
         after_initialize_invoke
       end
       it 'should call postgres with schema_files' do

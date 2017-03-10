@@ -35,7 +35,7 @@ module Masamune::Actions
     private
 
     def postgres_admin_retry_with_backoff_options
-      configuration.commands.postgres.merge(configuration.commands.postgres_admin).slice(:retries, :backoff)
+      configuration.commands.postgres.merge(configuration.commands.postgres_admin).slice(:max_retries, :backoff)
     end
   end
 end
