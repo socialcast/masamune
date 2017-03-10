@@ -119,7 +119,7 @@ module Masamune::SharedExampleGroup
     if output['hive'] && output['hive'].is_a?(String)
       hive(exec: output['hive'], output: output_file)
     elsif output['table']
-      table = eval "catalog.#{output['table']}" # rubocop:disable Lint/Eval
+      table = eval "catalog.#{output['table']}" # rubocop:disable Security/Eval
       query = denormalize_table(table, output.slice('columns', 'order', 'except', 'include')).to_s
       # FIXME: define format based on table.store.format
       case table.store.type
