@@ -28,8 +28,8 @@ module Masamune::Commands
 
     def initialize(delegate, attrs = {})
       super delegate
-      @delegate     = delegate
-      @max_retries      = attrs.fetch(:max_retries, configuration.max_retries)
+      @delegate = delegate
+      @max_retries = attrs.fetch(:max_retries, configuration.max_retries)
       @backoff      = attrs.fetch(:backoff, configuration.backoff)
       @retry_count  = 0
     end

@@ -21,7 +21,7 @@
 #  THE SOFTWARE.
 
 describe Masamune::Commands::RetryWithBackoff do
-  let(:options) { {max_retries: max_retries, backoff: 0 } }
+  let(:options) { { max_retries: max_retries, backoff: 0 } }
   let(:delegate) { double }
   let(:instance) { described_class.new(delegate, options) }
 
