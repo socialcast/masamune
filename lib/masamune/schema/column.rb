@@ -287,7 +287,9 @@ module Masamune::Schema
         when Hash
           value
         when String
-          JSON.parse(value)
+          JSON.parse(value).tap do |new_value|
+            raise unless new_value.is_a?(Hash) || new_value.is_a?(Array)
+          end
         when nil
           {}
         end
