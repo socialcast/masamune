@@ -22,7 +22,7 @@
 
 module Masamune::Schema
   class Fact < Table
-    SUPPORTED_GRAINS = [:transaction, :hourly, :daily, :monthly].freeze
+    SUPPORTED_GRAINS = %i[transaction hourly daily monthly].freeze
 
     attr_accessor :grain
     attr_accessor :partition
@@ -114,7 +114,7 @@ module Masamune::Schema
     def reserved_column_ids
       case type
       when :fact
-        [:time_key, :last_modified_at]
+        %i[time_key last_modified_at]
       else
         super
       end

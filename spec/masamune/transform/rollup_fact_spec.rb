@@ -69,7 +69,7 @@ describe Masamune::Transform::RollupFact do
         measure 'total', type: :integer, aggregate: :sum
       end
 
-      fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
+      fact 'visits', partition: 'y%Ym%m', grain: %w[hourly daily monthly] do
         references :cluster
         references :date
         references :tenant

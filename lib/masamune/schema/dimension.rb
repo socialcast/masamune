@@ -22,7 +22,7 @@
 
 module Masamune::Schema
   class Dimension < Table
-    SUPPORTED_GRAINS = [:hourly, :daily, :monthly].freeze
+    SUPPORTED_GRAINS = %i[hourly daily monthly].freeze
 
     def initialize(opts = {})
       opts.symbolize_keys!
@@ -81,11 +81,11 @@ module Masamune::Schema
       when :one, :date
         [:last_modified_at]
       when :two
-        [:start_at, :end_at, :version, :last_modified_at]
+        %i[start_at end_at version last_modified_at]
       when :four
-        [:start_at, :end_at, :version, :last_modified_at]
+        %i[start_at end_at version last_modified_at]
       when :ledger
-        [:source_kind, :source_uuid, :start_at, :last_modified_at, :delta]
+        %i[source_kind source_uuid start_at last_modified_at delta]
       else
         super
       end
@@ -117,14 +117,14 @@ module Masamune::Schema
       when :one, :date
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :two
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: [:start_at, :natural], unique: :natural
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: %i[start_at natural], unique: :natural
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: :end_at
         initialize_column! id: 'version', type: :integer, default: 1, null: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'
       when :four
         children << ledger_table
         # FIXME: derive type from from parent
-        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: [:start_at, :natural], unique: :natural
+        initialize_column! id: 'start_at', type: :timestamp, default: 'TO_TIMESTAMP(0)', index: %i[start_at natural], unique: :natural
         initialize_column! id: 'end_at', type: :timestamp, null: true, index: :end_at
         initialize_column! id: 'version', type: :integer, default: 1, null: true
         initialize_column! id: 'last_modified_at', type: :timestamp, default: 'NOW()'

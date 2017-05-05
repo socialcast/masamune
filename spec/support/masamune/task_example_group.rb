@@ -34,10 +34,10 @@ module Masamune::TaskExampleGroup
 
   shared_examples 'general usage' do
     it 'exits with status code 0 and prints general usage' do
-      expect { execute_command }.to raise_error { |e|
+      expect { execute_command }.to raise_error do |e|
         expect(e).to be_a(SystemExit)
         expect(e.status).to eq(0)
-      }
+      end
       expect(stdout.string).to match(/^Commands:/)
       expect(stderr.string).to be_blank
     end
@@ -45,10 +45,10 @@ module Masamune::TaskExampleGroup
 
   shared_examples 'command usage' do
     it 'exits with status code 0 and prints command usage' do
-      expect { execute_command }.to raise_error { |e|
+      expect { execute_command }.to raise_error do |e|
         expect(e).to be_a(SystemExit)
         expect(e.status).to eq(0)
-      }
+      end
       expect(stdout.string).to match(/^Usage:/)
       expect(stdout.string).to match(/^Options:/)
       expect(stderr.string).to be_blank
@@ -57,10 +57,10 @@ module Masamune::TaskExampleGroup
 
   shared_examples 'executes with success' do
     it 'exits with status code 0' do
-      expect { execute_command }.to raise_error { |e|
+      expect { execute_command }.to raise_error do |e|
         expect(e).to be_a(SystemExit)
         expect(e.status).to eq(0)
-      }
+      end
     end
   end
 

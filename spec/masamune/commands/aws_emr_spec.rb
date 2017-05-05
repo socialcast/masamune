@@ -45,7 +45,7 @@ describe Masamune::Commands::AwsEmr do
   describe '#command_args' do
     subject { instance.command_args }
 
-    it { is_expected.to eq(%w(aws emr ssh)) }
+    it { is_expected.to eq(%w[aws emr ssh]) }
 
     context 'with --cluster-id j-XYZ' do
       let(:delegate) { double(command_args: ['hive', '-e', "'show tables;'"]) }

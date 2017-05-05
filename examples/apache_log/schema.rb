@@ -27,9 +27,9 @@ schema :postgres do
 
   dimension :user, type: :one do
     column 'user_id', type: :integer, natural_key: true
-    column 'gender', type: :enum, values: %w(none unknown male female)
+    column 'gender', type: :enum, values: %w[none unknown male female]
     column 'nationality', type: :string
-    column 'ab_test_group', type: :enum, values: %w(none unknown control a b)
+    column 'ab_test_group', type: :enum, values: %w[none unknown control a b]
   end
 
   map from: postgres.users_file, to: postgres.user_dimension do |row|
@@ -47,7 +47,7 @@ schema :postgres do
     column 'device', type: :string, unique: 'shared', index: 'shared', default: 'Unknown'
   end
 
-  fact :visits, partition: 'y%Ym%m', grain: %w(hourly) do
+  fact :visits, partition: 'y%Ym%m', grain: %w[hourly] do
     # TODO: add date dimension generator
     references :date, degenerate: true
     references :user

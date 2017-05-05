@@ -44,7 +44,7 @@ describe Masamune::Actions::Transform do
         column 'updated_at', type: :timestamp
       end
 
-      fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
+      fact 'visits', partition: 'y%Ym%m', grain: %w[hourly daily monthly] do
         references :date
         references :user
 

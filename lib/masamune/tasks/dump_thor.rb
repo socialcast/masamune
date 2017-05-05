@@ -35,8 +35,8 @@ module Masamune::Tasks
     skip_lock!
 
     desc 'dump', 'Dump schema'
-    method_option :type, enum: %w(psql hql), desc: 'Schema type', default: 'psql'
-    method_option :section, enum: %w(pre post all), desc: 'Schema section', default: 'all'
+    method_option :type, enum: %w[psql hql], desc: 'Schema type', default: 'psql'
+    method_option :section, enum: %w[pre post all], desc: 'Schema section', default: 'all'
     method_option :exclude, type: :array, desc: 'Exclude tables matching globs', default: []
     method_option :skip_indexes, type: :boolean, desc: 'Disable indexes', default: false
     def dump_exec

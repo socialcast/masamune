@@ -70,8 +70,8 @@ describe Masamune::Schema::Table do
     let(:table) do
       described_class.new id: 'user',
         columns: [
-          Masamune::Schema::Column.new(id: 'tenant_id', index: %w(tenant_id shared)),
-          Masamune::Schema::Column.new(id: 'user_id', index: %w(user_id shared))
+          Masamune::Schema::Column.new(id: 'tenant_id', index: %w[tenant_id shared]),
+          Masamune::Schema::Column.new(id: 'user_id', index: %w[user_id shared])
         ]
     end
 
@@ -83,7 +83,7 @@ describe Masamune::Schema::Table do
       described_class.new id: 'user',
         columns: [
           Masamune::Schema::Column.new(id: 'tenant_id', unique: ['shared']),
-          Masamune::Schema::Column.new(id: 'user_id', unique: %w(user_id shared))
+          Masamune::Schema::Column.new(id: 'user_id', unique: %w[user_id shared])
         ]
     end
 
@@ -99,7 +99,7 @@ describe Masamune::Schema::Table do
         columns: [
           Masamune::Schema::Column.new(id: 'tenant_id'),
           Masamune::Schema::Column.new(id: 'user_id'),
-          Masamune::Schema::Column.new(id: 'state', type: :enum, sub_type: :user_state, values: %w(active inactive terminated), default: 'active')
+          Masamune::Schema::Column.new(id: 'state', type: :enum, sub_type: :user_state, values: %w[active inactive terminated], default: 'active')
         ]
     end
 
@@ -324,22 +324,22 @@ describe Masamune::Schema::Table do
     end
 
     context 'with specified columns' do
-      subject(:stage_table) { table.stage_table(columns: %w(id name user_account_state.id hr_user_account_state.id)) }
+      subject(:stage_table) { table.stage_table(columns: %w[id name user_account_state.id hr_user_account_state.id]) }
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns.keys).to eq([:name, :user_account_state_table_id, :hr_user_account_state_table_id])
-        expect(stage_table.references.keys).to eq([:user_account_state, :hr_user_account_state])
+        expect(stage_table.columns.keys).to eq(%i[name user_account_state_table_id hr_user_account_state_table_id])
+        expect(stage_table.references.keys).to eq(%i[user_account_state hr_user_account_state])
       end
     end
 
     context 'with specified columns (denormalized)' do
-      subject(:stage_table) { table.stage_table(columns: %w(id name user_account_state.name hr_user_account_state.name)) }
+      subject(:stage_table) { table.stage_table(columns: %w[id name user_account_state.name hr_user_account_state.name]) }
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns.keys).to eq([:name, :user_account_state_table_name, :hr_user_account_state_table_name])
-        expect(stage_table.references.keys).to eq([:user_account_state, :hr_user_account_state])
+        expect(stage_table.columns.keys).to eq(%i[name user_account_state_table_name hr_user_account_state_table_name])
+        expect(stage_table.references.keys).to eq(%i[user_account_state hr_user_account_state])
       end
     end
 
@@ -357,8 +357,8 @@ describe Masamune::Schema::Table do
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns.keys).to eq([:name, :user_account_state_table_name, :hr_user_account_state_table_name])
-        expect(stage_table.references.keys).to eq([:user_account_state, :hr_user_account_state])
+        expect(stage_table.columns.keys).to eq(%i[name user_account_state_table_name hr_user_account_state_table_name])
+        expect(stage_table.references.keys).to eq(%i[user_account_state hr_user_account_state])
       end
     end
 
@@ -376,7 +376,7 @@ describe Masamune::Schema::Table do
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns.keys).to eq([:user_id, :name, :hr_user_account_state_table_name])
+        expect(stage_table.columns.keys).to eq(%i[user_id name hr_user_account_state_table_name])
         expect(stage_table.references.keys).to eq([:hr_user_account_state])
       end
     end
@@ -396,7 +396,7 @@ describe Masamune::Schema::Table do
 
       it 'should stage table' do
         expect(stage_table.name).to eq('user_table_stage')
-        expect(stage_table.columns.keys).to eq([:hr_user_account_state_table_id, :user_id, :name])
+        expect(stage_table.columns.keys).to eq(%i[hr_user_account_state_table_id user_id name])
         expect(stage_table.references.keys).to eq([:hr_user_account_state])
       end
     end

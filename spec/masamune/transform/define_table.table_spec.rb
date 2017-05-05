@@ -101,8 +101,8 @@ describe Masamune::Transform::DefineTable do
     before do
       catalog.schema :postgres do
         table 'user' do
-          column 'tenant_id', index: %w(tenant_id shared)
-          column 'user_id', index: %w(user_id shared)
+          column 'tenant_id', index: %w[tenant_id shared]
+          column 'user_id', index: %w[user_id shared]
         end
       end
     end
@@ -146,7 +146,7 @@ describe Masamune::Transform::DefineTable do
       catalog.schema :postgres do
         table 'user' do
           column 'tenant_id', unique: ['shared']
-          column 'user_id', unique: %w(user_id shared)
+          column 'user_id', unique: %w[user_id shared]
         end
       end
     end
@@ -381,7 +381,7 @@ describe Masamune::Transform::DefineTable do
         table 'user' do
           column 'tenant_id'
           column 'user_id'
-          column 'state', type: :enum, sub_type: :user_state, values: %w(active inactive terminated), default: 'active'
+          column 'state', type: :enum, sub_type: :user_state, values: %w[active inactive terminated], default: 'active'
         end
       end
     end
@@ -724,7 +724,7 @@ describe Masamune::Transform::DefineTable do
     end
 
     context 'for postgres table with all specified columns' do
-      let(:columns) { %w(hr_user_account_state_table_id user_account_state_table_id name) }
+      let(:columns) { %w[hr_user_account_state_table_id user_account_state_table_id name] }
 
       it 'should render table template' do
         is_expected.to eq <<-EOS.strip_heredoc
@@ -739,7 +739,7 @@ describe Masamune::Transform::DefineTable do
     end
 
     context 'for postgres table with all specified columns in denormalized form' do
-      let(:columns) { %w(hr_user_account_state.name user_account_state.name name) }
+      let(:columns) { %w[hr_user_account_state.name user_account_state.name name] }
 
       it 'should render table template' do
         is_expected.to eq <<-EOS.strip_heredoc

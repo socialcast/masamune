@@ -59,7 +59,7 @@ describe Masamune::Schema::Column do
     end
 
     context 'with type :enum' do
-      subject(:column) { described_class.new(id: 'mode', type: :enum, values: %w(public private)) }
+      subject(:column) { described_class.new(id: 'mode', type: :enum, values: %w[public private]) }
 
       context '#default' do
         subject { column.default }
@@ -81,7 +81,7 @@ describe Masamune::Schema::Column do
       end
 
       context 'with :default' do
-        subject(:column) { described_class.new(id: 'mode', type: :enum, values: %w(public private), default: 'private') }
+        subject(:column) { described_class.new(id: 'mode', type: :enum, values: %w[public private], default: 'private') }
 
         context '#default' do
           subject { column.default }
@@ -123,7 +123,7 @@ describe Masamune::Schema::Column do
     end
 
     context 'with index: ["id", "shared"]' do
-      subject(:column) { described_class.new(id: 'id', index: %w(id shared)) }
+      subject(:column) { described_class.new(id: 'id', index: %w[id shared]) }
       context '#index' do
         subject { column.index }
         it { is_expected.to include(:id) }
@@ -210,7 +210,7 @@ describe Masamune::Schema::Column do
     end
 
     context 'with type :enum' do
-      let(:column) { described_class.new(id: 'enum', type: :enum, values: %w(public private)) }
+      let(:column) { described_class.new(id: 'enum', type: :enum, values: %w[public private]) }
       context 'with enum value' do
         let(:value) { 'public' }
         it { is_expected.to eq("'public'::ENUM_TYPE") }
@@ -476,7 +476,7 @@ describe Masamune::Schema::Column do
 
       context 'when array' do
         let(:value) { '["1","2","3"]' }
-        it { is_expected.to eq(%w(1 2 3)) }
+        it { is_expected.to eq(%w[1 2 3]) }
       end
 
       context 'when hash' do
@@ -494,7 +494,7 @@ describe Masamune::Schema::Column do
   describe '#default_ruby_value' do
     subject(:result) { column.default_ruby_value }
 
-    [:boolean, :integer, :string].each do |type|
+    %i[boolean integer string].each do |type|
       context "with type :#{type}" do
         let(:column) { described_class.new(id: 'column', type: type) }
         it { is_expected.to be_nil }
@@ -511,7 +511,7 @@ describe Masamune::Schema::Column do
       it { is_expected.to eq(Time.new(0)) }
     end
 
-    [:json, :yaml, :key_value].each do |type|
+    %i[json yaml key_value].each do |type|
       context "with type :#{type}" do
         let(:column) { described_class.new(id: 'column', type: type) }
         it { is_expected.to eq({}) }
@@ -602,7 +602,7 @@ describe Masamune::Schema::Column do
       end
 
       context 'when array of string' do
-        let(:value) { %w(1 2) }
+        let(:value) { %w[1 2] }
         it { is_expected.to eq('[1,2]') }
       end
     end
@@ -626,7 +626,7 @@ describe Masamune::Schema::Column do
       end
 
       context 'when array of string' do
-        let(:value) { %w(1 2) }
+        let(:value) { %w[1 2] }
         it { is_expected.to eq('["1","2"]') }
       end
 

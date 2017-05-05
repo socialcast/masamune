@@ -45,8 +45,8 @@ describe Masamune::Transform::DefineTable do
       catalog.schema :hive do
         dimension 'tenant', type: :ledger do
           column 'tenant_id', type: :integer, natural_key: true
-          column 'tenant_account_state', type: :enum, values: %w(missing unknown active inactive)
-          column 'tenant_premium_state', type: :enum, values: %w(missing unkown goodwill pilot sandbox premium internal free vmware)
+          column 'tenant_account_state', type: :enum, values: %w[missing unknown active inactive]
+          column 'tenant_premium_state', type: :enum, values: %w[missing unkown goodwill pilot sandbox premium internal free vmware]
           column 'preferences', type: :key_value, null: true
         end
       end
@@ -81,8 +81,8 @@ describe Masamune::Transform::DefineTable do
           partition :y
           partition :m
           column 'tenant_id', type: :integer, natural_key: true
-          column 'tenant_account_state', type: :enum, values: %w(missing unknown active inactive)
-          column 'tenant_premium_state', type: :enum, values: %w(missing unkown goodwill pilot sandbox premium internal free vmware)
+          column 'tenant_account_state', type: :enum, values: %w[missing unknown active inactive]
+          column 'tenant_premium_state', type: :enum, values: %w[missing unkown goodwill pilot sandbox premium internal free vmware]
           column 'preferences', type: :key_value, null: true
         end
       end

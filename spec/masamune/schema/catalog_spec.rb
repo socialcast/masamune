@@ -55,8 +55,8 @@ describe Masamune::Schema::Catalog do
   end
 
   context '#load' do
-    let(:postgres_extra) { %w(/tmp/schema.psql /tmp/00_schema.psql /tmp/20_schema.psql /tmp/40_schema.psql.erb) }
-    let(:hive_extra) { %w(/tmp/schema.hql /tmp/00_schema.hql /tmp/20_schema.hql /tmp/40_schema.hql.erb) }
+    let(:postgres_extra) { %w[/tmp/schema.psql /tmp/00_schema.psql /tmp/20_schema.psql /tmp/40_schema.psql.erb] }
+    let(:hive_extra) { %w[/tmp/schema.hql /tmp/00_schema.hql /tmp/20_schema.hql /tmp/40_schema.hql.erb] }
     let(:extra) { postgres_extra + hive_extra }
 
     before do
@@ -322,7 +322,7 @@ describe Masamune::Schema::Catalog do
             column 'user_id'
           end
 
-          fact 'visits', grain: %w(hourly daily monthly) do
+          fact 'visits', grain: %w[hourly daily monthly] do
             references :user
             measure 'count'
           end

@@ -326,6 +326,6 @@ class Masamune::DataPlan::Rule
   end
 
   def options_for_elem
-    @options.reject { |k, _| [:path, :table].include?(k) }
+    @options.reject { |k, _| %i[path table].include?(k) }
   end
 end
