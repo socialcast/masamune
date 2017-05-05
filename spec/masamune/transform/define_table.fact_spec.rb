@@ -179,9 +179,9 @@ describe Masamune::Transform::DefineTable do
           total INTEGER
         );
 
-        COPY visits_file_fact_stage FROM 'output_1.csv' WITH (FORMAT 'csv', HEADER true);
-        COPY visits_file_fact_stage FROM 'output_2.csv' WITH (FORMAT 'csv', HEADER true);
-        COPY visits_file_fact_stage FROM 'output_3.csv' WITH (FORMAT 'csv', HEADER true);
+        \\COPY visits_file_fact_stage FROM 'output_1.csv' WITH (FORMAT 'csv', HEADER true);
+        \\COPY visits_file_fact_stage FROM 'output_2.csv' WITH (FORMAT 'csv', HEADER true);
+        \\COPY visits_file_fact_stage FROM 'output_3.csv' WITH (FORMAT 'csv', HEADER true);
 
         CREATE INDEX visits_file_fact_stage_964dac1_index ON visits_file_fact_stage (date_dimension_date_id);
         CREATE INDEX visits_file_fact_stage_5a187ed_index ON visits_file_fact_stage (feature_type_name);

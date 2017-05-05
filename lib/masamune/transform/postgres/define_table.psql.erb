@@ -84,7 +84,7 @@ END IF; END $$;
   copy_options << "DELIMITER '\t'" if target.store.format == :tsv
   copy_options << "HEADER true" if target.store.headers
 -%>
-COPY <%= target.name %> FROM '<%= file %>' WITH (<%= copy_options.join(", ") %>);
+\COPY <%= target.name %> FROM '<%= file %>' WITH (<%= copy_options.join(", ") %>);
 <%- end -%>
 <%- end -%>
 
