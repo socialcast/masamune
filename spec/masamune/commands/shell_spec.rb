@@ -116,7 +116,7 @@ describe Masamune::Commands::Shell do
       end
 
       it { expect(delegate.status).to eq(0) }
-      it { expect(delegate.stdout).to eq(%w(ping pong)) }
+      it { expect(delegate.stdout).to eq(%w[ping pong]) }
       it { expect(delegate.stderr).to eq([]) }
     end
 
@@ -172,17 +172,17 @@ describe Masamune::Commands::Shell do
 
       context 'with command_args containing nil' do
         let(:command_args) { ['echo', nil, 'foo'] }
-        it { is_expected.to eq(%w(echo foo)) }
+        it { is_expected.to eq(%w[echo foo]) }
       end
 
       context 'with command_args containing an integer' do
         let(:command_args) { ['echo', nil, 5] }
-        it { is_expected.to eq(%w(echo 5)) }
+        it { is_expected.to eq(%w[echo 5]) }
       end
 
       context 'with nested command_args' do
         let(:command_args) { [['echo'], ['foo']] }
-        it { is_expected.to eq(%w(echo foo)) }
+        it { is_expected.to eq(%w[echo foo]) }
       end
     end
   end

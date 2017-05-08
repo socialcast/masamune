@@ -77,7 +77,7 @@ class RandomApacheLogGenerator
       user_info = info['results'].first
       user_info['user']['id'] = rand(1 << 15)
       user_info['user']['nationality'] = info['nationality']
-      user_info['user']['ab_test_group'] = %w(a b).sample
+      user_info['user']['ab_test_group'] = %w[a b].sample
       return user_info['user']
     end
   rescue
@@ -103,7 +103,7 @@ class RandomApacheLogGenerator
   attr_reader :users
 
   def paths
-    @paths ||= %w(/home /streams /profile /groups) + users.map { |user| "/users/#{user.id}" }
+    @paths ||= %w[/home /streams /profile /groups] + users.map { |user| "/users/#{user.id}" }
   end
 
   def user_agent_io_uri
@@ -127,9 +127,9 @@ class RandomApacheLogGenerator
   def fallback_user
     {
       'id'            => rand(1 << 15),
-      'gender'        => %w(male female).sample,
-      'nationality'   => %w(AU BR CA DE ES FI FR GB IE NL NZ US).sample,
-      'ab_test_group' => %w(a b).sample
+      'gender'        => %w[male female].sample,
+      'nationality'   => %w[AU BR CA DE ES FI FR GB IE NL NZ US].sample,
+      'ab_test_group' => %w[a b].sample
     }
   end
 end

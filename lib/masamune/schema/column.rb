@@ -356,7 +356,7 @@ module Masamune::Schema
     end
 
     def hash_value?
-      [:key_value, :yaml, :json].include?(type)
+      %i[key_value yaml json].include?(type)
     end
 
     def as_psql
@@ -406,11 +406,11 @@ module Masamune::Schema
     def typecast?(other_type)
       return true if type == other_type
       case [type, other_type]
-      when [:key_value, :yaml]
+      when %i[key_value yaml]
         true
-      when [:key_value, :json]
+      when %i[key_value json]
         true
-      when [:yaml, :json]
+      when %i[yaml json]
         true
       else
         false

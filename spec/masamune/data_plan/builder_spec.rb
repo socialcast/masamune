@@ -27,8 +27,8 @@ describe Masamune::DataPlan::Builder do
     end
 
     context 'with multiple namespaces' do
-      let(:namespaces) { %w(a b) }
-      let(:commands) { %w(load store) }
+      let(:namespaces) { %w[a b] }
+      let(:commands) { %w[load store] }
       let(:sources) { [{ path: 'log/%Y%m%d.*.log' }, { path: 'table/y=%Y/m=%m/d=%d' }] }
       let(:targets) { [{ path: 'table/y=%Y/m=%m/d=%d' }, { path: 'daily/%Y-%m-%d' }] }
 
@@ -47,8 +47,8 @@ describe Masamune::DataPlan::Builder do
     end
 
     context 'with :for option' do
-      let(:namespaces) { %w(a a a) }
-      let(:commands) { %w(missing_before override missing_after) }
+      let(:namespaces) { %w[a a a] }
+      let(:commands) { %w[missing_before override missing_after] }
       let(:sources) { [{ path: 'log/%Y%m%d.*.log', for: 'override' }] }
       let(:targets) { [{ path: 'table/y=%Y/m=%m/d=%d', for: 'override' }] }
 
@@ -70,8 +70,8 @@ describe Masamune::DataPlan::Builder do
     end
 
     context 'with :skip option' do
-      let(:namespaces) { %w(a a a) }
-      let(:commands) { %w(missing_before override) }
+      let(:namespaces) { %w[a a a] }
+      let(:commands) { %w[missing_before override] }
       let(:sources) { [{ skip: true }, { path: 'log/%Y%m%d.*.log' }] }
       let(:targets) { [{ skip: true }, { path: 'table/y=%Y/m=%m/d=%d' }] }
 

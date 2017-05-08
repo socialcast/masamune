@@ -70,7 +70,7 @@ module Masamune
       def start(*a)
         super
       rescue SignalException => e
-        raise e unless %w(SIGHUP SIGTERM).include?(e.to_s)
+        raise e unless %w[SIGHUP SIGTERM].include?(e.to_s)
         instance.logger.debug("Exiting at user request on #{e}")
         exit 0
       rescue ::Thor::MalformattedArgumentError, ::Thor::RequiredArgumentMissingError => e

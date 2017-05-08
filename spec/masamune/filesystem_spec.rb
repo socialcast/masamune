@@ -739,14 +739,14 @@ shared_examples_for 'Filesystem' do
 
   describe '#glob_sort' do
     before do
-      allow_any_instance_of(Masamune::Filesystem).to receive(:glob).and_return(%w(/tmp/a/02.txt /tmp/b/01.txt /tmp/c/00.txt))
+      allow_any_instance_of(Masamune::Filesystem).to receive(:glob).and_return(%w[/tmp/a/02.txt /tmp/b/01.txt /tmp/c/00.txt])
     end
 
     subject do
       instance.glob_sort('/tmp/*', order: :basename)
     end
 
-    it { is_expected.to eq(%w(/tmp/c/00.txt /tmp/b/01.txt /tmp/a/02.txt)) }
+    it { is_expected.to eq(%w[/tmp/c/00.txt /tmp/b/01.txt /tmp/a/02.txt]) }
     it { expect { |b| instance.glob_sort('/tmp/*', order: :basename, &b) }.to yield_successive_args('/tmp/c/00.txt', '/tmp/b/01.txt', '/tmp/a/02.txt') }
   end
 

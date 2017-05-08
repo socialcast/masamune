@@ -46,7 +46,7 @@ namespace :spec do
   end
 
   desc 'Run All Rspec code examples'
-  task all: [:unit, :acceptance]
+  task all: %i[unit acceptance]
 end
 
 task default: :spec

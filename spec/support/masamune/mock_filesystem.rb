@@ -88,7 +88,7 @@ class Masamune::MockFilesystem < Delegator
     true
   end
 
-  [:mkdir!, :copy_file_to_file, :copy_file_to_dir, :copy_dir, :remove_file, :remove_dir, :move_file_to_file, :move_file_to_dir, :move_dir, :write].each do |method|
+  %i[mkdir! copy_file_to_file copy_file_to_dir copy_dir remove_file remove_dir move_file_to_file move_file_to_dir move_dir write].each do |method|
     define_method(method) do |*_args|
       # Empty
     end

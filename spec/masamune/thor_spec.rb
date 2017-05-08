@@ -93,11 +93,11 @@ describe Masamune::Thor do
       let(:command) { 'command' }
       let(:options) { ['--version'] }
       it 'exits with status code 0 and prints version' do
-        expect { execute_command }.to raise_error { |e|
+        expect { execute_command }.to raise_error do |e|
           expect(e).to be_a(SystemExit)
           expect(e.message).to eq('exit')
           expect(e.status).to eq(0)
-        }
+        end
         expect(stdout.string).to match(/\Amasamune/)
         expect(stderr.string).to be_blank
       end
@@ -199,11 +199,11 @@ describe Masamune::Thor do
       let(:command) { 'unknown' }
       let(:options) { ['--start', '2013-01-01'] }
       it 'exits with status code 1 and prints error to stderr' do
-        expect { execute_command }.to raise_error { |e|
+        expect { execute_command }.to raise_error do |e|
           expect(e).to be_a(SystemExit)
           expect(e.message).to eq('Path :unknown_dir not defined')
           expect(e.status).to eq(1)
-        }
+        end
         expect(stdout.string).to be_blank
         expect(stderr.string).to match(/Path :unknown_dir not defined/)
       end

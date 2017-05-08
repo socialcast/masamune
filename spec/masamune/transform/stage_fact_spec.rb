@@ -72,10 +72,10 @@ describe Masamune::Transform::StageFact do
         row group_id: -2, group_mode: 'unknown', attributes: { id: :unknown }
       end
 
-      fact 'visits', partition: 'y%Ym%m', grain: %w(hourly daily monthly) do
+      fact 'visits', partition: 'y%Ym%m', grain: %w[hourly daily monthly] do
         references :cluster
         references :date
-        references :tenant, through: [:user, :from_group, :group]
+        references :tenant, through: %i[user from_group group]
         references :user
         references :group, label: 'from', default: :missing, unknown: :unknown
         references :group, default: :missing, unknown: :unknown
