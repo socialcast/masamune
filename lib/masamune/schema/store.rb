@@ -51,7 +51,7 @@ module Masamune::Schema
 
     class << self
       def types
-        [:postgres, :hive, :files]
+        %i[postgres hive files]
       end
     end
 

@@ -44,7 +44,7 @@ class Masamune::Configuration < Hashie::Dash
     end
 
     def default_commands
-      @default_commands ||= %i(aws_emr hive hadoop_streaming hadoop_filesystem s3cmd postgres postgres_admin)
+      @default_commands ||= %i[aws_emr hive hadoop_streaming hadoop_filesystem s3cmd postgres postgres_admin]
     end
   end
 

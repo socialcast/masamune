@@ -311,8 +311,8 @@ describe Masamune::Transform::DenormalizeTable do
           partition :y
           partition :m
           column 'tenant_id', type: :integer, natural_key: true
-          column 'tenant_account_state', type: :enum, values: %w(missing unknown active inactive)
-          column 'tenant_premium_state', type: :enum, values: %w(missing unkown goodwill pilot sandbox premium internal free vmware)
+          column 'tenant_account_state', type: :enum, values: %w[missing unknown active inactive]
+          column 'tenant_premium_state', type: :enum, values: %w[missing unkown goodwill pilot sandbox premium internal free vmware]
           column 'preferences', type: :key_value, null: true
         end
       end
@@ -322,18 +322,18 @@ describe Masamune::Transform::DenormalizeTable do
 
     let(:options) do
       {
-        columns: %w(
+        columns: %w[
           tenant_id
           tenant_account_state
           tenant_premium_state
           preferences
           y
           m
-        ),
-        order: %w(
+        ],
+        order: %w[
           tenant_id
           start_at
-        )
+        ]
       }
     end
 

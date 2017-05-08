@@ -83,7 +83,7 @@ module Masamune
     end
 
     # FIXME: cache eviction policy can be more precise
-    [:touch!, :mkdir!, :copy_file_to_file, :copy_file_to_dir, :copy_dir, :remove_file, :remove_dir, :move_file_to_file, :move_file_to_dir, :move_dir, :write].each do |method|
+    %i[touch! mkdir! copy_file_to_file copy_file_to_dir copy_dir remove_file remove_dir move_file_to_file move_file_to_dir move_dir write].each do |method|
       define_method(method) do |*args|
         clear!
         @filesystem.send(method, *args)
