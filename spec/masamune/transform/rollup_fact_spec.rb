@@ -167,8 +167,6 @@ describe Masamune::Transform::RollupFact do
 
         COMMIT;
 
-        VACUUM FULL ANALYZE visits_hourly_fact_y2014m08;
-
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_tmp CASCADE;
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
 
@@ -265,8 +263,6 @@ describe Masamune::Transform::RollupFact do
 
         COMMIT;
 
-        VACUUM FULL ANALYZE visits_daily_fact_y2014m08;
-
         DROP TABLE IF EXISTS visits_daily_fact_y2014m08_stage_tmp CASCADE;
         DROP TABLE IF EXISTS visits_daily_fact_y2014m08_stage CASCADE;
 
@@ -362,8 +358,6 @@ describe Masamune::Transform::RollupFact do
         CREATE INDEX visits_monthly_fact_y2014m08_39f0fdd_index ON visits_monthly_fact_y2014m08 (user_dimension_id);
 
         COMMIT;
-
-        VACUUM FULL ANALYZE visits_monthly_fact_y2014m08;
 
         DROP TABLE IF EXISTS visits_monthly_fact_y2014m08_stage_tmp CASCADE;
         DROP TABLE IF EXISTS visits_monthly_fact_y2014m08_stage CASCADE;

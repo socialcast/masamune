@@ -116,8 +116,6 @@ describe Masamune::Transform::InsertReferenceValues do
 
         COMMIT;
 
-        VACUUM FULL ANALYZE user_agent_type;
-
         SELECT pg_advisory_unlock(42);
 
         CREATE TEMPORARY TABLE IF NOT EXISTS feature_type_stage (LIKE feature_type INCLUDING ALL);
@@ -153,8 +151,6 @@ describe Masamune::Transform::InsertReferenceValues do
         ;
 
         COMMIT;
-
-        VACUUM FULL ANALYZE feature_type;
 
         SELECT pg_advisory_unlock(42);
       EOS

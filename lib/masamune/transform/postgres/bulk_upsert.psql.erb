@@ -64,6 +64,4 @@ WHERE
 
 COMMIT;
 
-VACUUM FULL ANALYZE <%= target.name %>;
-
 SELECT pg_advisory_unlock(<%= target.lock_id %>);

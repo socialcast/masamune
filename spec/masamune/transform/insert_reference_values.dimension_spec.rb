@@ -99,8 +99,6 @@ describe Masamune::Transform::InsertReferenceValues do
 
         COMMIT;
 
-        VACUUM FULL ANALYZE department_type;
-
         SELECT pg_advisory_unlock(42);
       EOS
     end

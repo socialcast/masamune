@@ -237,8 +237,6 @@ describe Masamune::Transform::StageFact do
 
         COMMIT;
 
-        VACUUM FULL ANALYZE visits_hourly_fact_y2014m08;
-
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage_tmp CASCADE;
         DROP TABLE IF EXISTS visits_hourly_fact_y2014m08_stage CASCADE;
 
