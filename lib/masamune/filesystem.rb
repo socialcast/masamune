@@ -157,6 +157,22 @@ module Masamune
       end
     end
 
+    def size(file)
+      case type(file)
+      when :hdfs
+        hadoop_fs('-test', '-z', file)
+      when :s3
+        result = 0
+        s3cmd('ls', s3b(file), safe: true) do |line|
+          _date, _time, size, _name = line.split(/\s+/)
+          result = size
+        end
+        result.to_i
+      when :local
+        File.size(file)
+      end
+    end
+
     def exists?(file)
       case type(file)
       when :hdfs

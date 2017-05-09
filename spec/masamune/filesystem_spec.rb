@@ -364,6 +364,32 @@ shared_examples_for 'Filesystem' do
     end
   end
 
+  describe '#size' do
+    context 'local_file' do
+      subject { instance.size(old_file) }
+      it { is_expected.to eq(0) }
+    end
+
+    context 'hdfs_file' do
+      before do
+        expect(filesystem).to receive(:hadoop_fs).with('-ls', '-R', 'file://' + old_file, safe: true).at_most(:once)
+          .and_yield("drwxrwxrwt   - root     wheel         0 2015-02-24 12:09 #{old_file}")
+        expect(filesystem).to receive(:hadoop_fs).with('-test', '-z', 'file://' + old_file).at_most(:once).and_return(0)
+      end
+      subject { instance.size('file://' + old_file) }
+      it { is_expected.to eq(0) }
+    end
+
+    context 's3_file' do
+      before do
+        expect(filesystem).to receive(:s3cmd).with('ls', 's3://bucket/00', safe: true).at_most(:once)
+          .and_yield('2013-05-24 18:52      2912   s3://bucket/00')
+      end
+      subject { instance.size('s3://bucket/00') }
+      it { is_expected.to eq 2912 }
+    end
+  end
+
   describe '#exists?' do
     context 'local missing file' do
       subject { instance.exists?(new_file) }
