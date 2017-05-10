@@ -128,8 +128,6 @@ describe Masamune::Transform::BulkUpsert do
 
         COMMIT;
 
-        VACUUM FULL ANALYZE user_dimension;
-
         SELECT pg_advisory_unlock(42);
       EOS
     end
@@ -196,8 +194,6 @@ describe Masamune::Transform::BulkUpsert do
         ;
 
         COMMIT;
-
-        VACUUM FULL ANALYZE user_dimension_ledger;
 
         SELECT pg_advisory_unlock(42);
       EOS
